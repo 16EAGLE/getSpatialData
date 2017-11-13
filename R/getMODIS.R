@@ -1,7 +1,8 @@
 #--------------------------------------------------------------------------------------------------------------------------------
 #Title: get_MODIS
 #Type: function
-#Description: Creates MODIS image files from an extent input by buidldin a HD4 MODIS archive and using GDAL to create e. g. TIF files from it
+#Description: Interface to the MODIS R packaga, which simplifies its use.
+#Creates MODIS image files from an extent input by buidlding a HD4 MODIS archive and using GDAL to create e. g. TIF files from it
 #Date of creation: 2017-07-13
 #Author: Jakob Schwalb-Willmann
 #Arguments:

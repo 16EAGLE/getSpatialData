@@ -24,9 +24,18 @@ getMODIS <- function(sub,prod.id = "MOD13Q1", start = "2013-06-01", end = "2013-
   #Ubuntu: sudo apt-get install gdal-bin
   #Windows: Install GDAL via http://trac.osgeo.org/osgeo4w/
   
+  #Define output handling
+  out <- function(input,type = 1, ll = log_level, msg = shiny_mode){
+    signs <- c("", "")
+    if(type == 2 & ll <= 2){warning(paste0(signs[2],input), call. = FALSE, immediate. = TRUE)}
+    else{if(type == 3){stop(input,call. = FALSE)}else{if(ll == 1){
+      if(msg == FALSE){cat(paste0(signs[1],input),sep="\n")
+      }else{message(paste0(signs[1],input))}}}}
+  }
+  
   #Load required packages
   t1 <- Sys.time()
-  loadp(c("MODIS","raster","rgdal","ggplot2","geosphere"))
+  for(x in c("MODIS","raster","rgdal","ggplot2","geosphere")){library(x, character.only = TRUE, quietly = TRUE)}
   out("Accessing data...")
   
   #Check required argument

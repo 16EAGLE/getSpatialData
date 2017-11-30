@@ -1,4 +1,4 @@
-s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"), platform = "Sentinel-3", 
+s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"), 
                        instrumentname = "Ocean Land Colour Instrument", producttype = "OL_1_EFR___",
                        timeliness = "Non Time Critical"){
   
@@ -9,6 +9,7 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"), 
 
   shub.user = "s3guest"
   pass <- "s3guest" #getPass()
+  platform <-  "Sentinel-3"
   shub.url = "https://scihub.copernicus.eu/s3"
   
   ext.xy <- rbind(c(ext@xmin, ext@ymin),c(ext@xmin, ext@ymax),c(ext@xmax, ext@ymax),c(ext@xmax, ext@ymin))

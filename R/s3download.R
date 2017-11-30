@@ -20,6 +20,7 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   writeLines(ext.gj, tmp.file)
   close(tmp.file)
   
+  reticulate::py_available(initialize = TRUE)
   sat <- reticulate::import("sentinelsat")
   out("pkg loaded.")
   api <- sat$SentinelAPI(shub.user, pass, shub.url)

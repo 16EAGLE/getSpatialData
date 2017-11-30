@@ -1,6 +1,6 @@
 s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"), 
                        instrumentname = "Ocean Land Colour Instrument", producttype = "OL_1_EFR___",
-                       timeliness = "Non Time Critical", py_path = NULL){
+                       timeliness = "Non Time Critical", skip_dates = "", py_path = NULL){
   
   ## Connect to base
   library(RCurl)
@@ -35,8 +35,11 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   
   olci.list <- lapply(products.list, function(x, pd = producttype, tl = timeliness){if(x$producttype == pd & x$timeliness == tl){return(x)} })
   olci.list <- olci.list[-which(sapply(olci.list, is.null) == TRUE)]
-  dates <- sort(as.POSIXct(sapply(olci.list, function(x){as.character(x$beginposition)})))
-  uuid <- sapply(olci.list, function(x){as.character(x$uuid)})
+  dates <- sapply(olci.list, function(x){substr(as.character(x$beginposition), start = 1, stop = 8)})
+  if(skip_dates[1] != ""){
+    sub <- which(dates != skip_dates)
+  }else{ sub <- seq(1, length(dates))}
+  uuid <- sapply(olci.list[[sub]], function(x){as.character(x$uuid)})
   
   api$download_all(uuid, dir.out)
 }

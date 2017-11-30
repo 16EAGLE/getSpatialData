@@ -35,7 +35,7 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   
   olci.list <- lapply(products.list, function(x, pd = producttype, tl = timeliness){if(x$producttype == pd & x$timeliness == tl){return(x)} })
   olci.list <- olci.list[-which(sapply(olci.list, is.null) == TRUE)]
-  dates <- sapply(olci.list, function(x){substr(as.character(x$beginposition), start = 1, stop = 8)})
+  dates <- sapply(olci.list, function(x){paste0(unlist(strsplit(substr(as.character(x$beginposition), start = 1, stop = 10), "-")), collapse = "")})
   cat(dates)
   if(skip_dates[1] != ""){
     sub <- which(dates != skip_dates)

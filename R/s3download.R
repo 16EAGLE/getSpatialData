@@ -39,7 +39,8 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   if(skip_dates[1] != ""){
     sub <- which(dates != skip_dates)
   }else{ sub <- seq(1, length(dates))}
-  uuid <- sapply(olci.list[[sub]], function(x){as.character(x$uuid)})
+  olci.list <- olci.list[sub]
+  uuid <- sapply(olci.list, function(x){as.character(x$uuid)})
   
   api$download_all(uuid, dir.out)
 }

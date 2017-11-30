@@ -7,7 +7,7 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   eval(parse(text = RCurl::getURL("https://raw.githubusercontent.com/16EAGLE/16EAGLE/master/R/base.R", .opts = RCurl::curlOptions(followlocation = TRUE))))
   r_load(c("reticulate", "getPass", "raster"))
 
-  if(!is.null(py_path)){use_python(python = py_path)}
+  if(!is.null(py_path)){use_python(python = py_path, required = TRUE)}
   
   shub.user = "s3guest"
   pass <- "s3guest" #getPass()

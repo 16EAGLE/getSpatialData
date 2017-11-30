@@ -21,7 +21,7 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   close(tmp.file)
   
   reticulate::py_available(initialize = TRUE)
-  sat <- py_load("sentinelsat")
+  sat <- py_load("sentinelsat")$sentinelsat
   
   api <- sat$SentinelAPI(shub.user, pass, shub.url)
   footprint <- sat$geojson_to_wkt(sat$read_geojson(tmp.gj))

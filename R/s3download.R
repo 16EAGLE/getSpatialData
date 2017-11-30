@@ -20,7 +20,7 @@ s3download <- function(dir.out, ext, time_range = list("20171101", "20171130"),
   writeLines(ext.gj, tmp.file)
   close(tmp.file)
   
-  sat <- py_load("sentinelsat")$sentinelsat
+  sat <- import("sentinelsat")
   api <- sat$SentinelAPI(shub.user, pass, shub.url)
   footprint <- sat$geojson_to_wkt(sat$read_geojson(tmp.gj))
   products = api$query(area = footprint, platformname=platform, date = time_range)

@@ -10,7 +10,7 @@
 #date_last_modified:
 #status: not published
 #author: Jakob Schwalb-Willmann
-#copyright: Jakob Schwalb-Willmann
+#copyright: Jakob Schwalb-Willmann/University of Wuerzburg
 #license: none
 #bugs: unkown
 #usage: source()

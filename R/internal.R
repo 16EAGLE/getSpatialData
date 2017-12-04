@@ -86,3 +86,10 @@ check.cmd <- function(cmd){
   sc <- try(devtools::system_check(cmd, quiet = TRUE),silent = TRUE)
   if(class(sc) == "try-error"){return(FALSE)}else{return(TRUE)}
 }
+
+
+#' On package startup
+#' @noRd
+.onLoad <- function(libname, pkgname){
+  sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+}

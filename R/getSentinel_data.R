@@ -71,8 +71,8 @@ getSentinel_data <- function(uuid, dir_out, hub_user, hub_pass = NULL,
 
 
   ## sentinelsat connection
-  sat <- try(py_load("sentinelsat")$sentinelsat)
-  if(class(sat)[1] == "try-error"){out("Could not load/install the 'sentinelsat' python library.", type = 3)}
+  # sat <- try(py_load("sentinelsat")$sentinelsat)
+  # if(class(sat)[1] == "try-error"){out("Could not load/install the 'sentinelsat' python library.", type = 3)}
 
 
   ## Connect to API and download data

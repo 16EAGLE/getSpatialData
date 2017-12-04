@@ -74,16 +74,16 @@ getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NU
 
   ## Python connection
   if(!is.null(py_path)){
-    py_avail <- try(use_python(python = py_path, required = TRUE), silent = TRUE)
-    if(class(py_avail) == "try_error"){py_avail <- FALSE}
+   py_avail <- try(use_python(python = py_path, required = TRUE), silent = TRUE)
+   if(class(py_avail) == "try_error"){py_avail <- FALSE}
   }else{py_avail <- py_available(initialize = TRUE)}
   if(is.FALSE(py_avail)){out("Could not connect to Python.", type = 3)}
 
 
   ## sentinelsat connection
-  sat <- try(py_load("sentinelsat")$sentinelsat)
-  if(class(sat)[1] == "try-error"){out("Could not load/install the 'sentinelsat' python library.", type = 3)}
-
+  #sat <- try(py_load("sentinelsat")$sentinelsat)
+  #if(class(sat)[1] == "try-error"){out("Could not load/install the 'sentinelsat' python library.", type = 3)}
+  #sat <- NULL
 
   ## Manage hub connection
   if(hub_access == "operational"){hub_access <- 'https://scihub.copernicus.eu/dhus'}
@@ -100,7 +100,7 @@ getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NU
   close(tmp.file)
 
 
-  ## Query through sentinelsat APO
+  ## Query through sentinelsat API
   api <- sat$SentinelAPI(hub_user, hub_pass, hub_access)
   aoi <- sat$geojson_to_wkt(sat$read_geojson(tmp.gj))
   file.remove(tmp.gj)

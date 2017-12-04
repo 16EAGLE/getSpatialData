@@ -19,6 +19,43 @@
 #' @importFrom reticulate py_available use_python
 #' @importFrom raster extent
 #'
+#' @examples
+#'
+#' ## Load packages
+#' library(getSpatialData)
+#' library(raster)
+#'
+#' ## Define an extent, a time range and a platform
+#' ext <- extent(10.29048,11.75558,45.93350,46.94617)
+#' time_range <-  c("20170801", "20170803")
+#' platform <- "Sentinel-2"
+#'
+#' ## Define your Hub credentials
+#' hub_user <- "your_account"
+#'
+#' ## Use getSentinel_query to search for data
+#' \dontrun{
+#' results <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
+#'                              hub_user = hub_user)
+#'
+#' ## View the results
+#' View(results) #get an overview about the search results
+#' colnames(results) #see all available filter attributes
+#' unique(results$processinglevel) #use one of the, e.g. to see available processing levels
+#'
+#' ## Filter the results
+#' results_filtered <- results[which(results$processinglevel == "Level-1C"),] #filter by Level
+#'
+#' ## Extract UUIDs
+#' uuid <- results_filtered$uuid #get UUIDs of your filtered query results
+#' uuid <- uuid[c(1:3)] #take the first three datasets to be downloaded
+#'
+#' ## Download datasets
+#' #dir_out <- "your/output/directory"
+#' dir_out <- tempdir() #or some temporary directory for this example
+#' files <- getSentinel_data(uuid = uuid, dir_out = dir_out,
+#'                           hub_user = hub_user)
+#' }
 #' @seealso \link{getSentinel_data}
 #' @export
 

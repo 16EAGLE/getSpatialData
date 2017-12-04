@@ -25,10 +25,10 @@ out <- function(input,type = 1, ll = 1, msg = FALSE, sign = ""){
 #' @keywords internal
 #' @noRd
 
-py_load <- function(lib, get.auto = TRUE, install.only = FALSE){ #returns list of imports
+py_load <- function(lib, get.auto = TRUE, install.only = FALSE, msg = FALSE){ #returns list of imports
   if(class(lib) != "character"){out("'lib' has to be a 'character' vector.", type=3)}
   imports <- lapply(lib, function(x){
-    out(paste0("Loading package '",x,"'..."),type=1)
+    out(paste0("Loading library '",x,"'..."),type=1, msg = msg)
     from <- F
     if(length(grep("[$]",x)) == 1){
       y <- unlist(strsplit(x, "[$]"))[2]
@@ -90,6 +90,8 @@ check.cmd <- function(cmd){
 
 #' On package startup
 #' @noRd
+sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
-  sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+  sat <<- try(py_load("sentinelsat", msg = TRUE)$sentinelsat)
+  if(class(sat)[1] == "try-error"){out("Could not load/install the 'sentinelsat' python library.", type = 2)}
 }

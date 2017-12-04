@@ -28,8 +28,11 @@ A data frame; each row represents one dataset, recognized by an individual UUID.
 \description{
 \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
 }
+\details{
+The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
+}
 \seealso{
-\url{getSentinel_data}, \url{getSentinel_meta}
+\link{getSentinel_data}
 }
 \author{
 Jakob Schwalb-Willmann

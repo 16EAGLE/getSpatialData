@@ -13,13 +13,13 @@
 #' @return A data frame; each row represents one dataset, recognized by an individual UUID. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for downloading.
 #' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
 #'
-#' @seealso \url{getSentinel_data}, \url{getSentinel_meta}
 #' @author Jakob Schwalb-Willmann
 #'
 #' @importFrom getPass getPass
 #' @importFrom reticulate py_available use_python
 #' @importFrom raster extent
 #'
+#' @seealso \link{getSentinel_data}
 #' @export
 
 getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NULL,

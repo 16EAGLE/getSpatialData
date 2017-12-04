@@ -1,6 +1,6 @@
 #' Download Sentinel-1, -2 and -3 datasets by UUIDs
 #'
-#' \code{getSentinel_data} downloads complete Sentinel datasets including imagery and meta files from the Copernicus Open Access Hubs for Sentinel data. The datasets are identified by their UUIDs, which can be extracted using \url{\code{getSentinel_query}}.
+#' \code{getSentinel_data} downloads complete Sentinel datasets including imagery and meta files from the Copernicus Open Access Hubs for Sentinel data. The datasets are identified by their UUIDs, which can be extracted using \link{getSentinel_query}.
 #'
 #' @inheritParams getSentinel_query
 #' @param uuid character vector, one or multiple UUIDs identifying the datasets to be downloaded.
@@ -9,12 +9,12 @@
 #' @return List of files that had been downloaded
 #' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
 #'
-#' @seealso \url{getSentinel_query}, \url{getSentinel_meta}
 #' @author Jakob Schwalb-Willmann
 #'
 #' @importFrom getPass getPass
 #' @importFrom reticulate py_available use_python
 #'
+#' @seealso \link{getSentinel_query}
 #' @export
 
 getSentinel_data <- function(uuid, dir_out, hub_user, hub_pass = NULL,

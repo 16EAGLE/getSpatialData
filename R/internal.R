@@ -93,6 +93,5 @@ check.cmd <- function(cmd){
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   message("Loading library 'sentinelsat'")
-  sat <<- try(reticulate::import("sentinelsat"))
-  if(class(sat)[1] == "try-error"){out("Could not load/install the 'sentinelsat' python library.", type = 2)}
+  sat <<- reticulate::import("sentinelsat")
 }

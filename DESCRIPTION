@@ -1,0 +1,18 @@
+Package: getSpatialData
+Type: Package
+Title: Get different kinds of freely available spatial datasets
+Version: 0.1.0
+Date: 2017-12-01
+Depends: R (>= 2.10)
+Authors@R: person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de",
+  role = c("aut", "cre"))
+Description: Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.
+License: none
+Encoding: UTF-8
+LazyData: true
+Imports:
+  getPass,
+  reticulate,
+  raster,
+  devtools
+RoxygenNote: 6.0.1

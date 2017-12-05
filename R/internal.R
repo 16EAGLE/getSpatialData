@@ -25,7 +25,7 @@ out <- function(input,type = 1, ll = 1, msg = FALSE, sign = ""){
 #' @keywords internal
 #' @noRd
 
-py_load <- function(lib, get.auto = TRUE, install.only = FALSE, msg = FALSE){ #returns list of imports
+py_load <- function(lib, get.auto = TRUE, install.only = FALSE, msg = FALSE, delay_load = FALSE){ #returns list of imports
   if(class(lib) != "character"){out("'lib' has to be a 'character' vector.", type=3)}
   imports <- lapply(lib, function(x){
     out(paste0("Loading library '",x,"'..."),type=1, msg = msg)
@@ -35,11 +35,11 @@ py_load <- function(lib, get.auto = TRUE, install.only = FALSE, msg = FALSE){ #r
       x <- unlist(strsplit(x, "[$]"))[1]
       from <- T
     }
-    lib.try <- try(reticulate::import(x), silent = TRUE)
+    lib.try <- try(reticulate::import(x, delay_load = delay_load), silent = TRUE)
     if(class(lib.try)[1] == "try-error"){
       if(get.auto == TRUE){
         system(paste0("pip install ",x))
-        re <- reticulate::import(x)
+        re <- reticulate::import(x, delay_load = delay_load)
       }else{
         out(paste0("Module '",x,"' is not installed. Auto-install is not available. Please install modules."),type=3)
       }
@@ -93,5 +93,5 @@ check.cmd <- function(cmd){
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
-  sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+  sat <<- py_load("sentinelsat", delay_load = TRUE)
 }

@@ -20,6 +20,10 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 For all current functions publicly available, a help file can be accessed, which contains information on the expected arguments, the return and examples.
 
+### Known bugs
+
+At the moment, the `getSentinel*` function bundle seems to fail using an Anaconda Python installation.
+
 ## Installation
 
 An operational use of this pre-beta version of getSpatialData is not recommended and not possible. Functions could be removed or fundamentaly changed. Documentation could be wrong or incomplete.

@@ -93,5 +93,5 @@ check.cmd <- function(cmd){
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
-  sat <<- py_load("sentinelsat", delay_load = TRUE)
+  sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
 }

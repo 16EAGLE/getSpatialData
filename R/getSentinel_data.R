@@ -73,7 +73,7 @@ getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
   ## Connect to API and download data
   api <- sat$SentinelAPI(hub_user, hub_pass, hub_access)
   files.dir_out <- list.files(dir_out, full.names = TRUE)
-  if(length(uuid) == 1){api$download(uuid, dir_out)}else{api$download_all(uuid, dir_out)}
+  if(length(uuid) == 1){api$download(id = uuid, directory_path = dir_out)}else{api$download_all(products = uuid, directory_path = dir_out)}
   files.downlaod <- list.files(dir_out, full.names = TRUE)
   files.downlaod <- files.downlaod[which(is.na(match(files.downlaod, files.dir_out)))]
 

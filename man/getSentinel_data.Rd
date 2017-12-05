@@ -4,11 +4,11 @@
 \alias{getSentinel_data}
 \title{Download Sentinel-1, -2 and -3 datasets by UUIDs}
 \usage{
-getSentinel_data(uuid, dir_out, hub_user, hub_pass = NULL,
+getSentinel_data(products, dir_out, hub_user, hub_pass = NULL,
   hub_access = "operational", py_path = NULL)
 }
 \arguments{
-\item{uuid}{character vector, one or multiple UUIDs identifying the datasets to be downloaded.}
+\item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getSentinel_query}.}
 
 \item{dir_out}{character, full path to download target directory}
 
@@ -30,7 +30,6 @@ List of files that had been downloaded
 The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
 }
 \examples{
-
 ## Load packages
 library(getSpatialData)
 library(raster)
@@ -41,31 +40,30 @@ time_range <-  c("20170801", "20170803")
 platform <- "Sentinel-2"
 
 ## Define your Hub credentials
-hub_user <- "your_account"
+hub_user <- "your_username"
 
 ## Use getSentinel_query to search for data
-\dontrun{
-results <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
-                             hub_user = hub_user)
+products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
+                              hub_user = hub_user)
+#if you do not want to retype your password for every call, use the 'hub_pass' argument
 
-## View the results
-View(results) #get an overview about the search results
-colnames(results) #see all available filter attributes
-unique(results$processinglevel) #use one of the, e.g. to see available processing levels
+## Get an overview of the products
+View(products) #get an overview about the search products
+colnames(products) #see all available filter attributes
+unique(products$processinglevel) #use one of the, e.g. to see available processing levels
 
-## Filter the results
-results_filtered <- results[which(results$processinglevel == "Level-1C"),] #filter by Level
+## Preview a single product
+getSentinel_preview(product = products[1,], hub_user = hub_user)
 
-## Extract UUIDs
-uuid <- results_filtered$uuid #get UUIDs of your filtered query results
-uuid <- uuid[c(1:3)] #take the first three datasets to be downloaded
+## Filter the products
+products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 
 ## Download datasets
 #dir_out <- "your/output/directory"
 dir_out <- tempdir() #or some temporary directory for this example
-files <- getSentinel_data(uuid = uuid, dir_out = dir_out,
+files <- getSentinel_data(products = products_filtered, dir_out = dir_out,
                           hub_user = hub_user)
-}
+
 }
 \seealso{
 \link{getSentinel_query}

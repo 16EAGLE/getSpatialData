@@ -20,7 +20,6 @@
 #' @importFrom raster extent
 #'
 #' @examples
-#'
 #' ## Load packages
 #' library(getSpatialData)
 #' library(raster)
@@ -31,31 +30,30 @@
 #' platform <- "Sentinel-2"
 #'
 #' ## Define your Hub credentials
-#' hub_user <- "your_account"
+#' hub_user <- "your_username"
 #'
 #' ## Use getSentinel_query to search for data
-#' \dontrun{
-#' results <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
-#'                              hub_user = hub_user)
+#' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
+#'                               hub_user = hub_user)
+#' #if you do not want to retype your password for every call, use the 'hub_pass' argument
 #'
-#' ## View the results
-#' View(results) #get an overview about the search results
-#' colnames(results) #see all available filter attributes
-#' unique(results$processinglevel) #use one of the, e.g. to see available processing levels
+#' ## Get an overview of the products
+#' View(products) #get an overview about the search products
+#' colnames(products) #see all available filter attributes
+#' unique(products$processinglevel) #use one of the, e.g. to see available processing levels
 #'
-#' ## Filter the results
-#' results_filtered <- results[which(results$processinglevel == "Level-1C"),] #filter by Level
+#' ## Preview a single product
+#' getSentinel_preview(product = products[1,], hub_user = hub_user)
 #'
-#' ## Extract UUIDs
-#' uuid <- results_filtered$uuid #get UUIDs of your filtered query results
-#' uuid <- uuid[c(1:3)] #take the first three datasets to be downloaded
+#' ## Filter the products
+#' products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 #'
 #' ## Download datasets
 #' #dir_out <- "your/output/directory"
 #' dir_out <- tempdir() #or some temporary directory for this example
-#' files <- getSentinel_data(uuid = uuid, dir_out = dir_out,
+#' files <- getSentinel_data(products = products_filtered, dir_out = dir_out,
 #'                           hub_user = hub_user)
-#' }
+#'
 #' @seealso \link{getSentinel_data}
 #' @export
 

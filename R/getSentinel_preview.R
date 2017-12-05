@@ -1,18 +1,14 @@
-#' Download Sentinel-1, -2 and -3 datasets by UUIDs
+#' Creates an RGB preview of a Sentinel product before downloading
 #'
-#' \code{getSentinel_data} downloads complete Sentinel datasets including imagery and meta files from the Copernicus Open Access Hubs for Sentinel data. The datasets are identified by their UUIDs, which can be extracted using \link{getSentinel_query}.
+#' \code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.
 #'
 #' @inheritParams getSentinel_query
-#' @param products data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getSentinel_query}.
-#' @param dir_out character, full path to download target directory
+#' @param product data.frame, single row data.frame collected from the return of \ling{getSentinel_query}, representing the selected product and all its attributes.
 #'
-#' @return List of files that had been downloaded
+#' @return None. A plot is generated.
 #' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
 #'
 #' @author Jakob Schwalb-Willmann
-#'
-#' @importFrom getPass getPass
-#' @importFrom reticulate py_available use_python
 #'
 #' @examples
 #' ## Load packages
@@ -50,32 +46,36 @@
 #'                           hub_user = hub_user)
 #'
 #' @seealso \link{getSentinel_query}
+#'
+#' @importFrom getPass getPass
+#' @importFrom httr GET
+#' @importFrom raster stack plotRGB
+#'
 #' @export
 
-getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
+getSentinel_preview <- function(product, hub_user, hub_pass = NULL,
                              hub_access = "operational", py_path = NULL){
 
   ## Intercept false inputs and get inputs
-  uuid <- products$uuid
-  char_args <- list(uuid = uuid, dir_out = dir_out, hub_user = hub_user,
+  link_icon <- product$link_icon
+  if(length(link_icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
+  char_args <- list(link_icon = link_icon, hub_user = hub_user,
                     if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()})
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
   }
-
 
   ## Manage hub connection
   if(hub_access == "operational"){hub_access <- 'https://scihub.copernicus.eu/dhus'}
   if(hub_access == "pre-ops"){hub_access <- 'https://scihub.copernicus.eu/s3'}
 
 
-  ## Connect to API and download data
-  api <- sat$SentinelAPI(hub_user, hub_pass, hub_access)
-  files.dir_out <- list.files(dir_out, full.names = TRUE)
-  if(length(uuid) == 1){api$download(uuid, dir_out)}else{api$download_all(uuid, dir_out)}
-  files.downlaod <- list.files(dir_out, full.names = TRUE)
-  files.downlaod <- files.downlaod[which(is.na(match(files.downlaod, files.dir_out)))]
+  ## Build URL
+  file_dir <- paste0(tempfile(),".jpg")
+  GET(link_icon, authenticate(hub_user, hub_pass), write_disk(path = file_dir))
 
-  return(files.downlaod)
+
+  ## Plot preview
+  preview <- stack(file_dir)
+  plotRGB(preview)
 }
-

@@ -92,10 +92,6 @@ check.cmd <- function(cmd){
 #' @noRd
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
-  pl <- try(reticulate::py_available(initialize = TRUE))
-  if(class(pl) == "try-error"){stop("No python installation could be found for your system's architecture. Please install Python and then retry.")
-  }else{
-    packageStartupMessage("Loading python library 'sentinelsat'")
-    sat <<- reticulate::import("sentinelsat")
-  }
+  reticulate::py_available(initialize = TRUE)
+  sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
 }

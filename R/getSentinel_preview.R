@@ -48,7 +48,7 @@
 #' @seealso \link{getSentinel_query}
 #'
 #' @importFrom getPass getPass
-#' @importFrom httr GET
+#' @importFrom httr GET write_disk authenticate
 #' @importFrom raster stack plotRGB
 #'
 #' @export

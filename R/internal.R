@@ -93,6 +93,6 @@ check.cmd <- function(cmd){
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
-  message("Loading library 'sentinelsat'")
+  packageStartupMessage("Loading python library 'sentinelsat'")
   sat <<- reticulate::import("sentinelsat")
 }

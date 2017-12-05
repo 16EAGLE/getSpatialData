@@ -3,7 +3,7 @@
 #' \code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.
 #'
 #' @inheritParams getSentinel_query
-#' @param product data.frame, single row data.frame collected from the return of \ling{getSentinel_query}, representing the selected product and all its attributes.
+#' @param product data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.
 #'
 #' @return None. A plot is generated.
 #' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
@@ -24,6 +24,7 @@
 #' hub_user <- "your_username"
 #'
 #' ## Use getSentinel_query to search for data
+#' \dontrun{
 #' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
 #'                               hub_user = hub_user)
 #' #if you do not want to retype your password for every call, use the 'hub_pass' argument
@@ -33,7 +34,7 @@
 #' colnames(products) #see all available filter attributes
 #' unique(products$processinglevel) #use one of the, e.g. to see available processing levels
 #'
-#' ## Preview a single product
+#' ## Preview a single product, in this case the first one
 #' getSentinel_preview(product = products[1,], hub_user = hub_user)
 #'
 #' ## Filter the products
@@ -44,7 +45,7 @@
 #' dir_out <- tempdir() #or some temporary directory for this example
 #' files <- getSentinel_data(products = products_filtered, dir_out = dir_out,
 #'                           hub_user = hub_user)
-#'
+#' }
 #' @seealso \link{getSentinel_query}
 #'
 #' @importFrom getPass getPass

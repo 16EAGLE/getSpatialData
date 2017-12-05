@@ -14,5 +14,6 @@ Imports:
   getPass,
   reticulate,
   raster,
+  httr,
   devtools
 RoxygenNote: 6.0.1

@@ -33,6 +33,7 @@
 #' hub_user <- "your_username"
 #'
 #' ## Use getSentinel_query to search for data
+#' \dontrun{
 #' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
 #'                               hub_user = hub_user)
 #' #if you do not want to retype your password for every call, use the 'hub_pass' argument
@@ -53,7 +54,7 @@
 #' dir_out <- tempdir() #or some temporary directory for this example
 #' files <- getSentinel_data(products = products_filtered, dir_out = dir_out,
 #'                           hub_user = hub_user)
-#'
+#' }
 #' @seealso \link{getSentinel_data}
 #' @export
 

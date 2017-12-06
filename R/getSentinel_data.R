@@ -65,6 +65,11 @@ getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
   }
 
 
+  ## Python connection
+  gSD_ini()
+  sat <- sat()
+
+
   ## Manage hub connection
   if(hub_access == "operational"){hub_access <- 'https://scihub.copernicus.eu/dhus'}
   if(hub_access == "pre-ops"){hub_access <- 'https://scihub.copernicus.eu/s3'}

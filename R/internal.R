@@ -88,24 +88,6 @@ check.cmd <- function(cmd){
 }
 
 
-#' On package startup
-#' @importFrom reticulate py_available py_config import
-#' @keywords internal
-#' @noRd
-.onLoad <- function(libname, pkgname){
-  reticulate::py_available(initialize = TRUE)
-
-  op <- options()
-  op.getSpatialData <- list(
-    getSpatialData.sat = "ini",
-    getSpatialData.pip = check.cmd("pip")
-  )
-  toset <- !(names(op.getSpatialData) %in% names(op))
-  if(any(toset)) options(op.getSpatialData[toset])
-
-  invisible()
-}
-
 #' ini call
 #'
 #' @importFrom reticulate py_config use_python
@@ -143,4 +125,23 @@ sat <- function(){
     }
   }
   return(st)
+}
+
+
+#' On package startup
+#' @importFrom reticulate py_available py_config import
+#' @keywords internal
+#' @noRd
+.onLoad <- function(libname, pkgname){
+  #reticulate::py_available(initialize = TRUE)
+
+  op <- options()
+  op.getSpatialData <- list(
+    getSpatialData.sat = "ini",
+    getSpatialData.pip = check.cmd("pip")
+  )
+  toset <- !(names(op.getSpatialData) %in% names(op))
+  if(any(toset)) options(op.getSpatialData[toset])
+
+  invisible()
 }

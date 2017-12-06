@@ -92,7 +92,6 @@ check.cmd <- function(cmd){
 #' @importFrom reticulate py_available py_config import
 #' @keywords internal
 #' @noRd
-sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
 
@@ -112,6 +111,7 @@ sat <- NULL #for choosing right env
 #' @importFrom reticulate py_config use_python
 #' @keywords internal
 #' @noRd
+sat <- NULL #for choosing right env
 gSD_ini <- function(){
   if(length(grep("conda", py_config()$pyhton)) != 0){
     v <- py_config()$python_versions

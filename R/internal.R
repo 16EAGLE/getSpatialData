@@ -94,8 +94,8 @@ check.cmd <- function(cmd){
 #' @keywords internal
 #' @noRd
 #sat <- NULL #for choosing right env
-gSD_ini <- function(){
-  if(length(grep("conda", py_config()$pyhton)) != 0){
+gSD_ini <- function(onLoad = FALSE){
+  if(length(grep("anac", tolower(py_config()$python))) != 0){
     v <- py_config()$python_versions
     vc <- v[-grep("conda", v)]
     if(length(vc) == 0){
@@ -134,6 +134,7 @@ sat <- function(){
 #' @noRd
 .onLoad <- function(libname, pkgname){
   #reticulate::py_available(initialize = TRUE)
+  gSD_ini(onLoad = TRUE)
 
   op <- options()
   op.getSpatialData <- list(

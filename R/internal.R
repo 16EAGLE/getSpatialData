@@ -110,7 +110,7 @@ sat <- NULL #for choosing right env
 
   op <- options()
   op.getSpatialData <- list(
-    getSpatialData.py = py_config()$python,
+    getSpatialData.py = "ini",
     getSpatialData.pip = check.cmd("pip")
   )
   toset <- !(names(op.getSpatialData) %in% names(op))

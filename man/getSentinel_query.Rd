@@ -5,7 +5,7 @@
 \title{Query Sentinel-1, -2 and -3 data from the Copernicus Open Access Hubs}
 \usage{
 getSentinel_query(ext, time_range, platform, hub_user, hub_pass = NULL,
-  hub_access = "auto", py_path = NULL)
+  hub_access = "auto")
 }
 \arguments{
 \item{ext}{extent object, representing the requested area of interest.}
@@ -19,8 +19,6 @@ getSentinel_query(ext, time_range, platform, hub_user, hub_pass = NULL,
 \item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default). Not needed for connections to the pre-operational hub.}
 
 \item{hub_access}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
-
-\item{py_path}{character, define path to the python command manually. If \code{NULL}, python is searched for automatically (default). To be used, of multiple versions of Python are installed (e.g. Anaconda).}
 }
 \value{
 A data frame; each row represents one dataset, recognized by an individual UUID. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for downloading.

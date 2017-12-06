@@ -54,7 +54,7 @@
 #' @export
 
 getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
-                             hub_access = "auto", py_path = NULL){
+                             hub_access = "auto"){
 
   ## Intercept false inputs and get inputs
   uuid <- products$uuid

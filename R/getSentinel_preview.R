@@ -55,7 +55,7 @@
 #' @export
 
 getSentinel_preview <- function(product, hub_user, hub_pass = NULL,
-                             hub_access = "auto", py_path = NULL){
+                             hub_access = "auto"){
 
   ## Intercept false inputs and get inputs
   link_icon <- product$link_icon

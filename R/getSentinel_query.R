@@ -8,7 +8,6 @@
 #' @param hub_user character, a valid user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
 #' @param hub_pass character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default). Not needed for connections to the pre-operational hub.
 #' @param hub_access character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
-#' @param py_path character, define path to the python command manually. If \code{NULL}, python is searched for automatically (default). To be used, of multiple versions of Python are installed (e.g. Anaconda).
 #'
 #' @return A data frame; each row represents one dataset, recognized by an individual UUID. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for downloading.
 #' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
@@ -59,7 +58,7 @@
 #' @export
 
 getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NULL,
-                              hub_access = "auto", py_path = NULL){
+                              hub_access = "auto"){
 
   ## Intercept false inputs and get inputs
   if(class(ext) != "Extent"){out("Argument 'ext' needs to be of type 'Extent'.", type = 3)}
@@ -96,7 +95,7 @@ getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NU
 
   ## Building return data.frame
   pd_list <- lapply(names(products), function(x, p = products){ eval(parse(text = paste0("p$`",x,"`"))) })
-  pd_names <- (unique(unlist(sapply(pd_list, names))))
+  pd_names <- (unique(unlist(lapply(pd_list, names))))
   pd_frame <- as.data.frame(stats::setNames(replicate(length(pd_names),numeric(0), simplify = F), pd_names))
   for( i in 1:length(pd_list)){
     subs <- match(names(pd_list[[i]]), pd_names)

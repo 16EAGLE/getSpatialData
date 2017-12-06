@@ -122,7 +122,16 @@ gSD_ini <- function(){
       use_python(python = vc[1])
     }
   }
+}
 
+
+#' sat call
+#'
+#' @importFrom reticulate import
+#' @keywords internal
+#' @noRd
+#sat <- NULL #for choosing right env
+sat <- function(){
   lib <- "sentinelsat"
   st <- try(import(lib, delay_load = TRUE))
   if(class(st)[1] == "try-error"){
@@ -133,6 +142,5 @@ gSD_ini <- function(){
       out("'sentinelsat' could not be installed, since 'pip install' could not be called from the command line. Please install 'pip' or install 'sentinelsat' manually.")
     }
   }
-  getOption("getSpatialData.sat") <- st
-  #sat <<- st
+  return(st)
 }

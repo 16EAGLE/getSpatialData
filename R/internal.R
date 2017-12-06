@@ -96,7 +96,7 @@ check.cmd <- function(cmd){
 #sat <- NULL #for choosing right env
 ini <- function(onLoad = FALSE){
   if(length(grep("anac", tolower(py_config()$python))) != 0){
-    v <- py_config()$python_versions
+    v <- tolower(py_config()$python_versions)
     vc <- v[-grep("anac", v)]
     if(length(vc) == 0){
       out("Anaconda Python is currently not supported by getSpatialData. Please install a standard Python 2.7.* or 3.* version.", type=if(onLoad == TRUE){2}else{3})

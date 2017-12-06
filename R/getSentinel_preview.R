@@ -59,6 +59,7 @@ getSentinel_preview <- function(product, hub_user, hub_pass = NULL,
 
   ## Intercept false inputs and get inputs
   link_icon <- product$link_icon
+  if(is.na(link_icon)){out("Argument 'product' is invalid or no preview is available.", type=3)}
   if(length(link_icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
   char_args <- list(link_icon = link_icon, hub_user = hub_user,
                     if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()})

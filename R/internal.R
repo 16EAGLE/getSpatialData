@@ -97,7 +97,7 @@ check.cmd <- function(cmd){
 
   op <- options()
   op.getSpatialData <- list(
-    getSpatialData.py = "ini",
+    getSpatialData.sat = "ini",
     getSpatialData.pip = check.cmd("pip")
   )
   toset <- !(names(op.getSpatialData) %in% names(op))
@@ -111,7 +111,7 @@ check.cmd <- function(cmd){
 #' @importFrom reticulate py_config use_python
 #' @keywords internal
 #' @noRd
-sat <- NULL #for choosing right env
+#sat <- NULL #for choosing right env
 gSD_ini <- function(){
   if(length(grep("conda", py_config()$pyhton)) != 0){
     v <- py_config()$python_versions
@@ -133,5 +133,6 @@ gSD_ini <- function(){
       out("'sentinelsat' could not be installed, since 'pip install' could not be called from the command line. Please install 'pip' or install 'sentinelsat' manually.")
     }
   }
-  sat <<- st
+  getOption("getSpatialData.sat") <- st
+  #sat <<- st
 }

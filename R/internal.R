@@ -100,8 +100,8 @@ sat <- NULL #for choosing right env
   st <- try(import(lib, delay_load = TRUE))
   if(class(st)[1] == "try-error"){
     if(is.TRUE(check.cmd("pip"))){
-      system(paste0("pip install ",x))
-      st <- import(x, delay_load = TRUE)
+      system(paste0("pip install ",lib))
+      st <- import(lib, delay_load = TRUE)
     }else{
       out("'sentinelsat' could not be installed, since 'pip install' could not be called from the command line. Please install 'pip' or install 'sentinelsat' manually.")
     }

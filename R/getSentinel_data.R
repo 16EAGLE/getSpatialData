@@ -54,7 +54,7 @@
 #' @export
 
 getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
-                             hub_access = "operational", py_path = NULL){
+                             hub_access = "auto", py_path = NULL){
 
   ## Intercept false inputs and get inputs
   uuid <- products$uuid
@@ -64,19 +64,15 @@ getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
   }
 
-
   ## Python connection
   ini()
   sat <- py_lib("sentinelsat")
 
-
-  ## Manage hub connection
-  if(hub_access == "operational"){hub_access <- 'https://scihub.copernicus.eu/dhus'}
-  if(hub_access == "pre-ops"){hub_access <- 'https://scihub.copernicus.eu/s3'}
-
+  ## Manage API access
+  cred <- access_API(hub_access, platform, hub_user, hub_pass)
 
   ## Query through sentinelsat API
-  api <- sat$SentinelAPI(hub_user, hub_pass, hub_access)
+  api <- sat$SentinelAPI(cred[1], cred[2], cred[3])
   out("Connected to Copernicus Open Access Hub.", msg = TRUE)
 
   files.dir_out <- list.files(dir_out, full.names = TRUE)

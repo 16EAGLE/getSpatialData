@@ -127,6 +127,30 @@ py_lib <- function(lib){
 }
 
 
+
+#' get API url from user input
+#'
+#' @param x API keyword or URL
+#' @param p platform
+#' @param user user name
+#' @param pw password
+#' @keywords internal
+#' @noRd
+access_API <- function(x, p, user, pw){
+  if(x == "auto"){
+    if(p == "Sentinel-1" | p == "Sentinel-2"){x <- "operational"
+    }else{x <- "pre-ops"}
+  }
+  if(x == "operational"){x <- 'https://scihub.copernicus.eu/dhus'}
+  if(x == "pre-ops"){
+    x <- 'https://scihub.copernicus.eu/s3'
+    user <- "s3guest"
+    pw <- "s3guest"
+  }
+  return(c(user, pw, x))
+}
+
+
 #' On package startup
 #' @importFrom reticulate py_available py_config import
 #' @keywords internal
@@ -144,3 +168,4 @@ py_lib <- function(lib){
 
   invisible()
 }
+

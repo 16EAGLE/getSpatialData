@@ -4,17 +4,17 @@
 \alias{getSentinel_preview}
 \title{Creates an RGB preview of a Sentinel product before downloading}
 \usage{
-getSentinel_preview(product, hub_user, hub_pass = NULL,
-  hub_access = "operational", py_path = NULL)
+getSentinel_preview(product, hub_user, hub_pass = NULL, hub_access = "auto",
+  py_path = NULL)
 }
 \arguments{
 \item{product}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.}
 
-\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}.}
+\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
 
-\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default).}
+\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default). Not needed for connections to the pre-operational hub.}
 
-\item{hub_access}{character, either "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (currently all Sentinel-3 products), or an URL to a Hub. Default is "operational".}
+\item{hub_access}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 
 \item{py_path}{character, define path to the python command manually. If \code{NULL}, python is searched for automatically (default). To be used, of multiple versions of Python are installed (e.g. Anaconda).}
 }

@@ -5,7 +5,7 @@
 \title{Query Sentinel-1, -2 and -3 data from the Copernicus Open Access Hubs}
 \usage{
 getSentinel_query(ext, time_range, platform, hub_user, hub_pass = NULL,
-  hub_access = "operational", py_path = NULL)
+  hub_access = "auto", py_path = NULL)
 }
 \arguments{
 \item{ext}{extent object, representing the requested area of interest.}
@@ -14,11 +14,11 @@ getSentinel_query(ext, time_range, platform, hub_user, hub_pass = NULL,
 
 \item{platform}{character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".}
 
-\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}.}
+\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
 
-\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default).}
+\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default). Not needed for connections to the pre-operational hub.}
 
-\item{hub_access}{character, either "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (currently all Sentinel-3 products), or an URL to a Hub. Default is "operational".}
+\item{hub_access}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 
 \item{py_path}{character, define path to the python command manually. If \code{NULL}, python is searched for automatically (default). To be used, of multiple versions of Python are installed (e.g. Anaconda).}
 }

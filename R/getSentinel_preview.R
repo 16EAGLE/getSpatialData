@@ -55,7 +55,7 @@
 #' @export
 
 getSentinel_preview <- function(product, hub_user, hub_pass = NULL,
-                             hub_access = "operational", py_path = NULL){
+                             hub_access = "auto", py_path = NULL){
 
   ## Intercept false inputs and get inputs
   link_icon <- product$link_icon
@@ -66,15 +66,12 @@ getSentinel_preview <- function(product, hub_user, hub_pass = NULL,
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
   }
 
-  ## Manage hub connection
-  if(hub_access == "operational"){hub_access <- 'https://scihub.copernicus.eu/dhus'}
-  if(hub_access == "pre-ops"){hub_access <- 'https://scihub.copernicus.eu/s3'}
-
+  ## Manage API access
+  cred <- access_API(hub_access, platform, hub_user, hub_pass)
 
   ## Build URL
   file_dir <- paste0(tempfile(),".jpg")
-  GET(link_icon, authenticate(hub_user, hub_pass), write_disk(path = file_dir))
-
+  GET(link_icon, authenticate(cred[1], cred[2]), write_disk(path = file_dir))
 
   ## Plot preview
   preview <- stack(file_dir)

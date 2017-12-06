@@ -6,7 +6,7 @@ getSpatialData is an R package in an early development stage that ultimatively a
 
 ## State of development
 
-At the moment, a getSentinel function bundle is developed, which should enable the user to easily query, download and transform Sentinel-1, -2 and -3 data directly within R. At this stage of development, the python library `sentinelsat` is used to connect to the Coperinucs Open Access Hub(s). Currently, the development of a python-independent, simple query assembler to use the API directly is evaluated.
+At the moment, a getSentinel function bundle is developed, which should enable the user to easily query, download and transform Sentinel-1, -2 and -3 data directly within R. At this stage of development, the python library `sentinelsat` is used to connect to the Coperinucs Open Access Hub(s). Currently, a python-independent, simple query assembler to use the API directly is developed, making only limited use of query-side filtering.
 
 ### Available functions
 

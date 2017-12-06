@@ -72,7 +72,7 @@ getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NU
 
 
   ## Python connection
-  gSD_ini()
+  ini()
   sat <- py_lib("sentinelsat")
 
 

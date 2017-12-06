@@ -94,7 +94,7 @@ check.cmd <- function(cmd){
 #' @keywords internal
 #' @noRd
 #sat <- NULL #for choosing right env
-gSD_ini <- function(onLoad = FALSE){
+ini <- function(onLoad = FALSE){
   if(length(grep("anac", tolower(py_config()$python))) != 0){
     v <- py_config()$python_versions
     vc <- v[-grep("conda", v)]
@@ -107,7 +107,7 @@ gSD_ini <- function(onLoad = FALSE){
 }
 
 
-#' sat call
+#' py_lib
 #' @param lib library name
 #' @importFrom reticulate import
 #' @keywords internal

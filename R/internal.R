@@ -159,12 +159,12 @@ access_API <- function(x, p, user, pw){
   #reticulate::py_available(initialize = TRUE)
 
   op <- options()
-  op.getSpatialData <- list(
-    getSpatialData.sat = "ini",
-    getSpatialData.pip = check.cmd("pip")
+  op.getSentinel <- list(
+    op.getSentinel.user = NULL,
+    op.getSentinel.pass = NULL
   )
-  toset <- !(names(op.getSpatialData) %in% names(op))
-  if(any(toset)) options(op.getSpatialData[toset])
+  toset <- !(names(op.getSentinel) %in% names(op))
+  if(any(toset)) options(op.getSentinel[toset])
 
   invisible()
 }

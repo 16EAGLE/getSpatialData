@@ -89,12 +89,16 @@ check.cmd <- function(cmd){
 
 
 #' On package startup
-#' @importFrom reticulate py_available use_python py_config import
+#' @importFrom reticulate py_available use_python py_config import conda_install
 #' @noRd
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
   #sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+
+  if(length(grep("conda", py_config()$python)) != 0){
+    conda_install("root", c("pycurl", "pyopenssl", "requests"))
+  }
 
   lib <- "sentinelsat"
   st <- try(import(lib, delay_load = TRUE))

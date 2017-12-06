@@ -72,11 +72,7 @@ getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NU
 
 
   ## Python connection
-  # if(!is.null(py_path)){
-  #  py_avail <- try(use_python(python = py_path, required = TRUE), silent = TRUE)
-  #  if(class(py_avail) == "try_error"){py_avail <- FALSE}
-  # }else{py_avail <- py_available(initialize = TRUE)}
-  # if(is.FALSE(py_avail)){out("Could not connect to Python.", type = 3)}
+  gSD_ini()
 
 
   ## Manage hub connection

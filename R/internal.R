@@ -90,11 +90,38 @@ check.cmd <- function(cmd){
 
 #' On package startup
 #' @importFrom reticulate py_available py_config import
+#' @keywords internal
 #' @noRd
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
-  #sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+
+  op <- options()
+  op.getSpatialData <- list(
+    getSpatialData.py = "ini",
+    getSpatialData.pip = check.cmd("pip")
+  )
+  toset <- !(names(op.getSpatialData) %in% names(op))
+  if(any(toset)) options(op.getSpatialData[toset])
+
+  invisible()
+}
+
+#' ini call
+#'
+#' @importFrom reticulate py_config use_python
+#' @keywords internal
+#' @noRd
+gSD_ini <- function(){
+  if(length(grep("conda", py_config()$pyhton)) != 0){
+    v <- py_config()$python_versions
+    vc <- v[-grep("conda", v)]
+    if(length(vc) == 0){
+      out("Anaconda Python is currently not supported by getSpatialData. Please install a standard Python 2.7.* or 3.* version.")
+    }else{
+      use_python(python = vc[1])
+    }
+  }
 
   lib <- "sentinelsat"
   st <- try(import(lib, delay_load = TRUE))
@@ -107,14 +134,4 @@ sat <- NULL #for choosing right env
     }
   }
   sat <<- st
-
-  op <- options()
-  op.getSpatialData <- list(
-    getSpatialData.py = "ini",
-    getSpatialData.pip = check.cmd("pip")
-  )
-  toset <- !(names(op.getSpatialData) %in% names(op))
-  if(any(toset)) options(op.getSpatialData[toset])
-
-  invisible()
 }

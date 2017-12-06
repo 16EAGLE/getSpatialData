@@ -96,9 +96,9 @@ sat <- NULL #for choosing right env
   reticulate::py_available(initialize = TRUE)
   #sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
 
-  if(length(grep("conda", py_config()$python)) != 0){
-    conda_install("root", c("pycurl", "pyopenssl", "requests"))
-  }
+  #if(length(grep("conda", py_config()$python)) != 0){
+  #  conda_install("root", c("pycurl", "pyopenssl", "requests"))
+  #}
 
   lib <- "sentinelsat"
   st <- try(import(lib, delay_load = TRUE))

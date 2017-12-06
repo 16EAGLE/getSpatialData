@@ -72,11 +72,13 @@ getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
 
   ## Query through sentinelsat API
   api <- sat$SentinelAPI(hub_user, hub_pass, hub_access)
+  out("Connected to Copernicus Open Access Hub.", msg = TRUE)
+
   files.dir_out <- list.files(dir_out, full.names = TRUE)
   if(length(uuid) == 1){
-    down <- api$download(id = uuid, directory_path = dir_out)
+    products = api$download(id = uuid, directory_path=dir_out)
   }else{
-    down <- api$download_all(products = uuid, directory_path = dir_out)
+    products = api$download_all(products = uuid, directory_path=dir_out)
   }
   files.downlaod <- list.files(dir_out, full.names = TRUE)
   files.downlaod <- files.downlaod[which(is.na(match(files.downlaod, files.dir_out)))]

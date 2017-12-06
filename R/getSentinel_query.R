@@ -96,6 +96,8 @@ getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NU
 
   ## Query through sentinelsat API
   api <- sat$SentinelAPI(hub_user, hub_pass, hub_access)
+  out("Connected to Copernicus Open Access Hub.", msg = TRUE)
+
   aoi <- sat$geojson_to_wkt(sat$read_geojson(tmp.gj))
   file.remove(tmp.gj)
   products = api$query(area = aoi, platformname=platform, date = time_range)

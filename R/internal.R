@@ -89,9 +89,22 @@ check.cmd <- function(cmd){
 
 
 #' On package startup
+#' @importFrom reticulate py_available use_python py_config import
 #' @noRd
 sat <- NULL #for choosing right env
 .onLoad <- function(libname, pkgname){
   reticulate::py_available(initialize = TRUE)
-  sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+  #sat <<- reticulate::import("sentinelsat", delay_load = TRUE)
+
+  lib <- "sentinelsat"
+  st <- try(import(lib, delay_load = TRUE))
+  if(class(st)[1] == "try-error"){
+    if(is.TRUE(check.cmd("pip"))){
+      system(paste0("pip install ",x))
+      st <- import(x, delay_load = TRUE)
+    }else{
+      out("'sentinelsat' could not be installed, since 'pip install' could not be called from the command line. Please install 'pip' or install 'sentinelsat' manually.")
+    }
+  }
+  sat <<- st
 }

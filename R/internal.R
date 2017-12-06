@@ -99,7 +99,7 @@ gSD_ini <- function(onLoad = FALSE){
     v <- py_config()$python_versions
     vc <- v[-grep("conda", v)]
     if(length(vc) == 0){
-      out("Anaconda Python is currently not supported by getSpatialData. Please install a standard Python 2.7.* or 3.* version.")
+      out("Anaconda Python is currently not supported by getSpatialData. Please install a standard Python 2.7.* or 3.* version.", type=if(onLoad == TRUE){2}else{3})
     }else{
       use_python(python = vc[1])
     }

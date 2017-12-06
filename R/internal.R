@@ -108,13 +108,12 @@ gSD_ini <- function(onLoad = FALSE){
 
 
 #' sat call
-#'
+#' @param lib library name
 #' @importFrom reticulate import
 #' @keywords internal
 #' @noRd
 #sat <- NULL #for choosing right env
-sat <- function(){
-  lib <- "sentinelsat"
+py_lib <- function(lib){
   st <- try(import(lib, delay_load = TRUE))
   if(class(st)[1] == "try-error"){
     if(is.TRUE(check.cmd("pip"))){
@@ -134,7 +133,6 @@ sat <- function(){
 #' @noRd
 .onLoad <- function(libname, pkgname){
   #reticulate::py_available(initialize = TRUE)
-  gSD_ini(onLoad = TRUE)
 
   op <- options()
   op.getSpatialData <- list(

@@ -67,7 +67,7 @@ getSentinel_data <- function(products, dir_out, hub_user, hub_pass = NULL,
 
   ## Python connection
   gSD_ini()
-  sat <- sat()
+  sat <- py_lib("sentinelsat")
 
 
   ## Manage hub connection

@@ -75,11 +75,17 @@ products <- getSentinel_query(ext = ext, time_range = time_range, platform = pla
 
 
 ## Get an overview of the products
-View(products) #get an overview about the search products
 colnames(products) #see all available filter attributes
 unique(products$processinglevel) #use one of the, e.g. to see available processing levels
 
+View(products) #get an overview about the search products. You can navigate
+#through the available datasets and their attributes (in RStudio, this looks like this):
+```
 
+![Alt Text](https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png)
+
+
+```
 ## Filter the products
 products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 ## add more lines, if you want to further filter your filtered products
@@ -87,8 +93,13 @@ products_filtered <- products[which(products$processinglevel == "Level-1C"),] #f
 
 ## Preview a single product in your plot window, e.g. to see cloud coverage
 getSentinel_preview(product = products_filtered[10,])
+# This will plot a preview to the active plotting device:
+```
+
+![Alt Text](https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png)
 
 
+```
 ## Download datasets
 #dir_out <- "your/output/directory"
 dir_out <- tempdir() #for this example, we use a temporary directory

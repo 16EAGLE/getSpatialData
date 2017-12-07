@@ -3,6 +3,7 @@
 export(getSentinel_data)
 export(getSentinel_preview)
 export(getSentinel_query)
+export(set_cophub_login)
 export(set_python)
 importFrom(getPass,getPass)
 importFrom(httr,GET)

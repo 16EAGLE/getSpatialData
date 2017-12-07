@@ -152,19 +152,19 @@ access_API <- function(x, p, user, pw){
 
 
 #' On package startup
-#' @importFrom reticulate py_available py_config import
 #' @keywords internal
 #' @noRd
 .onLoad <- function(libname, pkgname){
   #reticulate::py_available(initialize = TRUE)
 
   op <- options()
-  op.getSentinel <- list(
-    op.getSentinel.user = NULL,
-    op.getSentinel.pass = NULL
+  op.gSD <- list(
+    gSD.cophub_user = FALSE,
+    gSD.cophub_pass = FALSE,
+    gSD.cophub_def = FALSE
   )
-  toset <- !(names(op.getSentinel) %in% names(op))
-  if(any(toset)) options(op.getSentinel[toset])
+  toset <- !(names(op.gSD) %in% names(op))
+  if(any(toset)) options(op.gSD[toset])
 
   invisible()
 }

@@ -5,8 +5,8 @@
 #' @param ext extent object, representing the requested area of interest.
 #' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYYMMDD", e.g. "20170515"
 #' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".
-#' @param hub_user character, a valid user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
-#' @param hub_pass character, the password to the specified user account. If \code{NULL}, the password will be asked interactively (default). Not needed for connections to the pre-operational hub.
+#' @param hub_user character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_cophub_login} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
+#' @param hub_pass character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_cophub_login} inputs or, if \code{set_cophub_login} is not in use, asked interactively. Not needed for connections to the pre-operational hub.
 #' @param hub_access character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
 #'
 #' @return A data frame; each row represents one dataset, recognized by an individual UUID. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for downloading.
@@ -25,45 +25,50 @@
 #'
 #' ## Define an extent, a time range and a platform
 #' ext <- extent(10.29048,11.75558,45.93350,46.94617)
-#' time_range <-  c("20170801", "20170803")
+#' time_range <-  c("20170801", "20170830")
 #' platform <- "Sentinel-2"
 #'
-#' ## Define your Hub credentials
-#' hub_user <- "your_username"
+#' ## Prior to calling getSentinel* functions,
+#' ## define your Copernicus Open Access Hub credentials :
+#' \dontrun{
+#' set_cophub_login(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
 #'
 #' ## Use getSentinel_query to search for data
-#' \dontrun{
-#' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform,
-#'                               hub_user = hub_user)
-#' #if you do not want to retype your password for every call, use the 'hub_pass' argument
+#' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the products
 #' View(products) #get an overview about the search products
 #' colnames(products) #see all available filter attributes
 #' unique(products$processinglevel) #use one of the, e.g. to see available processing levels
 #'
-#' ## Preview a single product
-#' getSentinel_preview(product = products[1,], hub_user = hub_user)
-#'
 #' ## Filter the products
 #' products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 #'
+#' ## Preview a single product
+#' getSentinel_preview(product = products_filtered[10,])
+#'
 #' ## Download datasets
 #' #dir_out <- "your/output/directory"
-#' dir_out <- tempdir() #or some temporary directory for this example
-#' files <- getSentinel_data(products = products_filtered, dir_out = dir_out,
-#'                           hub_user = hub_user)
+#' dir_out <- tempdir() #for this example, we use a temporary directory
+#' files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
 #' }
 #' @seealso \link{getSentinel_data}
 #' @export
 
-getSentinel_query <- function(ext, time_range, platform, hub_user, hub_pass = NULL,
+getSentinel_query <- function(ext, time_range, platform, hub_user = NULL, hub_pass = NULL,
                               hub_access = "auto"){
+
+  ## Global Copernicus Hub login
+  if(is.TRUE(getOption("gSD.cophub_def"))){
+    if(is.null(hub_user)){hub_user <- getOption("gSD.cophub_user")}
+    if(is.null(hub_pass)){hub_pass <- getOption("gSD.cophub_pass")}
+  }
+  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_cophub_login()' to define your login credentials globally.", type=3)}
+  if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()}
 
   ## Intercept false inputs and get inputs
   if(class(ext) != "Extent"){out("Argument 'ext' needs to be of type 'Extent'.", type = 3)}
-  char_args <- list(time_range = time_range, platform = platform, hub_user = hub_user,
-                    if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()})
+  char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
   }

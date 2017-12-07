@@ -12,13 +12,21 @@ At the moment, a getSentinel function bundle is developed, which should enable t
 
 The following functions are publicly available and have been tested on Linux (Ubunut 16.04) and Windows 10. On both, Python 3.6.* callable from the command line and the python library `sentinelsat` were pre-installed, before installing `getSpatialData`.
 
+#### main functions
+
 * `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found datasetes (rows) and their attributes (columns).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview an user-selected, individual dataset within in an R plotting device without the necessity to download the dataset first.
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. Functions to deal with the files form within R wihtout expert knowledge will follow.
 
+
+#### helper functions
+
+* `set_python` – manually define the python installation that sould be used
+
+
 ### Manuals
 
-For all current functions publicly available, a help file can be accessed, which contains information on the expected arguments, the return and examples.
+For all current functions publicly available, documentation is available, containing information on the expected arguments, the return and examples. The files can be accesed executing a command like `?getSentinel_query`.
 
 ### Known bugs
 
@@ -34,7 +42,7 @@ To install the current pre-beta version for playing around with the concept, use
 devtools::install_github("16EAGLE/getSpatialData")
 ```
 
-Currently, a Python installation (Python interpreter for Python 2.7.* or 3.*) is necessary to use the package.
+Currently, a Python installation (Python interpreter for Python 2.7.* or 3.*) is necessary to use the package. Anaconda is not supported at the moment.
 
 ## Ideas
 

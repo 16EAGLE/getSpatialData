@@ -96,7 +96,7 @@ getSentinel_preview(product = products_filtered[10,])
 # This will plot a preview to the active plotting device:
 ```
 
-<img src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png" width="60%", align="middle"/>
+<img src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png" width="60%" align="middle"/>
 
 
 ```

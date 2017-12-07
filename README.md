@@ -44,6 +44,58 @@ devtools::install_github("16EAGLE/getSpatialData")
 
 Currently, a Python installation (Python interpreter for Python 2.7.* or 3.*) is necessary to use the package. Anaconda is not supported at the moment.
 
+
+## Example
+
+The following code represents a working chain for querrying, filtering, previewing and downloading Sentinel-2 data wihtin R. This can be also done for Sentinel-1 or -3.
+
+```
+## Requirements: A Python installation (not Anaconda). If not recognized properly, use set_python().
+## First run of a getSentinel* functions will take longer, since python dependencies will be installed
+
+
+## Load packages
+library(getSpatialData)
+library(raster)
+
+
+## Define an extent, a time range and a platform
+ext <- extent(10.29048, 11.75558, 45.93350, 46.94617)
+time_range <-  c("20170801", "20170830")
+platform <- "Sentinel-2"
+
+
+## Prior to calling getSentinel* functions,
+## define your Copernicus Open Access Hub credentials :
+set_cophub_login(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+
+
+## Use getSentinel_query to search for data
+products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)
+
+
+## Get an overview of the products
+View(products) #get an overview about the search products
+colnames(products) #see all available filter attributes
+unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+
+
+## Filter the products
+products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
+## add more lines, if you want to further filter your filtered products
+
+
+## Preview a single product in your plot window, e.g. to see cloud coverage
+getSentinel_preview(product = products_filtered[10,])
+
+
+## Download datasets
+#dir_out <- "your/output/directory"
+dir_out <- tempdir() #for this example, we use a temporary directory
+files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
+
+```
+
 ## Ideas
 
 Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 

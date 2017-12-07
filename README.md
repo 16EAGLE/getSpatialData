@@ -82,7 +82,11 @@ View(products) #get an overview about the search products. You can navigate
 #through the available datasets and their attributes (in RStudio, this looks like this):
 ```
 
-<center><img src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png" width="60%"/></center>
+img {
+    width: 60%;
+    text-align: center;
+}
+<img src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png">
 
 
 ```
@@ -96,7 +100,7 @@ getSentinel_preview(product = products_filtered[10,])
 # This will plot a preview to the active plotting device:
 ```
 
-<center><img src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png" width="60%"/></center>
+<img src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png">
 
 
 ```

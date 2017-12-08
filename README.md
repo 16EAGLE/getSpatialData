@@ -82,7 +82,7 @@ View(products) #get an overview about the search products. You can navigate
 #through the available datasets and their attributes (in RStudio, this looks like this):
 ```
 
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png"></p>
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png"></p>
 
 
 ```

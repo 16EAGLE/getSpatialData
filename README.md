@@ -22,6 +22,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 #### helper functions
 
 * `set_python` – manually define the python installation that sould be used
+* `set_cophub_login` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments
 
 
 ### Manuals

@@ -84,7 +84,7 @@ View(products) #get an overview about the search products. You can navigate
 
 <p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png"></p>
 <p align="center"><sub>Figure 1: Screenshot of the RStudion View() browser, displaying the products data.frame returned by getSentinel_query</sub></p>
-
+<br>
 
 
 ```
@@ -100,6 +100,7 @@ getSentinel_preview(product = products_filtered[10,])
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png"></p>
 <p align="center"><sub>Figure 2: Screenshot of the RStudion plotting window, displaying a product preview returned by getSentinel_preview</sub></p>
+<br>
 
 ```
 ## Download datasets

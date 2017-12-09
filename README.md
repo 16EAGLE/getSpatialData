@@ -2,7 +2,7 @@
 
 ## Introduction
 
-getSpatialData is an R package in an early development stage that ultimatively aims to provide function bundles to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite sensor data, environmental data products etc. The current version is a pre-beta version, meant to be used for some early functionality tests. The included functions and their concepts are explorative and could be removed or changed fundamentaly and do not necessarily represent the latest state of development.
+getSpatialData is an R package in an early development stage that ultimatively aims to provide homgenious function bundles to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite sensor data, environmental data products etc. The current version is a pre-beta version, meant to be used for some early functionality tests. The included functions and their concepts are explorative and could be removed or changed fundamentaly and do not necessarily represent the latest state of development.
 
 ## State of development
 
@@ -84,7 +84,7 @@ View(products) #get an overview about the search products. You can navigate
 ```
 
 <p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png"></p>
-<p align="center"><sub>Figure 1: Screenshot of the RStudion View() browser, displaying the products data.frame returned by getSentinel_query</sub></p>
+<p align="center"><sub>Figure 1: Screenshot of the RStudio View() browser, displaying the products data.frame returned by getSentinel_query</sub></p>
 <br>
 
 
@@ -100,7 +100,7 @@ getSentinel_preview(product = products_filtered[10,])
 ```
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png"></p>
-<p align="center"><sub>Figure 2: Screenshot of the RStudion plotting window, displaying a product preview returned by getSentinel_preview</sub></p>
+<p align="center"><sub>Figure 2: Screenshot of the RStudio plotting window, displaying a product preview returned by getSentinel_preview</sub></p>
 <br>
 
 ```

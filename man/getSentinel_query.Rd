@@ -42,7 +42,7 @@ platform <- "Sentinel-2"
 ## Prior to calling getSentinel* functions,
 ## define your Copernicus Open Access Hub credentials :
 \dontrun{
-set_cophub_login(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+set_cophub_login(hub_user = "16eagle") #asks for password, if 'hub_pass' is not defined
 
 ## Use getSentinel_query to search for data
 products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)

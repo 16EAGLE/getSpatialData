@@ -20,7 +20,9 @@
 #' @name gSD_settings
 #' @examples
 #' ## Define a python path
+#' \dontrun{
 #' set_python("path/to/my/python") #needs to lead to an executable file, on windows, a python.exe
+#' }
 #'
 #' ## Define user credentials for the Copernicus Open Access Hub
 #' set_cophub_login(hub_user = "my_user_name", hub_pass = "my_password")

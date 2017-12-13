@@ -122,8 +122,8 @@ The following data sources are being evaluated to be implemented within the pack
 | Product(s) | Source | API/URL | Status | Contributer | Remark | 
 | ---------- | --------------- | --- | -------| ----------- | ------ |
 | Sentinel (-1/-2/-3) | ESA Copernicus | ESA Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | |
-| MODIS | DAAC API | https://modis.ornl.gov/data/modis_webservice.html | planned | @16eagle | |
-| Landsat | ESPA API | https://landsat.usgs.gov/landsat-data-access | planned | | |
+| MODIS | NASA/USGS | DAAC API, https://modis.ornl.gov/data/modis_webservice.html | planned | @16eagle | |
+| Landsat | NASA | ESPA API, https://landsat.usgs.gov/landsat-data-access | planned | | |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to gfcanalysis |
 | Global Forest Cover | EU-JRC | http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/ | evaluated | | |
 | Global Surface Dynamics | EU-JRC | http://remote-sensing-biodiversity.org/global-water-dynamics-data/ | evaluated | | |

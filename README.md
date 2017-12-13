@@ -126,6 +126,8 @@ The following data sources are being evaluated to be implemented within the pack
 | Landsat | NASA | ESPA API, https://landsat.usgs.gov/landsat-data-access | planned | | |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to `gfcanalysis` |
 | CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | planned | | wrapper to `ecoClimate` |
+| Copernicus Global Land Products | ESA Copernicus | http://land.copernicus.eu/ | evaluated | | |
+| CHELSA Global Land Climate | Karger et al. | http://chelsa-climate.org/ | evaluated | | |
 | Global Forest Cover | EU-JRC | http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/ | evaluated | | |
 | Global Surface Dynamics | EU-JRC | http://remote-sensing-biodiversity.org/global-water-dynamics-data/ | evaluated | | |
 | Global Soil Grids | Hengl et al. | http://remote-sensing-biodiversity.org/global-soil-data-soilgrids/ | evaluated | | |

@@ -122,7 +122,7 @@ The following data sources are being evaluated to be implemented within the pack
 | Product(s) | Source | API/URL | Status | Contributer | Remark | 
 | ---------- | --------------- | --- | -------| ----------- | ------ |
 | Sentinel (-1/-2/-3) | ESA Copernicus | ESA Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | see beta: `getSentinel*` |
-| MODIS | NASA/USGS | DAAC API, https://modis.ornl.gov/data/modis_webservice.html | planned | @16eagle | |
+| MODIS | NASA/USGS | DAAC API, https://modis.ornl.gov/data/modis_webservice.html | ongoing | @16eagle | wrapper |
 | Landsat | NASA | ESPA API, https://landsat.usgs.gov/landsat-data-access | planned | | |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to gfcanalysis |
 | Global Forest Cover | EU-JRC | http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/ | evaluated | | |
@@ -130,4 +130,5 @@ The following data sources are being evaluated to be implemented within the pack
 | Global Soil Grids | Hengl et al. | http://remote-sensing-biodiversity.org/global-soil-data-soilgrids/ | evaluated | | |
 | Global Urban Footprint | Esch et al. | https://urban-tep.eo.esa.int/geobrowser/?id=portfolio#!&context=GUF%2FGUF2012-12m | evaluated | | |
 | UK Urban Areas LiDAR | UK Environment Agency | http://remote-sensing-biodiversity.org/free-lidar-data-for-some-uk-cities/ | evaluated | | |
+| CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | planned | | wrapper to ecoClimate |
 

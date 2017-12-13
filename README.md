@@ -119,6 +119,5 @@ The following data sources are being evaluated to be implemented within the pack
 
 | Product(s) | Source/Provider | URL | Status | Contributer |
 | ---------- | -------- | --- | -------| ----------- |
-
 | Sentinel (-1/-2/-3) | Copernicus Open Access Hub | https://scihub.copernicus.eu/ | ongoing | @16eagle |
 

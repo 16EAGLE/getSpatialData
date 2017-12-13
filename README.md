@@ -2,32 +2,32 @@
 
 ## Introduction
 
-getSpatialData is an R package in an early development stage that ultimatively aims to provide homgenious function bundles to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite sensor data, environmental data products etc. The current version is a pre-beta version, meant to be used for some early functionality tests. The included functions and their concepts are explorative and could be removed or changed fundamentaly and do not necessarily represent the latest state of development.
+getSpatialData is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, environmental data products etc. The current version is a pre-beta version, meant to be used for some early functionality tests. The included functions and their concepts are exploratory and could be removed or changed fundamentally and do not necessarily represent the latest state of development.
 
 ## State of development
 
-At the moment, a getSentinel function bundle is developed, which should enable the user to easily query, download and transform Sentinel-1, -2 and -3 data directly within R. At this stage of development, the python library `sentinelsat` is used to connect to the Coperinucs Open Access Hub(s). Currently, a python-independent, simple query assembler to use the API directly is developed, making only limited use of query-side filtering.
+At the moment, a getSentinel function bundle is developed, which should enable the user to easily query, download and transform Sentinel-1, -2 and -3 data directly within R. At this stage of development, the python library `sentinelsat` is used to connect to the Copernicus Open Access Hub(s). Currently, a python-independent, simple query assembler to use the API directly is developed, making only limited use of query-side filtering.
 
 ### Available functions
 
-The following functions are publicly available and have been tested on Linux (Ubunut 16.04) and Windows 10. On both, Python 3.6.* callable from the command line and the python library `sentinelsat` were pre-installed, before installing `getSpatialData`.
+The following functions are publicly available and have been tested on Linux (Ubuntu 16.04) and Windows 10. On both, Python 3.6.* callable from the command line and the python library `sentinelsat` were pre-installed, before installing `getSpatialData`.
 
 #### main functions
 
-* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found datasetes (rows) and their attributes (columns).
+* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found datasets (rows) and their attributes (columns).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview an user-selected, individual dataset within in an R plotting device without the necessity to download the dataset first.
-* `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. Functions to deal with the files form within R wihtout expert knowledge will follow.
+* `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. Functions to deal with the files form within R without expert knowledge will follow.
 
 
 #### helper functions
 
-* `set_python` – manually define the python installation that sould be used
+* `set_python` – manually define the python installation that should be used
 * `set_cophub_login` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments
 
 
 ### Manuals
 
-For all current functions publicly available, documentation is available, containing information on the expected arguments, the return and examples. The files can be accesed executing a command like `?getSentinel_query`.
+For all current functions publicly available, documentation is available, containing information on the expected arguments, the return and examples. The files can be accessed executing a command like `?getSentinel_query`.
 
 ### Known bugs
 
@@ -35,7 +35,7 @@ At the moment, the `getSentinel*` function bundle seems to fail using an Anacond
 
 ## Installation
 
-An operational use of this pre-beta version of getSpatialData is not recommended and not possible. Functions could be removed or fundamentaly changed. Documentation could be wrong or incomplete.
+An operational use of this pre-beta version of getSpatialData is not recommended and not possible. Functions could be removed or fundamentally changed. Documentation could be wrong or incomplete.
 
 To install the current pre-beta version for playing around with the concept, use `devtools`.
 
@@ -48,7 +48,7 @@ Currently, a Python installation (Python interpreter for Python 2.7.* or 3.*) is
 
 ## Example
 
-The following code represents a working chain for querrying, filtering, previewing and downloading Sentinel-2 data wihtin R. This can be also done for Sentinel-1 or -3.
+The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. This can be also done for Sentinel-1 or -3.
 
 ```
 ## Requirements: A Python installation (not Anaconda). If not recognized properly, use set_python().
@@ -119,7 +119,7 @@ Ideas on possible data sources to be included, technical ideas or other are welc
 
 The following data sources are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
 
-| Product(s) | Source | API/URL | Status | Contributer | Remark | 
+| Product(s) | Source | API/URL | Status | Contributor | Remark | 
 | ---------- | --------------- | --- | -------| ----------- | ------ |
 | Sentinel (-1/-2/-3) | ESA Copernicus | Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | included: `getSentinel*` |
 | MODIS | NASA/USGS | DAAC API, https://modis.ornl.gov/data/modis_webservice.html | ongoing | @16eagle | wrapper to `MODIS` |

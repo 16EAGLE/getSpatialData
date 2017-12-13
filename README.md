@@ -119,14 +119,13 @@ Ideas on possible data sources to be included, technical ideas or other are welc
 
 The following data sources are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
 
-| Product(s) | Source | URL | Status | Contributer | Remark | 
+| Product(s) | Source | API/URL | Status | Contributer | Remark | 
 | ---------- | --------------- | --- | -------| ----------- | ------ |
-| Sentinel (-1/-2/-3) | ESA Copernicus | https://scihub.copernicus.eu/ | ongoing | @16eagle | Copernicus Open Access Hub API |
+| Sentinel (-1/-2/-3) | ESA Copernicus | ESA Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | |
 | MODIS | DAAC API | https://modis.ornl.gov/data/modis_webservice.html | planned | @16eagle | |
 | Landsat | ESPA API | https://landsat.usgs.gov/landsat-data-access | planned | | |
-| Global Forste Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to gfcanalysis |
-| Global Forest Cover | EU-JRC | 
-http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/ | evaluated | | |
+| Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to gfcanalysis |
+| Global Forest Cover | EU-JRC | http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/ | evaluated | | |
 | Global Surface Dynamics | EU-JRC | http://remote-sensing-biodiversity.org/global-water-dynamics-data/ | evaluated | | |
 | Global Soil Grids | Hengl et al. | http://remote-sensing-biodiversity.org/global-soil-data-soilgrids/ | evaluated | | |
 | Global Urban Footprint | Esch et al. | https://urban-tep.eo.esa.int/geobrowser/?id=portfolio#!&context=GUF%2FGUF2012-12m | evaluated | | |

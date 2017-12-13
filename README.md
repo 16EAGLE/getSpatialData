@@ -120,24 +120,9 @@ Ideas on possible data sources to be included, technical ideas or other are welc
 The following data sources are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
 
 | Product(s) | Source/Provider | URL | Status | Contributer | Remark | 
-| ---------- | -------- | --- | -------| ----------- |
+| ---------- | --------------- | --- | -------| ----------- | ------ |
 | Sentinel (-1/-2/-3) | Copernicus Open Access Hub API | https://scihub.copernicus.eu/ | ongoing | @16eagle | |
 | MODIS | DAAC API | https://modis.ornl.gov/data/modis_webservice.html | planned | @16eagle | |
 | Landsat | DAAC API | https://landsat.usgs.gov/landsat-data-access | planned | - | |
-| Global Forste Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis/ | planned | wrapper to gfcanalysis |
-
-
-http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis/
-
-http://remote-sensing-biodiversity.org/global-water-dynamics-data/
-
-http://remote-sensing-biodiversity.org/new-30m-landcover-data-available/
-
-http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/
-
-http://remote-sensing-biodiversity.org/global-soil-data-soilgrids/
-
-http://remote-sensing-biodiversity.org/article-breaking-new-ground-in-mapping-human-settlements-from-space/
-
-http://remote-sensing-biodiversity.org/free-lidar-data-for-some-uk-cities/
+| Global Forste Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | wrapper to gfcanalysis |
 

@@ -121,7 +121,7 @@ The following data sources are being evaluated to be implemented within the pack
 
 | Product(s) | Source | API/URL | Status | Contributer | Remark | 
 | ---------- | --------------- | --- | -------| ----------- | ------ |
-| Sentinel (-1/-2/-3) | ESA Copernicus | ESA Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | |
+| Sentinel (-1/-2/-3) | ESA Copernicus | ESA Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | BETA implemented |
 | MODIS | NASA/USGS | DAAC API, https://modis.ornl.gov/data/modis_webservice.html | planned | @16eagle | |
 | Landsat | NASA | ESPA API, https://landsat.usgs.gov/landsat-data-access | planned | | |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to gfcanalysis |

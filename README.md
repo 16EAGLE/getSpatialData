@@ -114,3 +114,11 @@ files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
 ## Ideas
 
 Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 
+
+The following data sources are being evaluated to be implemented within the package. Please feel free to contribute to the list, e. g. through a pull request:
+
+| Product(s) | Source/Provider | URL | Status | Contributer |
+| ---------- | -------- | --- | -------| ----------- |
+
+| Sentinel (-1/-2/-3) | Copernicus Open Access Hub | https://scihub.copernicus.eu/ | ongoing | @16eagle |
+

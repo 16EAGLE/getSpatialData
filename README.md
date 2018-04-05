@@ -2,48 +2,45 @@
 
 ## Introduction
 
-getSpatialData is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, environmental data products etc. The current version is a pre-beta version, meant to be used for some early functionality tests. The included functions and their concepts are exploratory and could be removed or changed fundamentally and do not necessarily represent the latest state of development.
+getSpatialData is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed.
 
 ## State of development
 
-At the moment, a getSentinel function bundle is developed, which should enable the user to easily query, download and transform Sentinel-1, -2 and -3 data directly within R. At this stage of development, the python library `sentinelsat` is used to connect to the Copernicus Open Access Hub(s). Currently, a python-independent, simple query assembler to use the API directly is developed, making only limited use of query-side filtering.
+Lately, an R-native getSentinel function bundle has been deployed, which enables the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some).
+
+In addition, a NASA EE and USGS ESPA R client is being implemented, which will allow the user to query, preview, process-on-demand and download imagery from Landsat, MODIS etc. directly within R. The client is wirtten in R and will be published as soon as its base functionalities can be tested.
+
+A universal AOI defintion function is currently developed that understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It will support multi-point polygon shape objects (sp and sf) and extent/bounding box objects (raster and sp) as AOI definitions.
 
 ### Available functions
 
-The following functions are publicly available and have been tested on Linux (Ubuntu 16.04) and Windows 10. On both, Python 3.6.* callable from the command line and the python library `sentinelsat` were pre-installed, before installing `getSpatialData`.
+The following functions are publicly available and have been tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10:
 
 #### main functions
 
 * `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found datasets (rows) and their attributes (columns).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview an user-selected, individual dataset within in an R plotting device without the necessity to download the dataset first.
-* `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. Functions to deal with the files form within R without expert knowledge will follow.
+* `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. A transform function bundle helping to deal with the downloaded files within R without expert knowledge will follow soon.
 
 
 #### helper functions
 
-* `set_python` – manually define the python installation that should be used
-* `set_cophub_login` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments
+* `set_login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
+* `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 
 
 ### Manuals
 
 For all current functions publicly available, documentation is available, containing information on the expected arguments, the return and examples. The files can be accessed executing a command like `?getSentinel_query`.
 
-### Known bugs
-
-At the moment, the `getSentinel*` function bundle seems to fail using an Anaconda Python installation.
 
 ## Installation
 
-An operational use of this pre-beta version of getSpatialData is not recommended and not possible. Functions could be removed or fundamentally changed. Documentation could be wrong or incomplete.
-
-To install the current pre-beta version for playing around with the concept, use `devtools`.
+To install the current beta version, use `devtools`.
 
 ```s
 devtools::install_github("16EAGLE/getSpatialData")
 ```
-
-Currently, a Python installation (Python interpreter for Python 2.7.* or 3.*) is necessary to use the package. Anaconda is not supported at the moment.
 
 
 ## Example
@@ -51,28 +48,32 @@ Currently, a Python installation (Python interpreter for Python 2.7.* or 3.*) is
 The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. This can be also done for Sentinel-1 or -3.
 
 ```
-## Requirements: A Python installation (not Anaconda). If not recognized properly, use set_python().
-## First run of a getSentinel* functions will take longer, since python dependencies will be installed
-
-
 ## Load packages
 library(getSpatialData)
-library(raster)
 
 
-## Define an extent, a time range and a platform
-ext <- extent(10.29048, 11.75558, 45.93350, 46.94617)
-time_range <-  c("20170801", "20170830")
+## Define an AOI (last row needs to equal first row, closing the polygon)
+aoi <- rbind(c(9.29168701, 49.93884750),
+             c(9.36584472, 49.58400677),
+             c(10.1458740, 49.44312875),
+             c(10.6814575, 49.75642885),
+             c(9.75860595, 50.20327530),
+             c(9.29168701, 49.93884750))
+#currently, only lon/lat matrices are supported.
+
+
+## Define time range and platform
+time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
 
-## Prior to calling getSentinel* functions,
-## define your Copernicus Open Access Hub credentials :
-set_cophub_login(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+## set login credentials and archive directory
+set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+set_archive("/path/to/archive/")
 
 
 ## Use getSentinel_query to search for data
-products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)
+products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
 
 
 ## Get an overview of the products
@@ -95,7 +96,7 @@ products_filtered <- products[which(products$processinglevel == "Level-1C"),] #f
 
 
 ## Preview a single product in your plot window, e.g. to see cloud coverage
-getSentinel_preview(product = products_filtered[10,])
+getSentinel_preview(product = products_filtered[5,])
 # This will plot a preview to the active plotting device:
 ```
 
@@ -104,10 +105,8 @@ getSentinel_preview(product = products_filtered[10,])
 <br>
 
 ```
-## Download datasets
-#dir_out <- "your/output/directory"
-dir_out <- tempdir() #for this example, we use a temporary directory
-files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
+## Download some datasets to your archive directory
+files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
 
 ```
 
@@ -121,9 +120,9 @@ The following data sources are being evaluated to be implemented within the pack
 
 | Product(s) | Source | API/URL | Status | Contributor | Remark | 
 | ---------- | --------------- | --- | -------| ----------- | ------ |
-| Sentinel (-1/-2/-3) | ESA Copernicus | Copernicus Open Access Hub, https://scihub.copernicus.eu/ | ongoing | @16eagle | included: `getSentinel*` |
+| Sentinel (-1/-2/-3) | ESA Copernicus | Copernicus Open Access Hub, https://scihub.copernicus.eu/ | implemented | @16eagle | included: `getSentinel*` |
 | MODIS | NASA/USGS | DAAC API, https://modis.ornl.gov/data/modis_webservice.html | ongoing | @16eagle | wrapper to `MODIS` |
-| Landsat | NASA | ESPA API, https://landsat.usgs.gov/landsat-data-access | planned | | |
+| Landsat | NASA | ESPA API, https://landsat.usgs.gov/landsat-data-access | ongoing | | |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | wrapper to `gfcanalysis` |
 | CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | planned | | wrapper to `ecoClimate` |
 | Copernicus Global Land Products | ESA Copernicus | http://land.copernicus.eu/ | evaluated | | |

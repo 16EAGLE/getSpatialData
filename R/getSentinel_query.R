@@ -2,39 +2,44 @@
 #'
 #' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
 #'
-#' @param ext extent object, representing the requested area of interest.
-#' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYYMMDD", e.g. "20170515"
+#' @param aoi matrix representing area of interest. Needs to have two columns (representing longitude an latitude) and at least three rows, each representing a corner point of the AOI. The last row needs to be equal to the first row, closing the polygon.
+#' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"
 #' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".
-#' @param hub_user character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_cophub_login} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
-#' @param hub_pass character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_cophub_login} inputs or, if \code{set_cophub_login} is not in use, asked interactively. Not needed for connections to the pre-operational hub.
+#' @param hub_user character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
+#' @param hub_pass character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_login_CopHub} inputs or, if \code{set_login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.
 #' @param hub_access character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
 #'
 #' @return A data frame; each row represents one dataset, recognized by an individual UUID. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for downloading.
-#' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
 #' @importFrom getPass getPass
-#' @importFrom reticulate py_available use_python
 #' @importFrom raster extent
+#' @importFrom httr GET content
+#' @importFrom xml2 xml_contents
 #'
 #' @examples
 #' ## Load packages
 #' library(getSpatialData)
-#' library(raster)
 #'
-#' ## Define an extent, a time range and a platform
-#' ext <- extent(10.29048,11.75558,45.93350,46.94617)
-#' time_range <-  c("20170801", "20170830")
+#' ## Define an AOI (last row needs to equal first row, closing the polygon)
+#' aoi <- rbind(c(9.29168701, 49.93884750),
+#'              c(9.36584472, 49.58400677),
+#'              c(10.1458740, 49.44312875),
+#'              c(10.6814575, 49.75642885),
+#'              c(9.75860595, 50.20327530),
+#'              c(9.29168701, 49.93884750)) # last row must equal first row
+#'
+#' time_range <-  c("2017-08-01", "2017-08-30")
 #' platform <- "Sentinel-2"
 #'
-#' ## Prior to calling getSentinel* functions,
-#' ## define your Copernicus Open Access Hub credentials :
+#' ## set login credentials and archive directory
 #' \dontrun{
-#' set_cophub_login(hub_user = "16eagle") #asks for password, if 'hub_pass' is not defined
+#' set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+#' set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
 #'
 #' ## Use getSentinel_query to search for data
-#' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)
+#' products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the products
 #' View(products) #get an overview about the search products
@@ -45,68 +50,101 @@
 #' products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 #'
 #' ## Preview a single product
-#' getSentinel_preview(product = products_filtered[10,])
+#' getSentinel_preview(product = products_filtered[5,])
 #'
-#' ## Download datasets
-#' #dir_out <- "your/output/directory"
-#' dir_out <- tempdir() #for this example, we use a temporary directory
-#' files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
+#' ## Download some datasets to your archive directory
+#' files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
 #' }
 #' @seealso \link{getSentinel_data}
 #' @export
 
-getSentinel_query <- function(ext, time_range, platform, hub_user = NULL, hub_pass = NULL,
+getSentinel_query <- function(aoi, time_range, platform, hub_user = NULL, hub_pass = NULL,
                               hub_access = "auto"){
 
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_def"))){
+  if(is.TRUE(getOption("gSD.cophub_set"))){
     if(is.null(hub_user)){hub_user <- getOption("gSD.cophub_user")}
     if(is.null(hub_pass)){hub_pass <- getOption("gSD.cophub_pass")}
   }
-  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_cophub_login()' to define your login credentials globally.", type=3)}
+  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_login_CopHub()' to define your login credentials globally.", type=3)}
   if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()}
 
   ## Intercept false inputs and get inputs
-  if(class(ext) != "Extent"){out("Argument 'ext' needs to be of type 'Extent'.", type = 3)}
+  if(class(aoi) != "matrix"){out("Argument 'aoi' must to be a 'matrix'.", type = 3)}
+  if(length(aoi[1,]) != 2){out("Argument 'aoi' must consist of two columns (longitude and latitude).", type = 3)}
+  if(length(aoi[,1]) < 3){out("Argument 'aoi' must have at least three rows.", type = 3)}
   char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
   }
   if(length(time_range) != 2){out("Argument 'time_range' must contain two elements (start and stop time)", type = 3)}
 
-  ## Python connection
-  ini()
-  sat <- py_lib("sentinelsat")
+  ## url assembler function
+  cop.url <- function(ext.xy, url.root, platform, time.range, row.start){
+    qs <- list(url.root = paste0(url.root, "/"),
+               search = c("search?start=", "&rows=100&q="),  #"search?q=", #start=0&rows=1000&
+               and = "%20AND%20",
+               aoi.poly = c("footprint:%22Intersects(POLYGON((", ")))%22"),
+               platformname = "platformname:",
+               time = list("[" = "beginposition:%5b", "to" = "%20TO%20", "]" = "%5d"))
+    aoi.str <- paste0(apply(ext.xy, MARGIN = 1, function(x) paste0(x, collapse = "%20")), collapse = ",")
+    time.range <- sapply(time.range, function(x) paste0(x, "T00:00:00.000Z"), USE.NAMES = F)
+    return(paste0(qs$url.root, qs$search[1], toString(row.start), qs$search[2], "(", qs$aoi.poly[1], aoi.str, qs$aoi.poly[2], qs$and,
+                  qs$platformname, platform, qs$and,
+                  qs$time$`[`, time.range[1], qs$time$to, time.range[2], qs$time$`]`, ")"))
+  }
 
   ## Manage API access
   cred <- access_API(hub_access, platform, hub_user, hub_pass)
 
-  ## Convert raster::extetn to geojson
-  ext.xy <- rbind(c(ext@xmin, ext@ymin),c(ext@xmin, ext@ymax),c(ext@xmax, ext@ymax),c(ext@xmax, ext@ymin))
-  ext.gj <- paste0('{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[',toString(ext.xy[1,1]),',',toString(ext.xy[1,2]),'],[',toString(ext.xy[2,1]),',',toString(ext.xy[2,2]),'],[',toString(ext.xy[3,1]),',',toString(ext.xy[3,2]),'],[',toString(ext.xy[4,1]),',',toString(ext.xy[4,2]),'],[',toString(ext.xy[1,1]),',',toString(ext.xy[1,2]),']]]}}]}')
+  ## query API
+  row.start <- -100; re.query <- T; give.return <- T
+  query.list <- list()
 
-  tmp.gj <- paste0(tempfile(),".geojson")
-  tmp.file <- file(tmp.gj)
-  writeLines(ext.gj, tmp.file)
-  close(tmp.file)
+  while(is.TRUE(re.query)){
+    row.start <- row.start + 100
 
-  ## Query through sentinelsat API
-  api <- sat$SentinelAPI(cred[1], cred[2], cred[3])
-  out("Connected to Copernicus Open Access Hub.", msg = TRUE)
+    query <- gSD.get(cop.url(ext.xy = aoi, url.root = cred[3], platform = platform, time.range = time_range, row.start = row.start), cred[1], cred[2])
+    query.xml <- suppressMessages(xml_contents(content(query)))
+    query.list <- c(query.list, lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
 
-  aoi <- sat$geojson_to_wkt(sat$read_geojson(tmp.gj))
-  file.remove(tmp.gj)
-  products = api$query(area = aoi, platformname=platform, date = time_range)
-
-  ## Building return data.frame
-  pd_list <- lapply(names(products), function(x, p = products){ eval(parse(text = paste0("p$`",x,"`"))) })
-  pd_names <- (unique(unlist(lapply(pd_list, names))))
-  pd_frame <- as.data.frame(stats::setNames(replicate(length(pd_names),numeric(0), simplify = F), pd_names))
-  for( i in 1:length(pd_list)){
-    subs <- match(names(pd_list[[i]]), pd_names)
-    pd_frame[i,subs] <- sapply(pd_list[[i]], as.character)
+    if(length(query.list) == 0 & row.start == 0){
+      out("No results could be obtained for this request.", msg = T)
+      re.query <- F
+      give.return <- F
+    }
+    if(length(query.list) != 100) re.query <- F
   }
 
-  return(pd_frame)
+  ## build query result data frame
+  if(is.TRUE(give.return)){
+
+    ## predefine tags not having 'name' tag
+    field.tag <- c("title", "link href", 'link rel="alternative"', 'link rel="icon"', "summary", "name")
+    field.names <- c("title", "url", "url.alt", "url.icon", "summary")
+
+    ## get field.tag contents and assemble unique names vector
+    query.cont <- lapply(query.list, function(x, field = field.tag) unlist(lapply(field, function(f, y = x) grep(f, y, value = T))))
+    query.names <- lapply(query.cont, function(x, field.n = field.names) c(field.n, sapply(x[(length(field.n)+1):length(x)], function(y) strsplit(y, '\"')[[1]][2], USE.NAMES = F)))
+
+    ## make fields and treat url tags differently, as required field data is no content here
+    query.fields <- lapply(query.cont, function(x) sapply(x, function(y) strsplit(strsplit(y, ">")[[1]][2], "<")[[1]][1], USE.NAMES = F))
+    query.fields <- lapply(1:length(query.fields), function(i, qf = query.fields, qc = query.cont, qn = query.names){
+      x <- qf[[i]]
+      x[which(is.na(x) == T)] <- sapply(qc[[i]][which(is.na(x) == T)], function(y) strsplit(strsplit(y, 'href=\"')[[1]][2], '\"/>')[[1]][1], USE.NAMES = F)
+      names(x) <- qn[[i]]
+      return(x)
+    })
+
+    ## assemble products data.frame
+    pd.names <- unique(unlist(query.names))
+    pd.frame <- as.data.frame(stats::setNames(replicate(length(pd.names),numeric(0), simplify = F), pd.names))
+    for( i in 1:length(query.fields)){
+      subs <- match(names(query.fields[[i]]), pd.names)
+      pd.frame[i,subs] <- sapply(query.fields[[i]], as.character)
+    }
+  }
+
+  if(is.TRUE(give.return)) return(pd.frame)
 }
 

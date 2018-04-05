@@ -2,20 +2,20 @@
 % Please edit documentation in R/gSD_settings.R
 \name{gSD_settings}
 \alias{gSD_settings}
-\alias{set_python}
-\alias{set_cophub_login}
+\alias{set_login_CopHub}
+\alias{set_archive}
 \title{getSpatialData settings}
 \usage{
-set_python(py_path)
+set_login_CopHub(hub_user, hub_pass = NULL)
 
-set_cophub_login(hub_user, hub_pass = NULL)
+set_archive(dir_archive)
 }
 \arguments{
-\item{py_path}{character, path to preferred python installation.}
-
 \item{hub_user}{character, user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}.}
 
 \item{hub_pass}{character, password to the Copernicus Open Access Hub.}
+
+\item{dir_archive}{character, directory to the \code{getSpatialData} archive folder.}
 }
 \value{
 None.
@@ -24,18 +24,12 @@ None.
 Defines global settings that are used by all \code{getSpatialData} functions
 }
 \details{
-\code{set_python} sets up the connection to a python installation manually. This prevents getSpatialData from using a wrong Pyhton version, if multiple installs are available or if the correct install is not recognized automatically.
-
-\code{set_cophub_login} defines the login credentials for the Copernicus Open Access Hub. These will be saved and made available for all \code{getSpatialData} functions during the whole session and will be erased when quitting the session. Leave the \code{hub_user} and \code{hub_pass} arguments of the \code{getSentinel*} functions to their default value (\code{NULL}) to force them to use the global credentials defined with \code{set_cophub_login}.
+\code{set_login_CopHub} defines the login credentials for the Copernicus Open Access Hub. These will be saved and made available for all \code{getSpatialData} functions during the whole session and will be erased when quitting the session. Leave the \code{hub_user} and \code{hub_pass} arguments of the \code{getSentinel*} functions to their default value (\code{NULL}) to force them to use the global credentials defined with \code{set_login_CopHub}.
+\code{set_archive} globally defines the directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
 }
 \examples{
-## Define a python path
-\dontrun{
-set_python("path/to/my/python") #needs to lead to an executable file, on windows, a python.exe
-}
-
 ## Define user credentials for the Copernicus Open Access Hub
-set_cophub_login(hub_user = "my_user_name", hub_pass = "my_password")
+set_login_CopHub(hub_user = "my_user_name", hub_pass = "my_password")
 
 }
 \seealso{

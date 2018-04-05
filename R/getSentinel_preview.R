@@ -6,27 +6,31 @@
 #' @param product data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.
 #'
 #' @return None. A plot is generated.
-#' @details The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
 #' @examples
 #' ## Load packages
 #' library(getSpatialData)
-#' library(raster)
 #'
-#' ## Define an extent, a time range and a platform
-#' ext <- extent(10.29048,11.75558,45.93350,46.94617)
-#' time_range <-  c("20170801", "20170830")
+#' ## Define an AOI (last row needs to equal first row, closing the polygon)
+#' aoi <- rbind(c(9.29168701, 49.93884750),
+#'              c(9.36584472, 49.58400677),
+#'              c(10.1458740, 49.44312875),
+#'              c(10.6814575, 49.75642885),
+#'              c(9.75860595, 50.20327530),
+#'              c(9.29168701, 49.93884750)) # last row must equal first row
+#'
+#' time_range <-  c("2017-08-01", "2017-08-30")
 #' platform <- "Sentinel-2"
 #'
-#' ## Prior to calling getSentinel* functions,
-#' ## define your Copernicus Open Access Hub credentials :
+#' ## set login credentials and archive directory
 #' \dontrun{
-#' set_cophub_login(hub_user = "16eagle") #asks for password, if 'hub_pass' is not defined
+#' set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+#' set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
 #'
 #' ## Use getSentinel_query to search for data
-#' products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)
+#' products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the products
 #' View(products) #get an overview about the search products
@@ -37,12 +41,10 @@
 #' products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 #'
 #' ## Preview a single product
-#' getSentinel_preview(product = products_filtered[10,])
+#' getSentinel_preview(product = products_filtered[5,])
 #'
-#' ## Download datasets
-#' #dir_out <- "your/output/directory"
-#' dir_out <- tempdir() #for this example, we use a temporary directory
-#' files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
+#' ## Download some datasets to your archive directory
+#' files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
 #' }
 #' @seealso \link{getSentinel_query}
 #'
@@ -56,18 +58,18 @@ getSentinel_preview <- function(product, hub_user = NULL, hub_pass = NULL,
                              hub_access = "auto"){
 
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_def"))){
+  if(is.TRUE(getOption("gSD.cophub_set"))){
     if(is.null(hub_user)){hub_user <- getOption("gSD.cophub_user")}
     if(is.null(hub_pass)){hub_pass <- getOption("gSD.cophub_pass")}
   }
-  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_cophub_login()' to define your login credentials globally.", type=3)}
+  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_login_CopHub()' to define your login credentials globally.", type=3)}
   if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()}
 
   ## Intercept false inputs and get inputs
-  link_icon <- product$link_icon
-  if(is.na(link_icon)){out("Argument 'product' is invalid or no preview is available.", type=3)}
-  if(length(link_icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
-  char_args <- list(link_icon = link_icon)
+  url.icon <- product$url.icon
+  if(is.na(url.icon)){out("Argument 'product' is invalid or no preview is available.", type=3)}
+  if(length(url.icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
+  char_args <- list(url.icon = url.icon)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
   }
@@ -78,7 +80,7 @@ getSentinel_preview <- function(product, hub_user = NULL, hub_pass = NULL,
 
   ## Build URL
   file_dir <- paste0(tempfile(),".jpg")
-  GET(link_icon, authenticate(cred[1], cred[2]), write_disk(path = file_dir))
+  GET(url.icon, authenticate(cred[1], cred[2]), write_disk(path = file_dir))
 
   ## Plot preview
   preview <- stack(file_dir)

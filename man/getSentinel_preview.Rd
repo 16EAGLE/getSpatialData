@@ -10,9 +10,9 @@ getSentinel_preview(product, hub_user = NULL, hub_pass = NULL,
 \arguments{
 \item{product}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.}
 
-\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_cophub_login} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
+\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
 
-\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_cophub_login} inputs or, if \code{set_cophub_login} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
+\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_login_CopHub} inputs or, if \code{set_login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
 
 \item{hub_access}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 }
@@ -22,26 +22,28 @@ None. A plot is generated.
 \description{
 \code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.
 }
-\details{
-The \code{getSentinel*} function bundle makes use of the python library \code{sentinelsat}, serving as interface to the SciHub API. Python needs to be installed on your system.
-}
 \examples{
 ## Load packages
 library(getSpatialData)
-library(raster)
 
-## Define an extent, a time range and a platform
-ext <- extent(10.29048,11.75558,45.93350,46.94617)
-time_range <-  c("20170801", "20170830")
+## Define an AOI (last row needs to equal first row, closing the polygon)
+aoi <- rbind(c(9.29168701, 49.93884750),
+             c(9.36584472, 49.58400677),
+             c(10.1458740, 49.44312875),
+             c(10.6814575, 49.75642885),
+             c(9.75860595, 50.20327530),
+             c(9.29168701, 49.93884750)) # last row must equal first row
+
+time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
-## Prior to calling getSentinel* functions,
-## define your Copernicus Open Access Hub credentials :
+## set login credentials and archive directory
 \dontrun{
-set_cophub_login(hub_user = "16eagle") #asks for password, if 'hub_pass' is not defined
+set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
+set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
 
 ## Use getSentinel_query to search for data
-products <- getSentinel_query(ext = ext, time_range = time_range, platform = platform)
+products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
 
 ## Get an overview of the products
 View(products) #get an overview about the search products
@@ -52,12 +54,10 @@ unique(products$processinglevel) #use one of the, e.g. to see available processi
 products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
 
 ## Preview a single product
-getSentinel_preview(product = products_filtered[10,])
+getSentinel_preview(product = products_filtered[5,])
 
-## Download datasets
-#dir_out <- "your/output/directory"
-dir_out <- tempdir() #for this example, we use a temporary directory
-files <- getSentinel_data(products = products_filtered, dir_out = dir_out)
+## Download some datasets to your archive directory
+files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
 }
 }
 \seealso{

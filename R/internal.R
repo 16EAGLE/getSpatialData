@@ -15,49 +15,6 @@ out <- function(input,type = 1, ll = 1, msg = FALSE, sign = ""){
     }else{message(paste0(sign,input))}}}}
 }
 
-
-#' Loads and/or installs python libraries using pip
-#'
-#' @param lib character, library name
-#' @param get.auto logical, activates or deactivates automatic download, if not available
-#' @param install.only logical, if \code{TRUE}, library will be installed but not loaded.
-#'
-#' @keywords internal
-#' @noRd
-
-py_load <- function(lib, get.auto = TRUE, install.only = FALSE, msg = FALSE, delay_load = FALSE){ #returns list of imports
-  if(class(lib) != "character"){out("'lib' has to be a 'character' vector.", type=3)}
-  imports <- lapply(lib, function(x){
-    out(paste0("Loading library '",x,"'..."),type=1, msg = msg)
-    from <- F
-    if(length(grep("[$]",x)) == 1){
-      y <- unlist(strsplit(x, "[$]"))[2]
-      x <- unlist(strsplit(x, "[$]"))[1]
-      from <- T
-    }
-    lib.try <- try(reticulate::import(x, delay_load = delay_load), silent = TRUE)
-    if(class(lib.try)[1] == "try-error"){
-      if(get.auto == TRUE){
-        system(paste0("pip install ",x))
-        re <- reticulate::import(x, delay_load = delay_load)
-      }else{
-        out(paste0("Module '",x,"' is not installed. Auto-install is not available. Please install modules."),type=3)
-      }
-    }else{re <- lib.try}
-    if(from){
-      g <- parse(text = paste0("re$",y))
-      g <- list(eval(g)); names(g) <- y
-    }else{
-      g <- list(re); names(g) <- x
-    }
-    return(g)
-  })
-  if(length(imports) == 1){imports <- imports[[1]]
-  }else{imports <- unlist(imports)}
-  if(install.only == TRUE){return(TRUE)}else{return(imports)}
-}
-
-
 #' Simplifies check of variables being FALSE
 #'
 #' @param evaluate variable or expression to be evaluated
@@ -88,42 +45,24 @@ check.cmd <- function(cmd){
 }
 
 
-#' ini call
-#'
-#' @importFrom reticulate py_config use_python
+#' gSD.get
+#' @param q.url query url
+#' @param q.user query user
+#' @param q.pass query pass
+#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress
 #' @keywords internal
 #' @noRd
-#sat <- NULL #for choosing right env
-ini <- function(onLoad = FALSE){
-  if(length(grep("anac", tolower(py_config()$python))) != 0){
-    v <- tolower(py_config()$python_versions)
-    vc <- v[-grep("anac", v)]
-    if(length(vc) == 0){
-      out("Anaconda Python is currently not supported by getSpatialData. Please install a standard Python 2.7.* or 3.* version.", type=if(onLoad == TRUE){2}else{3})
-    }else{
-      use_python(python = vc[1])
-    }
+gSD.get <- function(q.url, q.user, q.pass, dir.file = NULL, prog = F){
+  if(is.null(dir.file)){
+    x <- GET(q.url, authenticate(q.user, q.pass))
+  } else{
+    if(is.FALSE(prog)) x <- GET(q.url, authenticate(q.user, q.pass), write_disk((dir.file)))
+    if(is.TRUE(prog)) x <- GET(q.url, authenticate(q.user, q.pass), progress(), write_disk((dir.file)))
   }
-}
-
-
-#' py_lib
-#' @param lib library name
-#' @importFrom reticulate import
-#' @keywords internal
-#' @noRd
-#sat <- NULL #for choosing right env
-py_lib <- function(lib){
-  st <- try(import(lib, delay_load = TRUE))
-  if(class(st)[1] == "try-error"){
-    if(is.TRUE(check.cmd("pip"))){
-      system(paste0("pip install ",lib))
-      st <- import(lib, delay_load = TRUE)
-    }else{
-      out("'sentinelsat' could not be installed, since 'pip install' could not be called from the command line. Please install 'pip' or install 'sentinelsat' manually.")
-    }
-  }
-  return(st)
+  stop_for_status(x, "connect to Copernicus Open Access API. Please retry.")
+  warn_for_status(x)
+  #message_for_status(x); cat("\n")
+  return(x)
 }
 
 
@@ -155,13 +94,14 @@ access_API <- function(x, p, user, pw){
 #' @keywords internal
 #' @noRd
 .onLoad <- function(libname, pkgname){
-  #reticulate::py_available(initialize = TRUE)
 
   op <- options()
   op.gSD <- list(
     gSD.cophub_user = FALSE,
     gSD.cophub_pass = FALSE,
-    gSD.cophub_def = FALSE
+    gSD.cophub_set = FALSE,
+    gSD.archive = FALSE,
+    gSD.archive_set = FALSE
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])

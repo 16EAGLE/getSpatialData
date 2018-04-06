@@ -2,9 +2,9 @@
 #'
 #' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
 #'
-#' @param aoi matrix representing area of interest. Needs to have two columns (representing longitude an latitude) and at least three rows, each representing a corner point of the AOI. The last row needs to be equal to the first row, closing the polygon.
 #' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"
 #' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".
+#' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param hub_user character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
 #' @param hub_pass character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_login_CopHub} inputs or, if \code{set_login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.
 #' @param hub_access character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
@@ -21,25 +21,31 @@
 #' @examples
 #' ## Load packages
 #' library(getSpatialData)
+#' library(sf)
+#' library(sp)
 #'
-#' ## Define an AOI (last row needs to equal first row, closing the polygon)
-#' aoi <- rbind(c(9.29168701, 49.93884750),
-#'              c(9.36584472, 49.58400677),
-#'              c(10.1458740, 49.44312875),
-#'              c(10.6814575, 49.75642885),
-#'              c(9.75860595, 50.20327530),
-#'              c(9.29168701, 49.93884750)) # last row must equal first row
+#' ## Define an AOI (either matrix, sf or sp object)
+#' data("aoi_data") # example aoi
 #'
+#' aoi <- aoi_data[[3]] # AOI as matrix object, or better:
+#' aoi <- aoi_data[[2]] # AOI as sp object, or:
+#' aoi <- aoi_data[[1]] # AOI as sf object
+#'
+#' ## set AOI for this session
+#' set_aoi(aoi)
+#' view_aoi() #view AOI in viewer
+#'
+#' ## Define time range and platform
 #' time_range <-  c("2017-08-01", "2017-08-30")
 #' platform <- "Sentinel-2"
 #'
-#' ## set login credentials and archive directory
+#' ## set login credentials and an archive directory
 #' \dontrun{
-#' set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
-#' set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
+#' set_login_CopHub(hub_user = "username") #asks for your password, if argument 'hub_pass' is not defined
+#' set_archive("/path/to/archive/")
 #'
-#' ## Use getSentinel_query to search for data
-#' products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
+#' ## Use getSentinel_query to search for data (using the session AOI)
+#' products <- getSentinel_query(time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the products
 #' View(products) #get an overview about the search products
@@ -52,27 +58,36 @@
 #' ## Preview a single product
 #' getSentinel_preview(product = products_filtered[5,])
 #'
-#' ## Download some datasets to your archive directory
-#' files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
+#' ## Download some datasets
+#' files <- getSentinel_data(products = products_filtered[c(4,5,6),])
 #' }
+#'
 #' @seealso \link{getSentinel_data}
 #' @export
 
-getSentinel_query <- function(aoi, time_range, platform, hub_user = NULL, hub_pass = NULL,
+getSentinel_query <- function(time_range, platform, aoi = NULL, hub_user = NULL, hub_pass = NULL,
                               hub_access = "auto"){
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(hub_user)){hub_user <- getOption("gSD.cophub_user")}
-    if(is.null(hub_pass)){hub_pass <- getOption("gSD.cophub_pass")}
+    if(is.null(hub_user)) hub_user <- getOption("gSD.cophub_user")
+    if(is.null(hub_pass)) hub_pass <- getOption("gSD.cophub_pass")
   }
-  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_login_CopHub()' to define your login credentials globally.", type=3)}
-  if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()}
+  if(!is.character(hub_user)) out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_login_CopHub()' to define your login credentials globally.", type=3)
+  if(!is.null(hub_pass)){ hub_pass = hub_pass} else{ hub_pass = getPass()}
 
-  ## Intercept false inputs and get inputs
-  if(class(aoi) != "matrix"){out("Argument 'aoi' must to be a 'matrix'.", type = 3)}
-  if(length(aoi[1,]) != 2){out("Argument 'aoi' must consist of two columns (longitude and latitude).", type = 3)}
-  if(length(aoi[,1]) < 3){out("Argument 'aoi' must have at least three rows.", type = 3)}
+  ## Global AOI
+  if(is.null(aoi)){
+    if(is.TRUE(getOption("gSD.aoi_set"))){
+      aoi <- getOption("gSD.aoi")
+    } else{
+      out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
+    }
+  } else{
+    aoi <- make_aoi(aoi, type = "matrix")
+  }
+
+  ## check time_range and platform
   char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
@@ -147,4 +162,3 @@ getSentinel_query <- function(aoi, time_range, platform, hub_user = NULL, hub_pa
 
   if(is.TRUE(give.return)) return(pd.frame)
 }
-

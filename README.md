@@ -2,15 +2,18 @@
 
 ## Introduction
 
-getSpatialData is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed.
+`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed.
+
+`getSpatialData` supports both `sf` and `sp` classes as AOI inputs.
 
 ## State of development
 
 Lately, an R-native getSentinel function bundle has been deployed, which enables the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some).
 
-In addition, a NASA EE and USGS ESPA R client is being implemented, which will allow the user to query, preview, process-on-demand and download imagery from Landsat, MODIS etc. directly within R. The client is wirtten in R and will be published as soon as its base functionalities can be tested.
+A universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects.
 
-A universal AOI defintion function is currently developed that understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It will support multi-point polygon shape objects (sp and sf) and extent/bounding box objects (raster and sp) as AOI definitions.
+Currently, a NASA EE and USGS ESPA R client is being implemented, which will allow the user to query, preview, process-on-demand and download imagery from Landsat, MODIS etc. directly within R. The client is wirtten in R and will be published as soon as its base functionalities can be tested.
+
 
 ### Available functions
 
@@ -27,6 +30,8 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 * `set_login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
 * `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
+* `set_aoi` - define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
+* `view_aoi` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
 
 
 ### Manuals
@@ -50,38 +55,34 @@ The following code represents a working chain for querying, filtering, previewin
 ```
 ## Load packages
 library(getSpatialData)
+library(sf)
+library(sp)
 
+## Define an AOI (either matrix, sf or sp object)
+data("aoi_data") # example aoi
 
-## Define an AOI (last row needs to equal first row, closing the polygon)
-aoi <- rbind(c(9.29168701, 49.93884750),
-             c(9.36584472, 49.58400677),
-             c(10.1458740, 49.44312875),
-             c(10.6814575, 49.75642885),
-             c(9.75860595, 50.20327530),
-             c(9.29168701, 49.93884750))
-#currently, only lon/lat matrices are supported.
+aoi <- aoi_data[[3]] # AOI as matrix object, or better:
+aoi <- aoi_data[[2]] # AOI as sp object, or:
+aoi <- aoi_data[[1]] # AOI as sf object
 
+## set AOI for this session
+set_aoi(aoi)
+view_aoi() #view AOI in viewer
 
 ## Define time range and platform
 time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
-
 ## set login credentials and archive directory
 set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
-set_archive("/path/to/archive/")
+set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
 
-
-## Use getSentinel_query to search for data
-products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
-
+## Use getSentinel_query to search for data (using the session AOI)
+products <- getSentinel_query(time_range = time_range, platform = platform)
 
 ## Get an overview of the products
-colnames(products) #see all available filter attributes
-unique(products$processinglevel) #use one of the, e.g. to see available processing levels
-
-View(products) #get an overview about the search products. You can navigate
-#through the available datasets and their attributes (in RStudio, this looks like this):
+View(products) #get an overview about the search products
+## displays similar to this in RStudio:
 ```
 
 <p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png"></p>
@@ -91,13 +92,14 @@ View(products) #get an overview about the search products. You can navigate
 
 ```
 ## Filter the products
+colnames(products) #see all available filter attributes
+unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+
 products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
-## add more lines, if you want to further filter your filtered products
 
-
-## Preview a single product in your plot window, e.g. to see cloud coverage
+## Preview a single product
 getSentinel_preview(product = products_filtered[5,])
-# This will plot a preview to the active plotting device:
+# This will plot a preview to the active plotting device, is plotted like this:
 ```
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png"></p>

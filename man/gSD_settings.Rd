@@ -4,11 +4,17 @@
 \alias{gSD_settings}
 \alias{set_login_CopHub}
 \alias{set_archive}
+\alias{set_aoi}
+\alias{view_aoi}
 \title{getSpatialData settings}
 \usage{
 set_login_CopHub(hub_user, hub_pass = NULL)
 
 set_archive(dir_archive)
+
+set_aoi(aoi)
+
+view_aoi(color = "green")
 }
 \arguments{
 \item{hub_user}{character, user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}.}
@@ -16,6 +22,10 @@ set_archive(dir_archive)
 \item{hub_pass}{character, password to the Copernicus Open Access Hub.}
 
 \item{dir_archive}{character, directory to the \code{getSpatialData} archive folder.}
+
+\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.}
+
+\item{color}{chracter, polygon filling color.}
 }
 \value{
 None.
@@ -26,6 +36,8 @@ Defines global settings that are used by all \code{getSpatialData} functions
 \details{
 \code{set_login_CopHub} defines the login credentials for the Copernicus Open Access Hub. These will be saved and made available for all \code{getSpatialData} functions during the whole session and will be erased when quitting the session. Leave the \code{hub_user} and \code{hub_pass} arguments of the \code{getSentinel*} functions to their default value (\code{NULL}) to force them to use the global credentials defined with \code{set_login_CopHub}.
 \code{set_archive} globally defines the directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
+\code{set_aoi} globally defines an AOI that is used for querying data within the running session (if no other AOI is provided with a query function call). The function supports \code{sf} and \code{sp} objects (see argument \code{aoi}) and is based on \code{sf}.
+\code{view_aoi} displays the defined AOI on an interactive \code{mapview}/\code{leaflet} map.
 }
 \examples{
 ## Define user credentials for the Copernicus Open Access Hub

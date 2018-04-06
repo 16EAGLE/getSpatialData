@@ -12,10 +12,12 @@ Encoding: UTF-8
 LazyData: true
 Imports:
   getPass,
-  raster,
   httr,
   xml2,
-  devtools,
   tools,
-  rgdal
+  raster,
+  sf,
+  sp,
+  rgdal,
+  mapview
 RoxygenNote: 6.0.1

@@ -4,15 +4,15 @@
 \alias{getSentinel_query}
 \title{Query Sentinel-1, -2 and -3 data from the Copernicus Open Access Hubs}
 \usage{
-getSentinel_query(aoi, time_range, platform, hub_user = NULL,
+getSentinel_query(time_range, platform, aoi = NULL, hub_user = NULL,
   hub_pass = NULL, hub_access = "auto")
 }
 \arguments{
-\item{aoi}{matrix representing area of interest. Needs to have two columns (representing longitude an latitude) and at least three rows, each representing a corner point of the AOI. The last row needs to be equal to the first row, closing the polygon.}
-
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
 
 \item{platform}{character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".}
+
+\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
 \item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
 
@@ -29,25 +29,31 @@ A data frame; each row represents one dataset, recognized by an individual UUID.
 \examples{
 ## Load packages
 library(getSpatialData)
+library(sf)
+library(sp)
 
-## Define an AOI (last row needs to equal first row, closing the polygon)
-aoi <- rbind(c(9.29168701, 49.93884750),
-             c(9.36584472, 49.58400677),
-             c(10.1458740, 49.44312875),
-             c(10.6814575, 49.75642885),
-             c(9.75860595, 50.20327530),
-             c(9.29168701, 49.93884750)) # last row must equal first row
+## Define an AOI (either matrix, sf or sp object)
+data("aoi_data") # example aoi
 
+aoi <- aoi_data[[3]] # AOI as matrix object, or better:
+aoi <- aoi_data[[2]] # AOI as sp object, or:
+aoi <- aoi_data[[1]] # AOI as sf object
+
+## set AOI for this session
+set_aoi(aoi)
+view_aoi() #view AOI in viewer
+
+## Define time range and platform
 time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
-## set login credentials and archive directory
+## set login credentials and an archive directory
 \dontrun{
-set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
-set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
+set_login_CopHub(hub_user = "username") #asks for your password, if argument 'hub_pass' is not defined
+set_archive("/path/to/archive/")
 
-## Use getSentinel_query to search for data
-products <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform)
+## Use getSentinel_query to search for data (using the session AOI)
+products <- getSentinel_query(time_range = time_range, platform = platform)
 
 ## Get an overview of the products
 View(products) #get an overview about the search products
@@ -60,9 +66,10 @@ products_filtered <- products[which(products$processinglevel == "Level-1C"),] #f
 ## Preview a single product
 getSentinel_preview(product = products_filtered[5,])
 
-## Download some datasets to your archive directory
-files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
+## Download some datasets
+files <- getSentinel_data(products = products_filtered[c(4,5,6),])
 }
+
 }
 \seealso{
 \link{getSentinel_data}

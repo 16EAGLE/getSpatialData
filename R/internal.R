@@ -89,6 +89,40 @@ access_API <- function(x, p, user, pw){
   return(c(user, pw, x))
 }
 
+#' make aoi
+#'
+#' @param aoi aoi
+#' @keywords internal
+#' @importFrom sp SpatialPolygons
+#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates
+#' @noRd
+make_aoi <- function(aoi, type = "matrix", quiet = F){
+
+  ## if not sfc, convert to sfc
+  if(!inherits(aoi, c("Spatial", "sfc", "matrix"))) out("Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object.", type = 3)
+  if(inherits(aoi, "matrix")){
+    if(!all(aoi[1,] == aoi[length(aoi[,1]),])) aoi <- rbind(aoi, aoi[1,])
+    aoi <- st_sfc(st_polygon(list(aoi)), crs = 4326)
+    if(is.FALSE(quiet)) out(paste0("Argument 'aoi' is a matrix, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
+  }
+  if(inherits(aoi, "Spatial")) aoi <- st_as_sf(aoi)
+
+  ## check projection
+  if(is.na(st_crs(aoi))){
+    st_crs(aoi) <- 4326
+    if(is.FALSE(quiet)) out(paste0("Argument 'aoi' has no projection, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
+  }
+  if(length(grep("WGS84", grep("longlat", st_crs(aoi)$proj4string, value = T), value = T)) != 1){
+    aoi <- st_transform(aoi, 4326)
+  }
+
+  ## get coordinates
+  aoi.m <- st_coordinates(aoi)[,c(1,2)]
+  aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
+
+  if(type == "matrix") return(aoi.m)
+  if(type == "sf") return(aoi.sf)
+}
 
 #' On package startup
 #' @keywords internal
@@ -101,11 +135,12 @@ access_API <- function(x, p, user, pw){
     gSD.cophub_pass = FALSE,
     gSD.cophub_set = FALSE,
     gSD.archive = FALSE,
-    gSD.archive_set = FALSE
+    gSD.archive_set = FALSE,
+    gSD.aoi = FALSE,
+    gSD.aoi_set = FALSE
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
 
   invisible()
 }
-

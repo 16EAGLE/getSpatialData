@@ -74,8 +74,8 @@ time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
 ## set login credentials and archive directory
-set_login_CopHub(hub_user = "16eagle") #asks for your password, if argument 'hub_pass' is not defined
-set_archive("/home/jakob/Dokumente/wd/tmp/gSD/")
+set_login_CopHub(hub_user = "username") #asks for your password, if argument 'hub_pass' is not defined
+set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)
 products <- getSentinel_query(time_range = time_range, platform = platform)

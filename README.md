@@ -64,6 +64,7 @@ data("aoi_data") # example aoi
 aoi <- aoi_data[[3]] # AOI as matrix object, or better:
 aoi <- aoi_data[[2]] # AOI as sp object, or:
 aoi <- aoi_data[[1]] # AOI as sf object
+#instead, you could define an AOI yourself, e.g. as simple matrix
 
 ## set AOI for this session
 set_aoi(aoi)
@@ -74,7 +75,7 @@ time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
 ## set login credentials and archive directory
-set_login_CopHub(hub_user = "username") #asks for your password, if argument 'hub_pass' is not defined
+set_login_CopHub(hub_user = "username") #asks for password or define 'hub_pass'
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)

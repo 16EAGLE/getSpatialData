@@ -19,5 +19,7 @@ Imports:
   sf,
   sp,
   rgdal,
-  mapview
+  mapview,
+  devtools
 RoxygenNote: 6.0.1
+Suggests: testthat

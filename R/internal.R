@@ -36,11 +36,11 @@ is.TRUE <- function(evaluate){if(evaluate == TRUE){return(TRUE)}else{return(FALS
 #' Checks, if specific command is available
 #'
 #' @param cmd command
-#'
+#' @importFrom devtools system_check
 #' @keywords internal
 #' @noRd
 check.cmd <- function(cmd){
-  sc <- try(devtools::system_check(cmd, quiet = TRUE),silent = TRUE)
+  sc <- try(system_check(cmd, quiet = TRUE),silent = TRUE)
   if(class(sc) == "try-error"){return(FALSE)}else{return(TRUE)}
 }
 
@@ -94,7 +94,7 @@ access_API <- function(x, p, user, pw){
 #' @param aoi aoi
 #' @keywords internal
 #' @importFrom sp SpatialPolygons
-#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates
+#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<-
 #' @noRd
 make_aoi <- function(aoi, type = "matrix", quiet = F){
 

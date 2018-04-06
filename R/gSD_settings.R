@@ -73,6 +73,6 @@ view_aoi <- function(color = "green"){
   if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)
   aoi.m <- getOption("gSD.aoi")
 
-  aoi.sf <- make_aoi(aoi, type = "sf", quiet = T)
+  aoi.sf <- make_aoi(aoi.m, type = "sf", quiet = T)
   mapview(aoi.sf, col.regions = color)
 }

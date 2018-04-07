@@ -30,7 +30,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 * `set_login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
 * `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
-* `set_aoi` - define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
+* `set_aoi` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
 * `view_aoi` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
 
 
@@ -52,7 +52,7 @@ devtools::install_github("16EAGLE/getSpatialData")
 
 The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. This can be also done for Sentinel-1 or -3.
 
-```
+```R
 ## Load packages
 library(getSpatialData)
 library(sf)
@@ -91,7 +91,7 @@ View(products) #get an overview about the search products
 <br>
 
 
-```
+```R
 ## Filter the products
 colnames(products) #see all available filter attributes
 unique(products$processinglevel) #use one of the, e.g. to see available processing levels
@@ -107,7 +107,7 @@ getSentinel_preview(product = products_filtered[5,])
 <p align="center"><sub>Figure 2: Screenshot of the RStudio plotting window, displaying a product preview returned by getSentinel_preview</sub></p>
 <br>
 
-```
+```R
 ## Download some datasets to your archive directory
 files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
 

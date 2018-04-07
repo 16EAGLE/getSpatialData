@@ -42,6 +42,7 @@ aoi <- aoi_data[[1]] # AOI as sf object
 ## set AOI for this session
 set_aoi(aoi)
 view_aoi() #view AOI in viewer
+# or, simply call set_aoi() without argument to interactively draw an AOI
 
 ## Define time range and platform
 time_range <-  c("2017-08-01", "2017-08-30")

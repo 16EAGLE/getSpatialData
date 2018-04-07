@@ -38,6 +38,7 @@ data("aoi_data") # example aoi
 aoi <- aoi_data[[3]] # AOI as matrix object, or better:
 aoi <- aoi_data[[2]] # AOI as sp object, or:
 aoi <- aoi_data[[1]] # AOI as sf object
+# or, simply call set_aoi() without argument to interactively draw an AOI
 
 ## set AOI for this session
 set_aoi(aoi)

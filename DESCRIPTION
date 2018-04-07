@@ -2,7 +2,7 @@ Package: getSpatialData
 Type: Package
 Title: Get different kinds of freely available spatial datasets
 Version: 0.0.1
-Date: 2017-12-01
+Date: 2018-04-01
 Depends: R (>= 2.10)
 Authors@R: person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de",
   role = c("aut", "cre"))
@@ -20,6 +20,7 @@ Imports:
   sp,
   rgdal,
   mapview,
+  mapedit,
   devtools
 RoxygenNote: 6.0.1
 Suggests: testthat

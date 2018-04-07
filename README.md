@@ -10,7 +10,7 @@
 
 Lately, an R-native getSentinel function bundle has been deployed, which enables the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some).
 
-A universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects.
+A universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects. Alternatively, it lets the user draw an AOI via `mapedit`.
 
 Currently, a NASA EE and USGS ESPA R client is being implemented, which will allow the user to query, preview, process-on-demand and download imagery from Landsat, MODIS etc. directly within R. The client is wirtten in R and will be published as soon as its base functionalities can be tested.
 

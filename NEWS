@@ -1,0 +1,30 @@
+-----------------------------------------------------------
+getSpatialData 0.0.2
+initial session-wide tool functions
+-----------------------------------------------------------
+New functions:
+ + set_archive(): defines getSpatialData archive folder
+ + set_aoi(): defines session AOI from sp, sf or matrix object or mapedit GUI input
+ + view_aoi(): displays AOI in a mapview viewer
+
+New features:
+ + getSentinel_preview() displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.
+
+Contributions:
+ + Mike Treglia (@mtreg, issue #1, feature idea)
+
+-----------------------------------------------------------
+getSpatialData 0.0.1
+getSentinel* function bundle for ESA Copernicus R client
+-----------------------------------------------------------
+New functions:
+ + getSentinel_query(): query function for Sentinel-1, -2, -3
+ + getSentinel_preview(): preview (quick look) function for Sentinel-1, -2, -3
+ + getSentinel_data(): download function for Sentinel-1, -2, -3
+ + set_login_CopHub(): session login for getSentinel* functions
+
+Removed features:
+ + early-dev. python bindings, getSpatialData is fully R-native now
+
+-----------------------------------------------------------
+This document should provide a broad overview on changes that are applied to the getSpatialData R package. There is no warranty for completeness, since minor changes might not be included. All improvement and feature descriptions are bundled per release version. The document is currently maintained by Jakob Schwalb-Willmann.

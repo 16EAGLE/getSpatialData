@@ -71,7 +71,7 @@ set_aoi(aoi)
 view_aoi() #view AOI in viewer, which will look like this:
 ```
 
-<p align="center"><img width="50%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_view_aoi.png"></p>
+<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_view_aoi.png"></p>
 <p align="center"><sub>Figure 1: Screenshot of the RStudio Viewer, displaying the previously defined session AOI using view_aoi()</sub></p>
 <br>
 
@@ -81,7 +81,7 @@ view_aoi() #view AOI in viewer, which will look like this:
 set_aoi() #call set_aoi() without argument, which opens a mapedit editor:
 ```
 
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_create_aoi.png"></p>
+<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_create_aoi.png"></p>
 <p align="center"><sub>Figure 2: Screenshot of the RStudio Viewer, displaying the mapedit editor allowing the user to draw a session AOI</sub></p>
 <br>
 
@@ -121,7 +121,7 @@ View(products_filtered)
 getSentinel_preview(product = products_filtered[9,])
 ```
 
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview.png"></p>
+<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview.png"></p>
 <p align="center"><sub>Figure 4: Screenshot of the RStudio viewer, displaying a corner-georeferenced Sentinel-2 preview and the session AOI using getSentinel_preview()</sub></p>
 <br>
 
@@ -131,7 +131,7 @@ getSentinel_preview(product = products_filtered[9,])
 getSentinel_preview(product = products_filtered[9,], show_aoi = FALSE)
 ```
 
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_no_aoi.png"></p>
+<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_no_aoi.png"></p>
 <p align="center"><sub>Figure 5: Screenshot of the RStudio viewer, displaying a corner-georeferenced Sentinel-2 preview using getSentinel_preview()</sub></p>
 <br>
 
@@ -141,7 +141,7 @@ getSentinel_preview(product = products_filtered[9,], show_aoi = FALSE)
 getSentinel_preview(product = products_filtered[9,], on_map = FALSE)
 ```
 
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_plotRGB.png"></p>
+<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_plotRGB.png"></p>
 <p align="center"><sub>Figure 6: Screenshot of the RStudio viewer, displaying a simple Sentinel-2 RGB plot preview using getSentinel_preview()</sub></p>
 <br>
 

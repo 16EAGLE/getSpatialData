@@ -4,11 +4,15 @@
 \alias{getSentinel_preview}
 \title{Creates an RGB preview of a Sentinel product before downloading}
 \usage{
-getSentinel_preview(product, hub_user = NULL, hub_pass = NULL,
-  hub_access = "auto")
+getSentinel_preview(product, on_map = TRUE, show_aoi = TRUE,
+  hub_user = NULL, hub_pass = NULL, hub_access = "auto")
 }
 \arguments{
 \item{product}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.}
+
+\item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
+
+\item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
 
 \item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
 
@@ -17,7 +21,7 @@ getSentinel_preview(product, hub_user = NULL, hub_pass = NULL,
 \item{hub_access}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 }
 \value{
-None. A plot is generated.
+None. A plot/view display is generated.
 }
 \description{
 \code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.

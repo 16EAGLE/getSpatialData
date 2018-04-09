@@ -71,7 +71,7 @@ set_aoi(aoi)
 view_aoi() #view AOI in viewer, which will look like this:
 ```
 
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_view_aoi.png"></p>
+<p align="center"><img width="50%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_view_aoi.png"></p>
 <p align="center"><sub>Figure 1: Screenshot of the RStudio Viewer, displaying the previously defined session AOI using view_aoi()</sub></p>
 <br>
 
@@ -111,7 +111,7 @@ View(products_filtered)
 #browser products or your filtered products
 ```
 
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_query_table.png"></p>
+<p align="center"><img width="100%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_query_table.png"></p>
 <p align="center"><sub>Figure 3: Screenshot of the View() display in RStudio, displaying a filtered products table produced by getSentinel_query()</sub></p>
 <br>
 

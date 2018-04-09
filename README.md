@@ -68,10 +68,26 @@ aoi <- aoi_data[[1]] # AOI as sf object
 
 ## set AOI for this session
 set_aoi(aoi)
-view_aoi() #view AOI in viewer
-# or, simply call set_aoi() without argument to interactively draw an AOI
+view_aoi() #view AOI in viewer, which will look like this:
+```
 
-## Define time range and platform
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_view_aoi.png"></p>
+<p align="center"><sub>Figure 1: Screenshot of the RStudio Viewer, displaying the previously defined session AOI using view_aoi()</sub></p>
+<br>
+
+
+```R
+#instead of using an existing AOI, you can simply draw one:
+set_aoi() #call set_aoi() without argument, which opens a mapedit editor:
+```
+
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_create_aoi.png"></p>
+<p align="center"><sub>Figure 2: Screenshot of the RStudio Viewer, displaying the mapedit editor allowing the user to draw a session AOI</sub></p>
+<br>
+
+
+```R
+## After defining a session AOI, define time range and platform
 time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
@@ -82,35 +98,57 @@ set_archive("/path/to/archive/")
 ## Use getSentinel_query to search for data (using the session AOI)
 products <- getSentinel_query(time_range = time_range, platform = platform)
 
-## Get an overview of the products
-View(products) #get an overview about the search products
-## displays similar to this in RStudio:
-```
-
-<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/view.png"></p>
-<p align="center"><sub>Figure 1: Screenshot of the RStudio View() browser, displaying the products data.frame returned by getSentinel_query</sub></p>
-<br>
-
-
-```R
 ## Filter the products
 colnames(products) #see all available filter attributes
 unique(products$processinglevel) #use one of the, e.g. to see available processing levels
 
 products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
+products_filtered <- products_filtered[products_filtered$cloudcoverpercentage <= 30, ] #filter by clouds
 
-## Preview a single product
-getSentinel_preview(product = products_filtered[5,])
-# This will plot a preview to the active plotting device, is plotted like this:
+## View products table
+View(products)
+View(products_filtered)
+#browser products or your filtered products
 ```
 
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/preview.png"></p>
-<p align="center"><sub>Figure 2: Screenshot of the RStudio plotting window, displaying a product preview returned by getSentinel_preview</sub></p>
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_query_table.png"></p>
+<p align="center"><sub>Figure 3: Screenshot of the View() display in RStudio, displaying a filtered products table produced by getSentinel_query()</sub></p>
 <br>
 
+
 ```R
-## Download some datasets to your archive directory
-files <- getSentinel_data(products = products_filtered[c(4,5,6), ])
+## Preview a single product on a mapview map with session AOI
+getSentinel_preview(product = products_filtered[9,])
+```
+
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview.png"></p>
+<p align="center"><sub>Figure 4: Screenshot of the RStudio viewer, displaying a corner-georeferenced Sentinel-2 preview and the session AOI using getSentinel_preview()</sub></p>
+<br>
+
+
+```R
+## Preview a single product on a mapview map without session AOI
+getSentinel_preview(product = products_filtered[9,], show_aoi = FALSE)
+```
+
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_no_aoi.png"></p>
+<p align="center"><sub>Figure 5: Screenshot of the RStudio viewer, displaying a corner-georeferenced Sentinel-2 preview using getSentinel_preview()</sub></p>
+<br>
+
+
+```R
+## Preview a single product as RGB plot
+getSentinel_preview(product = products_filtered[9,], on_map = FALSE)
+```
+
+<p align="center"><img width="80%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_plotRGB.png"></p>
+<p align="center"><sub>Figure 6: Screenshot of the RStudio viewer, displaying a simple Sentinel-2 RGB plot preview using getSentinel_preview()</sub></p>
+<br>
+
+
+```R
+## Finally, download some datasets to your archive directory
+files <- getSentinel_data(products = products_filtered[c(4,7,9), ])
 
 ```
 

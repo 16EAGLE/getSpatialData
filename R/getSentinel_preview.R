@@ -90,9 +90,10 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, hub_use
   platform <- product$platformname
   cred <- access_API(hub_access, platform, hub_user, hub_pass)
 
-  ## Build URL
+  ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
   GET(url.icon, authenticate(cred[1], cred[2]), write_disk(path = file_dir))
+  preview <- stack(file_dir)
 
   if(is.TRUE(on_map)){
 
@@ -102,7 +103,6 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, hub_use
     footprint <- as_Spatial(footprint)
 
     ## create preview
-    preview <- stack(file_dir)
     crs(preview) <- crs(footprint)
     extent(preview) <- extent(footprint)
 

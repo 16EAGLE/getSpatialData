@@ -26,9 +26,17 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. A transform function bundle helping to deal with the downloaded files within R without expert knowledge will follow soon.
 
 
+* `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query() (beta).
+* `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products (beta).
+* `getLandsat_previews()` – previews the query results obtained with getLandsat_query() (beta).
+
+
 #### helper functions
 
-* `set_login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
+* `login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
+* `login_USGS` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
+
+
 * `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 * `set_aoi` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
 * `view_aoi` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
@@ -92,7 +100,7 @@ time_range <-  c("2017-08-01", "2017-08-30")
 platform <- "Sentinel-2"
 
 ## set login credentials and archive directory
-set_login_CopHub(hub_user = "username") #asks for password or define 'hub_pass'
+login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)

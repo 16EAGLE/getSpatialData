@@ -59,15 +59,14 @@ gSD.get <- function(q.url, q.user, q.pass, dir.file = NULL, prog = F){
     if(is.FALSE(prog)) x <- GET(q.url, authenticate(q.user, q.pass), write_disk((dir.file)))
     if(is.TRUE(prog)) x <- GET(q.url, authenticate(q.user, q.pass), progress(), write_disk((dir.file)))
   }
-  stop_for_status(x, "connect to Copernicus Open Access API. Please retry.")
+  stop_for_status(x, "connect to server.")
   warn_for_status(x)
   #message_for_status(x); cat("\n")
   return(x)
 }
 
 
-
-#' get API url from user input
+#' get Copernicus Hub API url and credentials from user input
 #'
 #' @param x API keyword or URL
 #' @param p platform
@@ -75,7 +74,7 @@ gSD.get <- function(q.url, q.user, q.pass, dir.file = NULL, prog = F){
 #' @param pw password
 #' @keywords internal
 #' @noRd
-access_API <- function(x, p, user, pw){
+cophub_api <- function(x, p, user, pw){ #naming needs to change here!
   if(x == "auto"){
     if(p == "Sentinel-1" | p == "Sentinel-2"){x <- "operational"
     }else{x <- "pre-ops"}
@@ -88,6 +87,44 @@ access_API <- function(x, p, user, pw){
   }
   return(c(user, pw, x))
 }
+
+
+#' get USGS API key from user input
+#'
+#' @param username username
+#' @param password password
+#' @keywords internal
+#' @noRd
+usgs_login <- function(username, password){
+  x <- POST(paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
+  stop_for_status(x, "connect to server.")
+  warn_for_status(x)
+  content(x)$data
+}
+
+#' logout from USGS with API key
+#'
+#' @param api.key api.key
+#' @keywords internal
+#' @noRd
+usgs_logout <- function(api.key){
+  x <- GET(paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/logout?jsonRequest={"apiKey":"', api.key, '"}'))
+  stop_for_status(x, "connect to server.")
+  warn_for_status(x)
+  content(x)$data
+}
+
+#' get EE datasets
+#'
+#' @param api.key api.key
+#' @param wildcard wildcard
+#' @keywords internal
+#' @noRd
+usgs_ds <- function(api.key, wildcard = NULL){
+  x <- GET(paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/datasets?jsonRequest={"apiKey":"', api.key, '"', if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}'))
+  sapply(content(x)$data, function(y) y$datasetName, USE.NAMES = F)
+}
+
 
 #' make aoi
 #'
@@ -134,6 +171,10 @@ make_aoi <- function(aoi, type = "matrix", quiet = F){
     gSD.cophub_user = FALSE,
     gSD.cophub_pass = FALSE,
     gSD.cophub_set = FALSE,
+    gSD.usgs_user = FALSE,
+    gSD.usgs_pass = FALSE,
+    gSD.usgs_set = FALSE,
+    gSD.usgs_apikey = FALSE,
     gSD.archive = FALSE,
     gSD.archive_set = FALSE,
     gSD.aoi = FALSE,
@@ -143,4 +184,13 @@ make_aoi <- function(aoi, type = "matrix", quiet = F){
   if(any(toset)) options(op.gSD[toset])
 
   invisible()
+}
+
+#' On package unload (logouts)
+#' @keywords internal
+#' @noRd
+.onUnload <- function(libname, pkgname) {
+
+  ## logout from USGS
+  if(is.TRUE(getOption("gSD.usgs_set"))) usgs_logout(getOption("gSD.usgs_apikey"))
 }

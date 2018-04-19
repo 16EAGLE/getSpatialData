@@ -35,7 +35,7 @@
 #'
 #' ## set login credentials and an archive directory
 #' \dontrun{
-#' set_login_CopHub(hub_user = "username") #asks for password or define 'hub_pass'
+#' login_CopHub(username = "username") #asks for password or define 'password'
 #' set_archive("/path/to/archive/")
 #'
 #' ## Use getSentinel_query to search for data (using the session AOI)
@@ -60,40 +60,39 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr GET write_disk authenticate
-#' @importFrom raster stack plotRGB crs crs<- extent extent<-
+#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
 #' @importFrom sf st_as_sfc st_crs as_Spatial
 #' @importFrom mapview viewRGB addFeatures
 #'
 #' @export
 
-getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, hub_user = NULL, hub_pass = NULL,
-                                hub_access = "auto"){
+getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL,
+                                hub = "auto"){
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(hub_user)){hub_user <- getOption("gSD.cophub_user")}
-    if(is.null(hub_pass)){hub_pass <- getOption("gSD.cophub_pass")}
+    if(is.null(username)){username <- getOption("gSD.cophub_user")}
+    if(is.null(password)){password <- getOption("gSD.cophub_pass")}
   }
-  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_login_CopHub()' to define your login credentials globally.", type=3)}
-  if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()}
+  if(!is.character(username)){out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)}
+  if(!is.null(password)){password = password}else{password = getPass()}
 
   ## Intercept false inputs and get inputs
   url.icon <- product$url.icon
   if(is.na(url.icon)){out("Argument 'product' is invalid or no preview is available.", type=3)}
   if(length(url.icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
   char_args <- list(url.icon = url.icon)
-  for(i in 1:length(char_args)){
-    if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}else{TRUE}
-  }
+  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
 
   ## Manage API access
   platform <- product$platformname
-  cred <- access_API(hub_access, platform, hub_user, hub_pass)
+  cred <- cophub_api(hub, platform, username, password)
 
   ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
   GET(url.icon, authenticate(cred[1], cred[2]), write_disk(path = file_dir))
   preview <- stack(file_dir)
+  #NAvalue(preview) <- 0
 
   if(is.TRUE(on_map)){
 
@@ -107,7 +106,7 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, hub_use
     extent(preview) <- extent(footprint)
 
     ## create map
-    map <- viewRGB(preview)
+    map <- viewRGB(preview, r=1, g=2, b=3)
 
     if(is.TRUE(show_aoi)){
       if(is.FALSE(getOption("gSD.aoi_set"))){

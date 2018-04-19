@@ -38,7 +38,7 @@
 #'
 #' ## set login credentials and an archive directory
 #' \dontrun{
-#' set_login_CopHub(hub_user = "username") #asks for password or define 'hub_pass'
+#' login_CopHub(username = "username") #asks for password or define 'password'
 #' set_archive("/path/to/archive/")
 #'
 #' ## Use getSentinel_query to search for data (using the session AOI)
@@ -62,16 +62,16 @@
 #' @seealso \link{getSentinel_query}
 #' @export
 
-getSentinel_data <- function(products, dir_out = NULL, force = FALSE, hub_user = NULL, hub_pass = NULL,
-                             hub_access = "auto"){
+getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username = NULL, password = NULL,
+                             hub = "auto"){
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(hub_user)){hub_user <- getOption("gSD.cophub_user")}
-    if(is.null(hub_pass)){hub_pass <- getOption("gSD.cophub_pass")}
+    if(is.null(username)){username <- getOption("gSD.cophub_user")}
+    if(is.null(password)){password <- getOption("gSD.cophub_pass")}
   }
-  if(!is.character(hub_user)){out("Argument 'hub_user' needs to be of type 'character'. You can use 'set_login_CopHub()' to define your login credentials globally.", type=3)}
-  if(!is.null(hub_pass)){hub_pass = hub_pass}else{hub_pass = getPass()}
+  if(!is.character(username)){out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)}
+  if(!is.null(password)){password = password}else{password = getPass()}
 
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/SENTINEL-2/")}
@@ -81,15 +81,13 @@ getSentinel_data <- function(products, dir_out = NULL, force = FALSE, hub_user =
   ## Intercept false inputs and get inputs
   uuid <- products$uuid
   char_args <- list(uuid = uuid, dir_out = dir_out)
-  for(i in 1:length(char_args)){
-    if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
-  }
+  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined output directory does not exist.", type=3)
 
   ## Manage API access
   platform <- unique(products$platformname)
   if(length(platform) > 1){out(paste0("Argument 'products' contains multiple platforms: ", paste0(platform,collapse = ", "), ". Please use only a single platform per call."), type = 3)}
-  cred <- access_API(hub_access, platform, hub_user, hub_pass)
+  cred <- cophub_api(hub, platform, username, password)
 
   ## assemble md5 checksum url
   url.md5 <- sapply(products$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)

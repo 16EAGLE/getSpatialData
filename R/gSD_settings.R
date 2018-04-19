@@ -2,14 +2,14 @@
 #'
 #' Defines global settings that are used by all \code{getSpatialData} functions
 #'
-#' @param hub_user character, user name to the Copernicus Open Access Hub. Register on \url{https://scihub.copernicus.eu/}.
-#' @param hub_pass character, password to the Copernicus Open Access Hub.
+#' @param username character, username to the corresponding service. For details on registration, see details.
+#' @param password character, password to the corresponding service.
 #' @param dir_archive character, directory to the \code{getSpatialData} archive folder.
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
 #' @param color chracter, polygon filling color.
 #'
 #' @details
-#' \code{set_login_CopHub} defines the login credentials for the Copernicus Open Access Hub. These will be saved and made available for all \code{getSpatialData} functions during the whole session and will be erased when quitting the session. Leave the \code{hub_user} and \code{hub_pass} arguments of the \code{getSentinel*} functions to their default value (\code{NULL}) to force them to use the global credentials defined with \code{set_login_CopHub}.
+#' \code{login_CopHub} defines the login credentials for the Copernicus Open Access Hub (register on \url{https://scihub.copernicus.eu/}), \code{login_USGS} defines USGS login credentials Register on \url{https://ers.cr.usgs.gov/register/}. These will be saved and made available for all \code{getSpatialData} functions during the whole session and will be erased when quitting the session. Alternatively, login credentials can be set individually with each \code{get*} function call.
 #'
 #' \code{set_archive} globally defines the directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
 #'
@@ -25,7 +25,10 @@
 #' @name gSD_settings
 #' @examples
 #' ## Define user credentials for the Copernicus Open Access Hub
-#' set_login_CopHub(hub_user = "my_user_name", hub_pass = "my_password")
+#' login_CopHub(username = "my_user_name", password = "my_password")
+#'
+#' ## Define USGS user credentials
+#' login_USGS(username = "my_user_name", password = "my_password")
 #'
 #' ## set archive directory
 #' dir.arc <- tempdir()
@@ -45,21 +48,37 @@
 #'
 #' @seealso getSentinel_query
 #'
-set_login_CopHub <- function(hub_user, hub_pass = NULL){
+login_CopHub <- function(username, password = NULL){
 
-  if(is.null(hub_pass)){hub_pass <- getPass()}
-  char_args <- list(hub_user = hub_user, hub_pass = hub_pass)
+  if(is.null(password)){password <- getPass()}
+  char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
-  options(gSD.cophub_user=hub_user)
-  options(gSD.cophub_pass=hub_pass)
+  options(gSD.cophub_user=username)
+  options(gSD.cophub_pass=password)
   options(gSD.cophub_set=TRUE)
 }
 
+
 #' @rdname gSD_settings
 #' @export
+login_USGS <- function(username, password = NULL){
 
+  if(is.null(password)){password <- getPass()}
+  char_args <- list(username = username, password = password)
+  for(i in 1:length(char_args)){
+    if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
+  }
+  options(gSD.usgs_user=username)
+  options(gSD.usgs_pass=password)
+  options(gSD.usgs_set=TRUE)
+  options(gSD.usgs_apikey=usgs_login(username, password))
+}
+
+
+#' @rdname gSD_settings
+#' @export
 set_archive <- function(dir_archive){
 
   if(!is.character(dir_archive)){out(paste0("Argument 'dir_archive' needs to be of type 'character'."), type = 3)}
@@ -73,9 +92,7 @@ set_archive <- function(dir_archive){
 #' @rdname gSD_settings
 #' @importFrom mapedit drawFeatures
 #' @export
-
 set_aoi <- function(aoi){
-
   ## draw aoi with mapedit, if aoi is not defined
   if(missing(aoi)){
     aoi <- drawFeatures(crs = 4326)$geometry
@@ -91,11 +108,11 @@ set_aoi <- function(aoi){
   #out(paste0("Session AOI has been set successfully."), msg = T)
 }
 
+
 #' @rdname gSD_settings
 #' @importFrom sf st_sfc st_polygon
 #' @importFrom mapview mapview
 #' @export
-
 view_aoi <- function(color = "green"){
 
   if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)

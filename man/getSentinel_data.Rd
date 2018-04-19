@@ -4,8 +4,8 @@
 \alias{getSentinel_data}
 \title{Download Sentinel-1, -2 and -3 datasets}
 \usage{
-getSentinel_data(products, dir_out = NULL, force = FALSE, hub_user = NULL,
-  hub_pass = NULL, hub_access = "auto")
+getSentinel_data(products, dir_out = NULL, force = FALSE, username = NULL,
+  password = NULL, hub = "auto")
 }
 \arguments{
 \item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getSentinel_query}.}
@@ -14,11 +14,11 @@ getSentinel_data(products, dir_out = NULL, force = FALSE, hub_user = NULL,
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
-\item{hub_user}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{set_login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
+\item{username}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
 
-\item{hub_pass}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{set_login_CopHub} inputs or, if \code{set_login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
+\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
 
-\item{hub_access}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
+\item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 }
 \value{
 List of files that had been downloaded
@@ -50,7 +50,7 @@ platform <- "Sentinel-2"
 
 ## set login credentials and an archive directory
 \dontrun{
-set_login_CopHub(hub_user = "username") #asks for password or define 'hub_pass'
+login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)

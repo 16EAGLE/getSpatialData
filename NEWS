@@ -1,4 +1,20 @@
 -----------------------------------------------------------
+getSpatialData 0.0.3 (under development)
+getLandsat* function bundle for USGS EE client
+-----------------------------------------------------------
+New functions:
+ + getLandsat_names(): obtain dataset names
+ + getLandsat_query(): query USGS Earth Explorer for Landsat data
+ + getLandsat_preview(): preview (quick look) a queried Landsat product
+ + login_USGS(): session-wide login to USGS services
+
+Bug fixes:
+ + RGB clouring of preview functions is now correct
+
+Changes:
+ + clearer login functions naming (removed 'set_' prefix)
+
+-----------------------------------------------------------
 getSpatialData 0.0.2
 initial session-wide tool functions
 -----------------------------------------------------------

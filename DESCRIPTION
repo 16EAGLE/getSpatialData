@@ -1,8 +1,8 @@
 Package: getSpatialData
 Type: Package
 Title: Get different kinds of freely available spatial datasets
-Version: 0.0.2
-Date: 2018-04-01
+Version: 0.0.3
+Date: 2018-04-19
 Depends: R (>= 2.10)
 Authors@R: person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de",
   role = c("aut", "cre"))

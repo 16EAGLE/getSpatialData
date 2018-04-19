@@ -28,7 +28,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 * `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query() (beta).
 * `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products (beta).
-* `getLandsat_previews()` – previews the query results obtained with getLandsat_query() (beta).
+* `getLandsat_preview()` – previews the query results obtained with getLandsat_query() (beta).
 
 
 #### helper functions

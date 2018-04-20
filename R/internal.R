@@ -121,7 +121,9 @@ usgs_logout <- function(api.key){
 #' @keywords internal
 #' @noRd
 usgs_ds <- function(api.key, wildcard = NULL){
-  x <- GET(paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/datasets?jsonRequest={"apiKey":"', api.key, '"', if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}'))
+  q <- paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
+  if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
+  x <- GET(q)
   sapply(content(x)$data, function(y) y$datasetName, USE.NAMES = F)
 }
 

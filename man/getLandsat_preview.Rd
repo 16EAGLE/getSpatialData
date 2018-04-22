@@ -2,7 +2,7 @@
 % Please edit documentation in R/getLandsat_preview.R
 \name{getLandsat_preview}
 \alias{getLandsat_preview}
-\title{Creates an RGB preview of a Landsat product before downloading}
+\title{Preview a Landsat product}
 \usage{
 getLandsat_preview(product, on_map = TRUE, show_aoi = TRUE,
   username = NULL, password = NULL)

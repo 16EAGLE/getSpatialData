@@ -1,4 +1,4 @@
-#' Download Sentinel-1, -2 and -3 datasets
+#' Download Sentinel-1, -2 and -3 data
 #'
 #' \code{getSentinel_data} downloads complete Sentinel datasets including imagery and meta files from the Copernicus Open Access Hubs for Sentinel data. The datasets are identified by the query return of \link{getSentinel_query}.
 #'
@@ -7,7 +7,7 @@
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
-#' @return List of files that had been downloaded
+#' @return Character vector of files that had been downloaded.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -74,7 +74,7 @@ getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username =
   if(!is.null(password)){password = password}else{password = getPass()}
 
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/SENTINEL-2/")}
+    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/COPERNICUS/")}
     if(!dir.exists(dir_out)) dir.create(dir_out)
   }
 
@@ -94,8 +94,8 @@ getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username =
   md5 <- sapply(url.md5, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
 
   url.ds <- products$url
-  prod.idf <- products$identifier
-  file.ds <- sapply(prod.idf, function(x) paste0(dir_out, "/", x, ".zip"), USE.NAMES = F) #download to file
+  prod.id <- products$identifier
+  file.ds <- sapply(prod.id, function(x) paste0(dir_out, "/", x, ".zip"), USE.NAMES = F) #download to file
 
   ## download not parallelized (2 downstreams max)
   down.status <- rep(FALSE, length(url.ds))
@@ -108,25 +108,25 @@ getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username =
     for(i in which(down.status == F)){
       if(!file.exists(file.ds[i]) | force == T){
         if(file.exists(file.ds[i])) file.remove(file.ds[i]) #remove in case of force being TRUE
-        out(paste0("Downloading '", prod.idf[i], "' to '", file.ds[i], "'..."), msg = T)
+        out(paste0("Downloading '", prod.id[i], "' to '", file.ds[i], "'..."), msg = T)
         gSD.get(url.ds[i], cred[1], cred[2], dir.file = file.ds[i], prog = T)
 
         if(as.character(md5sum(file.ds[i])) == tolower(md5[i])){
           out("Successfull download, MD5 check sums match.", msg = T)
           down.status[i] <- T
         } else{
-          out(paste0("Downloading of '", prod.idf[i],"' failed, MD5 check sums do not match."), type = 2)
+          out(paste0("Downloading of '", prod.id[i],"' failed, MD5 check sums do not match."), type = 2)
           file.remove(file.ds[i])
         }
       } else{
-        out(paste0("Skipping '", prod.idf[i], "', since '", file.ds[i], "' already exists..."), msg = T)
+        out(paste0("Skipping '", prod.id[i], "', since '", file.ds[i], "' already exists..."), msg = T)
       }
     }
     down.retry <- down.retry-1 #limit retries
   }
 
   if(any(down.status) == F){out(paste0("All downloads failed due to unknown reason (", toString(max.retry), " attempts)."), type=3)}
-  if(all(down.status) == F){out(paste0("Downloads failed for datasets '", paste0(prod.idf[down.status == F], collapse = "', '"),  "' (", toString(max.retry), " attempts)."), type = 2)}
+  if(all(down.status) == F){out(paste0("Downloads failed for datasets '", paste0(prod.id[down.status == F], collapse = "', '"),  "' (", toString(max.retry), " attempts)."), type = 2)}
 
   out(paste0("All downloads have been succesfull (", toString(max.retry-down.retry), " attempts)."), msg = T)
   return(file.ds[down.status])

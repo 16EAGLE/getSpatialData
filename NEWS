@@ -6,6 +6,7 @@ New functions:
  + getLandsat_names(): obtain dataset names
  + getLandsat_query(): query USGS Earth Explorer for Landsat data
  + getLandsat_preview(): preview (quick look) a queried Landsat product
+ + getLandsat_data(): download Landsat data on-demand from USGS ESPA
  + login_USGS(): session-wide login to USGS services
 
 Bug fixes:
@@ -13,6 +14,7 @@ Bug fixes:
 
 Changes:
  + clearer login functions naming (removed 'set_' prefix)
+ + all request are now internally channeld through gSD.get/gSD.post
 
 -----------------------------------------------------------
 getSpatialData 0.0.2

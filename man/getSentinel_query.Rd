@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_query.R
 \name{getSentinel_query}
 \alias{getSentinel_query}
-\title{Query Sentinel-1, -2 and -3 data from the Copernicus Open Access Hubs}
+\title{Query Sentinel-1, -2 and -3 data}
 \usage{
 getSentinel_query(time_range, platform, aoi = NULL, username = NULL,
   password = NULL, hub = "auto")

@@ -1,4 +1,4 @@
-#' Query Sentinel-1, -2 and -3 data from the Copernicus Open Access Hubs
+#' Query Sentinel-1, -2 and -3 data
 #'
 #' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
 #'

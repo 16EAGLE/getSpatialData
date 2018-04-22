@@ -8,11 +8,11 @@
 #' @keywords internal
 #' @noRd
 
-out <- function(input,type = 1, ll = 1, msg = FALSE, sign = ""){
+out <- function(input,type = 1, ll = 1, msg = FALSE, sign = "", flush = F){
   if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
   else{if(type == 3){stop(input,call. = FALSE)}else{if(ll == 1){
-    if(msg == FALSE){cat(paste0(sign,input),sep="\n")
-    }else{message(paste0(sign,input))}}}}
+    if(msg == FALSE){ cat(paste0(sign,input),sep="\n")
+    } else{message(paste0(sign,input))}}}}
 }
 
 #' Simplifies check of variables being FALSE
@@ -46,22 +46,49 @@ check.cmd <- function(cmd){
 
 
 #' gSD.get
-#' @param q.url query url
-#' @param q.user query user
-#' @param q.pass query pass
+#' @param url url
+#' @param username user
+#' @param password pass
+#' @param dir.file output file path
+#' @param prog show or not show progress console
 #' @importFrom httr GET stop_for_status warn_for_status message_for_status progress
 #' @keywords internal
 #' @noRd
-gSD.get <- function(q.url, q.user, q.pass, dir.file = NULL, prog = F){
-  if(is.null(dir.file)){
-    x <- GET(q.url, authenticate(q.user, q.pass))
-  } else{
-    if(is.FALSE(prog)) x <- GET(q.url, authenticate(q.user, q.pass), write_disk((dir.file)))
-    if(is.TRUE(prog)) x <- GET(q.url, authenticate(q.user, q.pass), progress(), write_disk((dir.file)))
-  }
+gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
+
+  get.str <-"x <- GET(url"
+  if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
+  if(!is.null(dir.file)) get.str <- paste0(get.str, ", write_disk(dir.file)")
+  if(is.TRUE(prog)) get.str <- paste0(get.str, ", progress()")
+  get.str <- paste0(get.str, ")")
+  eval(parse(text = get.str))
+
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   #message_for_status(x); cat("\n")
+  return(x)
+}
+
+
+#' gSD.post
+#' @param url url
+#' @param username user
+#' @param password pass
+#' @param body body
+#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
+#' @keywords internal
+#' @noRd
+gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
+
+  post.str <-"x <- POST(url"
+  if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
+  post.str <- paste0(post.str, ", body = body)")
+  eval(parse(text = post.str))
+
+  if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
+  stop_for_status(x, "connect to server.")
+  warn_for_status(x)
+  #message_for_status(x); cat("\n")}
   return(x)
 }
 
@@ -79,9 +106,9 @@ cophub_api <- function(x, p, user, pw){ #naming needs to change here!
     if(p == "Sentinel-1" | p == "Sentinel-2"){x <- "operational"
     }else{x <- "pre-ops"}
   }
-  if(x == "operational"){x <- 'https://scihub.copernicus.eu/dhus'}
+  if(x == "operational"){x <- getOption("gSD.api")$dhus}
   if(x == "pre-ops"){
-    x <- 'https://scihub.copernicus.eu/s3'
+    x <- getOption("gSD.api")$s3
     user <- "s3guest"
     pw <- "s3guest"
   }
@@ -96,7 +123,7 @@ cophub_api <- function(x, p, user, pw){ #naming needs to change here!
 #' @keywords internal
 #' @noRd
 usgs_login <- function(username, password){
-  x <- POST(paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
+  x <- POST(paste0(getOption("gSD.api")$ee, 'login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   content(x)$data
@@ -108,7 +135,7 @@ usgs_login <- function(username, password){
 #' @keywords internal
 #' @noRd
 usgs_logout <- function(api.key){
-  x <- GET(paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/logout?jsonRequest={"apiKey":"', api.key, '"}'))
+  x <- gSD.get(paste0(getOption("gSD.api")$ee, 'logout?jsonRequest={"apiKey":"', api.key, '"}'))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   content(x)$data
@@ -121,12 +148,50 @@ usgs_logout <- function(api.key){
 #' @keywords internal
 #' @noRd
 usgs_ds <- function(api.key, wildcard = NULL){
-  q <- paste0('https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
+  q <- paste0(getOption("gSD.api")$ee, 'datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
   if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
-  x <- GET(q)
+  x <- gSD.get(q)
   sapply(content(x)$data, function(y) y$datasetName, USE.NAMES = F)
 }
 
+
+#' USGS ESPA ordering functon
+#'
+#' @param id id
+#' @param product product
+#' @param username username
+#' @param password password
+#' @param format format
+#' @keywords internal
+#' @importFrom httr content
+#' @noRd
+espa.order <- function(id, product = "sr", username, password, format = "gtiff"){
+
+  ## check query and abort, if not available
+  checked <- lapply(id , function(x, v = verbose){
+    r <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
+    if(names(content(r)) == "not_implemented") out(paste0("'", x, "': This ID is invalid, as it cannot be found in the ESPA database. Please remove it from input and reexecute."), type = 3)
+    list(x, r)
+  })
+
+  ## group request by collection (single or multi order)
+  req.data <- lapply(checked, function(x) c(names(content(x[[2]])), x[[1]]))
+  coll <- sapply(req.data, function(x) x[[1]][[1]], USE.NAMES=F)
+  coll.uni <- unique(coll)
+  out(paste0("Collecting from ", toString(length(coll.uni)), " collection(s) [", paste0(coll.uni, collapse = ", "), "], resulting in ", toString(length(coll.uni)), " order(s)..."))
+  req.coll <- lapply(coll.uni, function(x, c = coll, rd = req.data) rd[which(c == x)])
+
+  ## build request
+  req.body <- lapply(req.coll, function(x, p = product, f = format){
+    i <- paste0(sapply(x, function(y) y[2], USE.NAMES = F), collapse = '", "')
+    paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": ["', p, '"]}, "format": "', f, '"}')
+  })
+
+  ## order
+  order <- lapply(req.body, function(x, user = username, pass = password) gSD.post(url = paste0(getOption("gSD.api")$espa, "order/"), username = user, password = pass, body = x))
+  out(paste0("Products '", paste0(id, collapse = "', '"), " have been ordered successfully [product = '", product, ", format = '", format, "']."))
+  return(sapply(order, function(x) content(x)[[1]], USE.NAMES = F))
+}
 
 #' make aoi
 #'
@@ -170,6 +235,10 @@ make_aoi <- function(aoi, type = "matrix", quiet = F){
 
   op <- options()
   op.gSD <- list(
+    gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
+                   s3 = 'https://scihub.copernicus.eu/s3/',
+                   espa = 'https://espa.cr.usgs.gov/api/v0/',
+                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/'),
     gSD.cophub_user = FALSE,
     gSD.cophub_pass = FALSE,
     gSD.cophub_set = FALSE,

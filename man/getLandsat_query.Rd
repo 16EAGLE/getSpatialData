@@ -2,7 +2,7 @@
 % Please edit documentation in R/getLandsat_query.R
 \name{getLandsat_query}
 \alias{getLandsat_query}
-\title{Query Landsat data from the USGS Earth Explorer}
+\title{Query Landsat data}
 \usage{
 getLandsat_query(time_range, name, aoi = NULL, username = NULL,
   password = NULL)

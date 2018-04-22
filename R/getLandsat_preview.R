@@ -1,4 +1,4 @@
-#' Creates an RGB preview of a Landsat product before downloading
+#' Preview a Landsat product
 #'
 #' \code{getLandsat_preview} previews single products as RGB plot which had been queried using \link{getLandsat_query}. The function is useful to apply visual checks to products before downloading them.
 #'
@@ -45,7 +45,7 @@ getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username
 
   ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
-  GET(url.icon, write_disk(path = file_dir))
+  gSD.get(url.icon, dir.file = file_dir)
   preview <- stack(file_dir)
   #NAvalue(preview) <- 0
 

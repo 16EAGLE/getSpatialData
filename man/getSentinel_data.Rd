@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_data.R
 \name{getSentinel_data}
 \alias{getSentinel_data}
-\title{Download Sentinel-1, -2 and -3 datasets}
+\title{Download Sentinel-1, -2 and -3 data}
 \usage{
 getSentinel_data(products, dir_out = NULL, force = FALSE, username = NULL,
   password = NULL, hub = "auto")
@@ -21,7 +21,7 @@ getSentinel_data(products, dir_out = NULL, force = FALSE, username = NULL,
 \item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 }
 \value{
-List of files that had been downloaded
+Character vector of files that had been downloaded.
 }
 \description{
 \code{getSentinel_data} downloads complete Sentinel datasets including imagery and meta files from the Copernicus Open Access Hubs for Sentinel data. The datasets are identified by the query return of \link{getSentinel_query}.

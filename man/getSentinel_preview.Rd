@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_preview.R
 \name{getSentinel_preview}
 \alias{getSentinel_preview}
-\title{Creates an RGB preview of a Sentinel product before downloading}
+\title{Preview a Sentinel product}
 \usage{
 getSentinel_preview(product, on_map = TRUE, show_aoi = TRUE,
   username = NULL, password = NULL, hub = "auto")

@@ -1,4 +1,4 @@
-#' Creates an RGB preview of a Sentinel product before downloading
+#' Preview a Sentinel product
 #'
 #' \code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.
 #'
@@ -90,7 +90,7 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, usernam
 
   ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
-  GET(url.icon, authenticate(cred[1], cred[2]), write_disk(path = file_dir))
+  gSD.get(url.icon, cred[1], cred[2], dir.file = file_dir)
   preview <- stack(file_dir)
   #NAvalue(preview) <- 0
 

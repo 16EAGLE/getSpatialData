@@ -18,12 +18,13 @@ Currently, a MODIS get function bundle is being developed.
 
 The following functions are publicly available and have been tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10:
 
-#### main functions
+#### Sentinel
 
 * `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found datasets (rows) and their attributes (columns).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview an user-selected, individual dataset without the necessity to download the dataset first. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI. Alternatively, an RGB plot can be displayed.
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. A transform function bundle helping to deal with the downloaded files within R without expert knowledge will follow soon.
 
+#### Landsat
 
 * `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query().
 * `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products.

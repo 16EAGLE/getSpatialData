@@ -49,7 +49,6 @@ getLandsat_data <- function(products, level = "sr", dir_out = NULL, force = FALS
   ## place order(s)
   out("Ordering requested items from ESPA...")
   order.list <- espa.order(id = prod.id, product = level, username = username, password = password, format = "gtiff")
-  #order.list <- "espa-jxsw@web.de-04222018-101758-710"
 
   ## check order(s)
   remain.active = TRUE; ini = TRUE; show.status = TRUE

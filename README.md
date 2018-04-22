@@ -10,7 +10,7 @@
 
 Currently, `getSpatialData` can be used to download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some). An R-native getLandsat function bundle connecting to the USGS Earth Explorer and the USGS ESPA APIs can be used to query, preview and on-demand download Landsat data of different product levels.
 
-An universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects. Alternatively, it lets the user draw an AOI via `mapedit`.
+A universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects. Alternatively, it lets the user draw an AOI via `mapedit`.
 
 Currently, a MODIS get function bundle is being developed. 
 
@@ -25,9 +25,10 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. A transform function bundle helping to deal with the downloaded files within R without expert knowledge will follow soon.
 
 
-* `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query() (beta).
-* `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products (beta).
-* `getLandsat_preview()` – previews the query results obtained with getLandsat_query() (beta).
+* `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query().
+* `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products.
+* `getLandsat_preview()` – previews the query results obtained with getLandsat_query().
+* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products from USGS ESPA, including top-of-atmosphere or surface reflectance products as well as different indices, processed on-demand.
 
 
 #### helper functions

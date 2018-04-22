@@ -8,12 +8,11 @@
 
 ## State of development
 
-Lately, an R-native getSentinel function bundle has been deployed, which enables the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some).
+Currently, `getSpatialData` can be used to download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some). An R-native getLandsat function bundle connecting to the USGS Earth Explorer and the USGS ESPA APIs can be used to query, preview and on-demand download Landsat data of different product levels.
 
 An universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects. Alternatively, it lets the user draw an AOI via `mapedit`.
 
-Currently, a NASA EE and USGS ESPA R client is being implemented, which will allow the user to query, preview, process-on-demand and download imagery from Landsat, MODIS etc. directly within R. The client is wirtten in R and will be published as soon as its base functionalities can be tested.
-
+Currently, a MODIS get function bundle is being developed. 
 
 ### Available functions
 

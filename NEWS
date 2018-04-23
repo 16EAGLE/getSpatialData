@@ -9,8 +9,12 @@ New functions:
  + getLandsat_data(): download Landsat data on-demand from USGS ESPA
  + login_USGS(): session-wide login to USGS services
 
+New features:
+ + getLandsat_query(): argument "name" is now optional and set to "all" by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column "dataset_name".
+
 Bug fixes:
  + RGB clouring of preview functions is now correct
+ + getLandsat_query() outputs now more than 10 products per query (maximum is 50 000)
 
 Changes:
  + clearer login functions naming (removed 'set_' prefix)

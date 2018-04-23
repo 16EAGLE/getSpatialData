@@ -4,13 +4,13 @@
 \alias{getLandsat_query}
 \title{Query Landsat data}
 \usage{
-getLandsat_query(time_range, name, aoi = NULL, username = NULL,
+getLandsat_query(time_range, name = "all", aoi = NULL, username = NULL,
   password = NULL)
 }
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
 
-\item{name}{character, identifies the name of the dataset to be queried. Use \link{getLandsat_names} to revcieve a vector with all available Landsat datasets from Earth Explorer.}
+\item{name}{character, optional. Identifies the name of the dataset to be queried. If set to "all" (default), every available Landsat dataset is searched for results and included in the output. Use \link{getLandsat_names} to revcieve a vector with all available Landsat datasets from Earth Explorer, if you want to select a specific one.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 

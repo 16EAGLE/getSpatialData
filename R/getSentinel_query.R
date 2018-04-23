@@ -149,14 +149,13 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL,
       return(x)
     })
 
-    ## assemble products data.frame
-    pd.names <- unique(unlist(query.names))
-    pd.frame <- as.data.frame(stats::setNames(replicate(length(pd.names),numeric(0), simplify = F), pd.names))
-    for( i in 1:length(query.fields)){
-      subs <- match(names(query.fields[[i]]), pd.names)
-      pd.frame[i,subs] <- sapply(query.fields[[i]], as.character)
-    }
+    return.names <- unique(unlist(query.names))
+    return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names))
+    return.df <-  do.call(rbind.data.frame, lapply(query.fields, function(x, rn = return.names,  rdf = return.df){
+      rdf[1, match(names(x), rn)] <- sapply(x, as.character)
+      return(rdf)
+    }))
   }
 
-  if(is.TRUE(give.return)) return(pd.frame)
+  if(is.TRUE(give.return)) return(return.df)
 }

@@ -108,11 +108,14 @@ getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username =
     for(i in which(down.status == F)){
       if(!file.exists(file.ds[i]) | force == T){
         if(file.exists(file.ds[i])) file.remove(file.ds[i]) #remove in case of force being TRUE
-        out(paste0("Downloading '", prod.id[i], "' to '", file.ds[i], "'..."), msg = T)
-        gSD.get(url.ds[i], cred[1], cred[2], dir.file = file.ds[i], prog = T)
 
-        if(as.character(md5sum(file.ds[i])) == tolower(md5[i])){
+        file.tmp <- tempfile(tmpdir = dir_out, fileext = ".zip")
+        out(paste0("Downloading '", prod.id[i], "' to '", file.ds[i], "'..."), msg = T)
+        gSD.get(url.ds[i], cred[1], cred[2], dir.file = file.tmp, prog = T) #file.ds[i]
+
+        if(as.character(md5sum(file.tmp)) == tolower(md5[i])){ #file.ds[i]
           out("Successfull download, MD5 check sums match.", msg = T)
+          file.rename(file.tmp, file.ds[i])
           down.status[i] <- T
         } else{
           out(paste0("Downloading of '", prod.id[i],"' failed, MD5 check sums do not match."), type = 2)

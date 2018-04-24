@@ -41,8 +41,6 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     } else{
       out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
     }
-  } else{
-    aoi <- make_aoi(aoi, type = "matrix")
   }
   aoi <- make_aoi(aoi, type = "sf", quiet = T)
 

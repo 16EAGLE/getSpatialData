@@ -4,13 +4,20 @@
 \alias{getLandsat_data}
 \title{Download Landsat data}
 \usage{
-getLandsat_data(products, level = "sr", dir_out = NULL, force = FALSE,
-  username = NULL, password = NULL)
+getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
+  force = FALSE, username = NULL, password = NULL)
 }
 \arguments{
 \item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.}
 
 \item{level}{character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.}
+
+\item{source}{character, either:
+\itemize{
+   \item "auto" for automatic selection of data source depending on \code{level}
+   \item "ESPA" to download on-demand products from USGS-EROS ESPA
+   \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
+}}
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 

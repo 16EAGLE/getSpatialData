@@ -41,6 +41,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 * `set_aoi` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
 * `view_aoi` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
+* `get_aoi` - get the session AOI you have defined or drawn before as `sf`, `sp` or `matrix` object.
 
 
 ### Manuals

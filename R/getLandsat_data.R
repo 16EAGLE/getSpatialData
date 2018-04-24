@@ -6,6 +6,12 @@
 #' @param products data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
 #' @param level character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.
+#' @param source character, either:
+#' \itemize{
+#'    \item "auto" for automatic selection of data source depending on \code{level}
+#'    \item "ESPA" to download on-demand products from USGS-EROS ESPA
+#'    \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
+#' }
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
 #' @return Character vector of files that had been downloaded.
@@ -22,7 +28,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
 #' @export
 #'
-getLandsat_data <- function(products, level = "sr", dir_out = NULL, force = FALSE, username = NULL, password = NULL){
+getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = NULL, force = FALSE, username = NULL, password = NULL){
 
   ## Global USGS login
   if(is.TRUE(getOption("gSD.usgs_set"))){
@@ -37,95 +43,113 @@ getLandsat_data <- function(products, level = "sr", dir_out = NULL, force = FALS
     if(!dir.exists(dir_out)) dir.create(dir_out)
   }
 
-  prod.id <- products$displayId
-  levels.avail <- products$levels_available
-  char_args <- list(prod.id = prod.id, levels.avail = levels.avail)
+  char_args <- list(level = level, source = source)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined output directory does not exist.", type=3)
 
-  ## check if requested level is allowed
-  for(x in levels.avail) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one product in 'products'. Check column 'levels_available'."), type = 3)
+  ## Check file existence
+  file.ds <- sapply(products$displayId, function(x, d = dir_out, l = level) paste0(d, "/", x, "_", toupper(l), ".tar.gz"), USE.NAMES = F)
+  if(!isTRUE(force)){
+    sub.avoid <- which(file.exists(file.ds) == T)
+    if(length(sub.avoid) > 0) out(paste0("Product(s) '", paste0(products$displayId[sub.avoid], collapse = "', "), "' are already present and will be skipped, since force = FALSE."))
+    products <- products[!file.exists(file.ds),]
+    file.down <- file.ds[!file.exists(file.ds)]
+  }
 
-  ## place order(s)
-  out("Ordering requested items from ESPA...")
-  order.list <- espa.order(id = prod.id, product = level, username = username, password = password, format = "gtiff")
+  if(nrow(products) == 0){
+    out("Requested products are already present in '", dir_out, "'.")
 
-  ## check order(s)
-  remain.active = TRUE; ini = TRUE; show.status = TRUE
-  while(remain.active){
+  } else{
+    prod.id <- products$displayId
+    levels.avail <- products$levels_available
 
-    ## query server for all ordered items
-    order.status <- lapply(order.list, function(x, user = username, pass = password) gSD.get(paste0(getOption("gSD.api")$espa, "order-status/", x), user, pass))
+    ## check if requested level is allowed
+    for(x in levels.avail) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one product in 'products'. Check column 'levels_available'."), type = 3)
 
-    ## get tiems
-    items <- lapply(order.list, function(x, user = username, pass = password){
-      y <- gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass)
-      status <- content(y)
-    })
+    ## inser source
 
-    ## get items content
-    items <- lapply(items, function(x) lapply(x[[1]], function(y){
-      r <- unlist(y)
-      names(r) <- names(y)
-      return(r)
-    }))
+    ## ESPA: place order(s)
+    out("Ordering requested items from ESPA...")
+    order.list <- espa.order(id = prod.id, product = level, username = username, password = password, format = "gtiff")
 
-    ## make items data.frame containing revieve status
-    items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
-    items <- cbind(items, items$status == "complete")
-    #items <- cbind.data.frame(items, sapply(as.character(items$product_dload_url), function(x) if(nchar(x) == 0) "" else paste0(dir_out, "/", tail(strsplit(x, "/")[[1]], n=1)), USE.NAMES = F), stringsAsFactors = F)
-    items <- cbind.data.frame(items, sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
-    colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
+    ## check order(s)
+    remain.active = TRUE; ini = TRUE; show.status = TRUE
+    while(remain.active){
 
-    if(ini){
-      items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
-      colnames(items.df)[ncol(items.df)] <- "recieved"
-      ini <- FALSE
-    } else{
-      items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
-    }
-    if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
-    items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
+      ## query server for all ordered items
+      order.status <- lapply(order.list, function(x, user = username, pass = password) gSD.get(paste0(getOption("gSD.api")$espa, "order-status/", x), user, pass))
 
-    ## Items to download
-    if(all(items.df$available) & all(items.df$recieved)){
-      remain.active <- FALSE
+      ## get tiems
+      items <- lapply(order.list, function(x, user = username, pass = password){
+        y <- gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass)
+        status <- content(y)
+      })
 
-    } else{
+      ## get items content
+      items <- lapply(items, function(x) lapply(x[[1]], function(y){
+        r <- unlist(y)
+        names(r) <- names(y)
+        return(r)
+      }))
 
-      ## Download or wait for status
-      sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
-      if(length(sub.download) > 0){
+      ## make items data.frame containing recieve status
+      items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
+      items <- cbind(items, items$status == "complete")
+      items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
+      colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
 
-        items.get <- items.df[sub.download,]
-        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "."), msg = T)
-        items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x){
-          y <- rbind.data.frame(x, stringsAsFactors = F)
-          colnames(y) <- names(x)
+      if(ini){
+        items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
+        colnames(items.df)[ncol(items.df)] <- "recieved"
+        ini <- FALSE
+      } else{
+        items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
+      }
+      if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
+      items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
 
-          out(paste0("Attempting to download '", y$name, "' to '", y$file, "'..."), msg = T)
-          md5 <- strsplit(content(gSD.get(y$cksum_download_url), as = "text", encoding = "UTF-8"), " ")[[1]][1]
-          gSD.get(y$product_dload_url,dir.file = y$file, prog = T)
-
-          if(as.character(md5sum(y$file)) == tolower(md5)){
-            out("Successfull download, MD5 check sums match.", msg = T)
-            return(TRUE)
-
-          } else{
-            out(paste0("Download failed, MD5 check sums do not match. Will retry."), type = 2)
-            file.remove(y$file)
-            return(FALSE)
-          }
-        })
-        show.status <- TRUE
+      ## Items to download
+      if(all(items.df$available) & all(items.df$recieved)){
+        remain.active <- FALSE
 
       } else{
-        if(isTRUE(show.status)) out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
-        show.status <- FALSE
+
+        ## Download or wait for status
+        sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
+        if(length(sub.download) > 0){
+
+          items.get <- items.df[sub.download,]
+          out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "."), msg = T)
+          items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
+            y <- rbind.data.frame(x, stringsAsFactors = F)
+            colnames(y) <- names(x)
+
+            out(paste0("Attempting to download '", y$name, "' to '", y$file, "'..."), msg = T)
+            md5 <- strsplit(content(gSD.get(y$cksum_download_url), as = "text", encoding = "UTF-8"), " ")[[1]][1]
+            file.tmp <- tempfile(tmpdir = d, fileext = ".tar.gz")
+            gSD.get(y$product_dload_url, dir.file = file.tmp, prog = T) #y$file
+
+            if(as.character(md5sum(file.tmp)) == tolower(md5)){
+              out("Successfull download, MD5 check sums match.", msg = T)
+              file.rename(file.tmp, y$file)
+              return(TRUE)
+
+            } else{
+              out(paste0("Download failed, MD5 check sums do not match. Will retry."), type = 2)
+              file.remove(file.tmp)
+              return(FALSE)
+            }
+          })
+          show.status <- TRUE
+
+        } else{
+          if(isTRUE(show.status)) out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
+          show.status <- FALSE
+        }
       }
+      Sys.sleep(10) #wait before reconnecting to ESPA to recheck status
     }
-    Sys.sleep(10)
+    out(paste0("Requested products have been stored to '", dir_out, "'."))
   }
-  out(paste0("Requested products have been stored to '", dir_out, "'."))
-  return(items.df$file)
+  return(file.ds)
 }

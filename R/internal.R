@@ -189,7 +189,7 @@ espa.order <- function(id, product = "sr", username, password, format = "gtiff")
 
   ## order
   order <- lapply(req.body, function(x, user = username, pass = password) gSD.post(url = paste0(getOption("gSD.api")$espa, "order/"), username = user, password = pass, body = x))
-  out(paste0("Products '", paste0(id, collapse = "', '"), " have been ordered successfully [product = '", product, ", format = '", format, "']."))
+  out(paste0("Products '", paste0(id, collapse = "', '"), "' have been ordered successfully [product = '", product, "', format = '", format, "']."))
   return(sapply(order, function(x) content(x)[[1]], USE.NAMES = F))
 }
 
@@ -198,7 +198,7 @@ espa.order <- function(id, product = "sr", username, password, format = "gtiff")
 #' @param aoi aoi
 #' @keywords internal
 #' @importFrom sp SpatialPolygons
-#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<-
+#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
 #' @noRd
 make_aoi <- function(aoi, type = "matrix", quiet = F){
 
@@ -223,9 +223,11 @@ make_aoi <- function(aoi, type = "matrix", quiet = F){
   ## get coordinates
   aoi.m <- st_coordinates(aoi)[,c(1,2)]
   aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
+  aoi.sp <- as_Spatial(aoi.sf)
 
   if(type == "matrix") return(aoi.m)
   if(type == "sf") return(aoi.sf)
+  if(type == "sp") return(aoi.sp)
 }
 
 #' On package startup

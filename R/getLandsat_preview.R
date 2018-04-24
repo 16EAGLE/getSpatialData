@@ -68,8 +68,8 @@ getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username
       if(is.FALSE(getOption("gSD.aoi_set"))){
         out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
       } else{
-        aoi.m <- getOption("gSD.aoi")
-        aoi.sf <- make_aoi(aoi.m, type = "sf", quiet = T)
+        aoi.sf <- getOption("gSD.aoi")
+        #aoi.sf <- make_aoi(aoi.m, type = "sf", quiet = T)
         map <- addFeatures(map, aoi.sf)
       }
     }

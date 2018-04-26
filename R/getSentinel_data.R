@@ -63,7 +63,7 @@
 #' @export
 
 getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username = NULL, password = NULL,
-                             hub = "auto"){
+                             hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
@@ -72,6 +72,7 @@ getSentinel_data <- function(products, dir_out = NULL, force = FALSE, username =
   }
   if(!is.character(username)){out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)}
   if(!is.null(password)){password = password}else{password = getPass()}
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/COPERNICUS/")}

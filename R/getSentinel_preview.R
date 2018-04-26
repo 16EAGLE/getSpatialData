@@ -67,7 +67,7 @@
 #' @export
 
 getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL,
-                                hub = "auto"){
+                                hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
@@ -76,6 +76,7 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, usernam
   }
   if(!is.character(username)){out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)}
   if(!is.null(password)){password = password}else{password = getPass()}
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Intercept false inputs and get inputs
   url.icon <- product$url.icon

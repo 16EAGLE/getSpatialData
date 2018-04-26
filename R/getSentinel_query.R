@@ -8,6 +8,7 @@
 #' @param username character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.
 #' @param password character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.
 #' @param hub character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
+#' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #'
 #' @return A data frame; each row represents one dataset. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for previewing and downloading.
 #'
@@ -66,7 +67,7 @@
 #' @export
 
 getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL, password = NULL,
-                              hub = "auto"){
+                              hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
@@ -75,6 +76,7 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL,
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)){ password = password} else{ password = getPass()}
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Global AOI
   if(is.null(aoi)){

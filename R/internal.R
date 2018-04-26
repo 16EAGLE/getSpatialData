@@ -8,7 +8,8 @@
 #' @keywords internal
 #' @noRd
 
-out <- function(input,type = 1, ll = 1, msg = FALSE, sign = "", flush = F){
+out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = getOption("gSD.verbose")){
+  if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
   if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
   else{if(type == 3){stop(input,call. = FALSE)}else{if(ll == 1){
     if(msg == FALSE){ cat(paste0(sign,input),sep="\n")
@@ -92,6 +93,32 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
   return(x)
 }
 
+#' gSD.download
+#' @param name name
+#' @param url url
+#' @param file file
+#' @importFrom tools md5sum
+#' @keywords internal
+#' @noRd
+gSD.download <- function(name, url.file, file, url.checksum = NULL){
+
+  out(paste0("Attempting to download '", name, "' to '", file, "'..."), msg = T)
+  file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+  gSD.get(url.file, dir.file = file.tmp, prog = T)
+
+  if(!is.null(url.checksum)){
+    md5 <- strsplit(content(gSD.get(url.checksum), as = "text", encoding = "UTF-8"), " ")[[1]][1]
+    if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
+    } else{
+      out(paste0("Download failed, MD5 check sums do not match. Will retry."), type = 2)
+      file.remove(file.tmp)
+      return(FALSE)
+    }
+  } #else out("Download finished. MD5 check sums not available (file integrity could not be checked).", msg = T)
+
+  file.rename(file.tmp, file)
+  return(TRUE)
+}
 
 #' get Copernicus Hub API url and credentials from user input
 #'
@@ -240,7 +267,10 @@ make_aoi <- function(aoi, type = "matrix", quiet = F){
     gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
                    s3 = 'https://scihub.copernicus.eu/s3/',
                    espa = 'https://espa.cr.usgs.gov/api/v0/',
-                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/'),
+                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/',
+                   aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',
+                   aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz'),
+    gSD.verbose = FALSE,
     gSD.cophub_user = FALSE,
     gSD.cophub_pass = FALSE,
     gSD.cophub_set = FALSE,

@@ -5,7 +5,8 @@
 \title{Download Landsat data}
 \usage{
 getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
-  force = FALSE, username = NULL, password = NULL, verbose = TRUE)
+  espa_order = NULL, force = FALSE, username = NULL, password = NULL,
+  verbose = TRUE)
 }
 \arguments{
 \item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.}
@@ -21,6 +22,8 @@ getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 
+\item{espa_order}{character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{products} is allowed to be undefined.}
+
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
 \item{username}{character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.}
@@ -33,13 +36,10 @@ getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
 Character vector of files that had been downloaded.
 }
 \description{
-\code{getLandsat_data} downloads Landsat datasets queried using \link{getLandsat_query} from USGS ESPA.
-}
-\details{
-Using ESPA, \code{getLandsat_data} offers the possibility of downloading not only L1 products, but also atmospherically corrected imager (surfaces reflectances) or multiple indeces (see argument \code{level}).
+\code{getLandsat_data} downloads Landsat datasets queried using \link{getLandsat_query} from different sources.
 }
 \note{
-Since ESPA is an on-demand service, \link{getLandsat_query} places an order and than waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The function status is indicated by the console messages that it is prompting during execution.
+ESPA is used as source if higher-level products are requested by the user (see \code{level}). Since ESPA is an on-demand service, \code{getLandsat_data} places an order and then waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The ESPA processing time depends on the size of the order and can take up to 48 hours in highly demanding cases! The function status is indicated by the console messages that it is prompting during execution.
 }
 \seealso{
 \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}

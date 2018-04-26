@@ -85,7 +85,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     }), SIMPLIFY = F), recursive = F)
 
     ## Read out meta data
-    out("Reading meta data of search result from USGS EarthExplorer...")
+    out("Reading meta data of search results from USGS EarthExplorer...")
     meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
     meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
     meta.val <- lapply(meta.list, function(x) sapply(x, function(y){

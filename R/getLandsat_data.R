@@ -1,6 +1,6 @@
 #' Download Landsat data
 #'
-#' \code{getLandsat_data} downloads Landsat datasets queried using \link{getLandsat_query} from USGS ESPA.
+#' \code{getLandsat_data} downloads Landsat datasets queried using \link{getLandsat_query} from different sources.
 #'
 #' @inheritParams getLandsat_query
 #' @param products data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.
@@ -12,12 +12,12 @@
 #'    \item "ESPA" to download on-demand products from USGS-EROS ESPA
 #'    \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
 #' }
+#' @param espa_order character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{products} is allowed to be undefined.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
 #' @return Character vector of files that had been downloaded.
 #'
-#' @details Using ESPA, \code{getLandsat_data} offers the possibility of downloading not only L1 products, but also atmospherically corrected imager (surfaces reflectances) or multiple indeces (see argument \code{level}).
-#' @note  Since ESPA is an on-demand service, \link{getLandsat_query} places an order and than waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The function status is indicated by the console messages that it is prompting during execution.
+#' @note ESPA is used as source if higher-level products are requested by the user (see \code{level}). Since ESPA is an on-demand service, \code{getLandsat_data} places an order and then waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The ESPA processing time depends on the size of the order and can take up to 48 hours in highly demanding cases! The function status is indicated by the console messages that it is prompting during execution.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -28,7 +28,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
 #' @export
 #'
-getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = NULL, force = FALSE, username = NULL, password = NULL, verbose = TRUE){
+getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = NULL, espa_order = NULL, force = FALSE, username = NULL, password = NULL, verbose = TRUE){
 
   ## Global USGS login
   if(is.TRUE(getOption("gSD.usgs_set"))){
@@ -39,33 +39,82 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
   if(!is.null(password)){password = password}else{password = getPass()}
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
+
+  ## Argument checks
+  source <- tolower(source)
+  level <- tolower(level)
+  char_args <- list(level = level, source = source)
+  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
+
+  if(is.null(espa_order)){
+    if(missing(products)) out("Argument 'products' must be defined (except if an ESPA order is given).", type = 3)
+    for(x in products$levels_available) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one product in 'products'. Check column 'levels_available'."), type = 3)
+  }
+
+
+  ## check/set source (direct EE download needs machine-to-machine privilleges)
+  if(!is.null(espa_order)){ source <- "espa"
+  } else{
+    if(source == "auto"){
+      if(level == "l1"){
+        if(all(sapply(products$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
+          source <- "aws"
+        } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'products' contains products that do not originate from Landsat-8.", type = 3)
+      } else source <- "espa"
+    } else{
+      if(level == "l1" & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
+    }
+  }
+
+
+  ## Redirect, if direct ESPA order download
+  if(!is.null(espa_order)){
+    prod.id <- sapply(espa_order, function(x, user = username, pass = password){
+      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))[[1]][[1]]$name
+    }, USE.NAMES = F)
+    level <- sapply(espa_order, function(x, user = username, pass = password){
+      y <- unlist(content(gSD.get(paste0(getOption("gSD.api")$espa, "order/", x), user, pass))$product_opts)
+      y <- y[grep("products", names(y))]
+      names(y) <- NULL
+      return(y)
+    }, USE.NAMES = F)
+  } else{
+    prod.id <- products$displayId
+  }
+
+
+  ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/LANDSAT/", toupper(level), "/")}
     if(!dir.exists(dir_out)) dir.create(dir_out)
   }
 
-  source <- tolower(source)
-  level <- tolower(level)
-  char_args <- list(level = level, source = source)
-  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
-  if(!dir.exists(dir_out)) out("The defined output directory does not exist.", type=3)
 
-  prod.id <- products$displayId
-  levels.avail <- products$levels_available
+  ## ESPA
+  if(source == "espa"){
 
-  ## check if requested level is allowed
-  for(x in levels.avail) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one product in 'products'. Check column 'levels_available'."), type = 3)
+    ## files
+    dir.ds <- sapply(prod.id, function(x, d = dir_out, l = level) paste0(d, "/", x, "_", toupper(l)), USE.NAMES = F)
+    catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
+    file.ds <- sapply(dir.ds, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
 
-  ## check/set source (the Level-1 issue fix: direct EE download, needs machine-to-machine privilleges)
-  if(source == "auto"){
-    if(level == "l1"){
-      if(all(sapply(products$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
-        source <- "aws"
-      } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'products' contains products that do not originate from Landsat-8.", type = 3)
-    } else source <- "espa"
-  } else{
-    if(level == "l1" & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
+    if(!isTRUE(force)){
+      sub.avoid <- which(file.exists(file.ds) == T)
+      if(length(sub.avoid) > 0) out(paste0("Product(s) '", paste0(products$displayId[sub.avoid], collapse = "', "), "' are already present and will be skipped, since force = FALSE."))
+      if(is.null(espa_order)) products <- products[!file.exists(file.ds),]
+      file.down <- file.ds[!file.exists(file.ds)]
+    }
+
+    if(length(file.down) != 0){
+      if(is.null(espa_order)){
+        order.list <- espa.order(id = products$displayId, level = level, username = username, password = password, format = "gtiff")
+      } else{
+        order.list <- espa_order
+      }
+      espa.download(order.list = order.list, username = username, password = password, file.down = file.down)
+    }
   }
+
 
   ## AWS
   if(source == "aws"){
@@ -110,93 +159,6 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
     }, SIMPLIFY = F)
   }
 
-
-  ## ESPA
-  if(source == "espa"){
-
-    ## files
-    dir.ds <- sapply(products$displayId, function(x, d = dir_out, l = level) paste0(d, "/", x, "_", toupper(l)), USE.NAMES = F)
-    catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
-    file.ds <- sapply(dir.ds, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
-
-    if(!isTRUE(force)){
-      sub.avoid <- which(file.exists(file.ds) == T)
-      if(length(sub.avoid) > 0) out(paste0("Product(s) '", paste0(products$displayId[sub.avoid], collapse = "', "), "' are already present and will be skipped, since force = FALSE."))
-      products <- products[!file.exists(file.ds),]
-      file.down <- file.ds[!file.exists(file.ds)]
-    }
-
-    if(nrow(products) != 0){
-      out("Ordering requested items from ESPA...")
-      #order.list <- espa.order(id = prod.id, product = level, username = username, password = password, format = "gtiff")
-      order.list <- "espa-jxsw@web.de-04262018-073617-054"
-      out("DEMO: FIXED ORDER!!!", type = 2)
-
-      ## check order(s)
-      remain.active = TRUE; ini = TRUE; show.status = TRUE
-      while(remain.active){
-
-        ## query server for all ordered items
-        order.status <- lapply(order.list, function(x, user = username, pass = password) gSD.get(paste0(getOption("gSD.api")$espa, "order-status/", x), user, pass))
-
-        ## get tiems
-        items <- lapply(order.list, function(x, user = username, pass = password){
-          y <- gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass)
-          status <- content(y)
-        })
-
-        ## get items content
-        items <- lapply(items, function(x) lapply(x[[1]], function(y){
-          r <- unlist(y)
-          names(r) <- names(y)
-          return(r)
-        }))
-
-        ## make items data.frame containing recieve status
-        items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
-        items <- cbind(items, items$status == "complete")
-        items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
-        colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
-
-        if(ini){
-          items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
-          colnames(items.df)[ncol(items.df)] <- "recieved"
-          ini <- FALSE
-        } else{
-          items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
-        }
-        if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
-        items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
-
-        ## Items to download
-        if(all(items.df$available) & all(items.df$recieved)){
-          remain.active <- FALSE
-
-        } else{
-
-          ## Download or wait for status
-          sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
-          if(length(sub.download) > 0){
-
-            items.get <- items.df[sub.download,]
-            out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "."), msg = T)
-            items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
-
-              y <- rbind.data.frame(x, stringsAsFactors = F)
-              colnames(y) <- names(x)
-              gSD.download(name = y$name, url.file = y$product_dload_url, url.checksum = y$cksum_download_url, file = y$file)
-            })
-            show.status <- TRUE
-
-          } else{
-            if(isTRUE(show.status)) out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
-            show.status <- FALSE
-          }
-        }
-        Sys.sleep(10) #wait before reconnecting to ESPA to recheck status
-      }
-    }
-  }
   out(paste0("Requested products are stored in '", dir_out, "'."))
   return(file.ds)
 }

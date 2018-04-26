@@ -185,16 +185,17 @@ usgs_ds <- function(api.key, wildcard = NULL){
 #' USGS ESPA ordering functon
 #'
 #' @param id id
-#' @param product product
+#' @param level level
 #' @param username username
 #' @param password password
 #' @param format format
 #' @keywords internal
 #' @importFrom httr content
 #' @noRd
-espa.order <- function(id, product = "sr", username, password, format = "gtiff"){
+espa.order <- function(id, level = "sr", username, password, format = "gtiff"){
 
   ## check query and abort, if not available
+  out("Ordering requested items from ESPA...")
   checked <- lapply(id , function(x, v = verbose){
     r <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
     if(names(content(r)) == "not_implemented") out(paste0("'", x, "': This ID is invalid, as it cannot be found in the ESPA database. Please remove it from input and reexecute."), type = 3)
@@ -209,16 +210,94 @@ espa.order <- function(id, product = "sr", username, password, format = "gtiff")
   req.coll <- lapply(coll.uni, function(x, c = coll, rd = req.data) rd[which(c == x)])
 
   ## build request
-  req.body <- lapply(req.coll, function(x, p = product, f = format){
+  req.body <- lapply(req.coll, function(x, p = level, f = format){
     i <- paste0(sapply(x, function(y) y[2], USE.NAMES = F), collapse = '", "')
     paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": ["', p, '"]}, "format": "', f, '"}')
   })
 
   ## order
   order <- lapply(req.body, function(x, user = username, pass = password) gSD.post(url = paste0(getOption("gSD.api")$espa, "order/"), username = user, password = pass, body = x))
-  out(paste0("Products '", paste0(id, collapse = "', '"), "' have been ordered successfully [product = '", product, "', format = '", format, "']."))
-  return(sapply(order, function(x) content(x)[[1]], USE.NAMES = F))
+  order.list <- sapply(order, function(x) content(x)[[1]], USE.NAMES = F)
+  out(paste0("Products '", paste0(id, collapse = "', '"), "' have been ordered successfully:"))
+  out(paste0("[level = '", level, "', format = '", format, "', order ID(s) '", paste0(order.list, collapse = "', '"), "']."))
+  return(order.list)
 }
+
+
+#' USGS ESPA downloading functon
+#'
+#' @param order.list order.list
+#' @param username username
+#' @param password password
+#' @param file.down file.down
+#' @param delay delay
+#' @keywords internal
+#' @noRd
+## check order(s)
+espa.download <- function(order.list, username, password, file.down, delay = 10){
+
+  remain.active = TRUE; ini = TRUE; show.status = TRUE
+  while(remain.active){
+
+    ## get tiems
+    items <- lapply(order.list, function(x, user = username, pass = password){
+      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))
+    })
+
+    ## get items content
+    items <- lapply(items, function(x) lapply(x[[1]], function(y){
+      r <- unlist(y)
+      names(r) <- names(y)
+      return(r)
+    }))
+
+    ## make items data.frame containing recieve status
+    items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
+    items <- cbind(items, items$status == "complete")
+    items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
+    colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
+
+    if(ini){
+      items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
+      colnames(items.df)[ncol(items.df)] <- "recieved"
+      ini <- FALSE
+    } else{
+      items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
+    }
+    if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
+    items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
+
+    ## Items to download
+    if(all(items.df$available) & all(items.df$recieved)){
+      remain.active <- FALSE
+    } else{
+
+      ## Download or wait for status
+      sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
+      if(length(sub.download) > 0){
+
+        items.get <- items.df[sub.download,]
+        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "."), msg = T)
+        items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
+
+          y <- rbind.data.frame(x, stringsAsFactors = F)
+          colnames(y) <- names(x)
+          gSD.download(name = y$name, url.file = y$product_dload_url, url.checksum = y$cksum_download_url, file = y$file)
+        })
+        show.status <- TRUE
+      } else{
+        if(isTRUE(show.status)){
+          out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
+          out("Note: It is also possible to terminate the function and call it again later by providing the displayed order ID(s) as input to 'espa_order'.", msg = T)
+        }
+        show.status <- FALSE
+      }
+    }
+    Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
+  }
+}
+
+
 
 #' make aoi
 #'

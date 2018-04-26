@@ -29,7 +29,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query().
 * `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products.
 * `getLandsat_preview()` – previews the query results obtained with getLandsat_query().
-* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products from USGS ESPA, including top-of-atmosphere or surface reflectance products as well as different indices, processed on-demand.
+* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products. Level-1 products (Landsat-8 only) are downloaded from Amazon Web Services (AWS). Higher-level products, e.g. top-of-atmosphere (TOA) or surface reflectance (SR) products as well as different indices are orderd and downloaded from USGS ESPA (processed on-demand).
 
 
 #### login functions

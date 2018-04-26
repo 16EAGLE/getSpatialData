@@ -20,16 +20,19 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 #### Sentinel
 
-* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found datasets (rows) and their attributes (columns).
-* `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview an user-selected, individual dataset without the necessity to download the dataset first. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI. Alternatively, an RGB plot can be displayed.
-* `getSentinel_data()` – uses the output of `getSentinel_query()` to download the specified datasets to a local directory as .zip files. A transform function bundle helping to deal with the downloaded files within R without expert knowledge will follow soon.
+* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview (quick-look) a user-selected, individual dataset even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
+* `getSentinel_data()` – uses the output of `getSentinel_query()` to download  Sentinel data products.
 
 #### Landsat
 
-* `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be used with getLandsat_query().
-* `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products.
-* `getLandsat_preview()` – previews the query results obtained with getLandsat_query().
-* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products. Level-1 products (Landsat-8 only) are downloaded from Amazon Web Services (AWS). Higher-level products, e.g. top-of-atmosphere (TOA) or surface reflectance (SR) products as well as different indices are orderd and downloaded from USGS ESPA (processed on-demand).
+* `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
+* `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected, individual dataset. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
+* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products.
+  * supports order (on-demand processing) and download of higher-level products (all Landsat datasets), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
+  * supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
+  * will support direct download of Level-1 products (all Landsat datasets) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
 
 
 #### login functions

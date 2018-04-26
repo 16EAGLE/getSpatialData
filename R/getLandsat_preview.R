@@ -22,7 +22,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_data}
 #' @export
 
-getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL){
+getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL, verbose = TRUE){
 
   ## Global USGS login #### currently not even necessary here! remove?
   if(is.null(username)){
@@ -35,6 +35,7 @@ getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username
     if(is.null(password)) password = getPass()
     api.key <- usgs_login(username, password)
   }
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Intercept false inputs and get inputs
   url.icon <- product$browseUrl

@@ -18,7 +18,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_preview} \link{getLandsat_data}
 #' @export
 
-getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = NULL, password = NULL){
+getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = NULL, password = NULL, verbose = TRUE){
 
   ## Global USGS login
   if(is.null(username)){
@@ -33,6 +33,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     if(is.null(password)) password = getPass()
     api.key <- usgs_login(username, password)
   }
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Global AOI
   if(is.null(aoi)){
@@ -53,7 +54,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmin, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
 
-  out("[1/3] Querying USGS Earth Explorer for available products...")
+  out("Searching USGS EarthExplorer for available products...")
   if(name == "all") name <- getLandsat_names()
   query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
   query.cont <- lapply(query, content)
@@ -84,7 +85,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     }), SIMPLIFY = F), recursive = F)
 
     ## Read out meta data
-    out("[2/3] Reading out additional meta data...")
+    out("Reading meta data of search result from USGS EarthExplorer...")
     meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
     meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
     meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
@@ -119,13 +120,21 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     }))
 
     ## Connect to ESPA to revieve available products for dataset results (no use of entityId, displayId instead)
-    out("[3/3] Recieving available product levels from USGS-EROS ESPA...")
+    out("Recieving available product levels from USGS-EROS ESPA...")
     avail.products <- as.character(sapply(return.df$displayId, function(x){
       t <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
       paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
     }, USE.NAMES = F))
     return.df <- cbind(return.df, avail.products, stringsAsFactors = FALSE)
     colnames(return.df)[ncol(return.df)] <- "levels_available"
+
+    ## Correct WRS fields
+    wrs.sub <- grep("WRS", colnames(return.df))
+    return.df[,wrs.sub] <- apply(return.df[,wrs.sub], MARGIN = 2, function(x) sapply(x, function(y){
+      z <- strsplit(y, " ")[[1]]
+      z[length(z)]
+    }, USE.NAMES = F))
+
     return(return.df)
 
   } else { out("No results could be obtained for this request.", msg = T) }

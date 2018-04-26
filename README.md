@@ -32,11 +32,13 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products from USGS ESPA, including top-of-atmosphere or surface reflectance products as well as different indices, processed on-demand.
 
 
-#### helper functions
+#### login functions
 
 * `login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
 * `login_USGS` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
 
+
+#### settings functions
 
 * `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 * `set_aoi` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.

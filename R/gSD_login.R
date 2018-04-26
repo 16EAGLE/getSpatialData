@@ -36,6 +36,7 @@ login_CopHub <- function(username, password = NULL){
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
+
   options(gSD.cophub_user=username)
   options(gSD.cophub_pass=password)
   options(gSD.cophub_set=TRUE)
@@ -51,8 +52,10 @@ login_USGS <- function(username, password = NULL){
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
+
+  ## verify
+  options(gSD.usgs_apikey=usgs_login(username, password))
   options(gSD.usgs_user=username)
   options(gSD.usgs_pass=password)
   options(gSD.usgs_set=TRUE)
-  options(gSD.usgs_apikey=usgs_login(username, password))
 }

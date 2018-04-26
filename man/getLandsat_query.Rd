@@ -5,7 +5,7 @@
 \title{Query Landsat data}
 \usage{
 getLandsat_query(time_range, name = "all", aoi = NULL, username = NULL,
-  password = NULL)
+  password = NULL, verbose = TRUE)
 }
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
@@ -17,6 +17,8 @@ getLandsat_query(time_range, name = "all", aoi = NULL, username = NULL,
 \item{username}{character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.}
 
 \item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_USGS} inputs or, if \code{login_USGS} is not in use, asked interactively.}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
 A data frame; each row represents one dataset. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getLandsat functions for previeqing or downloading.

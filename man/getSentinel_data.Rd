@@ -5,7 +5,7 @@
 \title{Download Sentinel-1, -2 and -3 data}
 \usage{
 getSentinel_data(products, dir_out = NULL, force = FALSE, username = NULL,
-  password = NULL, hub = "auto")
+  password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
 \item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getSentinel_query}.}
@@ -19,6 +19,8 @@ getSentinel_data(products, dir_out = NULL, force = FALSE, username = NULL,
 \item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
 
 \item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
 Character vector of files that had been downloaded.

@@ -5,7 +5,7 @@
 \title{Preview a Landsat product}
 \usage{
 getLandsat_preview(product, on_map = TRUE, show_aoi = TRUE,
-  username = NULL, password = NULL)
+  username = NULL, password = NULL, verbose = TRUE)
 }
 \arguments{
 \item{product}{data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected product and all its attributes.}
@@ -17,6 +17,8 @@ getLandsat_preview(product, on_map = TRUE, show_aoi = TRUE,
 \item{username}{character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.}
 
 \item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_USGS} inputs or, if \code{login_USGS} is not in use, asked interactively.}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
 None. A plot/view display is generated.

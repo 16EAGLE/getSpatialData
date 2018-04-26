@@ -5,7 +5,7 @@
 \title{Preview a Sentinel product}
 \usage{
 getSentinel_preview(product, on_map = TRUE, show_aoi = TRUE,
-  username = NULL, password = NULL, hub = "auto")
+  username = NULL, password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
 \item{product}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.}
@@ -19,6 +19,8 @@ getSentinel_preview(product, on_map = TRUE, show_aoi = TRUE,
 \item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
 
 \item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
 None. A plot/view display is generated.

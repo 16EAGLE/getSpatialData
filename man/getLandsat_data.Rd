@@ -5,7 +5,7 @@
 \title{Download Landsat data}
 \usage{
 getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
-  force = FALSE, username = NULL, password = NULL)
+  force = FALSE, username = NULL, password = NULL, verbose = TRUE)
 }
 \arguments{
 \item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.}
@@ -26,6 +26,8 @@ getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
 \item{username}{character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.}
 
 \item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_USGS} inputs or, if \code{login_USGS} is not in use, asked interactively.}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
 Character vector of files that had been downloaded.

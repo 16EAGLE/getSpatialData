@@ -179,7 +179,7 @@ The following data sources are being evaluated to be implemented within the pack
 | ---------- | --------------- | --- | -------| ----------- | ------ |
 | Sentinel (-1/-2/-3) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | @16eagle | |
 | MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | ongoing | @16eagle | R: `MODIS`, `MODIStools`, `laads` |
-| Landsat | USGS | <a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api"</a>USGS EarthExplorer json API <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a> | implemented | | |
+| Landsat | USGS | <a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api">USGS EarthExplorer json API</a>, <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a> | implemented | @16eagle | |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | planned | | R: `gfcanalysis` |
 | CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | planned | | R: `ecoClimate` |
 | Copernicus Global Land Products | ESA Copernicus | http://land.copernicus.eu/ | evaluated | | |

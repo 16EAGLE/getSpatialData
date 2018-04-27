@@ -72,12 +72,13 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
     prod.id <- sapply(espa_order, function(x, user = username, pass = password){
       content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))[[1]][[1]]$name
     }, USE.NAMES = F)
-    level <- sapply(espa_order, function(x, user = username, pass = password){
+    level <- unique(sapply(espa_order, function(x, user = username, pass = password){
       y <- unlist(content(gSD.get(paste0(getOption("gSD.api")$espa, "order/", x), user, pass))$product_opts)
       y <- y[grep("products", names(y))]
       names(y) <- NULL
       return(y)
-    }, USE.NAMES = F)
+    }, USE.NAMES = F))
+    if(length(level) > 1) out(paste0("The provided order IDs refer to orders of different processing levels ['", paste0(level, collapse = "', '"), "']. Please use order IDs of identical levels per call."), type = 3)
   } else{
     prod.id <- products$displayId
   }
@@ -100,7 +101,6 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
 
     if(!isTRUE(force)){
       sub.avoid <- which(file.exists(file.ds) == T)
-      if(length(sub.avoid) > 0) out(paste0("Product(s) '", paste0(products$displayId[sub.avoid], collapse = "', "), "' are already present and will be skipped, since force = FALSE."))
       if(is.null(espa_order)) products <- products[!file.exists(file.ds),]
       file.down <- file.ds[!file.exists(file.ds)]
     }

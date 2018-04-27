@@ -253,6 +253,8 @@ espa.download <- function(order.list, username, password, file.down, delay = 10)
 
     ## make items data.frame containing recieve status
     items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
+    names.required <- sapply(file.down, function(x) paste0(head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_")[[1]], n=-1), collapse = "_"), USE.NAMES = F)
+    items <- items[sapply(names.required, function(x, y = items$name) which(y == x), USE.NAMES = F),]
     items <- cbind(items, items$status == "complete")
     items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
     colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
@@ -277,7 +279,7 @@ espa.download <- function(order.list, username, password, file.down, delay = 10)
       if(length(sub.download) > 0){
 
         items.get <- items.df[sub.download,]
-        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "."), msg = T)
+        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "'."), msg = T)
         items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
 
           y <- rbind.data.frame(x, stringsAsFactors = F)

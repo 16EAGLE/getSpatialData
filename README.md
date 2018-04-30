@@ -8,7 +8,7 @@
 
 ## State of development
 
-Currently, `getSpatialData` can be used to query, preview and download Sentine and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some). An R-native getLandsat function bundle connecting to USGS Earth Explore, USGS EROS ESPA and Amazaon Web Sercise can be used to query, preview and on-demand download Landsat data of different product levels.
+Currently, `getSpatialData` can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.
 
 ### Available functions
 
@@ -52,7 +52,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 ### Manuals
 
-For all current functions publicly available, documentation is available, containing information on the expected arguments, the return and examples. The files can be accessed executing a command like `?getSentinel_query`.
+For all public functions documentation is available, containing information on the expected arguments and providing code examples. The files can be accessed executing a command like `?getSentinel_query`.
 
 
 ## Installation

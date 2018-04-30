@@ -182,6 +182,89 @@ usgs_ds <- function(api.key, wildcard = NULL){
 }
 
 
+#' query EE
+#'
+#' @param aoi aoi
+#' @param time_range time_range
+#' @param name name
+#' @param api.key api.key
+#' @param meta.fields meta.fields
+#' @keywords internal
+#' @noRd
+usgs_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
+
+  spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmin, '}}')
+  temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
+
+  out("Searching USGS EarthExplorer for available products...")
+  query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
+  query.cont <- lapply(query, content)
+  if(length(name) == 1) if(query.cont[[1]]$error != "") out("Invalid query. This dataset seems to be not available for the specified time range.", type = 3)
+  query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
+  query.cont <- query.cont[query.use]
+  query.names <- name[query.use]
+
+  query.results <- lapply(query.cont, function(x) x$data$results)
+  if(length(query.results) != 0){
+
+    query.df <- unlist(mapply(y = query.results, n = query.names, function(y, n) lapply(y, function(x, ds_name = n){
+      x.names <- names(x)
+      x.char <- as.character(x)
+
+      # Make sf polygon filed from spatialFootprint
+      spf.sub <- grep("spatialFoot", x.names)
+      spf <- unlist(x[spf.sub])
+      spf <- as.numeric(spf[grep("coordinates", names(spf))])
+      spf.sf <- make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T)
+
+      df <- rbind.data.frame(x.char, stringsAsFactors = F)
+      colnames(df) <- x.names
+      df[,spf.sub] <- st_as_text(spf.sf)
+      df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
+      colnames(df)[ncol(df)] <- "dataset_name"
+      return(df)
+    }), SIMPLIFY = F), recursive = F)
+
+    ## Read out meta data
+    out("Reading meta data of search results from USGS EarthExplorer...")
+    meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
+    meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
+    meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
+      z <- try(y$metadataValue[[1]], silent = T)
+      if(inherits(z, "try-error")) NULL else z
+    }, USE.NAMES = F))
+    meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
+
+    ## Define meta fields that are usefull for the query output
+    if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
+    meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
+    meta.df <- mapply(FUN = function(v, n, i){
+      x <- v[i]
+      x <- rbind.data.frame(x, stringsAsFactors = F)
+      colnames(x) <- gsub(" ", "", n[i])
+      return(x)
+    }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
+
+    query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
+      ## apply meaningful order and replace startTime and endTime with meta outputs
+      x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
+      colnames(x)[1] <- colnames(q)[1]
+      return(x)
+    }, SIMPLIFY = F)
+
+    return.names <- unique(unlist(lapply(query.df, colnames)))
+    return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names), stringsAsFactors = F)
+    return.df <-  do.call(rbind.data.frame, lapply(query.df, function(x, rn = return.names,  rdf = return.df){
+      rdf[1, match(colnames(x), rn)] <- x
+      return(rdf)
+    }))
+    return(return.df)
+  } else{
+    return(NULL)
+  }
+}
+
+
 #' USGS ESPA ordering functon
 #'
 #' @param id id

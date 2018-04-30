@@ -4,15 +4,11 @@
 
 `getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed. See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#datasets) that are or will be implemented.
 
-`getSpatialData` supports both `sf` and `sp` classes as AOI inputs.
+`getSpatialData` supports both `sf` and `sp` classes as AOI inputs (see `set_aoi`).
 
 ## State of development
 
-Currently, `getSpatialData` can be used to download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some). An R-native getLandsat function bundle connecting to the USGS Earth Explorer and the USGS ESPA APIs can be used to query, preview and on-demand download Landsat data of different product levels.
-
-A universal AOI defintion function has been implemented (see `set_aoi`). It understands different spatial objects representing the user's AOI and translates them depending on the client function that the user wants to use. It supports multi-point polygon shape objects (sp and sf) or matrix objects. Alternatively, it lets the user draw an AOI via `mapedit`.
-
-Currently, a MODIS get function bundle is being developed. 
+Currently, `getSpatialData` can be used to query, preview and download Sentine and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is coded in R and works independently from external libraries. It is currently tested for minor bugs (please report bugs if you find some). An R-native getLandsat function bundle connecting to USGS Earth Explore, USGS EROS ESPA and Amazaon Web Sercise can be used to query, preview and on-demand download Landsat data of different product levels.
 
 ### Available functions
 
@@ -26,8 +22,8 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 #### Landsat
 
-* `getLandsat_names()` – obtains available Landsat dataset names from the USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
-* `getLandsat_query()` – querys the USGS Earth Explorer for Landsat products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getLandsat_names()` – obtains available Landsat dataset names from USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
+* `getLandsat_query()` – querys USGS Earth Explorer for Landsat products and returns a data frame containing the found datasets (rows) and their attributes (columns).
 * `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected, individual dataset. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products.
   * supports order (on-demand processing) and download of higher-level products (all Landsat datasets), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
@@ -35,13 +31,18 @@ The following functions are publicly available and have been tested on Linux (Ub
   * will support direct download of Level-1 products (all Landsat datasets) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
 
 
-#### login functions
+#### MODIS
+* `getMODIS_names()` – obtains available MODIS dataset names from USGS Earth Explorer, which can be optionally used with getMODIS_query() to narrow the search.
+* `getMODIS_query()` – querys USGS Earth Explorer for MODIS products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+
+
+#### Login
 
 * `login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
 * `login_USGS` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
 
 
-#### settings functions
+#### Session settings
 
 * `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 * `set_aoi` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
@@ -178,7 +179,7 @@ The following data sources are being evaluated to be implemented within the pack
 | Product(s) | Source | Access | Status | Existing Clients | 
 | ---------- | --------------- | --- | -------| ----------- |
 | Sentinel (-1/-2/-3) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | native |
-| MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | ongoing | R: `MODIS`, `MODIStools`, `laads` |
+| MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | ongoing | R: `MODIS` |
 | Landsat | USGS | <a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api">USGS EarthExplorer json API</a>, <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a> | implemented | native |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | evaluated | R: `gfcanalysis` |
 | CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | evaluated | R: `ecoClimate` |

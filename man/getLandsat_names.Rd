@@ -2,7 +2,7 @@
 % Please edit documentation in R/getLandsat_names.R
 \name{getLandsat_names}
 \alias{getLandsat_names}
-\title{Get Landsat dataset names from the USGS Earth Explorer}
+\title{Get Landsat dataset names from USGS Earth Explorer}
 \usage{
 getLandsat_names(username = NULL, password = NULL)
 }

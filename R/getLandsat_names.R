@@ -1,4 +1,4 @@
-#' Get Landsat dataset names from the USGS Earth Explorer
+#' Get Landsat dataset names from USGS Earth Explorer
 #'
 #' \code{getLandsat_names} obtains names of available Landsat datasets from the USGS Earth Explorer. They can optionally be used with the \link{getLandsat_query} function for querying a specific Landsat dataset instead of all.
 #'

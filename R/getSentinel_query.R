@@ -127,7 +127,8 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL,
       re.query <- F
       give.return <- F
     }
-    if(length(query.list) != 100) re.query <- F
+    if(length(query.list) != row.start+100 ) re.query <- F
+    #if(length(query.list) != 100) re.query <- F
   }
 
   ## build query result data frame

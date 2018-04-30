@@ -1,24 +1,30 @@
 -----------------------------------------------------------
 getSpatialData 0.0.3 (under development)
-getLandsat* function bundle for USGS EE client
+getLandsat* and getMODIS* function bundles for USGS EE client
 -----------------------------------------------------------
 New functions:
- + getLandsat_names(): obtain dataset names
+ + getLandsat_names(): obtain Landsat dataset names
  + getLandsat_query(): query USGS Earth Explorer for Landsat data
  + getLandsat_preview(): preview (quick look) a queried Landsat product
  + getLandsat_data(): download Landsat data on-demand from USGS ESPA
+ + getMODIS_names(): obtain MODIS dataset names
+ + getMODIS_query(): query USGS Earth Explorer for MODIS data
  + login_USGS(): session-wide login to USGS services
 
 New features:
- + getLandsat_query(): argument "name" is now optional and set to "all" by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column "dataset_name".
+ + getLandsat_query() and getMODIS_query(): argument "name" is now optional and set to "all" by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column "dataset_name".
 
 Bug fixes:
  + RGB clouring of preview functions is now correct
- + getLandsat_query() outputs now more than 10 products per query (maximum is 50 000)
+ + getLandsat_query() and getMODIS_query() output now more than 10 products per query (maximum is 50 000)
+ + getSentinel_query() paging error (always maxiumu of 200 records) solved
 
 Changes:
  + clearer login functions naming (removed 'set_' prefix)
  + all request are now internally channeld through gSD.get/gSD.post
+
+Contributions:
+ + Francesco Pirotti (@fpirotti, issue #2, bug fix)
 
 -----------------------------------------------------------
 getSpatialData 0.0.2

@@ -1,6 +1,6 @@
 # getSpatialData
 
-[![Build Status](https://api.travis-ci.org/16EAGLE/getSpatialData.svg)](https://travis-ci.org/16eagle/getSpatialData) 
+[![Build Status](https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master)](https://travis-ci.org/16EAGLE/getSpatialData) 
 
 ## Introduction
 

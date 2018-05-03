@@ -1,9 +1,9 @@
-#' Preview a Landsat product
+#' Preview a Landsat image
 #'
-#' \code{getLandsat_preview} previews single products as RGB plot which had been queried using \link{getLandsat_query}. The function is useful to apply visual checks to products before downloading them.
+#' \code{getLandsat_preview} previews single image as RGB plot which had been queried using \link{getLandsat_query}. The function is useful to apply visual checks to records before downloading them.
 #'
 #' @inheritParams getLandsat_query
-#' @param product data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected product and all its attributes.
+#' @param record data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected record and all its attributes.
 #' @param on_map logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.
 #' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.
 #'
@@ -22,7 +22,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_data}
 #' @export
 
-getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL, verbose = TRUE){
+getLandsat_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL, verbose = TRUE){
 
   ## Global USGS login #### currently not even necessary here! remove?
   if(is.null(username)){
@@ -38,9 +38,9 @@ getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Intercept false inputs and get inputs
-  url.icon <- product$browseUrl
-  if(is.na(url.icon)){out("Argument 'product' is invalid or no preview is available.", type=3)}
-  if(length(url.icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
+  url.icon <- record$browseUrl
+  if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
+  if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
   char_args <- list(url.icon = url.icon)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
 
@@ -53,7 +53,7 @@ getLandsat_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username
   if(is.TRUE(on_map)){
 
     ## create footprint
-    footprint <- st_as_sfc(list(product$spatialFootprint))
+    footprint <- st_as_sfc(list(record$spatialFootprint))
     st_crs(footprint) <- 4326
     footprint <- as_Spatial(footprint)
 

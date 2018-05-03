@@ -10,22 +10,42 @@
 
 Currently, `getSpatialData` can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.
 
+## Semantics
+
+The following universal semantics on data are used by `getSpatialData` (from smallest to biggest entity):
+* `image`: An image of a specific time and spatial extent.
+* `record`: A set of meta fields identifying and describing a specific `image`, being part of multiple records obtained by a `query`.
+* `dataset`: Smallest entity that is delivered by a service. Might consist of multiple files, including meta data and bandwise imagery. Covers a specific time and spatial extent.
+* `product`: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:
+  * `platform`: A general platform design (e.g. "Landsat" or "Sentinel").
+  * `sensor`: Type of sensor which acquired the data from which the product originates (e.g. "MODIS", "MSI" or "OLI").
+  * `collection`: A product version.
+  * `level`: Processing level of the product (e.g. "Level 2A" or "Surface Reflectance").
+  * `source`: The service acquiring, processing or distributing the product (e.g. "ESA Copernicus" or "USGS").
+
+The following universal semantics on computational steps are used by `getSpatialData`:
+* `get`: Recieve data from a `source`.
+  * `names`: Result of searching available products (differs by `source` and `platform`), which might be differentiated further later on (e.g. by `level`).
+  * `query`: Result of searching a `source` for data `records` of a specific or multiple `products`.
+  * `preview`: Preview a `record`.
+  * `data`: Result of recieving one or multiple `dataset` from a `source`.
+  
 ### Available functions
 
 The following functions are publicly available and have been tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10:
 
 #### Sentinel
 
-* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found records (rows) and their attributes (columns).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview (quick-look) a user-selected, individual dataset even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
-* `getSentinel_data()` – uses the output of `getSentinel_query()` to download  Sentinel data products.
+* `getSentinel_data()` – uses the output of `getSentinel_query()` to download Sentinel data.
 
 #### Landsat
 
 * `getLandsat_names()` – obtains available Landsat dataset names from USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
-* `getLandsat_query()` – querys USGS Earth Explorer for Landsat products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getLandsat_query()` – querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).
 * `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected, individual dataset. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
-* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data products.
+* `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data.
   * supports order (on-demand processing) and download of higher-level products (all Landsat datasets), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
   * supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
   * will support direct download of Level-1 products (all Landsat datasets) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
@@ -33,7 +53,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 #### MODIS
 * `getMODIS_names()` – obtains available MODIS dataset names from USGS Earth Explorer, which can be optionally used with getMODIS_query() to narrow the search.
-* `getMODIS_query()` – querys USGS Earth Explorer for MODIS products and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getMODIS_query()` – querys USGS Earth Explorer for MODIS data and returns a data frame containing the found datasets (rows) and their attributes (columns).
 
 
 #### Login
@@ -112,29 +132,29 @@ login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)
-products <- getSentinel_query(time_range = time_range, platform = platform)
+records <- getSentinel_query(time_range = time_range, platform = platform)
 
-## Filter the products
-colnames(products) #see all available filter attributes
-unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+## Filter the records
+colnames(records) #see all available filter attributes
+unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 
-products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
-products_filtered <- products_filtered[products_filtered$cloudcoverpercentage <= 30, ] #filter by clouds
+records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
+records_filtered <- records_filtered[records_filtered$cloudcoverpercentage <= 30, ] #filter by clouds
 
-## View products table
-View(products)
-View(products_filtered)
-#browser products or your filtered products
+## View records table
+View(records)
+View(records_filtered)
+#browser records or your filtered records
 ```
 
 <p align="center"><img width="100%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_query_table.png"></p>
-<p align="center"><sub>Figure 3: Screenshot of the View() display in RStudio, displaying a filtered products table produced by getSentinel_query()</sub></p>
+<p align="center"><sub>Figure 3: Screenshot of the View() display in RStudio, displaying a filtered records table produced by getSentinel_query()</sub></p>
 <br>
 
 
 ```R
-## Preview a single product on a mapview map with session AOI
-getSentinel_preview(product = products_filtered[9,])
+## Preview a single record on a mapview map with session AOI
+getSentinel_preview(record = records_filtered[9,])
 ```
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview.png"></p>
@@ -143,8 +163,8 @@ getSentinel_preview(product = products_filtered[9,])
 
 
 ```R
-## Preview a single product on a mapview map without session AOI
-getSentinel_preview(product = products_filtered[9,], show_aoi = FALSE)
+## Preview a single record on a mapview map without session AOI
+getSentinel_preview(record = records_filtered[9,], show_aoi = FALSE)
 ```
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_no_aoi.png"></p>
@@ -153,8 +173,8 @@ getSentinel_preview(product = products_filtered[9,], show_aoi = FALSE)
 
 
 ```R
-## Preview a single product as RGB plot
-getSentinel_preview(product = products_filtered[9,], on_map = FALSE)
+## Preview a single record as RGB plot
+getSentinel_preview(record = records_filtered[9,], on_map = FALSE)
 ```
 
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_plotRGB.png"></p>
@@ -164,7 +184,7 @@ getSentinel_preview(product = products_filtered[9,], on_map = FALSE)
 
 ```R
 ## Finally, download some datasets to your archive directory
-files <- getSentinel_data(products = products_filtered[c(4,7,9), ])
+files <- getSentinel_data(records = records_filtered[c(4,7,9), ])
 
 ```
 

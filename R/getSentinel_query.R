@@ -10,7 +10,7 @@
 #' @param hub character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #'
-#' @return A data frame; each row represents one dataset. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for previewing and downloading.
+#' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for previewing and downloading.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -46,21 +46,21 @@
 #' set_archive("/path/to/archive/")
 #'
 #' ## Use getSentinel_query to search for data (using the session AOI)
-#' products <- getSentinel_query(time_range = time_range, platform = platform)
+#' records <- getSentinel_query(time_range = time_range, platform = platform)
 #'
-#' ## Get an overview of the products
-#' View(products) #get an overview about the search products
-#' colnames(products) #see all available filter attributes
-#' unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+#' ## Get an overview of the records
+#' View(records) #get an overview about the search records
+#' colnames(records) #see all available filter attributes
+#' unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 #'
-#' ## Filter the products
-#' products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
+#' ## Filter the records
+#' records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
 #'
-#' ## Preview a single product
-#' getSentinel_preview(product = products_filtered[5,])
+#' ## Preview a single record
+#' getSentinel_preview(record = records_filtered[5,])
 #'
 #' ## Download some datasets
-#' files <- getSentinel_data(products = products_filtered[c(4,5,6),])
+#' files <- getSentinel_data(records = records_filtered[c(4,5,6),])
 #' }
 #'
 #' @seealso \link{getSentinel_data}

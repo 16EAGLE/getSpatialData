@@ -1,9 +1,9 @@
-#' Preview a Sentinel product
+#' Preview a Sentinel image
 #'
-#' \code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.
+#' \code{getSentinel_preview} previews single image as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
 #'
 #' @inheritParams getSentinel_query
-#' @param product data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.
+#' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.
 #' @param on_map logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.
 #' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.
 #'
@@ -39,21 +39,21 @@
 #' set_archive("/path/to/archive/")
 #'
 #' ## Use getSentinel_query to search for data (using the session AOI)
-#' products <- getSentinel_query(time_range = time_range, platform = platform)
+#' records <- getSentinel_query(time_range = time_range, platform = platform)
 #'
-#' ## Get an overview of the products
-#' View(products) #get an overview about the search products
-#' colnames(products) #see all available filter attributes
-#' unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+#' ## Get an overview of the records
+#' View(records) #get an overview about the search records
+#' colnames(records) #see all available filter attributes
+#' unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 #'
-#' ## Filter the products
-#' products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
+#' ## Filter the records
+#' records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
 #'
-#' ## Preview a single product
-#' getSentinel_preview(product = products_filtered[5,])
+#' ## Preview a single record
+#' getSentinel_preview(record = records_filtered[5,])
 #'
 #' ## Download some datasets
-#' files <- getSentinel_data(products = products_filtered[c(4,5,6),])
+#' files <- getSentinel_data(records = records_filtered[c(4,5,6),])
 #' }
 #'
 #' @seealso \link{getSentinel_query}
@@ -66,7 +66,7 @@
 #'
 #' @export
 
-getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL,
+getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL,
                                 hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
@@ -79,14 +79,14 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, usernam
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Intercept false inputs and get inputs
-  url.icon <- product$url.icon
-  if(is.na(url.icon)){out("Argument 'product' is invalid or no preview is available.", type=3)}
-  if(length(url.icon) > 1){out("Argument 'product' must contain only a single product, represented by a single row data.frame.")}
+  url.icon <- record$url.icon
+  if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
+  if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
   char_args <- list(url.icon = url.icon)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
 
   ## Manage API access
-  platform <- product$platformname
+  platform <- record$platformname
   cred <- cophub_api(hub, platform, username, password)
 
   ## Recieve preview
@@ -98,7 +98,7 @@ getSentinel_preview <- function(product, on_map = TRUE, show_aoi = TRUE, usernam
   if(is.TRUE(on_map)){
 
     ## create footprint
-    footprint <- st_as_sfc(list(product$footprint))
+    footprint <- st_as_sfc(list(record$footprint))
     st_crs(footprint) <- 4326
     footprint <- as_Spatial(footprint)
 

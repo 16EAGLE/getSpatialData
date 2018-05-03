@@ -1,6 +1,6 @@
-#' Get MODIS dataset names from USGS Earth Explorer
+#' Get MODIS product names from USGS Earth Explorer
 #'
-#' \code{getMODIS_names} obtains names of available MODIS datasets from USGS Earth Explorer. They can optionally be used with the \link{getMODIS_query} function for querying a specific MODIS dataset instead of all.
+#' \code{getMODIS_names} obtains names of available MODIS products from USGS Earth Explorer. They can optionally be used with the \link{getMODIS_query} function for querying a specific MODIS product instead of all.
 #'
 #' @inheritParams getLandsat_names
 #' @return A character vector

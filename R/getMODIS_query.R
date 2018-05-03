@@ -5,7 +5,7 @@
 #' @inheritParams getLandsat_query
 #' @param name character, optional. Identifies the name of the dataset to be queried. If set to "all" (default), every available MODIS dataset is searched for results and included in the output. Use \link{getMODIS_names} to revcieve a vector with all available MODIS datasets from Earth Explorer, if you want to select a specific one.
 #'
-#' @return A data frame; each row represents one dataset. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getMODIS functions for previewing or downloading.
+#' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getMODIS functions for previewing or downloading.
 #'
 #' @author Jakob Schwalb-Willmann
 #'

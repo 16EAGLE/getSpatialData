@@ -1,6 +1,6 @@
-#' Get Landsat dataset names from USGS Earth Explorer
+#' Get Landsat products names from USGS Earth Explorer
 #'
-#' \code{getLandsat_names} obtains names of available Landsat datasets from the USGS Earth Explorer. They can optionally be used with the \link{getLandsat_query} function for querying a specific Landsat dataset instead of all.
+#' \code{getLandsat_names} obtains names of available Landsat products from the USGS Earth Explorer. They can optionally be used with the \link{getLandsat_query} function for querying a specific Landsat product instead of all.
 #'
 #' @param username character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.
 #' @param password character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_USGS} inputs or, if \code{login_USGS} is not in use, asked interactively.

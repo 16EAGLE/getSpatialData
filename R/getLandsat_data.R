@@ -1,9 +1,9 @@
 #' Download Landsat data
 #'
-#' \code{getLandsat_data} downloads Landsat datasets queried using \link{getLandsat_query} from different sources.
+#' \code{getLandsat_data} downloads Landsat data queried using \link{getLandsat_query} from different sources.
 #'
 #' @inheritParams getLandsat_query
-#' @param products data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.
+#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
 #' @param level character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.
 #' @param source character, either:
@@ -12,7 +12,7 @@
 #'    \item "ESPA" to download on-demand products from USGS-EROS ESPA
 #'    \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
 #' }
-#' @param espa_order character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{products} is allowed to be undefined.
+#' @param espa_order character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
 #' @return Character vector of files that had been downloaded.
@@ -28,7 +28,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
 #' @export
 #'
-getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = NULL, espa_order = NULL, force = FALSE, username = NULL, password = NULL, verbose = TRUE){
+getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, espa_order = NULL, force = FALSE, username = NULL, password = NULL, verbose = TRUE){
 
   ## Global USGS login
   if(is.TRUE(getOption("gSD.usgs_set"))){
@@ -47,8 +47,8 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
 
   if(is.null(espa_order)){
-    if(missing(products)) out("Argument 'products' must be defined (except if an ESPA order is given).", type = 3)
-    for(x in products$levels_available) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one product in 'products'. Check column 'levels_available'."), type = 3)
+    if(missing(records)) out("Argument 'records' must be defined (except if an ESPA order is given).", type = 3)
+    for(x in records$levels_available) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one record in 'records'. Check column 'levels_available'."), type = 3)
   }
 
 
@@ -57,9 +57,9 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
   } else{
     if(source == "auto"){
       if(level == "l1"){
-        if(all(sapply(products$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
+        if(all(sapply(records$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
           source <- "aws"
-        } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'products' contains products that do not originate from Landsat-8.", type = 3)
+        } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'records' contains records that do not originate from Landsat-8.", type = 3)
       } else source <- "espa"
     } else{
       if(level == "l1" & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
@@ -80,7 +80,7 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
     }, USE.NAMES = F))
     if(length(level) > 1) out(paste0("The provided order IDs refer to orders of different processing levels ['", paste0(level, collapse = "', '"), "']. Please use order IDs of identical levels per call."), type = 3)
   } else{
-    prod.id <- products$displayId
+    prod.id <- records$displayId
   }
 
 
@@ -101,13 +101,13 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
 
     if(!isTRUE(force)){
       sub.avoid <- which(file.exists(file.ds) == T)
-      if(is.null(espa_order)) products <- products[!file.exists(file.ds),]
+      if(is.null(espa_order)) records <- records[!file.exists(file.ds),]
       file.down <- file.ds[!file.exists(file.ds)]
     }
 
     if(length(file.down) != 0){
       if(is.null(espa_order)){
-        order.list <- espa.order(id = products$displayId, level = level, username = username, password = password, format = "gtiff")
+        order.list <- espa.order(id = records$displayId, level = level, username = username, password = password, format = "gtiff")
       } else{
         order.list <- espa_order
       }
@@ -119,13 +119,13 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
   ## AWS
   if(source == "aws"){
 
-    out("Checking availability of requested products on AWS...")
+    out("Checking availability of requested records on AWS...")
     file.gz <- tempfile(fileext = ".gz")
     aws.scenes <- gSD.get(getOption("gSD.api")$aws.l8.sl, dir.file = file.gz)
     aws.scenes <- readLines(file.gz) #much faster than read.csv
 
-    out("Recieving download AWS URLs of requested products...")
-    url.index <- mapply(x = products$entityId, d = products$displayId, function(x, d, ds = aws.scenes){
+    out("Recieving download AWS URLs of requested records...")
+    url.index <- mapply(x = records$entityId, d = records$displayId, function(x, d, ds = aws.scenes){
       c.cat <- tail(strsplit(d, "_")[[1]], n=1)
       y <- grep(x, ds, value = T)
 
@@ -142,7 +142,7 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
       tail(strsplit(y, ",")[[1]], n = 1)
     }, SIMPLIFY = F)
 
-    url.files <- mapply(x = url.index, y = products$displayId, function(x, y){
+    url.files <- mapply(x = url.index, y = records$displayId, function(x, y){
       name = paste0(head(strsplit(grep("LC08", strsplit(x, "/")[[1]], value = T), "_")[[1]], n=-4), collapse = "_")
       z <- grep("href", grep(name, unlist(strsplit(strsplit(grep("body", xml_contents(content(gSD.get(x), encoding = "UTF-8")), value = T), ">")[[1]], "<"), recursive = T), value = T), value = T, invert = T)
       z <- unique(c(grep("TIF", z, value = T), grep("IMD", z, value = T), grep("ovr", z, value = T), grep("txt", z, value = T)))
@@ -159,6 +159,6 @@ getLandsat_data <- function(products, level = "sr", source = "auto", dir_out = N
     }, SIMPLIFY = F)
   }
 
-  out(paste0("Requested products are stored in '", dir_out, "'."))
+  out(paste0("Requested records are stored in '", dir_out, "'."))
   return(file.ds)
 }

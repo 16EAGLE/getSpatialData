@@ -4,7 +4,7 @@
 #'
 #' @inheritParams getLandsat_query
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.
-#' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
+#' @param dir_out character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
 #' @param level character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.
 #' @param source character, either:
 #' \itemize{
@@ -15,15 +15,59 @@
 #' @param espa_order character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
-#' @return Character vector of files that had been downloaded.
+#' @return Character vector of paths to the downloaded files.
 #'
 #' @note ESPA is used as source if higher-level products are requested by the user (see \code{level}). Since ESPA is an on-demand service, \code{getLandsat_data} places an order and then waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The ESPA processing time depends on the size of the order and can take up to 48 hours in highly demanding cases! The function status is indicated by the console messages that it is prompting during execution.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
+#' @examples
+#'
+#' ## Load packages
+#' library(getSpatialData)
+#' library(sf)
+#'
+#' ## set aoi and time range for the query
+#' set_aoi(aoi_data[[1]])
+#' time_range <-  c("2017-08-01", "2017-08-30")
+#'
+#' ## Login to USGS ERS
+#' \dontrun{
+#' login_USGS("username")
+#'
+#' ## set archive directory
+#' set_archive("/path/to/archive/")
+#'
+#' ## get available products and select one
+#' product_names <- getLandsat_names()
+#'
+#' ## query for records for your AOI, time range and product
+#' query <- getLandsat_query(time_range = time_range, name = product_names[7])
+#'
+#' ## preview a record
+#' getLandsat_preview(query[5,])
+#'
+#' #print available levels for a record
+#' query[5,]$levels_available
+#'
+#' ## download record 5 with level "l1" (will direct to AWS automaticaly)
+#' files <- getLandsat_data(records = query[5,], level = "l1", source = "auto")
+#'
+#' ## download record 5 with level "sr" (will be processed on demand by ESPA)
+#' files <- getLandsat_data(records = query[5,], level = "sr", source = "auto")
+#' # this can take very long, since the function will wait,
+#' # until the processing by ESPA is done
+#'
+#' ## you can abort the function while it is waiting for ESPA and resume later:
+#' files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
+#' # the order IDs are displayed and send by mail, use them to resume the task
+#' }
+#'
+#'
 #' @importFrom getPass getPass
 #' @importFrom tools md5sum
 #' @importFrom httr content
+#' @importFrom utils head tail
 #'
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
 #' @export
@@ -107,11 +151,11 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
     if(length(file.down) != 0){
       if(is.null(espa_order)){
-        order.list <- espa.order(id = records$displayId, level = level, username = username, password = password, format = "gtiff")
+        order.list <- .ESPA_order(id = records$displayId, level = level, username = username, password = password, format = "gtiff", verbose = verbose)
       } else{
         order.list <- espa_order
       }
-      espa.download(order.list = order.list, username = username, password = password, file.down = file.down)
+      .ESPA_download(order.list = order.list, username = username, password = password, file.down = file.down, dir_out = dir_out)
     }
   }
 

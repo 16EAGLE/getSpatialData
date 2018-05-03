@@ -57,6 +57,7 @@ check.cmd <- function(cmd){
 #' @noRd
 gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
 
+  x <- NULL # needed due to checks
   get.str <-"x <- GET(url"
   if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
   if(!is.null(dir.file)) get.str <- paste0(get.str, ", write_disk(dir.file)")
@@ -128,7 +129,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
 #' @param pw password
 #' @keywords internal
 #' @noRd
-cophub_api <- function(x, p, user, pw){ #naming needs to change here!
+.CopHub_select <- function(x, p, user, pw){ #cophub_api
   if(x == "auto"){
     if(p == "Sentinel-1" | p == "Sentinel-2"){x <- "operational"
     }else{x <- "pre-ops"}
@@ -143,38 +144,38 @@ cophub_api <- function(x, p, user, pw){ #naming needs to change here!
 }
 
 
-#' get USGS API key from user input
+#' get ERS API key from user input
 #'
 #' @param username username
 #' @param password password
 #' @keywords internal
 #' @noRd
-usgs_login <- function(username, password){
+.ERS_login <- function(username, password){
   x <- POST(paste0(getOption("gSD.api")$ee, 'login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   content(x)$data
 }
 
-#' logout from USGS with API key
+#' logout from ERS with API key
 #'
 #' @param api.key api.key
 #' @keywords internal
 #' @noRd
-usgs_logout <- function(api.key){
+.ERS_logout <- function(api.key){
   x <- gSD.get(paste0(getOption("gSD.api")$ee, 'logout?jsonRequest={"apiKey":"', api.key, '"}'))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   content(x)$data
 }
 
-#' get EE datasets
+#' get EE products
 #'
 #' @param api.key api.key
 #' @param wildcard wildcard
 #' @keywords internal
 #' @noRd
-usgs_ds <- function(api.key, wildcard = NULL){
+.EE_ds <- function(api.key, wildcard = NULL){
   q <- paste0(getOption("gSD.api")$ee, 'datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
   if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
   x <- gSD.get(q)
@@ -189,9 +190,13 @@ usgs_ds <- function(api.key, wildcard = NULL){
 #' @param name name
 #' @param api.key api.key
 #' @param meta.fields meta.fields
+#'
+#' @importFrom sf st_bbox st_as_text
+#' @importFrom xml2 as_list
+#'
 #' @keywords internal
 #' @noRd
-usgs_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
+.EE_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
 
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmin, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
@@ -215,13 +220,13 @@ usgs_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
       spf.sub <- grep("spatialFoot", x.names)
       spf <- unlist(x[spf.sub])
       spf <- as.numeric(spf[grep("coordinates", names(spf))])
-      spf.sf <- make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T)
+      spf.sf <- .make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T)
 
       df <- rbind.data.frame(x.char, stringsAsFactors = F)
       colnames(df) <- x.names
       df[,spf.sub] <- st_as_text(spf.sf)
       df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
-      colnames(df)[ncol(df)] <- "dataset_name"
+      colnames(df)[ncol(df)] <- "product"
       return(df)
     }), SIMPLIFY = F), recursive = F)
 
@@ -265,6 +270,89 @@ usgs_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
 }
 
 
+#' preview EE record
+#'
+#' @param record record
+#' @param on_map on_map
+#' @param show_aoi show_aoi
+#' @param verbose verbose
+#'
+#' @importFrom getPass getPass
+#' @importFrom httr GET write_disk authenticate
+#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
+#' @importFrom sf st_as_sfc st_crs as_Spatial
+#' @importFrom mapview viewRGB addFeatures
+#'
+#' @keywords internal
+#' @noRd
+.EE_preview <- function(record, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+
+  ## Intercept false inputs and get inputs
+  url.icon <- record$browseUrl
+  if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
+  if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
+  char_args <- list(url.icon = url.icon)
+  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
+
+  if(length(grep("https", url.icon)) == 0){
+    out("No preview available for this record or product.", msg = T)
+  } else{
+    ## Recieve preview
+    file_dir <- paste0(tempfile(),".jpg")
+    gSD.get(url.icon, dir.file = file_dir)
+    preview <- stack(file_dir)
+    #NAvalue(preview) <- 0
+
+    if(is.TRUE(on_map)){
+
+      ## create footprint
+      footprint <- st_as_sfc(list(record$spatialFootprint))
+      st_crs(footprint) <- 4326
+      footprint <- as_Spatial(footprint)
+
+      ## create preview
+      crs(preview) <- crs(footprint)
+      extent(preview) <- extent(footprint)
+      #preview <- aggregate(preview, 2) # make it faster
+
+      ## create map
+      map <- suppressWarnings(viewRGB(preview, r=1, g=2, b=3))
+
+      if(is.TRUE(show_aoi)){
+        if(is.FALSE(getOption("gSD.aoi_set"))){
+          out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+        } else{
+          aoi.sf <- getOption("gSD.aoi")
+          #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
+          map <- addFeatures(map, aoi.sf)
+        }
+      }
+      map # display mapview or leaflet output
+    } else{
+
+      ## create simple RGB plot
+      plotRGB(preview)
+    }
+  }
+}
+
+
+#' convert MODIS product names
+#'
+#' @param names names
+#' @keywords internal
+#' @noRd
+.convMODIS_names <- function(names){
+   sapply(names, function(x){
+    y <- strsplit(x, "_")[[1]]
+    y <- y[2:length(y)]
+    if(length(y) > 1) y <- paste0(y[1:(length(y)-1)], collapse = "_")
+    return(y)
+  }, USE.NAMES = F)
+}
+
+
 #' USGS ESPA ordering functon
 #'
 #' @param id id
@@ -275,7 +363,7 @@ usgs_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
 #' @keywords internal
 #' @importFrom httr content
 #' @noRd
-espa.order <- function(id, level = "sr", username, password, format = "gtiff"){
+.ESPA_order <- function(id, level = "sr", username, password, format = "gtiff", verbose){
 
   ## check query and abort, if not available
   out("Ordering requested items from ESPA...")
@@ -314,10 +402,13 @@ espa.order <- function(id, level = "sr", username, password, format = "gtiff"){
 #' @param password password
 #' @param file.down file.down
 #' @param delay delay
+#'
+#' @importFrom utils head tail
+#'
 #' @keywords internal
 #' @noRd
 ## check order(s)
-espa.download <- function(order.list, username, password, file.down, delay = 10){
+.ESPA_download <- function(order.list, username, password, file.down, delay = 10, dir_out){
 
   remain.active = TRUE; ini = TRUE; show.status = TRUE
   while(remain.active){
@@ -391,7 +482,7 @@ espa.download <- function(order.list, username, password, file.down, delay = 10)
 #' @importFrom sp SpatialPolygons
 #' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
 #' @noRd
-make_aoi <- function(aoi, type = "matrix", quiet = F){
+.make_aoi <- function(aoi, type = "matrix", quiet = F){
 
   ## if not sfc, convert to sfc
   if(!inherits(aoi, c("Spatial", "sfc", "matrix"))) out("Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object.", type = 3)
@@ -459,5 +550,5 @@ make_aoi <- function(aoi, type = "matrix", quiet = F){
 .onUnload <- function(libname, pkgname) {
 
   ## logout from USGS
-  if(is.TRUE(getOption("gSD.usgs_set"))) usgs_logout(getOption("gSD.usgs_apikey"))
+  if(is.TRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }

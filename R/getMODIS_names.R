@@ -7,6 +7,36 @@
 #'
 #' @author Jakob Schwalb-Willmann
 #'
+#' @examples
+#' ## Load packages
+#' library(getSpatialData)
+#' library(sf)
+#'
+#' ## set aoi and time range for the query
+#' set_aoi(aoi_data[[1]])
+#' time_range <-  c("2017-08-01", "2017-08-30")
+#'
+#' ## Login to USGS ERS
+#' \dontrun{
+#' login_USGS("username")
+#'
+#' ## set archive directory
+#' set_archive("/path/to/archive/")
+#'
+#' ## get available products and select one
+#' product_names <- getMODIS_names()
+#' product <- grep("MOD13Q1", product_names, value = T)
+#'
+#' ## query for records for your AOI, time range and product
+#' query <- getMODIS_query(time_range = time_range, name = product)
+#'
+#' ## preview a record
+#' getMODIS_preview(query[1,])
+#'
+#' ## download records 1 and 2
+#' files <- getMODIS_data(query[1:2,])
+#' }
+#'
 #' @importFrom getPass getPass
 #' @importFrom MODIS getProduct
 #'
@@ -23,13 +53,12 @@ getMODIS_names <- function(username = NULL, password = NULL){
     }
   } else{
     if(is.null(password)) password = getPass()
-    api.key <- usgs_login(username, password)
+    api.key <- .ERS_login(username, password)
   }
 
   mp <- as.character(getProduct()$PRODUCT)
-  ee.names <- usgs_ds(api.key, "MODIS_")
-  ee.products <- sapply(ee.names, function(x) paste0(tail(head(strsplit(x, "_")[[1]], n=-1), n=1), collapse = "_"), USE.NAMES = F)
+  ee.names <- .EE_ds(api.key, "MODIS_")
+  ee.products <- .convMODIS_names(ee.names)
   ap <- intersect(mp, ee.products)
-
   ee.names[sapply(ap, function(x, ee.p = ee.products) which(ee.p == x), USE.NAMES = F)]
 }

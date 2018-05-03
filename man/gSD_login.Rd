@@ -22,9 +22,9 @@ None.
 Login to services supported by \code{getSpatialData} once for the running session.
 }
 \details{
-\code{login_CopHub} defines the login credentials for the Copernicus Open Access Hub (register on \url{https://scihub.copernicus.eu/})
+\code{login_CopHub} defines login credentials for the Copernicus Open Access Hub (register on \url{https://scihub.copernicus.eu/})
 
-\code{login_USGS} defines USGS login credentials Register on \url{https://ers.cr.usgs.gov/register/}.
+\code{login_USGS} defines login credentials to the USGS EROS Registration System (ERS). Register on \url{https://ers.cr.usgs.gov/register/}.
 }
 \note{
 Login credentials will be saved and made available for all \code{getSpatialData} functions during the whole session. They will be erased when quitting the session. Alternatively, login credentials can be set individually with each \code{get*} function call.

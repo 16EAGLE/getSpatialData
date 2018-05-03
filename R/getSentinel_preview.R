@@ -87,7 +87,7 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username
 
   ## Manage API access
   platform <- record$platformname
-  cred <- cophub_api(hub, platform, username, password)
+  cred <- .CopHub_select(hub, platform, username, password)
 
   ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
@@ -114,7 +114,7 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username
         out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
       } else{
         aoi.sf <- getOption("gSD.aoi")
-        #aoi.sf <- make_aoi(aoi.m, type = "sf", quiet = T)
+        #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
         map <- addFeatures(map, aoi.sf)
       }
     }

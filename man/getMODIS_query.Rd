@@ -10,21 +10,52 @@ getMODIS_query(time_range, name = "all", aoi = NULL, username = NULL,
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
 
-\item{name}{character, optional. Identifies the name of the dataset to be queried. If set to "all" (default), every available MODIS dataset is searched for results and included in the output. Use \link{getMODIS_names} to revcieve a vector with all available MODIS datasets from Earth Explorer, if you want to select a specific one.}
+\item{name}{character, optional. Identifies the name of the product to be queried. If set to "all" (default), every available MODIS product is searched for results and included in the output. Use \link{getMODIS_names} to revcieve a vector with all available MODIS products from Earth Explorer, if you want to select a specific one.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
-\item{username}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
+\item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
 
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
+\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
-A data frame; each row represents one dataset. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getMODIS functions for previewing or downloading.
+A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getMODIS functions for previewing or downloading.
 }
 \description{
 \code{getMODIS_query} queries USGS Earth Explorer for MODIS data by some basic input search parameters. The function returns a data frame that can be further filtered.
+}
+\examples{
+## Load packages
+library(getSpatialData)
+library(sf)
+
+## set aoi and time range for the query
+set_aoi(aoi_data[[1]])
+time_range <-  c("2017-08-01", "2017-08-30")
+
+## Login to USGS ERS
+\dontrun{
+login_USGS("username")
+
+## set archive directory
+set_archive("/path/to/archive/")
+
+## get available products and select one
+product_names <- getMODIS_names()
+product <- grep("MOD13Q1", product_names, value = T)
+
+## query for records for your AOI, time range and product
+query <- getMODIS_query(time_range = time_range, name = product)
+
+## preview a record
+getMODIS_preview(query[1,])
+
+## download records 1 and 2
+files <- getMODIS_data(query[1:2,])
+}
+
 }
 \seealso{
 \link{getMODIS_names} \link{getMODIS_preview} \link{getMODIS_data}

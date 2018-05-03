@@ -3,11 +3,54 @@
 #' \code{getLandsat_query} queries the USGS Earth Explorer for Landsat data by some basic input search parameters. The function returns a data frame that can be further filtered.
 #'
 #' @inheritParams getSentinel_query
-#' @param name character, optional. Identifies the name of the dataset to be queried. If set to "all" (default), every available Landsat dataset is searched for results and included in the output. Use \link{getLandsat_names} to revcieve a vector with all available Landsat datasets from Earth Explorer, if you want to select a specific one.
+#' @param name character, optional. Identifies the name of the product to be queried. If set to "all" (default), every available Landsat product is searched for results and included in the output. Use \link{getLandsat_names} to revcieve a vector with all available Landsat products from Earth Explorer, if you want to select a specific one.
+#' @param username character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).
+#' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).
 #'
 #' @return A data frame of found records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getLandsat functions for previewing or downloading.
 #'
 #' @author Jakob Schwalb-Willmann
+#'
+#' @examples
+#' ## Load packages
+#' library(getSpatialData)
+#' library(sf)
+#'
+#' ## set aoi and time range for the query
+#' set_aoi(aoi_data[[1]])
+#' time_range <-  c("2017-08-01", "2017-08-30")
+#'
+#' ## Login to USGS ERS
+#' \dontrun{
+#' login_USGS("username")
+#'
+#' ## set archive directory
+#' set_archive("/path/to/archive/")
+#'
+#' ## get available products and select one
+#' product_names <- getLandsat_names()
+#'
+#' ## query for records for your AOI, time range and product
+#' query <- getLandsat_query(time_range = time_range, name = product_names[7])
+#'
+#' ## preview a record
+#' getLandsat_preview(query[5,])
+#'
+#' #print available levels for a record
+#' query[5,]$levels_available
+#'
+#' ## download record 5 with level "l1" (will direct to AWS automaticaly)
+#' files <- getLandsat_data(records = query[5,], level = "l1", source = "auto")
+#'
+#' ## download record 5 with level "sr" (will be processed on demand by ESPA)
+#' files <- getLandsat_data(records = query[5,], level = "sr", source = "auto")
+#' # this can take very long, since the function will wait,
+#' # until the processing by ESPA is done
+#'
+#' ## you can abort the function while it is waiting for ESPA and resume later:
+#' files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
+#' # the order IDs are displayed and send by mail, use them to resume the task
+#' }
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr content
@@ -28,7 +71,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     }
   } else{
     if(is.null(password)) password = getPass()
-    api.key <- usgs_login(username, password)
+    api.key <- .ERS_login(username, password)
   }
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
@@ -40,7 +83,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
       out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
     }
   }
-  aoi <- make_aoi(aoi, type = "sf", quiet = T)
+  aoi <- .make_aoi(aoi, type = "sf", quiet = T)
 
   ## check time_range and name
   char_args <- list(time_range = time_range, name = name)
@@ -52,10 +95,10 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
   meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
                    "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
 
-  return.df <- usgs_query(aoi, time_range, name, api.key, meta.fields)
+  return.df <- .EE_query(aoi, time_range, name, api.key, meta.fields)
   if(!is.null(return.df)){
 
-    ## Connect to ESPA to revieve available products for dataset results (no use of entityId, displayId instead)
+    ## Connect to ESPA to revieve available products for (no use of entityId, displayId instead)
     out("Recieving available product levels from USGS-EROS ESPA...")
     avail.products <- as.character(sapply(return.df$displayId, function(x){
       t <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))

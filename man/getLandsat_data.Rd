@@ -4,12 +4,12 @@
 \alias{getLandsat_data}
 \title{Download Landsat data}
 \usage{
-getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
+getLandsat_data(records, level = "sr", source = "auto", dir_out = NULL,
   espa_order = NULL, force = FALSE, username = NULL, password = NULL,
   verbose = TRUE)
 }
 \arguments{
-\item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getLandsat_query}.}
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.}
 
 \item{level}{character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.}
 
@@ -20,26 +20,70 @@ getLandsat_data(products, level = "sr", source = "auto", dir_out = NULL,
    \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
 }}
 
-\item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
+\item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 
-\item{espa_order}{character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{products} is allowed to be undefined.}
+\item{espa_order}{character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.}
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
-\item{username}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
+\item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
 
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
+\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
-Character vector of files that had been downloaded.
+Character vector of paths to the downloaded files.
 }
 \description{
-\code{getLandsat_data} downloads Landsat datasets queried using \link{getLandsat_query} from different sources.
+\code{getLandsat_data} downloads Landsat data queried using \link{getLandsat_query} from different sources.
 }
 \note{
 ESPA is used as source if higher-level products are requested by the user (see \code{level}). Since ESPA is an on-demand service, \code{getLandsat_data} places an order and then waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The ESPA processing time depends on the size of the order and can take up to 48 hours in highly demanding cases! The function status is indicated by the console messages that it is prompting during execution.
+}
+\examples{
+
+## Load packages
+library(getSpatialData)
+library(sf)
+
+## set aoi and time range for the query
+set_aoi(aoi_data[[1]])
+time_range <-  c("2017-08-01", "2017-08-30")
+
+## Login to USGS ERS
+\dontrun{
+login_USGS("username")
+
+## set archive directory
+set_archive("/path/to/archive/")
+
+## get available products and select one
+product_names <- getLandsat_names()
+
+## query for records for your AOI, time range and product
+query <- getLandsat_query(time_range = time_range, name = product_names[7])
+
+## preview a record
+getLandsat_preview(query[5,])
+
+#print available levels for a record
+query[5,]$levels_available
+
+## download record 5 with level "l1" (will direct to AWS automaticaly)
+files <- getLandsat_data(records = query[5,], level = "l1", source = "auto")
+
+## download record 5 with level "sr" (will be processed on demand by ESPA)
+files <- getLandsat_data(records = query[5,], level = "sr", source = "auto")
+# this can take very long, since the function will wait,
+# until the processing by ESPA is done
+
+## you can abort the function while it is waiting for ESPA and resume later:
+files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
+# the order IDs are displayed and send by mail, use them to resume the task
+}
+
+
 }
 \seealso{
 \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}

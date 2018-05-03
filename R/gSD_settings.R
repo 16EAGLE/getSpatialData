@@ -25,11 +25,11 @@
 #' @examples
 #' ## set archive directory
 #' dir.arc <- tempdir()
-#' set_archiv(dir.arc)
+#' set_archive(dir.arc)
 #'
 #' ## set aoi (example aoi)
-#' aoi <- data("aoi")[[1]]
-#' set_aoi(aoi)
+#' data("aoi_data")
+#' set_aoi(aoi_data[[1]])
 #'
 #' \dontrun{
 #' ## draw aoi interactively
@@ -65,7 +65,7 @@ set_aoi <- function(aoi){
   }
 
   ## check aoi input
-  aoi.sf <- make_aoi(aoi, type = "sf")
+  aoi.sf <- .make_aoi(aoi, type = "sf")
 
   ## set aoi
   options(gSD.aoi=aoi.sf)
@@ -83,7 +83,7 @@ view_aoi <- function(color = "green"){
   if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)
   aoi.m <- getOption("gSD.aoi")
 
-  aoi.sf <- make_aoi(aoi.m, type = "sf", quiet = T)
+  aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
   mapview(aoi.sf, col.regions = color)
 }
 
@@ -94,5 +94,5 @@ get_aoi <- function(type = "sf"){
 
   if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)
   aoi <- getOption("gSD.aoi")
-  make_aoi(aoi, type = type, quiet = T)
+  .make_aoi(aoi, type = type, quiet = T)
 }

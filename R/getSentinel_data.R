@@ -7,7 +7,7 @@
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
-#' @return Character vector of files that had been downloaded.
+#' @return Character vector of paths to the downloaded files.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -75,7 +75,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/COPERNICUS/")}
+    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/SENTINEL/")}
     if(!dir.exists(dir_out)) dir.create(dir_out)
   }
 
@@ -88,7 +88,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   ## Manage API access
   platform <- unique(records$platformname)
   if(length(platform) > 1){out(paste0("Argument 'records' contains multiple platforms: ", paste0(platform,collapse = ", "), ". Please use only a single platform per call."), type = 3)}
-  cred <- cophub_api(hub, platform, username, password)
+  cred <- .CopHub_select(hub, platform, username, password)
 
   ## assemble md5 checksum url
   url.md5 <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)

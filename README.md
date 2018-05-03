@@ -22,7 +22,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 #### Landsat
 
-* `getLandsat_names()` – obtains available Landsat dataset names from USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
+* `getLandsat_names()` – obtains available Landsat product names from USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
 * `getLandsat_query()` – querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).
 * `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected, individual dataset. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data.
@@ -32,8 +32,9 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 
 #### MODIS
-* `getMODIS_names()` – obtains available MODIS dataset names from USGS Earth Explorer, which can be optionally used with getMODIS_query() to narrow the search.
+* `getMODIS_names()` – obtains available MODIS product names from USGS Earth Explorer, which can be optionally used with getMODIS_query() to narrow the search.
 * `getMODIS_query()` – querys USGS Earth Explorer for MODIS data and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getMODIS_data()` – uses the output of getMODIS_query() to order and download MODIS data from LAADS.
 
 
 #### Login
@@ -82,7 +83,6 @@ To install the current beta version, use `devtools`.
 ```s
 devtools::install_github("16EAGLE/getSpatialData")
 ```
-
 
 ## Example
 

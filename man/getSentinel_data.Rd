@@ -4,29 +4,29 @@
 \alias{getSentinel_data}
 \title{Download Sentinel-1, -2 and -3 data}
 \usage{
-getSentinel_data(products, dir_out = NULL, force = FALSE, username = NULL,
+getSentinel_data(records, dir_out = NULL, force = FALSE, username = NULL,
   password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
-\item{products}{data.frame, one or multiple prodcuts (each represented by one row), as it is returned by \link{getSentinel_query}.}
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.}
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
-\item{username}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
+\item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
 
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
+\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
 
 \item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
-Character vector of files that had been downloaded.
+Character vector of paths to the downloaded files.
 }
 \description{
-\code{getSentinel_data} downloads complete Sentinel datasets including imagery and meta files from the Copernicus Open Access Hubs for Sentinel data. The datasets are identified by the query return of \link{getSentinel_query}.
+\code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs for Sentinel. The datasets are identified by the query return of \link{getSentinel_query}.
 }
 \examples{
 ## Load packages
@@ -56,21 +56,21 @@ login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)
-products <- getSentinel_query(time_range = time_range, platform = platform)
+records <- getSentinel_query(time_range = time_range, platform = platform)
 
-## Get an overview of the products
-View(products) #get an overview about the search products
-colnames(products) #see all available filter attributes
-unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+## Get an overview of the records
+View(records) #get an overview about the search records
+colnames(records) #see all available filter attributes
+unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 
-## Filter the products
-products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
+## Filter the records
+records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
 
-## Preview a single product
-getSentinel_preview(product = products_filtered[5,])
+## Preview a single record
+getSentinel_preview(record = records_filtered[5,])
 
 ## Download some datasets
-files <- getSentinel_data(products = products_filtered[c(4,5,6),])
+files <- getSentinel_data(records = records_filtered[c(4,5,6),])
 }
 
 }

@@ -2,21 +2,16 @@
 % Please edit documentation in R/getLandsat_preview.R
 \name{getLandsat_preview}
 \alias{getLandsat_preview}
-\title{Preview a Landsat product}
+\title{Preview a Landsat image}
 \usage{
-getLandsat_preview(product, on_map = TRUE, show_aoi = TRUE,
-  username = NULL, password = NULL, verbose = TRUE)
+getLandsat_preview(record, on_map = TRUE, show_aoi = TRUE, verbose = TRUE)
 }
 \arguments{
-\item{product}{data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected product and all its attributes.}
+\item{record}{data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected record and all its attributes.}
 
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
-
-\item{username}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
-
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
@@ -24,9 +19,49 @@ getLandsat_preview(product, on_map = TRUE, show_aoi = TRUE,
 None. A plot/view display is generated.
 }
 \description{
-\code{getLandsat_preview} previews single products as RGB plot which had been queried using \link{getLandsat_query}. The function is useful to apply visual checks to products before downloading them.
+\code{getLandsat_preview} previews a single Landsat record as image on a map or as RGB plot. The function is useful to apply visual checks to records before downloading them.
 }
 \examples{
+## Load packages
+library(getSpatialData)
+library(sf)
+
+## set aoi and time range for the query
+set_aoi(aoi_data[[1]])
+time_range <-  c("2017-08-01", "2017-08-30")
+
+## Login to USGS ERS
+\dontrun{
+login_USGS("username")
+
+## set archive directory
+set_archive("/path/to/archive/")
+
+## get available products and select one
+product_names <- getLandsat_names()
+
+## query for records for your AOI, time range and product
+query <- getLandsat_query(time_range = time_range, name = product_names[7])
+
+## preview a record
+getLandsat_preview(query[5,])
+
+#print available levels for a record
+query[5,]$levels_available
+
+## download record 5 with level "l1" (will direct to AWS automaticaly)
+files <- getLandsat_data(records = query[5,], level = "l1", source = "auto")
+
+## download record 5 with level "sr" (will be processed on demand by ESPA)
+files <- getLandsat_data(records = query[5,], level = "sr", source = "auto")
+# this can take very long, since the function will wait,
+# until the processing by ESPA is done
+
+## you can abort the function while it is waiting for ESPA and resume later:
+files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
+# the order IDs are displayed and send by mail, use them to resume the task
+}
+
 
 }
 \seealso{

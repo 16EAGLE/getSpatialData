@@ -2,20 +2,63 @@
 % Please edit documentation in R/getLandsat_names.R
 \name{getLandsat_names}
 \alias{getLandsat_names}
-\title{Get Landsat dataset names from USGS Earth Explorer}
+\title{Get Landsat product names from USGS Earth Explorer}
 \usage{
 getLandsat_names(username = NULL, password = NULL)
 }
 \arguments{
-\item{username}{character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.}
+\item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
 
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_USGS} inputs or, if \code{login_USGS} is not in use, asked interactively.}
+\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
 }
 \value{
 A character vector
 }
 \description{
-\code{getLandsat_names} obtains names of available Landsat datasets from the USGS Earth Explorer. They can optionally be used with the \link{getLandsat_query} function for querying a specific Landsat dataset instead of all.
+\code{getLandsat_names} obtains names of available Landsat products from the USGS Earth Explorer. They can optionally be used with the \link{getLandsat_query} function for querying a specific Landsat product instead of all.
+}
+\examples{
+## Load packages
+library(getSpatialData)
+library(sf)
+
+## set aoi and time range for the query
+set_aoi(aoi_data[[1]])
+time_range <-  c("2017-08-01", "2017-08-30")
+
+## Login to USGS ERS
+\dontrun{
+login_USGS("username")
+
+## set archive directory
+set_archive("/path/to/archive/")
+
+## get available products and select one
+product_names <- getLandsat_names()
+
+## query for records for your AOI, time range and product
+query <- getLandsat_query(time_range = time_range, name = product_names[7])
+
+## preview a record
+getLandsat_preview(query[5,])
+
+#print available levels for a record
+query[5,]$levels_available
+
+## download record 5 with level "l1" (will direct to AWS automaticaly)
+files <- getLandsat_data(records = query[5,], level = "l1", source = "auto")
+
+## download record 5 with level "sr" (will be processed on demand by ESPA)
+files <- getLandsat_data(records = query[5,], level = "sr", source = "auto")
+# this can take very long, since the function will wait,
+# until the processing by ESPA is done
+
+## you can abort the function while it is waiting for ESPA and resume later:
+files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
+# the order IDs are displayed and send by mail, use them to resume the task
+}
+
+
 }
 \seealso{
 \link{getLandsat_query}

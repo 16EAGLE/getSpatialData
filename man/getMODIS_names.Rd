@@ -2,20 +2,51 @@
 % Please edit documentation in R/getMODIS_names.R
 \name{getMODIS_names}
 \alias{getMODIS_names}
-\title{Get MODIS dataset names from USGS Earth Explorer}
+\title{Get MODIS product names from USGS Earth Explorer}
 \usage{
 getMODIS_names(username = NULL, password = NULL)
 }
 \arguments{
-\item{username}{character, a valid USGS user name. Default is NULL. Leave it undefined, if you want to use \link{login_USGS} to define the login credentials once for all \code{get*} functions that connect to USGS services during the session. Register on \url{https://ers.cr.usgs.gov/register/}.}
+\item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
 
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_USGS} inputs or, if \code{login_USGS} is not in use, asked interactively.}
+\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
 }
 \value{
 A character vector
 }
 \description{
-\code{getMODIS_names} obtains names of available MODIS datasets from USGS Earth Explorer. They can optionally be used with the \link{getMODIS_query} function for querying a specific MODIS dataset instead of all.
+\code{getMODIS_names} obtains names of available MODIS products from USGS Earth Explorer. They can optionally be used with the \link{getMODIS_query} function for querying a specific MODIS product instead of all.
+}
+\examples{
+## Load packages
+library(getSpatialData)
+library(sf)
+
+## set aoi and time range for the query
+set_aoi(aoi_data[[1]])
+time_range <-  c("2017-08-01", "2017-08-30")
+
+## Login to USGS ERS
+\dontrun{
+login_USGS("username")
+
+## set archive directory
+set_archive("/path/to/archive/")
+
+## get available products and select one
+product_names <- getMODIS_names()
+product <- grep("MOD13Q1", product_names, value = T)
+
+## query for records for your AOI, time range and product
+query <- getMODIS_query(time_range = time_range, name = product)
+
+## preview a record
+getMODIS_preview(query[1,])
+
+## download records 1 and 2
+files <- getMODIS_data(query[1:2,])
+}
+
 }
 \seealso{
 \link{getMODIS_query}

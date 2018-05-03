@@ -43,11 +43,11 @@ Defines session-wide archive and AOI settings that are used by all \code{getSpat
 \examples{
 ## set archive directory
 dir.arc <- tempdir()
-set_archiv(dir.arc)
+set_archive(dir.arc)
 
 ## set aoi (example aoi)
-aoi <- data("aoi")[[1]]
-set_aoi(aoi)
+data("aoi_data")
+set_aoi(aoi_data[[1]])
 
 \dontrun{
 ## draw aoi interactively

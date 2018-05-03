@@ -2,21 +2,21 @@
 % Please edit documentation in R/getSentinel_preview.R
 \name{getSentinel_preview}
 \alias{getSentinel_preview}
-\title{Preview a Sentinel product}
+\title{Preview a Sentinel image}
 \usage{
-getSentinel_preview(product, on_map = TRUE, show_aoi = TRUE,
+getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
   username = NULL, password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
-\item{product}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected product and all its attributes.}
+\item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.}
 
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
 
-\item{username}{character, a valid user name to the Copernicus Open Access Hub. Default is NULL. Leave it undefined, if you want to use use \link{login_CopHub} to define the login credentials once for all \code{getSentinel*} functions during the session. Register on \url{https://scihub.copernicus.eu/}. Not needed for connections to the pre-operational hub.}
+\item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
 
-\item{password}{character, the password to the specified user account. If \code{NULL}, the password will be taken from \link{login_CopHub} inputs or, if \code{login_CopHub} is not in use, asked interactively. Not needed for connections to the pre-operational hub.}
+\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
 
 \item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
 
@@ -26,7 +26,7 @@ getSentinel_preview(product, on_map = TRUE, show_aoi = TRUE,
 None. A plot/view display is generated.
 }
 \description{
-\code{getSentinel_preview} previews single products as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to products before downloading them.
+\code{getSentinel_preview} previews single image as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
 }
 \examples{
 ## Load packages
@@ -56,21 +56,21 @@ login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)
-products <- getSentinel_query(time_range = time_range, platform = platform)
+records <- getSentinel_query(time_range = time_range, platform = platform)
 
-## Get an overview of the products
-View(products) #get an overview about the search products
-colnames(products) #see all available filter attributes
-unique(products$processinglevel) #use one of the, e.g. to see available processing levels
+## Get an overview of the records
+View(records) #get an overview about the search records
+colnames(records) #see all available filter attributes
+unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 
-## Filter the products
-products_filtered <- products[which(products$processinglevel == "Level-1C"),] #filter by Level
+## Filter the records
+records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
 
-## Preview a single product
-getSentinel_preview(product = products_filtered[5,])
+## Preview a single record
+getSentinel_preview(record = records_filtered[5,])
 
 ## Download some datasets
-files <- getSentinel_data(products = products_filtered[c(4,5,6),])
+files <- getSentinel_data(records = records_filtered[c(4,5,6),])
 }
 
 }

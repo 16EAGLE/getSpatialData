@@ -2,7 +2,7 @@
 
 ## Introduction
 
-`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed. See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#datasets) that are or will be implemented.
+`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed. See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#products) that are or will be implemented.
 
 `getSpatialData` supports both `sf` and `sp` classes as AOI inputs (see `set_aoi`).
 
@@ -17,23 +17,24 @@ The following functions are publicly available and have been tested on Linux (Ub
 #### Sentinel
 
 * `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found records (rows) and their attributes (columns).
-* `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview (quick-look) a user-selected, individual dataset even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
+* `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download Sentinel data.
 
 #### Landsat
 
 * `getLandsat_names()` – obtains available Landsat product names from USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.
 * `getLandsat_query()` – querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).
-* `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected, individual dataset. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
+* `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data.
-  * supports order (on-demand processing) and download of higher-level products (all Landsat datasets), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
+  * supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
   * supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
-  * will support direct download of Level-1 products (all Landsat datasets) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
+  * will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
 
 
 #### MODIS
 * `getMODIS_names()` – obtains available MODIS product names from USGS Earth Explorer, which can be optionally used with getMODIS_query() to narrow the search.
-* `getMODIS_query()` – querys USGS Earth Explorer for MODIS data and returns a data frame containing the found datasets (rows) and their attributes (columns).
+* `getMODIS_query()` – querys USGS Earth Explorer for MODIS data and returns a data frame containing the found records (rows) and their attributes (columns).
+* `getMODIS_preview()` – uses the output of `getMODIS_query()` to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getMODIS_data()` – uses the output of getMODIS_query() to order and download MODIS data from LAADS.
 
 
@@ -192,17 +193,17 @@ files <- getSentinel_data(records = records_filtered[c(4,7,9), ])
 
 Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 
 
-### Datasets
+### Products
 
-The following data sources are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
+The following products are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
 
-| Product(s) | Source | Access | Status | Existing Clients | 
+| Product(s) | Source | Access | Status | Dependent Client(s) | 
 | ---------- | --------------- | --- | -------| ----------- |
 | Sentinel (-1/-2/-3) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | native |
-| MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | ongoing | R: `MODIS` |
+| MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | implemented | R: `MODIS` |
 | Landsat | USGS | <a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api">USGS EarthExplorer json API</a>, <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a> | implemented | native |
-| Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | evaluated | R: `gfcanalysis` |
-| CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | evaluated | R: `ecoClimate` |
+| Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | evaluated | R: `gfcanalysis`? |
+| CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | evaluated | R: `ecoClimate`? |
 | Copernicus Global Land Products | ESA Copernicus | http://land.copernicus.eu/ | evaluated | |
 | CHELSA Global Land Climate | Karger et al. | http://chelsa-climate.org/ | evaluated | |
 | Global Forest Cover | EU-JRC | http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/ | evaluated | |
@@ -211,5 +212,5 @@ The following data sources are being evaluated to be implemented within the pack
 | Global Urban Footprint | Esch et al. | https://urban-tep.eo.esa.int/geobrowser/?id=portfolio#!&context=GUF%2FGUF2012-12m | evaluated | |
 | UK Urban Areas LiDAR | UK Environment Agency | http://remote-sensing-biodiversity.org/free-lidar-data-for-some-uk-cities/ | evaluated | |
 | Global Human Built-up And Settlement Extent (HBASE)| Wang et al. | http://sedac.ciesin.columbia.edu/data/set/ulandsat-hbase-v1 | evaluated | |
-| GIMMS NDVI3g | NASA | https://nex.nasa.gov/nex/projects/1349/ | evaluated | R: `GIMMS` |
+| GIMMS NDVI3g | NASA | https://nex.nasa.gov/nex/projects/1349/ | evaluated | R: `GIMMS`? |
 

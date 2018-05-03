@@ -7,7 +7,7 @@
 #' \strong{Sentinel}
 #' \itemize{
 #'   \item \link{getSentinel_query} querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found records (rows) and their attributes (columns).
-#'   \item \link{getSentinel_preview} uses the output of \code{getSentinel_query} to preview (quick-look) a user-selected, individual dataset even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
+#'   \item \link{getSentinel_preview} uses the output of \code{getSentinel_query} to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 #'   \item \link{getSentinel_data} uses the output of \code{getSentinel_query} to download Sentinel data.
 #' }
 #'
@@ -17,12 +17,12 @@
 #' \itemize{
 #'   \item \link{getLandsat_names} obtains available Landsat product names from USGS Earth Explorer, which can be optionally used with \link{getLandsat_query} to narrow the search.
 #'   \item \link{getLandsat_query} querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).
-#'   \item \link{getLandsat_preview} uses the output of \link{getLandsat_query} to preview (quick-look) a user-selected, individual dataset. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
+#'   \item \link{getLandsat_preview} uses the output of \link{getLandsat_query} to preview (quick-look) a user-selected record By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 #'   \item \link{getLandsat_data} uses the output of \link{getLandsat_query} to order and download Landsat data.
 #'   \itemize{
 #'     \item supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
 #'     \item supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
-#'     \item will support direct download of Level-1 products (all Landsat datasets) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
+#'     \item will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
 #'   }
 #' }
 #'
@@ -30,7 +30,8 @@
 #' \strong{MODIS}
 #' \itemize{
 #'   \item \link{getMODIS_names} obtains available MODIS product names from USGS Earth Explorer, which can be optionally used with \link{getMODIS_query} to narrow the search.
-#'   \item \link{getMODIS_query} querys USGS Earth Explorer for MODIS data and returns a data frame containing the found datasets (rows) and their attributes (columns).
+#'   \item \link{getMODIS_query} querys USGS Earth Explorer for MODIS data and returns a data frame containing the found records (rows) and their attributes (columns).
+#'   \item \link{getMODIS_preview} uses the output of \link{getMODIS_query} to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 #'   \item \link{getMODIS_data} uses the output of \link{getMODIS_query} to order and download MODIS data from LAADS.
 #' }
 #'

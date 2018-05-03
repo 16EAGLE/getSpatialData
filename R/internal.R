@@ -245,6 +245,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
     meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
     meta.df <- mapply(FUN = function(v, n, i){
       x <- v[i]
+      x <- lapply(x, function(x) if(is.null(x)) "" else x)
       x <- rbind.data.frame(x, stringsAsFactors = F)
       colnames(x) <- gsub(" ", "", n[i])
       return(x)

@@ -2,9 +2,9 @@
 
 ## Introduction
 
-`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed. See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#products) that are or will be implemented.
+`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed. See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#) that are or will be implemented.
 
-`getSpatialData` supports both `sf` and `sp` classes as AOI inputs (see `set_aoi`).
+`getSpatialData` supports both `sf` and `sp` classes as AOI inputs (see `set_aoi` in  [available functions](https://github.com/16EAGLE/getSpatialData#available-functions)).
 
 ## State of development
 
@@ -197,7 +197,7 @@ Ideas on possible data sources to be included, technical ideas or other are welc
 
 The following products are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
 
-| Product(s) | Source | Access | Status | Dependent Client(s) | 
+| Product(s) | Source | Access | Status | Client(s) | 
 | ---------- | --------------- | --- | -------| ----------- |
 | Sentinel (-1/-2/-3) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | native |
 | MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | implemented | R: `MODIS` |

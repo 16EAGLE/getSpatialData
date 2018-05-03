@@ -102,7 +102,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     out("Recieving available product levels from USGS-EROS ESPA...")
     avail.products <- as.character(sapply(return.df$displayId, function(x){
       t <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
-      paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
+      if(names(content(t)) == "not_implemented") return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
     }, USE.NAMES = F))
     return.df <- cbind(return.df, avail.products, stringsAsFactors = FALSE)
     colnames(return.df)[ncol(return.df)] <- "levels_available"

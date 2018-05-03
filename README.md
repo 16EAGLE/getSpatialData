@@ -10,26 +10,6 @@
 
 Currently, `getSpatialData` can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.
 
-## Semantics
-
-The following universal semantics on data are used by `getSpatialData` (from smallest to biggest entity):
-* `image`: An image of a specific time and spatial extent.
-* `record`: A set of meta fields identifying and describing a specific `image`, being part of multiple records obtained by a `query`.
-* `dataset`: Smallest entity that is delivered by a service. Might consist of multiple files, including meta data and bandwise imagery. Covers a specific time and spatial extent.
-* `product`: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:
-  * `platform`: A general platform design (e.g. "Landsat" or "Sentinel").
-  * `sensor`: Type of sensor which acquired the data from which the product originates (e.g. "MODIS", "MSI" or "OLI").
-  * `collection`: A product version.
-  * `level`: Processing level of the product (e.g. "Level 2A" or "Surface Reflectance").
-  * `source`: The service acquiring, processing or distributing the product (e.g. "ESA Copernicus" or "USGS").
-
-The following universal semantics on computational steps are used by `getSpatialData`:
-* `get`: Recieve data from a `source`.
-  * `names`: Result of searching available products (differs by `source` and `platform`), which might be differentiated further later on (e.g. by `level`).
-  * `query`: Result of searching a `source` for data `records` of a specific or multiple `products`.
-  * `preview`: Preview a `record`.
-  * `data`: Result of recieving one or multiple `dataset` from a `source`.
-  
 ### Available functions
 
 The following functions are publicly available and have been tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10:
@@ -74,6 +54,26 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 For all public functions documentation is available, containing information on the expected arguments and providing code examples. The files can be accessed executing a command like `?getSentinel_query`.
 
+## Semantics
+
+The following universal semantics on data are used by `getSpatialData` (from smallest to biggest entity):
+* `image`: An image of a specific time and spatial extent.
+* `record`: A set of meta fields identifying and describing a specific `image`, being part of multiple records in a `query`.
+* `dataset`: Smallest entity that is delivered by a service. Might consist of multiple files, including meta data and bandwise imagery. Covers a specific time and spatial extent.
+* `product`: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:
+  * `platform`: A general platform design (e.g. "Landsat" or "Sentinel").
+  * `sensor`: Type of sensor which acquired the data from which the product originates (e.g. "MODIS", "MSI" or "OLI").
+  * `collection`: A product version.
+  * `level`: Processing level of the product (e.g. "Level 2A" or "Surface Reflectance").
+  * `source`: The service acquiring, processing or distributing the product (e.g. "ESA Copernicus" or "USGS").
+
+The following universal semantics on computational steps are used by `getSpatialData`:
+* `get`: Recieve data from a `source`.
+  * `names`: Result of searching available products (differs by `source` and `platform`), which might be differentiated further later on (e.g. by `level`).
+  * `query`: Result of searching a `source` for data `records` of a specific or multiple `products`.
+  * `preview`: Preview a `record`.
+  * `data`: Result of recieving one or multiple `dataset` from a `source`.
+  
 
 ## Installation
 

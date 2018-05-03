@@ -68,12 +68,12 @@ The following universal semantics on data are used by `getSpatialData` (from sma
   * `source`: The service acquiring, processing or distributing the product (e.g. "ESA Copernicus" or "USGS").
 
 The following universal semantics on computational steps are used by `getSpatialData`:
-* `get`: Recieve data from a `source`.
+* `get`: Recieve data from different sources, named either by `sensor` or `platform` (whichever is used by the scientific community to referr to the derived products)
   * `names`: Result of searching available products (differs by `source` and `platform`), which might be differentiated further later on (e.g. by `level`).
   * `query`: Result of searching a `source` for data `records` of a specific or multiple `products`.
   * `preview`: Preview a `record`.
   * `data`: Result of recieving one or multiple `dataset` from a `source`.
-  
+* `prep`: Prepare/preprocess data obtained with `get`
 
 ## Installation
 

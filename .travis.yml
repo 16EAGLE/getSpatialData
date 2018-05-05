@@ -15,6 +15,7 @@ before_install:
   - sudo apt-get install libssh2-1-dev
   - R -e 'install.packages("devtools")'
   - R -e 'install.packages("covr")
+  - R -e 'install.packages("sf")
 
 install:
   - R -e 'devtools::install_deps(dep = T)'

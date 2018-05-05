@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get install libgdal-dev
   - sudo apt-get install libproj-dev
   - sudo apt-get install libudunits2-dev
-  - sudp apt-get install inslibssh2-1-dev
+  - sudo apt-get install libssh2-1-dev
   - ./pkg-build.sh install_devtools
   - ./pkg-build.sh intsall_r Rcpp
   - ./pkg-build.sh intsall_r httpuv

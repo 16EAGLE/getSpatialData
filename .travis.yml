@@ -10,8 +10,8 @@ before_install:
   - sudo apt-get install libproj-dev
   - sudo apt-get install libudunits2-dev
   - sudo apt-get install libssh2-1-dev
-  - sudo apt-get install libuv1
-  - sudo apt-get install libuv1-dev
+# - sudo apt-get install libuv1
+# - sudo apt-get install libuv1-dev
   - ./pkg-build.sh install_devtools
   - ./pkg-build.sh install_r Rcpp
   - ./pkg-build.sh install_r httpuv # fails

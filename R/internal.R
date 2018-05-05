@@ -58,13 +58,14 @@ check.cmd <- function(cmd){
 gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
 
   x <- NULL # needed due to checks
-  get.str <-"x <- GET(url"
+  get.str <-"x <- try(GET(url"
   if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
   if(!is.null(dir.file)) get.str <- paste0(get.str, ", write_disk(dir.file)")
   if(is.TRUE(prog)) get.str <- paste0(get.str, ", progress()")
-  get.str <- paste0(get.str, ")")
+  get.str <- paste0(get.str, "), silent = T)")
   eval(parse(text = get.str))
 
+  if(inherits(x, "try-error")) out(paste0("Could not reach Copernicus Open Access Hub: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   #message_for_status(x); cat("\n")
@@ -82,6 +83,7 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
 #' @noRd
 gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 
+  x <- NULL # needed due to checks
   post.str <-"x <- POST(url"
   if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
   post.str <- paste0(post.str, ", body = body)")

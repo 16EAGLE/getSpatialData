@@ -5,17 +5,13 @@ before_install:
   - curl -OL https://raw.githubusercontent.com/metacran/r-builder/master/pkg-build.sh
   - chmod 755 pkg-build.sh
   - ./pkg-build.sh bootstrap
-
-before_script:
   - sudo apt-get install gdal-bin
   - sudo apt-get install libgdal-dev
   - sudo apt-get install libproj-dev
+  - sudo apt-get install libudunits2-dev
   - ./pkg-build.sh install_devtools
-  - ./pkg-build.sh install_deps
-  #- wget http://cran.r-project.org/src/contrib/Archive/rgdal/rgdal_1.2-5.tar.gz
-  #- ./pkg-build.sh install_r_local rgdal_1.2-5.tar.gz
-  #- rm rgdal_1.2-5.tar.gz
   - ./pkg-build.sh install_r rgdal
+  - ./pkg-build.sh install_r covr
 
 install:
   - ./pkg-build.sh install_deps
@@ -34,6 +30,7 @@ notifications:
 
 env:
   matrix:
-    - RVERSION=oldrel
-    - RVERSION=release
-    - RVERSION=devel
+    - RVERSION=devel COVERAGE=true
+
+after_success:
+  - Rscript -e 'library(covr); codecov()'

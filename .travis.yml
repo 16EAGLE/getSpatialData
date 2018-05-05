@@ -5,20 +5,21 @@ r:
   - devel
 sudo: required
 
-apt_packages:
-  - gdal-bin
-  - libgdal-dev
-  - libproj-dev
-  - libudunits2-dev
-  - libssh2-1-dev
+before_install:
+  apt_packages:
+    - gdal-bin
+    - libgdal-dev
+    - libproj-dev
+    - libudunits2-dev
+    - libssh2-1-dev
  
-r_packages:
-  - devtools
-  - Rcpp
-  - httpuv
-  - shiny
-  - rgdal
-  - covr
+  r_packages:
+    - devtools
+    - Rcpp
+    - httpuv
+    - shiny
+    - rgdal
+    - covr
  
 install:
   - R -e 'devtools::install_deps(dep = T)'

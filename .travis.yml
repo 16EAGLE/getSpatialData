@@ -12,7 +12,8 @@ before_install:
   - sudo apt-get install libssh2-1-dev
   - ./pkg-build.sh install_devtools
   - ./pkg-build.sh install_r Rcpp
-  - ./pkg-build.sh install_r httpuv #fails
+  # - ./pkg-build.sh install_r httpuv #fails
+  - ./pkg-build.sh install_github rstudio/httpuv
   - ./pkg-build.sh install_r shiny
   - ./pkg-build.sh install_r rgdal
   - ./pkg-build.sh install_r covr

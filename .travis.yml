@@ -6,21 +6,21 @@ r:
 sudo: required
 
 before_install:
-  apt_packages:
-    - gdal-bin
-    - libgdal-dev
-    - libproj-dev
-    - libudunits2-dev
-    - libssh2-1-dev
+  - sudo apt-get install gdal-bin
+  - sudo apt-get install libgdal-dev
+  - sudo apt-get install libproj-dev
+  - sudo apt-get install libudunits2-dev
+  - sudo apt-get install libssh2-1-dev
+  - R -e 'install.packages("devtools")'
  
-  r_packages:
-    - devtools
-    - Rcpp
-    - httpuv
-    - shiny
-    - rgdal
-    - covr
- 
+r_packages:
+  - devtools
+  - Rcpp
+  - httpuv  
+  - shiny
+  - rgdal
+  - covr
+
 install:
   - R -e 'devtools::install_deps(dep = T)'
 

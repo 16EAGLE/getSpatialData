@@ -14,8 +14,10 @@ before_install:
   - sudo apt-get install libudunits2-dev
   - sudo apt-get install libssh2-1-dev
   - R -e 'install.packages("devtools")'
-  - R -e 'install.packages("covr")
   - R -e 'install.packages("sf")
+
+r_packages:
+  - covr
 
 install:
   - R -e 'devtools::install_deps(dep = T)'

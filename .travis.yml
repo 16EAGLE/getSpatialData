@@ -1,44 +1,76 @@
-language: c
+language: R
+r:
+  - oldrel
+  - release
+  - devel
 sudo: required
 
-before_install:
-  - curl -OL https://raw.githubusercontent.com/metacran/r-builder/master/pkg-build.sh
-  - chmod 755 pkg-build.sh
-  - ./pkg-build.sh bootstrap
-  - sudo apt-get install gdal-bin
-  - sudo apt-get install libgdal-dev
-  - sudo apt-get install libproj-dev
-  - sudo apt-get install libudunits2-dev
-  - sudo apt-get install libssh2-1-dev
-# - sudo apt-get install libuv1
-# - sudo apt-get install libuv1-dev
-  - ./pkg-build.sh install_devtools
-  - ./pkg-build.sh install_r Rcpp
-  - ./pkg-build.sh install_r httpuv # fails
-# - ./pkg-build.sh install_github rstudio/httpuv
-  - ./pkg-build.sh install_r shiny
-  - ./pkg-build.sh install_r rgdal
-  - ./pkg-build.sh install_r covr
-
+apt_packages:
+  - gdal-bin
+  - libgdal-dev
+  - libproj-dev
+  - libudunits2-dev
+  - libssh2-1-dev
+ 
+r_packages:
+  - devtools
+  - Rcpp
+  - httpuv
+  - shiny
+  - rgdal
+  - covr
+ 
 install:
-  - ./pkg-build.sh install_deps
+  - R -e 'devtools::install_deps(dep = T)'
 
 script:
-  - ./pkg-build.sh run_build
-  - ./pkg-build.sh run_check
-
-after_failure:
-  - ./pkg-build.sh dump_logs
-
-notifications:
-  email:
-    on_success: change
-    on_failure: change
-
-env:
-  matrix:
-    - RVERSION=3.3.3 COVERAGE=true
-    # - RVERSION=devel COVERAGE=true
+  - R CMD build .
+  - R CMD check *tar.gz
 
 after_success:
-  - Rscript -e 'library(covr); codecov()'
+  - R -e 'library(covr); codecov()'
+
+
+#language: c
+#sudo: required
+#
+#before_install:
+#  - curl -OL https://raw.githubusercontent.com/metacran/r-builder/master/pkg-build.sh
+#  - chmod 755 pkg-build.sh
+#  - ./pkg-build.sh bootstrap
+#  - sudo apt-get install gdal-bin
+#  - sudo apt-get install libgdal-dev
+#  - sudo apt-get install libproj-dev
+#  - sudo apt-get install libudunits2-dev
+#  - sudo apt-get install libssh2-1-dev
+## - sudo apt-get install libuv1
+## - sudo apt-get install libuv1-dev
+#  - ./pkg-build.sh install_devtools
+#  - ./pkg-build.sh install_r Rcpp
+#  - ./pkg-build.sh install_r httpuv # fails
+## - ./pkg-build.sh install_github rstudio/httpuv
+#  - ./pkg-build.sh install_r shiny
+#  - ./pkg-build.sh install_r rgdal
+#  - ./pkg-build.sh install_r covr
+#
+#install:
+#  - ./pkg-build.sh install_deps
+#
+#script:
+#  - ./pkg-build.sh run_build
+#  - ./pkg-build.sh run_check
+#
+#after_failure:
+#  - ./pkg-build.sh dump_logs
+#
+#notifications:
+#  email:
+#    on_success: change
+#    on_failure: change
+#
+#env:
+#  matrix:
+#    - RVERSION=devel COVERAGE=true
+#
+#after_success:
+#  - Rscript -e 'library(covr); codecov()'

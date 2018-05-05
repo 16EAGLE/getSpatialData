@@ -6,20 +6,15 @@ r:
 sudo: required
 
 before_install:
+# - sudo apt-get install gdal-bin # version to old, get updated ppa
+  - sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update # ppa contains gdal > 2.0.0 needed for sf
   - sudo apt-get install gdal-bin
-  - sudo apt-get install libgdal-dev
+# - sudo apt-get install libgdal-dev
   - sudo apt-get install libproj-dev
   - sudo apt-get install libudunits2-dev
   - sudo apt-get install libssh2-1-dev
   - R -e 'install.packages("devtools")'
- 
-r_packages:
-  - devtools
-  - Rcpp
-  - httpuv  
-  - shiny
-  - rgdal
-  - covr
+  - R -e 'install.packages("covr")
 
 install:
   - R -e 'devtools::install_deps(dep = T)'

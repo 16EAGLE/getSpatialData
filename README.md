@@ -192,10 +192,6 @@ files <- getSentinel_data(records = records_filtered[c(4,7,9), ])
 
 ```
 
-## Ideas
-
-Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 
-
 ### Products
 
 The following products are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
@@ -217,3 +213,7 @@ The following products are being evaluated to be implemented within the package.
 | Global Human Built-up And Settlement Extent (HBASE)| Wang et al. | http://sedac.ciesin.columbia.edu/data/set/ulandsat-hbase-v1 | evaluated | |
 | GIMMS NDVI3g | NASA | https://nex.nasa.gov/nex/projects/1349/ | evaluated | R: `GIMMS`? |
 
+
+### Ideas
+
+Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 

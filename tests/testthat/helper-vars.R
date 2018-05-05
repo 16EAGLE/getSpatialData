@@ -9,3 +9,6 @@ vars.global <-   list(username = "", #getPass::getPass("Enter username: "),
 vars.sentinel <- list(platform.a = "Sentinel-1",
                       platform.b = "Sentinel-2",
                       platform.c = "Sentinel-3")
+
+# Sys.setenv("gSD_tests" = "yes") ## comment before CRAN / also defined in .travis.yml
+if(Sys.getenv("gSD_tests") == "yes") gSD_tests <- TRUE else gSD_tests <- FALSE

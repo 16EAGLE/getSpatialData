@@ -5,11 +5,7 @@ r:
   - devel
 sudo: required
 
-env:
-  global:
-    - gSD_tests=no
-
-before_install
+before_install:
 # - sudo apt-get install gdal-bin # version to old, get updated ppa
 # - sudo add-apt-repository -y ppa:ubuntugis/ppa # ppa contains gdal > 2.0.0 needed for sf # gdal-bin not found
   - sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable

@@ -1,6 +1,6 @@
 language: R
 r:
-  - oldrel
+# - oldrel
   - release
   - devel
 sudo: required
@@ -19,9 +19,10 @@ before_install:
   - sudo apt-get install libudunits2-dev
   - sudo apt-get install libssh2-1-dev
   - R -e 'install.packages("devtools")'
+  - R -e 'install.packages("covr")'
 
-r_packages:
-  - covr
+r_github_packages:
+  - r-lib/covr
 
 install:
   - R -e 'devtools::install_deps(dep = T)'
@@ -31,7 +32,7 @@ script:
   - R CMD check *tar.gz
 
 after_success:
-  - R -e 'library(covr); codecov()'
+  - Rscript -e 'covr::codecov()'
 
 
 #language: c

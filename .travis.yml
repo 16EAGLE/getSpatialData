@@ -1,6 +1,6 @@
 language: R
 r:
-  - oldrel
+# - oldrel
   - release
   - devel
 sudo: required

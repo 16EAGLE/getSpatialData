@@ -30,9 +30,9 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `getLandsat_query()` – querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).
 * `getLandsat_preview()` – uses the output of `getLandsat_query()` to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getLandsat_data()` – uses the output of getLandsat_query() to order and download Landsat data.
-  - supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
-  - supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
-  - will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
+    - supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
+    - supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
+    - will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
 
 
 #### MODIS
@@ -63,18 +63,18 @@ The following universal semantics on data are used by `getSpatialData` (from sma
 * `record`: A set of meta fields identifying and describing a specific `image`, being part of multiple records in a `query`.
 * `dataset`: Smallest entity that is delivered by a service. Might consist of multiple files, including meta data and bandwise imagery. Covers a specific time and spatial extent.
 * `product`: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:
-  - `platform`: A general platform design (e.g. "Landsat" or "Sentinel").
-  - `sensor`: Type of sensor which acquired the data from which the product originates (e.g. "MODIS", "MSI" or "OLI").
-  - `collection`: A product version.
-  - `level`: Processing level of the product (e.g. "Level 2A" or "Surface Reflectance").
-  - `source`: The service acquiring, processing or distributing the product (e.g. "ESA Copernicus" or "USGS").
+    - `platform`: A general platform design (e.g. "Landsat" or "Sentinel").
+    - `sensor`: Type of sensor which acquired the data from which the product originates (e.g. "MODIS", "MSI" or "OLI").
+    - `collection`: A product version.
+    - `level`: Processing level of the product (e.g. "Level 2A" or "Surface Reflectance").
+    - `source`: The service acquiring, processing or distributing the product (e.g. "ESA Copernicus" or "USGS").
 
 The following universal semantics on computational steps are used by `getSpatialData`:
 * `get`: Recieve data from different sources, named either by `sensor` or `platform` (whichever is used by the scientific community to referr to the derived products)
-  - `names`: Result of searching available products (differs by `source` and `platform`), which might be differentiated further later on (e.g. by `level`).
-  - `query`: Result of searching a `source` for data `records` of a specific or multiple `products`.
-  - `preview`: Preview a `record`.
-  - `data`: Result of recieving one or multiple `dataset` from a `source`.
+    - `names`: Result of searching available products (differs by `source` and `platform`), which might be differentiated further later on (e.g. by `level`).
+    - `query`: Result of searching a `source` for data `records` of a specific or multiple `products`.
+    - `preview`: Preview a `record`.
+    - `data`: Result of recieving one or multiple `dataset` from a `source`.
 * `prep`: Prepare/preprocess data obtained with `get`
 
 ## Installation

@@ -61,6 +61,13 @@ At the moment, the package includes the following functions:
 
 Further details are included in the README file, which is constantly updated on \url{https://github.com/16EAGLE/getSpatialData}.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item Report bugs at \url{http://www.github.com/16eagle/getSpatialData/issues}
+}
+
+}
 \author{
 Jakob Schwalb-Willmann
 }

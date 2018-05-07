@@ -7,7 +7,7 @@
 
 `getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. It supports both `sf` and `sp` classes as AOI inputs (see `set_aoi` in  [available functions](https://github.com/16EAGLE/getSpatialData#available-functions)). Due to the early development stage, the included functions and their concepts could be removed or changed in some cases.
 
-For all public functions [documentation is available](https://jxsw.de/getSpatialData). See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#) that are or will be implemented.
+For all public functions [documentation is available](https://jxsw.de/getSpatialData). See also the [list of data sources](http://github.com/16EAGLE/getSpatialData#) that are or will be implemented.
 
 
 ## State of development

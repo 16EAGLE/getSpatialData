@@ -26,3 +26,4 @@ Imports:
 RoxygenNote: 6.0.1
 Suggests: testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
+URL: http://www.github.com/16eagle/getSpatialData/

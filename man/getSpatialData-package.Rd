@@ -64,6 +64,7 @@ Further details are included in the README file, which is constantly updated on 
 \seealso{
 Useful links:
 \itemize{
+  \item \url{http://www.github.com/16eagle/getSpatialData/}
   \item Report bugs at \url{http://www.github.com/16eagle/getSpatialData/issues}
 }
 

@@ -31,7 +31,7 @@ getLandsat* and getMODIS* function bundles for USGS EE client
 
 <br>
 **Contributions:**
-* Francesco Pirotti (@fpirotti, issue #2, bug fix)
+* Bug fix by Francesco Pirotti (@fpirotti, #2)
 
 <br>
 
@@ -52,7 +52,7 @@ initial session-wide tool functions
 
 <br>
 **Contributions:**
-* Mike Treglia (@mtreg, issue #1, feature idea)
+* Feature idea by Mike Treglia (@mtreg, #1)
 
 <br>
 
@@ -70,7 +70,7 @@ getSentinel* function bundle for ESA Copernicus R client
 
 <br>
 **Removed features:**
-* early-dev. python bindings, getSpatialData is fully R-native now
+* early-dev. python bindings, getSentinel* is fully R-native now
 
 
 <br>

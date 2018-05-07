@@ -44,16 +44,16 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 #### Login
 
-* `login_CopHub` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
-* `login_USGS` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
+* `login_CopHub()` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
+* `login_USGS()` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
 
 
 #### Session settings
 
-* `set_archive` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
-* `set_aoi` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
-* `view_aoi` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
-* `get_aoi` - get the session AOI you have defined or drawn before as `sf`, `sp` or `matrix` object.
+* `set_archive()` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
+* `set_aoi()` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
+* `view_aoi()` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
+* `get_aoi()` - get the session AOI you have defined or drawn before as `sf`, `sp` or `matrix` object.
 
 
 ## Semantics

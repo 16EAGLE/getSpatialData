@@ -70,6 +70,9 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
@@ -99,29 +102,37 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
+          <h2 id="section-sentinel" class="hasAnchor"><a href="#section-sentinel" class="anchor"></a>Sentinel</h2>
+          <p class="section-desc"><p>Query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data</p></p>
         </th>
       </tr>
       <tr>
         <!--  -->
         <td>
-          <p><code><a href="aoi_data.html">aoi_data</a></code> </p>
+          <p><code><a href="getSentinel_data.html">getSentinel_data()</a></code> </p>
         </td>
-        <td><p>An example AOI of three different classes</p></td>
+        <td><p>Download Sentinel-1, Sentinel-2 and Sentinel-3 data</p></td>
       </tr><tr>
         <!--  -->
         <td>
-          <p><code><a href="gSD_login.html">login_CopHub()</a></code> <code><a href="gSD_login.html">login_USGS()</a></code> </p>
+          <p><code><a href="getSentinel_preview.html">getSentinel_preview()</a></code> </p>
         </td>
-        <td><p>Session-wide login</p></td>
+        <td><p>Preview a Sentinel image</p></td>
       </tr><tr>
         <!--  -->
         <td>
-          <p><code><a href="gSD_settings.html">set_archive()</a></code> <code><a href="gSD_settings.html">set_aoi()</a></code> <code><a href="gSD_settings.html">view_aoi()</a></code> <code><a href="gSD_settings.html">get_aoi()</a></code> </p>
+          <p><code><a href="getSentinel_query.html">getSentinel_query()</a></code> </p>
         </td>
-        <td><p>Session-wide archive and AOI settings</p></td>
-      </tr><tr>
+        <td><p>Query Sentinel-1, Sentinel-2 and Sentinel-3 data</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-landsat" class="hasAnchor"><a href="#section-landsat" class="anchor"></a>Landsat</h2>
+          <p class="section-desc"><p>Query, preview and download Landsat data</p></p>
+        </th>
+      </tr>
+      <tr>
         <!--  -->
         <td>
           <p><code><a href="getLandsat_data.html">getLandsat_data()</a></code> </p>
@@ -145,7 +156,15 @@
           <p><code><a href="getLandsat_query.html">getLandsat_query()</a></code> </p>
         </td>
         <td><p>Query Landsat data</p></td>
-      </tr><tr>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-modis" class="hasAnchor"><a href="#section-modis" class="anchor"></a>MODIS</h2>
+          <p class="section-desc"><p>Query, preview and download MODIS data</p></p>
+        </th>
+      </tr>
+      <tr>
         <!--  -->
         <td>
           <p><code><a href="getMODIS_data.html">getMODIS_data()</a></code> </p>
@@ -169,24 +188,48 @@
           <p><code><a href="getMODIS_query.html">getMODIS_query()</a></code> </p>
         </td>
         <td><p>Query MODIS data</p></td>
-      </tr><tr>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-login" class="hasAnchor"><a href="#section-login" class="anchor"></a>Login</h2>
+          <p class="section-desc"><p>Define login credentials that can be used throughout the running session</p></p>
+        </th>
+      </tr>
+      <tr>
         <!--  -->
         <td>
-          <p><code><a href="getSentinel_data.html">getSentinel_data()</a></code> </p>
+          <p><code><a href="gSD_login.html">login_CopHub()</a></code> <code><a href="gSD_login.html">login_USGS()</a></code> </p>
         </td>
-        <td><p>Download Sentinel-1, Sentinel-2 and Sentinel-3 data</p></td>
-      </tr><tr>
+        <td><p>Session-wide login</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-settings" class="hasAnchor"><a href="#section-settings" class="anchor"></a>Settings</h2>
+          <p class="section-desc"><p>Define settings for the running session</p></p>
+        </th>
+      </tr>
+      <tr>
         <!--  -->
         <td>
-          <p><code><a href="getSentinel_preview.html">getSentinel_preview()</a></code> </p>
+          <p><code><a href="gSD_settings.html">set_archive()</a></code> <code><a href="gSD_settings.html">set_aoi()</a></code> <code><a href="gSD_settings.html">view_aoi()</a></code> <code><a href="gSD_settings.html">get_aoi()</a></code> </p>
         </td>
-        <td><p>Preview a Sentinel image</p></td>
-      </tr><tr>
+        <td><p>Session-wide archive and AOI settings</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-general" class="hasAnchor"><a href="#section-general" class="anchor"></a>General</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      <tr>
         <!--  -->
         <td>
-          <p><code><a href="getSentinel_query.html">getSentinel_query()</a></code> </p>
+          <p><code><a href="aoi_data.html">aoi_data</a></code> </p>
         </td>
-        <td><p>Query Sentinel-1, Sentinel-2 and Sentinel-3 data</p></td>
+        <td><p>An example AOI of three different classes</p></td>
       </tr><tr>
         <!--  -->
         <td>
@@ -201,7 +244,12 @@
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#section-all-functions">All functions</a></li>
+      <li><a href="#section-sentinel">Sentinel</a></li>
+      <li><a href="#section-landsat">Landsat</a></li>
+      <li><a href="#section-modis">MODIS</a></li>
+      <li><a href="#section-login">Login</a></li>
+      <li><a href="#section-settings">Settings</a></li>
+      <li><a href="#section-general">General</a></li>
     </ul>
   </div>
 </div>

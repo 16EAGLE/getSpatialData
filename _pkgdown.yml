@@ -1,4 +1,36 @@
 development:
   mode: unreleased
 
+home:
+  links:
+  - text: Browse source code at
+    href: http://github.com/16eagle/getSpatialData
 
+reference:
+- title: Sentinel
+  desc:  Query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data
+  contents:
+  - starts_with("getSentinel")
+- title: Landsat
+  desc:  Query, preview and download Landsat data
+  contents:
+  - starts_with("getLandsat")
+- title: MODIS
+  desc:  Query, preview and download MODIS data
+  contents:
+  - starts_with("getMODIS")
+- title: Login
+  desc:  Define login credentials that can be used throughout the running session
+  contents:
+  - starts_with("login")
+- title: Settings
+  desc:  Define settings for the running session
+  contents:
+  - set_archive
+  - set_aoi
+  - view_aoi
+  - get_aoi
+- title: General
+  contents:
+  - aoi_data
+  - getSpatialData-package

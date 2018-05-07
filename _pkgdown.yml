@@ -3,8 +3,14 @@ development:
 
 home:
   links:
-  - text: Browse source code at
+  - text: Browse source code
     href: http://github.com/16eagle/getSpatialData
+
+#template:
+#  params:
+#    docsearch:
+#      api_key: API_KEY
+#      index_name: INDEX_NAME
 
 reference:
 - title: Sentinel

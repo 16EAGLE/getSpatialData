@@ -129,7 +129,7 @@ set_aoi() #call set_aoi() without argument, which opens a mapedit editor:
 ```R
 ## After defining a session AOI, define time range and platform
 time_range <-  c("2017-08-01", "2017-08-30")
-platform <- "Sentinel-2"
+platform <- "Sentinel-2" #or "Sentinel-1" or "Sentinel-3"
 
 ## set login credentials and archive directory
 login_CopHub(username = "username") #asks for password or define 'password'

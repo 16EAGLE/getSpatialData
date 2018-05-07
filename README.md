@@ -5,9 +5,10 @@
 
 ## Introduction
 
-`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. The current version is a beta version, meant to be used for functionality tests. The included functions and their concepts are exploratory and could be removed or changed. See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#) that are or will be implemented.
+`getSpatialData` is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. It supports both `sf` and `sp` classes as AOI inputs (see `set_aoi` in  [available functions](https://github.com/16EAGLE/getSpatialData#available-functions)). Due to the early development stage, the included functions and their concepts could be removed or changed in some cases.
 
-`getSpatialData` supports both `sf` and `sp` classes as AOI inputs (see `set_aoi` in  [available functions](https://github.com/16EAGLE/getSpatialData#available-functions)).
+For all public functions [documentation is available](https://jxsw.de/getSpatialData). See also the [list of data sources](https://github.com/16EAGLE/getSpatialData#) that are or will be implemented.
+
 
 ## State of development
 
@@ -54,10 +55,6 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `view_aoi` - display the session AOI in an interactive `mapview`/`leaflet` map viewer.
 * `get_aoi` - get the session AOI you have defined or drawn before as `sf`, `sp` or `matrix` object.
 
-
-### Manuals
-
-For all public functions documentation is available, containing information on the expected arguments and providing code examples. The files can be accessed executing a command like `?getSentinel_query`.
 
 ## Semantics
 

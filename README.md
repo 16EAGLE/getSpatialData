@@ -9,6 +9,13 @@
 
 For all public functions [documentation is available](http://jxsw.de/getSpatialData). See also the [list of data sources](http://jxsw.de/getSpatialData/#products) that are or will be implemented.
 
+## Installation
+
+To install the current beta version, use `devtools`.
+
+```s
+devtools::install_github("16EAGLE/getSpatialData")
+```
 
 ## State of development
 
@@ -76,14 +83,6 @@ The following universal semantics on computational steps are used by `getSpatial
     - `preview`: Preview a `record`.
     - `data`: Result of recieving one or multiple `dataset` from a `source`.
 * `prep`: Prepare/preprocess data obtained with `get`
-
-## Installation
-
-To install the current beta version, use `devtools`.
-
-```s
-devtools::install_github("16EAGLE/getSpatialData")
-```
 
 ## Example
 

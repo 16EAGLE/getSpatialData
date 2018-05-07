@@ -1,4 +1,4 @@
-#' Query Sentinel-1, -2 and -3 data
+#' Query Sentinel-1, Sentinel-2 and Sentinel-3 data
 #'
 #' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
 #'
@@ -10,7 +10,7 @@
 #' @param hub character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #'
-#' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for previewing and downloading.
+#' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.
 #'
 #' @author Jakob Schwalb-Willmann
 #'

@@ -11,7 +11,7 @@
 
 ## State of development
 
-Currently, `getSpatialData` can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, -2 and -3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.
+Currently, `getSpatialData` can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.
 
 ### Available functions
 
@@ -19,7 +19,7 @@ The following functions are publicly available and have been tested on Linux (Ub
 
 #### Sentinel
 
-* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found records (rows) and their attributes (columns).
+* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, Sentinel-2 and Sentinel-3 data and returns a data frame containing the found records (rows) and their attributes (columns).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download Sentinel data.
 
@@ -90,7 +90,7 @@ devtools::install_github("16EAGLE/getSpatialData")
 
 ## Example
 
-The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. This can be also done for Sentinel-1 or -3.
+The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.
 
 ```R
 ## Load packages
@@ -192,7 +192,7 @@ files <- getSentinel_data(records = records_filtered[c(4,7,9), ])
 
 ```
 
-### Products
+## Products
 
 The following products are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:
 
@@ -214,6 +214,6 @@ The following products are being evaluated to be implemented within the package.
 | GIMMS NDVI3g | NASA | https://nex.nasa.gov/nex/projects/1349/ | evaluated | R: `GIMMS`? |
 
 
-### Ideas
+## Ideas
 
 Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 

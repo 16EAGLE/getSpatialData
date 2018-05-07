@@ -1,4 +1,4 @@
-#' Download Sentinel-1, -2 and -3 data
+#' Download Sentinel-1, Sentinel-2 and Sentinel-3 data
 #'
 #' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs for Sentinel. The datasets are identified by the query return of \link{getSentinel_query}.
 #'

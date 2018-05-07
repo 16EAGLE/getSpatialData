@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_query.R
 \name{getSentinel_query}
 \alias{getSentinel_query}
-\title{Query Sentinel-1, -2 and -3 data}
+\title{Query Sentinel-1, Sentinel-2 and Sentinel-3 data}
 \usage{
 getSentinel_query(time_range, platform, aoi = NULL, username = NULL,
   password = NULL, hub = "auto", verbose = TRUE)
@@ -23,7 +23,7 @@ getSentinel_query(time_range, platform, aoi = NULL, username = NULL,
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
-A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The UUIDs of the selected datasets can be handed over to the other getSentinel functions for previewing and downloading.
+A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.
 }
 \description{
 \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.

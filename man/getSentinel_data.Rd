@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_data.R
 \name{getSentinel_data}
 \alias{getSentinel_data}
-\title{Download Sentinel-1, -2 and -3 data}
+\title{Download Sentinel-1, Sentinel-2 and Sentinel-3 data}
 \usage{
 getSentinel_data(records, dir_out = NULL, force = FALSE, username = NULL,
   password = NULL, hub = "auto", verbose = TRUE)

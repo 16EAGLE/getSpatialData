@@ -16,15 +16,26 @@ reference:
 - title: Sentinel
   desc:  Query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data
   contents:
-  - starts_with("getSentinel")
+  - getSentinel_query
+  - getSentinel_preview
+  - getSentinel_data
+  #- starts_with("getSentinel") #manually for order
 - title: Landsat
   desc:  Query, preview and download Landsat data
   contents:
-  - starts_with("getLandsat")
+  - getLandsat_names
+  - getLandsat_query
+  - getLandsat_preview
+  - getLandsat_data
+  #- starts_with("getLandsat")
 - title: MODIS
   desc:  Query, preview and download MODIS data
   contents:
-  - starts_with("getMODIS")
+  - getMODIS_names
+  - getMODIS_query
+  - getMODIS_preview
+  - getMODIS_data
+  #- starts_with("getMODIS")
 - title: Login
   desc:  Define login credentials that can be used throughout the running session
   contents:

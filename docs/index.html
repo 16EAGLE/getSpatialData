@@ -100,10 +100,13 @@
 <li>
 <code><a href="reference/getLandsat_preview.html">getLandsat_preview()</a></code> – uses the output of <code><a href="reference/getLandsat_query.html">getLandsat_query()</a></code> to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.</li>
 <li>
-<code><a href="reference/getLandsat_data.html">getLandsat_data()</a></code> – uses the output of getLandsat_query() to order and download Landsat data.</li>
+<code><a href="reference/getLandsat_data.html">getLandsat_data()</a></code> – uses the output of getLandsat_query() to order and download Landsat data.
+<ul>
 <li>supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.</li>
 <li>supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).</li>
 <li>will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)</li>
+</ul>
+</li>
 </ul>
 </div>
 <div id="modis" class="section level4">
@@ -158,7 +161,8 @@
 <li>
 <code>dataset</code>: Smallest entity that is delivered by a service. Might consist of multiple files, including meta data and bandwise imagery. Covers a specific time and spatial extent.</li>
 <li>
-<code>product</code>: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:</li>
+<code>product</code>: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:
+<ul>
 <li>
 <code>platform</code>: A general platform design (e.g. “Landsat” or “Sentinel”).</li>
 <li>
@@ -170,10 +174,13 @@
 <li>
 <code>source</code>: The service acquiring, processing or distributing the product (e.g. “ESA Copernicus” or “USGS”).</li>
 </ul>
+</li>
+</ul>
 <p>The following universal semantics on computational steps are used by <code>getSpatialData</code>:</p>
 <ul>
 <li>
-<code>get</code>: Recieve data from different sources, named either by <code>sensor</code> or <code>platform</code> (whichever is used by the scientific community to referr to the derived products)</li>
+<code>get</code>: Recieve data from different sources, named either by <code>sensor</code> or <code>platform</code> (whichever is used by the scientific community to referr to the derived products)
+<ul>
 <li>
 <code>names</code>: Result of searching available products (differs by <code>source</code> and <code>platform</code>), which might be differentiated further later on (e.g. by <code>level</code>).</li>
 <li>
@@ -182,6 +189,8 @@
 <code>preview</code>: Preview a <code>record</code>.</li>
 <li>
 <code>data</code>: Result of recieving one or multiple <code>dataset</code> from a <code>source</code>.</li>
+</ul>
+</li>
 <li>
 <code>prep</code>: Prepare/preprocess data obtained with <code>get</code>
 </li>

@@ -16,7 +16,7 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr GET content
-#' @importFrom xml2 xml_contents
+#' @importFrom xml2 xml_contents as_xml_document
 #'
 #' @examples
 #' ## Load packages
@@ -118,8 +118,8 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL,
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
 
-    query <- gSD.get(cop.url(ext.xy = aoi, url.root = cred[3], platform = platform, time.range = time_range, row.start = row.start), cred[1], cred[2])
-    query.xml <- suppressMessages(xml_contents(content(query)))
+    query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], platform = platform, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
+    query.xml <- suppressMessages(xml_contents(as_xml_document(content(query, as = "text"))))
     query.list <- c(query.list, lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
 
     if(length(query.list) == 0 & row.start == 0){

@@ -75,14 +75,14 @@
 <p>To install the current beta version, use <code>devtools</code>.</p>
 <div class="sourceCode"><pre class="sourceCode s"><code class="sourceCode gnuassembler"><span class="kw">devtools::</span>install_github(<span class="st">"16EAGLE/getSpatialData"</span>)</code></pre></div>
 </div>
-<div id="state-of-development" class="section level2">
+<div id="available-functions" class="section level2">
 <h2 class="hasAnchor">
-<a href="#state-of-development" class="anchor"></a>State of development</h2>
-<p>Currently, <code>getSpatialData</code> can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.</p>
-<div id="available-functions" class="section level3">
+<a href="#available-functions" class="anchor"></a>Available Functions</h2>
+<p>The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release).</p>
+<div id="get-functions" class="section level3">
 <h3 class="hasAnchor">
-<a href="#available-functions" class="anchor"></a>Available functions</h3>
-<p>The following functions are publicly available and have been tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10:</p>
+<a href="#get-functions" class="anchor"></a>get functions</h3>
+<p>The <code>get*</code> function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets.</p>
 <div id="sentinel" class="section level4">
 <h4 class="hasAnchor">
 <a href="#sentinel" class="anchor"></a>Sentinel</h4>
@@ -129,6 +129,11 @@
 <code><a href="reference/getMODIS_data.html">getMODIS_data()</a></code> – uses the output of getMODIS_query() to order and download MODIS data from LAADS.</li>
 </ul>
 </div>
+</div>
+<div id="session-functions" class="section level3">
+<h3 class="hasAnchor">
+<a href="#session-functions" class="anchor"></a>Session functions</h3>
+<p>Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.</p>
 <div id="login" class="section level4">
 <h4 class="hasAnchor">
 <a href="#login" class="anchor"></a>Login</h4>
@@ -139,9 +144,9 @@
 <code><a href="reference/gSD_login.html">login_USGS()</a></code> – define your USGS login credentials once for the present R session to be able to call each <code>get*</code> function that connects to a USGS service without defining login arguments each time you use them.</li>
 </ul>
 </div>
-<div id="session-settings" class="section level4">
+<div id="settings" class="section level4">
 <h4 class="hasAnchor">
-<a href="#session-settings" class="anchor"></a>Session settings</h4>
+<a href="#settings" class="anchor"></a>Settings</h4>
 <ul>
 <li>
 <code><a href="reference/gSD_settings.html">set_archive()</a></code> – define a <code>getSpatialData</code> archive directory to which all <code>*_data</code> functions will download data.</li>

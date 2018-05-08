@@ -17,13 +17,13 @@ To install the current beta version, use `devtools`.
 devtools::install_github("16EAGLE/getSpatialData")
 ```
 
-## State of development
+## Available Functions
 
-Currently, `getSpatialData` can be used to query, preview and download Sentinel and Landsat data. An R-native getSentinel function bundle allows the user to easily query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data directly from R. The client is weitten in R and works independently from external libraries. An R-native getLandsat function bundle connecting to USGS Earth Explorer, USGS EROS ESPA and Amazon Web Services can be used to query, preview and on-demand download Landsat data of different product levels.
+The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release).
 
-### Available functions
+### get functions
 
-The following functions are publicly available and have been tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10:
+The `get*` function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets.
 
 #### Sentinel
 
@@ -49,13 +49,17 @@ The following functions are publicly available and have been tested on Linux (Ub
 * `getMODIS_data()` – uses the output of getMODIS_query() to order and download MODIS data from LAADS.
 
 
+### Session functions
+
+Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.
+
 #### Login
 
 * `login_CopHub()` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
 * `login_USGS()` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
 
 
-#### Session settings
+#### Settings
 
 * `set_archive()` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 * `set_aoi()` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.

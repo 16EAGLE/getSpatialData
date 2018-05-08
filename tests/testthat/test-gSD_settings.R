@@ -1,6 +1,6 @@
-if(gSD_tests_auth){
-  context("gSD_login")
+if(runAuthTests){
 
+  context("gSD_login")
   test_that("login_CopHub", {
     expect_is(x <- login_CopHub(username = vars.auth$dhus.user, password = vars.auth$dhus.pass), "list")
     expect_true(getOption("gSD.cophub_set"))
@@ -16,12 +16,26 @@ if(gSD_tests_auth){
   })
 }
 
-context("gSD_settings")
 
+context("gSD_settings")
 test_that("set_archive", {
   expect_is(x <- set_archive(vars.global$dir.arc), "list")
   expect_true(getOption("gSD.archive_set"))
   expect_is(getOption("gSD.archive"), "character")
+  expect_is(getOption("gSD.archive_get"), "character")
+  expect_is(getOption("gSD.archive_prep"), "character")
 })
-unlink(vars.global$dir.arc)
 
+test_that("set_aoi", {
+  expect_silent(set_aoi(aoi = vars.global$aoi))
+})
+
+test_that("view_aoi", {
+  expect_is(x <- view_aoi(), "mapview")
+})
+
+test_that("get_aoi", {
+  expect_is(x <- get_aoi(), "sfc_POLYGON")
+  expect_is(x <- get_aoi(type = "sp"), "SpatialPolygons")
+  expect_is(x <- get_aoi(type = "matrix"), "matrix")
+})

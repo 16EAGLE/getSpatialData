@@ -1,4 +1,4 @@
-if(gSD_tests_auth){
+if(runAuthTests){
   context("getSentinel_* (dhus)")
 
   test_that("getSentinel_query (Sentinel-1)", {

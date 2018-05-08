@@ -19,11 +19,7 @@ devtools::install_github("16EAGLE/getSpatialData")
 
 ## Available Functions
 
-The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release).
-
-### get functions
-
-The `get*` function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets.
+The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release). The `get*` function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets. Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.
 
 #### Sentinel
 
@@ -49,17 +45,13 @@ The `get*` function familiy allows to connect to a specific service to query for
 * `getMODIS_data()` – uses the output of getMODIS_query() to order and download MODIS data from LAADS.
 
 
-### Session functions
-
-Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.
-
-#### Login
+#### Session Login
 
 * `login_CopHub()` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
 * `login_USGS()` – define your USGS login credentials once for the present R session to be able to call each `get*` function that connects to a USGS service without defining login arguments each time you use them.
 
 
-#### Settings
+#### Session Settings
 
 * `set_archive()` – define a `getSpatialData` archive directory to which all `*_data` functions will download data.
 * `set_aoi()` - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.

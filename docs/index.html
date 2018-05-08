@@ -78,11 +78,7 @@
 <div id="available-functions" class="section level2">
 <h2 class="hasAnchor">
 <a href="#available-functions" class="anchor"></a>Available Functions</h2>
-<p>The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release).</p>
-<div id="get-functions" class="section level3">
-<h3 class="hasAnchor">
-<a href="#get-functions" class="anchor"></a>get functions</h3>
-<p>The <code>get*</code> function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets.</p>
+<p>The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release). The <code>get*</code> function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets. Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.</p>
 <div id="sentinel" class="section level4">
 <h4 class="hasAnchor">
 <a href="#sentinel" class="anchor"></a>Sentinel</h4>
@@ -129,14 +125,9 @@
 <code><a href="reference/getMODIS_data.html">getMODIS_data()</a></code> – uses the output of getMODIS_query() to order and download MODIS data from LAADS.</li>
 </ul>
 </div>
-</div>
-<div id="session-functions" class="section level3">
-<h3 class="hasAnchor">
-<a href="#session-functions" class="anchor"></a>Session functions</h3>
-<p>Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.</p>
-<div id="login" class="section level4">
+<div id="session-login" class="section level4">
 <h4 class="hasAnchor">
-<a href="#login" class="anchor"></a>Login</h4>
+<a href="#session-login" class="anchor"></a>Session Login</h4>
 <ul>
 <li>
 <code><a href="reference/gSD_login.html">login_CopHub()</a></code> – define your Copernicus Open Access login credentials once for the present R session to be able to call each <code>getSentinel*</code> function without defining login arguments each time you use them.</li>
@@ -144,9 +135,9 @@
 <code><a href="reference/gSD_login.html">login_USGS()</a></code> – define your USGS login credentials once for the present R session to be able to call each <code>get*</code> function that connects to a USGS service without defining login arguments each time you use them.</li>
 </ul>
 </div>
-<div id="settings" class="section level4">
+<div id="session-settings" class="section level4">
 <h4 class="hasAnchor">
-<a href="#settings" class="anchor"></a>Settings</h4>
+<a href="#session-settings" class="anchor"></a>Session Settings</h4>
 <ul>
 <li>
 <code><a href="reference/gSD_settings.html">set_archive()</a></code> – define a <code>getSpatialData</code> archive directory to which all <code>*_data</code> functions will download data.</li>
@@ -157,7 +148,6 @@
 <li>
 <code><a href="reference/gSD_settings.html">get_aoi()</a></code> - get the session AOI you have defined or drawn before as <code>sf</code>, <code>sp</code> or <code>matrix</code> object.</li>
 </ul>
-</div>
 </div>
 </div>
 <div id="semantics" class="section level2">

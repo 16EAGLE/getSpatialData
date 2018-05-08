@@ -5,10 +5,10 @@ getLandsat* and getMODIS* function bundles for USGS EE client
 **New functions:**
 * `getLandsat_names()`: obtain Landsat product names
 * `getLandsat_query()`: query USGS Earth Explorer for Landsat data
-* `getLandsat_preview():` preview (quick look) a queried Landsat record
-* `getLandsat_data():` download Landsat data on-demand from USGS ESPA
-* `getMODIS_names():` obtain MODIS product names
-* `getMODIS_query():` query USGS Earth Explorer for MODIS data
+* `getLandsat_preview()`: preview (quick look) a queried Landsat record
+* `getLandsat_data()`: download Landsat data on-demand from USGS ESPA
+* `getMODIS_names()`: obtain MODIS product names
+* `getMODIS_query()`: query USGS Earth Explorer for MODIS data
 * `getMODIS_preview()`:  preview (quick look) a queried MODIS record
 * `getMODIS_data()`: download MODIS data from LAADS
 * `login_USGS()`: session-wide login to USGS services

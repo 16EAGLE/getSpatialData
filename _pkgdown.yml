@@ -66,11 +66,11 @@ reference:
   - getMODIS_preview
   - getMODIS_data
   #- starts_with("getMODIS")
-- title: Login
+- title: Session Login
   desc:  Define login credentials that can be used throughout the running session
   contents:
   - starts_with("login")
-- title: Settings
+- title: Session Settings
   desc:  Define settings for the running session
   contents:
   - set_archive

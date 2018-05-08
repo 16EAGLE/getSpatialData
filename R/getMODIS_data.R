@@ -56,13 +56,15 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
 
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"))}
-    if(!dir.exists(dir_out)) dir.create(dir_out)
+    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"))}
+    if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
+  if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)
+  if(!dir.exists(dir_out)) out("The defined archive directory does not exist.", type=3)
 
   ## Define MODIS options & check source (not implemted yet, authentification needed for LP DAAC)
   source <- "auto"
-  MODIS.opt <- paste0("MODISoptions(localArcPath = dir_out, outDirPath = dir_out")
+  MODIS.opt <- paste0("MODISoptions(localArcPath = dir_out, outDirPath = getOption('gSD.archive_prep')")
   if(source != "auto"){
     if(source != "LAADS" & source != "LPDAAC") out("Argument 'source' must be either 'auto', 'LAADS' or 'LPDAAC'", type = 3)
     MODIS.opt <- paste0(MODIS.opt, ", MODISserverOrder = '", source, "'")

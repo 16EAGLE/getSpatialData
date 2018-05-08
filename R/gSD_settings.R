@@ -48,7 +48,13 @@ set_archive <- function(dir_archive){
 
   if(!is.character(dir_archive)){out(paste0("Argument 'dir_archive' needs to be of type 'character'."), type = 3)}
   if(!dir.exists(dir_archive)) out("The defined directory does not exist.", type=3)
-  options(gSD.archive=dir_archive)
+
+  dir_get <- paste0(dir_archive, "/get_data")
+  dir_prep <- paste0(dir_archive, "/prep_data")
+
+  options(gSD.archive = dir_archive)
+  options(gSD.archive_get = dir_get)
+  options(gSD.archive_prep = dir_prep)
   options(gSD.archive_set=TRUE)
   #out(paste0("Session archive directory has been set to '", dir_archive, "'."), msg = T)
 }

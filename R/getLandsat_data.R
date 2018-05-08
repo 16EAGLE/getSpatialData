@@ -130,9 +130,11 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/LANDSAT/", toupper(level), "/")}
-    if(!dir.exists(dir_out)) dir.create(dir_out)
+    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"), "/LANDSAT/", toupper(level), "/")}
+    if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
+  if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)
+  if(!dir.exists(dir_out)) out("The defined archive directory does not exist.", type=3)
 
 
   ## ESPA

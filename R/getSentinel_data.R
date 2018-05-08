@@ -75,8 +75,8 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive"), "/SENTINEL/")}
-    if(!dir.exists(dir_out)) dir.create(dir_out)
+    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"), "/SENTINEL/")}
+    if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
 
   ## Intercept false inputs and get inputs
@@ -124,6 +124,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
         }
       } else{
         out(paste0("Skipping '", prod.id[i], "', since '", file.ds[i], "' already exists..."), msg = T)
+        down.status[i] <- T
       }
     }
     down.retry <- down.retry-1 #limit retries

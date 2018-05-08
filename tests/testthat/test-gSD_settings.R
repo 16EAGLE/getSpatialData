@@ -2,14 +2,14 @@ if(gSD_tests_auth){
   context("gSD_login")
 
   test_that("login_CopHub", {
-    expect_is(x <- login_CopHub(username = vars.global$username, password = vars.global$password), "list")
+    expect_is(x <- login_CopHub(username = vars.auth$dhus.user, password = vars.auth$dhus.pass), "list")
     expect_true(getOption("gSD.cophub_set"))
     expect_is(username <- getOption("gSD.cophub_user"), "character")
     expect_is(password <- getOption("gSD.cophub_pass"), "character")
   })
 
   test_that("login_USGS", {
-    expect_is(x <- login_USGS(username = vars.global$username, password = vars.global$password), "list")
+    expect_is(x <- login_USGS(username = vars.auth$ee.user, password = vars.auth$ee.pass), "list")
     expect_true(getOption("gSD.usgs_set"))
     expect_is(username <- getOption("gSD.usgs_user"), "character")
     expect_is(password <- getOption("gSD.usgs_pass"), "character")

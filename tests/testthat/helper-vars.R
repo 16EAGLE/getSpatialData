@@ -8,8 +8,7 @@ vars.sentinel <- list(platform.a = "Sentinel-1",
                       platform.c = "Sentinel-3")
 
 # Sys.setenv("gSD_user" =  getPass::getPass("Enter username: "))
-# Sys.setenv("gSD_pass" =  getPass::getPass("Enter username: "))
-
+# Sys.setenv("gSD_pass" =  getPass::getPass("Enter password: "))
 vars.auth <- list(dhus.user = Sys.getenv("gSD_user"),
                   dhus.pass = Sys.getenv("gSD_pass"),
                   s3.user = "s3guest",

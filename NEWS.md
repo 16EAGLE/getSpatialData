@@ -3,25 +3,25 @@ getLandsat* and getMODIS* function bundles for USGS EE client
 
 <br>
 **New functions:**
-* getLandsat_names(): obtain Landsat product names
-* getLandsat_query(): query USGS Earth Explorer for Landsat data
-* getLandsat_preview(): preview (quick look) a queried Landsat record
-* getLandsat_data(): download Landsat data on-demand from USGS ESPA
-* getMODIS_names(): obtain MODIS product names
-* getMODIS_query(): query USGS Earth Explorer for MODIS data
-* getMODIS_preview():  preview (quick look) a queried MODIS record
-* getMODIS_data(): download MODIS data from LAADS
-* login_USGS(): session-wide login to USGS services
+* `getLandsat_names()`: obtain Landsat product names
+* `getLandsat_query()`: query USGS Earth Explorer for Landsat data
+* `getLandsat_preview():` preview (quick look) a queried Landsat record
+* `getLandsat_data():` download Landsat data on-demand from USGS ESPA
+* `getMODIS_names():` obtain MODIS product names
+* `getMODIS_query():` query USGS Earth Explorer for MODIS data
+* `getMODIS_preview()`:  preview (quick look) a queried MODIS record
+* `getMODIS_data()`: download MODIS data from LAADS
+* `login_USGS()`: session-wide login to USGS services
 
 <br>
 **New features:**
-* getLandsat_query() and getMODIS_query(): argument "name" is now optional and set to "all" by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column "dataset_name".
+* `getLandsat_query()` and `getMODIS_query()`: argument "name" is now optional and set to "all" by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column "dataset_name".
 
 <br>
 **Bug fixes:**
 * RGB clouring of preview functions is now correct
-* getLandsat_query() and getMODIS_query() output now more than 10 products per query (maximum is 50 000)
-* getSentinel_query() paging error (always maxiumu of 200 records) solved
+* `getLandsat_query()` and `getMODIS_query()` output now more than 10 products per query (maximum is 50 000)
+* `getSentinel_query()` paging error (always maxiumu of 200 records) solved
 
 <br>
 **Minor Changes:**
@@ -42,13 +42,13 @@ initial session-wide tool functions
 
 <br>
 **New functions:**
-* set_archive(): defines getSpatialData archive folder
-* set_aoi(): defines session AOI from sp, sf or matrix object or mapedit GUI input
-* view_aoi(): displays AOI in a mapview viewer
+* `set_archive()`: defines getSpatialData archive folder
+* `set_aoi()`: defines session AOI from sp, sf or matrix object or mapedit GUI input
+* `view_aoi()`: displays AOI in a mapview viewer
 
 <br>
 **New features:**
-* getSentinel_preview() displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.
+* `getSentinel_preview()` displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.
 
 <br>
 **Contributions:**
@@ -63,10 +63,10 @@ getSentinel* function bundle for ESA Copernicus R client
 
 <br>
 **New functions:**
-* getSentinel_query(): query function for Sentinel-1, -2, -3
-* getSentinel_preview(): preview (quick look) function for Sentinel-1, -2, -3
-* getSentinel_data(): download function for Sentinel-1, -2, -3
-* set_login_CopHub(): session login for getSentinel* functions
+* `getSentinel_query()`: query function for Sentinel-1, -2, -3
+* `getSentinel_preview()`: preview (quick look) function for Sentinel-1, -2, -3
+* `getSentinel_data()`: download function for Sentinel-1, -2, -3
+* `login_CopHub()`: session login for getSentinel* functions
 
 <br>
 **Removed features:**

@@ -68,15 +68,53 @@
   </a>
 </li>
 <li>
-  <a href="../reference/index.html">Reference</a>
+  <a href="../index.html#get-started">Get Started</a>
+</li>
+<li>
+  <a href="../reference/index.html">Functions</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Other packages
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="http://www.github.com/bleutner/RStoolbox">RStoolbox</a>
+    </li>
+    <li>
+      <a href="http://www.github.com/RRemelgado/rsmove">rsMove</a>
+    </li>
+    <li>
+      <a href="http://movevis.org">moveVis</a>
+    </li>
+  </ul>
+</li>
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="http://www.twitter.com/schwalbwillmann">
+    <span class="fa fa-twitter fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="http://www.github.com/16eagle">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="http://remote-sensing.eu">
+    <span class="fa fa-globe fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -99,25 +137,37 @@
 <p>getLandsat* and getMODIS* function bundles for USGS EE client</p>
 <p><br><strong>New functions:</strong></p>
 <ul>
-<li>getLandsat_names(): obtain Landsat product names</li>
-<li>getLandsat_query(): query USGS Earth Explorer for Landsat data</li>
-<li>getLandsat_preview(): preview (quick look) a queried Landsat record</li>
-<li>getLandsat_data(): download Landsat data on-demand from USGS ESPA</li>
-<li>getMODIS_names(): obtain MODIS product names</li>
-<li>getMODIS_query(): query USGS Earth Explorer for MODIS data</li>
-<li>getMODIS_preview(): preview (quick look) a queried MODIS record</li>
-<li>getMODIS_data(): download MODIS data from LAADS</li>
-<li>login_USGS(): session-wide login to USGS services</li>
+<li>
+<code><a href="../reference/getLandsat_names.html">getLandsat_names()</a></code>: obtain Landsat product names</li>
+<li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: query USGS Earth Explorer for Landsat data</li>
+<li>
+<code>getLandsat_preview():</code> preview (quick look) a queried Landsat record</li>
+<li>
+<code>getLandsat_data():</code> download Landsat data on-demand from USGS ESPA</li>
+<li>
+<code>getMODIS_names():</code> obtain MODIS product names</li>
+<li>
+<code>getMODIS_query():</code> query USGS Earth Explorer for MODIS data</li>
+<li>
+<code><a href="../reference/getMODIS_preview.html">getMODIS_preview()</a></code>: preview (quick look) a queried MODIS record</li>
+<li>
+<code><a href="../reference/getMODIS_data.html">getMODIS_data()</a></code>: download MODIS data from LAADS</li>
+<li>
+<code><a href="../reference/gSD_login.html">login_USGS()</a></code>: session-wide login to USGS services</li>
 </ul>
 <p><br><strong>New features:</strong></p>
 <ul>
-<li>getLandsat_query() and getMODIS_query(): argument “name” is now optional and set to “all” by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column “dataset_name”.</li>
+<li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code> and <code><a href="../reference/getMODIS_query.html">getMODIS_query()</a></code>: argument “name” is now optional and set to “all” by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column “dataset_name”.</li>
 </ul>
 <p><br><strong>Bug fixes:</strong></p>
 <ul>
 <li>RGB clouring of preview functions is now correct</li>
-<li>getLandsat_query() and getMODIS_query() output now more than 10 products per query (maximum is 50 000)</li>
-<li>getSentinel_query() paging error (always maxiumu of 200 records) solved</li>
+<li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code> and <code><a href="../reference/getMODIS_query.html">getMODIS_query()</a></code> output now more than 10 products per query (maximum is 50 000)</li>
+<li>
+<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code> paging error (always maxiumu of 200 records) solved</li>
 </ul>
 <p><br><strong>Minor Changes:</strong></p>
 <ul>
@@ -138,13 +188,17 @@
 <p>initial session-wide tool functions</p>
 <p><br><strong>New functions:</strong></p>
 <ul>
-<li>set_archive(): defines getSpatialData archive folder</li>
-<li>set_aoi(): defines session AOI from sp, sf or matrix object or mapedit GUI input</li>
-<li>view_aoi(): displays AOI in a mapview viewer</li>
+<li>
+<code><a href="../reference/gSD_settings.html">set_archive()</a></code>: defines getSpatialData archive folder</li>
+<li>
+<code><a href="../reference/gSD_settings.html">set_aoi()</a></code>: defines session AOI from sp, sf or matrix object or mapedit GUI input</li>
+<li>
+<code><a href="../reference/gSD_settings.html">view_aoi()</a></code>: displays AOI in a mapview viewer</li>
 </ul>
 <p><br><strong>New features:</strong></p>
 <ul>
-<li>getSentinel_preview() displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.</li>
+<li>
+<code><a href="../reference/getSentinel_preview.html">getSentinel_preview()</a></code> displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.</li>
 </ul>
 <p><br><strong>Contributions:</strong></p>
 <ul>
@@ -159,10 +213,14 @@
 <p>getSentinel* function bundle for ESA Copernicus R client</p>
 <p><br><strong>New functions:</strong></p>
 <ul>
-<li>getSentinel_query(): query function for Sentinel-1, -2, -3</li>
-<li>getSentinel_preview(): preview (quick look) function for Sentinel-1, -2, -3</li>
-<li>getSentinel_data(): download function for Sentinel-1, -2, -3</li>
-<li>set_login_CopHub(): session login for getSentinel* functions</li>
+<li>
+<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: query function for Sentinel-1, -2, -3</li>
+<li>
+<code><a href="../reference/getSentinel_preview.html">getSentinel_preview()</a></code>: preview (quick look) function for Sentinel-1, -2, -3</li>
+<li>
+<code><a href="../reference/getSentinel_data.html">getSentinel_data()</a></code>: download function for Sentinel-1, -2, -3</li>
+<li>
+<code>set_login_CopHub()</code>: session login for getSentinel* functions</li>
 </ul>
 <p><br><strong>Removed features:</strong></p>
 <ul>

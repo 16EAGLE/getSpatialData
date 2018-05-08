@@ -5,6 +5,36 @@ home:
   links:
   - text: Browse source code
     href: http://github.com/16eagle/getSpatialData
+  - text: Find out more about our work
+    href: http://remote-sensing.eu
+
+navbar:
+  #type: inverse
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: "Get Started"
+      href: index.html#get-started
+    - text: "Functions"
+      href: reference/index.html
+    - text: "Changelog"
+      href: news/index.html
+    - text: "Other packages"
+      menu:
+      -  text: "RStoolbox"
+         href: http://www.github.com/bleutner/RStoolbox
+      -  text: "rsMove"
+         href: http://www.github.com/RRemelgado/rsmove
+      -  text: "moveVis"
+         href: http://movevis.org
+
+  right:
+    - icon: fa-twitter fa-lg
+      href: http://www.twitter.com/schwalbwillmann
+    - icon: fa-github fa-lg
+      href: http://www.github.com/16eagle
+    - icon: fa-globe fa-lg
+      href: http://remote-sensing.eu
 
 #template:
 #  params:

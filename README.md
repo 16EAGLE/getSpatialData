@@ -80,7 +80,7 @@ The following universal semantics on computational steps are used by `getSpatial
     - `data`: Result of recieving one or multiple `dataset` from a `source`.
 * `prep`: Prepare/preprocess data obtained with `get`
 
-## Example
+## Get Started
 
 The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.
 

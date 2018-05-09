@@ -1,10 +1,5 @@
 data("aoi_data")
 
-#if(isTRUE(paste0(unname(Sys.info()["user"]), "_", unname(Sys.info()["nodename"])) == "jakob_JMBPlinux")){
-#  Sys.setenv("gSD_user" =  getPass::getPass("Enter username: "))
-#  Sys.setenv("gSD_pass" =  getPass::getPass("Enter password: "))
-#}
-
 vars.auth <- list(dhus.user = Sys.getenv("gSD_user"),
                   dhus.pass = Sys.getenv("gSD_pass"),
                   s3.user = "s3guest",
@@ -15,9 +10,7 @@ vars.auth <- list(dhus.user = Sys.getenv("gSD_user"),
                   espa.pass = Sys.getenv("gSD_pass"))
 
 if(vars.auth$dhus.user != "") runAuthTests <- TRUE else runAuthTests <- FALSE
-
-#if(vars.auth$dhus.user != "") Sys.setenv("gSD_tests_auth" = "yes")
-#if(Sys.getenv("gSD_tests_auth") == "yes") runAuthTests <- TRUE else runAuthTests <- FALSE
+if(Sys.getenv("gSD_downtests") == "yes") runDownTests <- TRUE else runDownTests <- FALSE
 
 vars.global <-   list(dir.arc = tempdir(),
                       aoi = aoi_data[[1]],

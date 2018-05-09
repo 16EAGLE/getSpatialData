@@ -65,7 +65,7 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
   get.str <- paste0(get.str, "), silent = T)")
   eval(parse(text = get.str))
 
-  if(inherits(x, "try-error")) out(paste0("Could not reach Copernicus Open Access Hub: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
+  if(inherits(x, "try-error")) out(paste0("Could not reach server: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   #message_for_status(x); cat("\n")

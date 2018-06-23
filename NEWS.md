@@ -1,4 +1,14 @@
-## getSpatialData 0.0.3 (under development)
+## getSpatialData 0.0.4 (under development)
+
+<br>
+**Bug fixes:**
+* `getMODIS_data()` now native, deprecated FTP LAADS DAAC services replaced by https requests
+
+<br>
+
+***
+
+## getSpatialData 0.0.3
 getLandsat* and getMODIS* function bundles for USGS EE client
 
 <br>

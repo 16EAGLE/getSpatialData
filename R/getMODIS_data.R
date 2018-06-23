@@ -9,7 +9,7 @@
 #'
 #' @return Character vector of paths to the downloaded files.
 #'
-#' @details \code{getMODIS_data} downloads MODIS data from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}). The function uses the LAADC MODIS R client being part of the \strong{MODIS} R package written by Florian Detsch & Matteo Mattiuzzi (see \url{ https://github.com/MatMatt/MODIS}).
+#' @details \code{getMODIS_data} downloads MODIS data from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}).
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -44,7 +44,6 @@
 #' }
 #'
 #' @importFrom getPass getPass
-#' @importFrom MODIS MODISoptions getHdf
 #'
 #' @seealso \link{getMODIS_names} \link{getMODIS_query} \link{getMODIS_preview}
 #' @export
@@ -56,33 +55,30 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
 
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"))}
+    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"), "/MODIS/")}
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
   if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined archive directory does not exist.", type=3)
 
-  ## Define MODIS options & check source (not implemted yet, authentification needed for LP DAAC)
-  source <- "auto"
-  MODIS.opt <- paste0("MODISoptions(localArcPath = dir_out") #, outDirPath = dir_out")
-  if(source != "auto"){
-    if(source != "LAADS" & source != "LPDAAC") out("Argument 'source' must be either 'auto', 'LAADS' or 'LPDAAC'", type = 3)
-    MODIS.opt <- paste0(MODIS.opt, ", MODISserverOrder = '", source, "'")
-  }
-  sink(file = tempfile(fileext = ".txt"))
-  tmp <- suppressMessages(eval(parse(text = paste0(MODIS.opt, ", quiet = F)"))))
-  sink(file = NULL)
-
-  ## Assemple getHdf
-  records$product <- .convMODIS_names(records$product)
+  ## Assemple request
   out(paste0("Starting download of product(s) '", paste0(records$displayId, collapse = "', "), "'."), msg = T)
-  file.ds <- unlist(apply(records[1:2,], MARGIN = 1, function(x, d = paste0(dir_out, "/MODIS")){
+  url.files <- apply(records, MARGIN = 1, function(x, root = getOption("gSD.api")$laads){
     y <- rbind.data.frame(x, stringsAsFactors = F)
     colnames(y) <- names(x)
-    out(paste0("Attempting to download '", y$displayId, "' into '", d, "'..."), msg = T)
-    getHdf(product = y$product, begin = y$acquisitionDate, end = y$acquisitionDate, tileH = y$HorizontalTileNumber,
-           tileV = y$VerticalTileNumber, collection = "006")
-  }))
+    fn <- gsub("Entity ID: ", "", strsplit(y$summary, ", ")[[1]][1]) #positiona
+    ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
+    paste0(root, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
+           "/", substr(ydoy, 5, nchar(ydoy)), "/", fn)
+  })
+
+  dir.ds <- sapply(url.files, function(x, d = dir_out) paste0(d, "/", gsub(".hdf", "", tail(strsplit(x, "/")[[1]], n=1)[1])), USE.NAMES = F)
+  catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
+  file.ds <- unlist(mapply(url = url.files, dir = dir.ds, FUN = function(url, dir){
+    file <- paste0(dir, "/", tail(strsplit(url, "/")[[1]], n=1))
+    gSD.download(name = tail(strsplit(url, "/")[[1]], n=1), url.file = url, file = file)
+    return(file)
+  }, SIMPLIFY = F))
   names(file.ds) <- NULL
 
   out(paste0("Requested records are stored in '", dir_out, "'."))

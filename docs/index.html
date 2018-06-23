@@ -8,8 +8,8 @@
 <title>Get different kinds of freely available spatial datasets • getSpatialData</title>
 <!-- jquery --><script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><!-- Font Awesome icons --><link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="jquery.sticky-kit.min.js"></script><script src="pkgdown.js"></script><meta property="og:title" content="Get different kinds of freely available spatial datasets">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js" integrity="sha384-cV+rhyOuRHc9Ub/91rihWcGmMmCXDeksTtCihMupQHSsi8GIIRDG0ThDc3HGQFJ3" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
+<script src="pkgdown.js"></script><meta property="og:title" content="Get different kinds of freely available spatial datasets">
 <meta property="og:description" content="Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.">
 <meta name="twitter:card" content="summary">
 <!-- mathjax --><script src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><!--[if lt IE 9]>
@@ -29,7 +29,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">getSpatialData</a>
-        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased package">0.0.3</span>
+        <span class="label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased package">0.0.4</span>
       </span>
     </div>
 
@@ -278,10 +278,10 @@ records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSen
 
 ## Filter the records
 <span class="kw">colnames</span>(records) <span class="co">#see all available filter attributes</span>
-<span class="kw">unique</span>(records$processinglevel) <span class="co">#use one of the, e.g. to see available processing levels</span>
+<span class="kw">unique</span>(records<span class="op">$</span>processinglevel) <span class="co">#use one of the, e.g. to see available processing levels</span>
 
-records_filtered &lt;-<span class="st"> </span>records[<span class="kw">which</span>(records$processinglevel ==<span class="st"> "Level-1C"</span>),] <span class="co">#filter by Level</span>
-records_filtered &lt;-<span class="st"> </span>records_filtered[records_filtered$cloudcoverpercentage &lt;=<span class="st"> </span><span class="dv">30</span>, ] <span class="co">#filter by clouds</span>
+records_filtered &lt;-<span class="st"> </span>records[<span class="kw">which</span>(records<span class="op">$</span>processinglevel <span class="op">==</span><span class="st"> "Level-1C"</span>),] <span class="co">#filter by Level</span>
+records_filtered &lt;-<span class="st"> </span>records_filtered[records_filtered<span class="op">$</span>cloudcoverpercentage <span class="op">&lt;=</span><span class="st"> </span><span class="dv">30</span>, ] <span class="co">#filter by clouds</span>
 
 ## View records table
 <span class="kw">View</span>(records)
@@ -342,8 +342,7 @@ files &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSenti
 <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a>
 </td>
 <td>implemented</td>
-<td>R: <code>MODIS</code>
-</td>
+<td>native</td>
 </tr>
 <tr class="odd">
 <td>Landsat</td>

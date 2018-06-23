@@ -191,7 +191,7 @@ The following products are being evaluated to be implemented within the package.
 | Product(s) | Source | Access | Status | Client(s) | 
 | ---------- | --------------- | --- | -------| ----------- |
 | Sentinel (-1/-2/-3) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | native |
-| MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | implemented | R: `MODIS` |
+| MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | implemented | native |
 | Landsat | USGS | <a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api">USGS EarthExplorer json API</a>, <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a> | implemented | native |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | evaluated | R: `gfcanalysis`? |
 | CMIP5/PMIP3 Global Climate | ecoClimate | http://ecoclimate.org/about/ | evaluated | R: `ecoClimate`? |

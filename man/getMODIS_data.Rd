@@ -22,7 +22,7 @@ Character vector of paths to the downloaded files.
 \code{getMODIS_data} downloads MODIS data queried using \link{getMODIS_query} from different sources.
 }
 \details{
-\code{getMODIS_data} downloads MODIS data from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}). The function uses the LAADC MODIS R client being part of the \strong{MODIS} R package written by Florian Detsch & Matteo Mattiuzzi (see \url{ https://github.com/MatMatt/MODIS}).
+\code{getMODIS_data} downloads MODIS data from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}).
 }
 \examples{
 ## Load packages

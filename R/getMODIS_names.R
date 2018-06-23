@@ -38,7 +38,6 @@
 #' }
 #'
 #' @importFrom getPass getPass
-#' @importFrom MODIS getProduct
 #'
 #' @seealso \link{getMODIS_query}
 #' @export
@@ -56,9 +55,11 @@ getMODIS_names <- function(username = NULL, password = NULL){
     api.key <- .ERS_login(username, password)
   }
 
-  mp <- as.character(getProduct()$PRODUCT)
-  ee.names <- .EE_ds(api.key, "MODIS_")
-  ee.products <- .convMODIS_names(ee.names)
-  ap <- intersect(mp, ee.products)
-  ee.names[sapply(ap, function(x, ee.p = ee.products) which(ee.p == x), USE.NAMES = F)]
+  #mp <- as.character(getProduct()$PRODUCT)
+  #ee.names <- .EE_ds(api.key, "MODIS_")
+  #ee.products <- .convMODIS_names(ee.names)
+  #ap <- intersect(mp, ee.products)
+  #ee.names[sapply(ap, function(x, ee.p = ee.products) which(ee.p == x), USE.NAMES = F)]
+
+  .EE_ds(api.key, "MODIS_") # no comparison so far
 }

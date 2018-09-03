@@ -19,6 +19,7 @@ Imports:
   sf,
   sp,
   rgdal,
+  gdalUtils,
   mapview,
   mapedit,
   devtools

@@ -545,6 +545,9 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
 
+  ## allocate gdal on load
+  gdalUtils::gdal_setInstallation(rescan = T)
+
   invisible()
 }
 

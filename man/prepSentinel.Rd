@@ -2,15 +2,15 @@
 % Please edit documentation in R/prepSentinel.R
 \name{prepSentinel}
 \alias{prepSentinel}
-\title{Prepare Sentinel data}
+\title{Prepare Sentinel data to be ready-to-use}
 \usage{
-prepSentinel(dir_zip, dir_out = NULL, format = "vrt",
+prepSentinel(datasets, dir_out = NULL, format = "vrt",
   select.tiles = "all", overwrite = F, verbose = T)
 }
 \arguments{
-\item{dir_zip}{character, path to zip file.}
+\item{datasets}{character vector or list, containing paths to datasets (.zip, as downloaded by \code{getSentinel_data}) that should be prepared.}
 
-\item{dir_out}{character, full path to target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
+\item{dir_out}{character, full path to target directory. Optional. If not set, \code{prepSentinel} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 
 \item{format}{character, output format of the raster datasets (indicated by the file extension, e.g. "tiff" for format GTiff). Default is "vrt".}
 
@@ -24,7 +24,59 @@ prepSentinel(dir_zip, dir_out = NULL, format = "vrt",
 Character vector of paths to the prepared files.
 }
 \description{
-\code{prepSentinel} makes downloaded Sentinel datasets ready-to-use by automatically extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
+\code{prepSentinel} makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
+}
+\examples{
+## Load packages
+library(getSpatialData)
+library(sf)
+library(sp)
+
+## Define an AOI (either matrix, sf or sp object)
+data("aoi_data") # example aoi
+
+aoi <- aoi_data[[3]] # AOI as matrix object, or better:
+aoi <- aoi_data[[2]] # AOI as sp object, or:
+aoi <- aoi_data[[1]] # AOI as sf object
+
+## set AOI for this session
+set_aoi(aoi)
+view_aoi() #view AOI in viewer
+# or, simply call set_aoi() without argument to interactively draw an AOI
+
+## Define time range and platform
+time_range <-  c("2017-08-01", "2017-08-30")
+platform <- "Sentinel-2"
+
+## set login credentials and an archive directory
+\dontrun{
+login_CopHub(username = "username") #asks for password or define 'password'
+set_archive("/path/to/archive/")
+
+## Use getSentinel_query to search for data (using the session AOI)
+records <- getSentinel_query(time_range = time_range, platform = platform)
+
+## Get an overview of the records
+View(records) #get an overview about the search records
+colnames(records) #see all available filter attributes
+unique(records$processinglevel) #use one of the, e.g. to see available processing levels
+
+## Filter the records
+records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
+
+## Preview a single record
+getSentinel_preview(record = records_filtered[5,])
+
+## Download some datasets
+datasets <- getSentinel_data(records = records_filtered[c(4,5,6),])
+
+## Make them ready to use
+datasets_prep <- prepSentinel(datasets, format = "tiff")
+
+## Load them to R
+r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
+}
+
 }
 \seealso{
 \link{getSentinel_data}

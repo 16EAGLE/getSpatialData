@@ -1,14 +1,15 @@
-#' Crop to spatial extent
+#' Crop file to a spatial extent
 #'
-#' \code{crop_file} crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.
+#' \code{cropFAST} crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.
 #'
 #' @inheritParams getSentinel_data
 #' @param file Path to raster file.
 #' @param ext Extent object or such from which an extent can be extracted.
 #' @param ... additional arguments passed to \code{writeRaster}, e.g. \code{filename}.
 #'
-#' @details GDAL must be installed. If no GDAL installation is found, \code{crop_file} is masking \code{raster::crop}.
-
+#' @details GDAL must be installed. If no GDAL installation is found, \code{cropFAST} is masking \code{raster::crop}.
+#' The input file on disk will not be changed.
+#'
 #' @return Raster* object.
 #'
 #' @author Jakob Schwalb-Willmann
@@ -16,10 +17,32 @@
 #' @importFrom gdalUtils gdal_setInstallation gdalbuildvrt
 #' @importFrom raster extent intersect
 #'
+#' @examples
+#' \dontrun{
+#' library(raster)
+#'
+#' ## load a file
+#' path_tiff <- "/path/to/file.tiff"
+#' r_tiff <- stack(path_tiff)
+#'
+#' ## define an AOI
+#' data("aoi_data")
+#' aoi <- aoi_data[[2]] # example AOI
+#'
+#' ## if necessary, reproject AOI to file CRS
+#' aoi <- spTransform(aoi, crs(r))
+#'
+#' ## crop (file on disk will not be changed)
+#' r_crop <- cropFAST(path_tiff, ext = aoi)
+#'
+#' ## crop to a new file
+#' r_crop <- cropFAST(path_tiff, ext = aoi, filename = "/path/to/file_cropped.tiff")
+#' }
+#'
 #' @seealso \link{getSentinel_data}
 #' @export
 
-crop_file <- function(file, ext, verbose = TRUE, ...){
+cropFAST <- function(file, ext, verbose = TRUE, ...){
 
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(!inherits(ext, "Extent")){

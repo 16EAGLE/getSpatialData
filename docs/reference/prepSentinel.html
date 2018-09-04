@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prepare Sentinel data — prepSentinel • getSpatialData</title>
+<title>Prepare Sentinel data to be ready-to-use — prepSentinel • getSpatialData</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Prepare Sentinel data — prepSentinel" />
+<meta property="og:title" content="Prepare Sentinel data to be ready-to-use — prepSentinel" />
 
-<meta property="og:description" content="prepSentinel makes downloaded Sentinel datasets ready-to-use by automatically extracting, sorting and converting the relevant contents of the datasets to a user-defined format." />
+<meta property="og:description" content="prepSentinel makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -133,30 +133,30 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Prepare Sentinel data</h1>
+    <h1>Prepare Sentinel data to be ready-to-use</h1>
     
     <div class="hidden name"><code>prepSentinel.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p><code>prepSentinel</code> makes downloaded Sentinel datasets ready-to-use by automatically extracting, sorting and converting the relevant contents of the datasets to a user-defined format.</p>
+    <p><code>prepSentinel</code> makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>prepSentinel</span>(<span class='no'>dir_zip</span>, <span class='kw'>dir_out</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>format</span> <span class='kw'>=</span> <span class='st'>"vrt"</span>,
+    <pre class="usage"><span class='fu'>prepSentinel</span>(<span class='no'>datasets</span>, <span class='kw'>dir_out</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>format</span> <span class='kw'>=</span> <span class='st'>"vrt"</span>,
   <span class='kw'>select.tiles</span> <span class='kw'>=</span> <span class='st'>"all"</span>, <span class='kw'>overwrite</span> <span class='kw'>=</span> <span class='no'>F</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='no'>T</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dir_zip</th>
-      <td><p>character, path to zip file.</p></td>
+      <th>datasets</th>
+      <td><p>character vector or list, containing paths to datasets (.zip, as downloaded by <code>getSentinel_data</code>) that should be prepared.</p></td>
     </tr>
     <tr>
       <th>dir_out</th>
-      <td><p>character, full path to target directory. Optional. If not set, <code>getSentinel_data</code> uses the directory to the <code>getSpatialData</code> archive folder. Use <a href='gSD_settings.html'>set_archive</a> to once define a getSpatialData  archive folder.</p></td>
+      <td><p>character, full path to target directory. Optional. If not set, <code>prepSentinel</code> uses the directory to the <code>getSpatialData</code> archive folder. Use <a href='gSD_settings.html'>set_archive</a> to once define a getSpatialData  archive folder.</p></td>
     </tr>
     <tr>
       <th>format</th>
@@ -185,6 +185,56 @@
     <div class='dont-index'><p><a href='getSentinel_data.html'>getSentinel_data</a></p></div>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='co'>## Load packages</span>
+<span class='fu'>library</span>(<span class='no'>getSpatialData</span>)
+<span class='fu'>library</span>(<span class='no'>sf</span>)
+<span class='fu'>library</span>(<span class='no'>sp</span>)
+
+<span class='co'>## Define an AOI (either matrix, sf or sp object)</span>
+<span class='fu'>data</span>(<span class='st'>"aoi_data"</span>) <span class='co'># example aoi</span>
+
+<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>3</span>]] <span class='co'># AOI as matrix object, or better:</span>
+<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>2</span>]] <span class='co'># AOI as sp object, or:</span>
+<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>1</span>]] <span class='co'># AOI as sf object</span>
+
+<span class='co'>## set AOI for this session</span>
+<span class='fu'><a href='gSD_settings.html'>set_aoi</a></span>(<span class='no'>aoi</span>)
+<span class='fu'><a href='gSD_settings.html'>view_aoi</a></span>() <span class='co'>#view AOI in viewer</span>
+<span class='co'># or, simply call set_aoi() without argument to interactively draw an AOI</span>
+
+<span class='co'>## Define time range and platform</span>
+<span class='no'>time_range</span> <span class='kw'>&lt;-</span>  <span class='fu'>c</span>(<span class='st'>"2017-08-01"</span>, <span class='st'>"2017-08-30"</span>)
+<span class='no'>platform</span> <span class='kw'>&lt;-</span> <span class='st'>"Sentinel-2"</span>
+
+<span class='co'>## set login credentials and an archive directory</span></div><span class='co'># NOT RUN {</span>
+<span class='fu'><a href='gSD_login.html'>login_CopHub</a></span>(<span class='kw'>username</span> <span class='kw'>=</span> <span class='st'>"username"</span>) <span class='co'>#asks for password or define 'password'</span>
+<span class='fu'><a href='gSD_settings.html'>set_archive</a></span>(<span class='st'>"/path/to/archive/"</span>)
+
+<span class='co'>## Use getSentinel_query to search for data (using the session AOI)</span>
+<span class='no'>records</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getSentinel_query.html'>getSentinel_query</a></span>(<span class='kw'>time_range</span> <span class='kw'>=</span> <span class='no'>time_range</span>, <span class='kw'>platform</span> <span class='kw'>=</span> <span class='no'>platform</span>)
+
+<span class='co'>## Get an overview of the records</span>
+<span class='fu'>View</span>(<span class='no'>records</span>) <span class='co'>#get an overview about the search records</span>
+<span class='fu'>colnames</span>(<span class='no'>records</span>) <span class='co'>#see all available filter attributes</span>
+<span class='fu'>unique</span>(<span class='no'>records</span>$<span class='no'>processinglevel</span>) <span class='co'>#use one of the, e.g. to see available processing levels</span>
+
+<span class='co'>## Filter the records</span>
+<span class='no'>records_filtered</span> <span class='kw'>&lt;-</span> <span class='no'>records</span>[<span class='fu'>which</span>(<span class='no'>records</span>$<span class='no'>processinglevel</span> <span class='kw'>==</span> <span class='st'>"Level-1C"</span>),] <span class='co'>#filter by Level</span>
+
+<span class='co'>## Preview a single record</span>
+<span class='fu'><a href='getSentinel_preview.html'>getSentinel_preview</a></span>(<span class='kw'>record</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fl'>5</span>,])
+
+<span class='co'>## Download some datasets</span>
+<span class='no'>datasets</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getSentinel_data.html'>getSentinel_data</a></span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fu'>c</span>(<span class='fl'>4</span>,<span class='fl'>5</span>,<span class='fl'>6</span>),])
+
+<span class='co'>## Make them ready to use</span>
+<span class='no'>datasets_prep</span> <span class='kw'>&lt;-</span> <span class='fu'>prepSentinel</span>(<span class='no'>datasets</span>, <span class='kw'>format</span> <span class='kw'>=</span> <span class='st'>"tiff"</span>)
+
+<span class='co'>## Load them to R</span>
+<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'>stack</span>(<span class='no'>datasets_prep</span><span class='kw'>[[</span><span class='fl'>1</span>]]<span class='kw'>[[</span><span class='fl'>1</span>]][<span class='fl'>1</span>]) <span class='co'>#first dataset, first tile, 10m resoultion</span>
+<span class='co'># }</span><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -194,7 +244,9 @@
       <li><a href="#value">Value</a></li>
 
       <li><a href="#see-also">See also</a></li>
-          </ul>
+      
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
     <h2>Author</h2>
     

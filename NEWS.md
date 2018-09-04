@@ -1,4 +1,10 @@
 ## getSpatialData 0.0.4 (under development)
+Introduction of function for data preparation
+
+<br>
+**New functions:**
+* `prepSentinel()`: automatically prepare Sentinel data to be ready-to-use
+* `cropFAST()`: fastly crop large-scale datasets to a spatial extent
 
 <br>
 **Bug fixes:**

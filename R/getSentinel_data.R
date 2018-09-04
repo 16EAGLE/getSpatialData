@@ -17,6 +17,7 @@
 #' @examples
 #' ## Load packages
 #' library(getSpatialData)
+#' library(raster)
 #' library(sf)
 #' library(sp)
 #'
@@ -56,7 +57,13 @@
 #' getSentinel_preview(record = records_filtered[5,])
 #'
 #' ## Download some datasets
-#' files <- getSentinel_data(records = records_filtered[c(4,5,6),])
+#' datasets <- getSentinel_data(records = records_filtered[c(4,5,6),])
+#'
+#' ## Make them ready to use
+#' datasets_prep <- prepSentinel(datasets, format = "tiff")
+#'
+#' ## Load them to R
+#' r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
 #' }
 #'
 #' @seealso \link{getSentinel_query}

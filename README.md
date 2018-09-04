@@ -45,6 +45,11 @@ The following functions are publicly available. They have been manually tested o
 * `getMODIS_data()` – uses the output of getMODIS_query() to order and download MODIS data from LAADS.
 
 
+#### Preprocessing
+* `prepSentinel()` – makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
+* `cropFAST()` – crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.
+
+
 #### Session Login
 
 * `login_CopHub()` – define your Copernicus Open Access login credentials once for the present R session to be able to call each `getSentinel*` function without defining login arguments each time you use them.
@@ -87,6 +92,7 @@ The following code represents a working chain for querying, filtering, previewin
 ```R
 ## Load packages
 library(getSpatialData)
+library(raster)
 library(sf)
 library(sp)
 
@@ -179,8 +185,21 @@ getSentinel_preview(record = records_filtered[9,], on_map = FALSE)
 
 
 ```R
-## Finally, download some datasets to your archive directory
-files <- getSentinel_data(records = records_filtered[c(4,7,9), ])
+## Download some datasets to your archive directory
+datasets <- getSentinel_data(records = records_filtered[c(4,7,9), ])
+
+## Finally, define an output format and make them ready-to-use
+datasets_prep <- prepSentinel(datasets, format = "tiff")
+# or use VRT to not store duplicates of different formats
+datasets_prep <- prepSentinel(datasets, format = "vrt")
+
+## View the files
+datasets_prep[[1]][[1]][1] #first dataset, first tile, 10 m resolution
+datasets_prep[[1]][[1]][2] #first dataset, first tile, 20 m resolution
+datasets_prep[[1]][[1]][3] #first dataset, first tile, 60 m resolution
+
+## Load them directly into R
+r <- stack(datasets_prep[[1]][[1]][1])
 
 ```
 

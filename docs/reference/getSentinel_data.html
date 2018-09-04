@@ -192,7 +192,7 @@
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'>## Load packages</span>
 <span class='fu'>library</span>(<span class='no'>getSpatialData</span>)
-<span class='fu'>library</span>(<span class='no'>sf</span>)
+<span class='fu'>library</span>(<span class='no'>raster</span>)</div><div class='output co'>#&gt; <span class='message'>Lade nötiges Paket: sp</span></div><div class='input'><span class='fu'>library</span>(<span class='no'>sf</span>)
 <span class='fu'>library</span>(<span class='no'>sp</span>)
 
 <span class='co'>## Define an AOI (either matrix, sf or sp object)</span>
@@ -205,7 +205,8 @@
 
 <span class='co'>## set AOI for this session</span>
 <span class='fu'><a href='gSD_settings.html'>set_aoi</a></span>(<span class='no'>aoi</span>)
-<span class='fu'><a href='gSD_settings.html'>view_aoi</a></span>() <span class='co'>#view AOI in viewer</span></div><div class='output co'>#&gt; <span class='error'>Error in isFALSE(highlight): konnte Funktion "isFALSE" nicht finden</span></div><div class='input'>
+<span class='fu'><a href='gSD_settings.html'>view_aoi</a></span>() <span class='co'>#view AOI in viewer</span>
+
 <span class='co'>## Define time range and platform</span>
 <span class='no'>time_range</span> <span class='kw'>&lt;-</span>  <span class='fu'>c</span>(<span class='st'>"2017-08-01"</span>, <span class='st'>"2017-08-30"</span>)
 <span class='no'>platform</span> <span class='kw'>&lt;-</span> <span class='st'>"Sentinel-2"</span>
@@ -220,7 +221,7 @@
 <span class='co'>## Get an overview of the records</span>
 <span class='fu'>View</span>(<span class='no'>records</span>) <span class='co'>#get an overview about the search records</span>
 <span class='fu'>colnames</span>(<span class='no'>records</span>) <span class='co'>#see all available filter attributes</span>
-<span class='fu'>unique</span>(<span class='no'>records</span>$<span class='no'>processinglevel</span>) <span class='co'>#use one of the, e.g. to see available processing levels</span>
+<span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/unique'>unique</a></span>(<span class='no'>records</span>$<span class='no'>processinglevel</span>) <span class='co'>#use one of the, e.g. to see available processing levels</span>
 
 <span class='co'>## Filter the records</span>
 <span class='no'>records_filtered</span> <span class='kw'>&lt;-</span> <span class='no'>records</span>[<span class='fu'>which</span>(<span class='no'>records</span>$<span class='no'>processinglevel</span> <span class='kw'>==</span> <span class='st'>"Level-1C"</span>),] <span class='co'>#filter by Level</span>
@@ -229,7 +230,13 @@
 <span class='fu'><a href='getSentinel_preview.html'>getSentinel_preview</a></span>(<span class='kw'>record</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fl'>5</span>,])
 
 <span class='co'>## Download some datasets</span>
-<span class='no'>files</span> <span class='kw'>&lt;-</span> <span class='fu'>getSentinel_data</span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fu'>c</span>(<span class='fl'>4</span>,<span class='fl'>5</span>,<span class='fl'>6</span>),])
+<span class='no'>datasets</span> <span class='kw'>&lt;-</span> <span class='fu'>getSentinel_data</span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fu'>c</span>(<span class='fl'>4</span>,<span class='fl'>5</span>,<span class='fl'>6</span>),])
+
+<span class='co'>## Make them ready to use</span>
+<span class='no'>datasets_prep</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='prepSentinel.html'>prepSentinel</a></span>(<span class='no'>datasets</span>, <span class='kw'>format</span> <span class='kw'>=</span> <span class='st'>"tiff"</span>)
+
+<span class='co'>## Load them to R</span>
+<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='http://www.rdocumentation.org/packages/raster/topics/stack'>stack</a></span>(<span class='no'>datasets_prep</span><span class='kw'>[[</span><span class='fl'>1</span>]]<span class='kw'>[[</span><span class='fl'>1</span>]][<span class='fl'>1</span>]) <span class='co'>#first dataset, first tile, 10m resoultion</span>
 <span class='co'># }</span><div class='input'>
 </div></pre>
   </div>

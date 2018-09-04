@@ -165,6 +165,16 @@
 <code><a href="reference/getMODIS_data.html">getMODIS_data()</a></code> – uses the output of getMODIS_query() to order and download MODIS data from LAADS.</li>
 </ul>
 </div>
+<div id="preprocessing" class="section level4">
+<h4 class="hasAnchor">
+<a href="#preprocessing" class="anchor"></a>Preprocessing</h4>
+<ul>
+<li>
+<code><a href="reference/prepSentinel.html">prepSentinel()</a></code> – makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.</li>
+<li>
+<code><a href="reference/cropFAST.html">cropFAST()</a></code> – crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.</li>
+</ul>
+</div>
 <div id="session-login" class="section level4">
 <h4 class="hasAnchor">
 <a href="#session-login" class="anchor"></a>Session Login</h4>
@@ -243,6 +253,7 @@
 <p>The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Load packages
 <span class="kw">library</span>(getSpatialData)
+<span class="kw">library</span>(raster)
 <span class="kw">library</span>(sf)
 <span class="kw">library</span>(sp)
 
@@ -278,7 +289,7 @@ records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSen
 
 ## Filter the records
 <span class="kw">colnames</span>(records) <span class="co">#see all available filter attributes</span>
-<span class="kw">unique</span>(records<span class="op">$</span>processinglevel) <span class="co">#use one of the, e.g. to see available processing levels</span>
+<span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/unique">unique</a></span>(records<span class="op">$</span>processinglevel) <span class="co">#use one of the, e.g. to see available processing levels</span>
 
 records_filtered &lt;-<span class="st"> </span>records[<span class="kw">which</span>(records<span class="op">$</span>processinglevel <span class="op">==</span><span class="st"> "Level-1C"</span>),] <span class="co">#filter by Level</span>
 records_filtered &lt;-<span class="st"> </span>records_filtered[records_filtered<span class="op">$</span>cloudcoverpercentage <span class="op">&lt;=</span><span class="st"> </span><span class="dv">30</span>, ] <span class="co">#filter by clouds</span>
@@ -305,8 +316,21 @@ records_filtered &lt;-<span class="st"> </span>records_filtered[records_filtered
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_plotRGB.png"></p>
 <p align="center"><sub>Figure 6: Screenshot of the RStudio viewer, displaying a simple Sentinel-2 RGB plot preview using getSentinel_preview()</sub></p>
 <p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Finally, download some datasets to your archive directory
-files &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSentinel_data.html">getSentinel_data</a></span>(<span class="dt">records =</span> records_filtered[<span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">7</span>,<span class="dv">9</span>), ])</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Download some datasets to your archive directory
+datasets &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSentinel_data.html">getSentinel_data</a></span>(<span class="dt">records =</span> records_filtered[<span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">7</span>,<span class="dv">9</span>), ])
+
+## Finally, define an output format and make them ready-to-use
+datasets_prep &lt;-<span class="st"> </span><span class="kw"><a href="reference/prepSentinel.html">prepSentinel</a></span>(datasets, <span class="dt">format =</span> <span class="st">"tiff"</span>)
+<span class="co"># or use VRT to not store duplicates of different formats</span>
+datasets_prep &lt;-<span class="st"> </span><span class="kw"><a href="reference/prepSentinel.html">prepSentinel</a></span>(datasets, <span class="dt">format =</span> <span class="st">"vrt"</span>)
+
+## View the files
+datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>] <span class="co">#first dataset, first tile, 10 m resolution</span>
+datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">2</span>] <span class="co">#first dataset, first tile, 20 m resolution</span>
+datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">3</span>] <span class="co">#first dataset, first tile, 60 m resolution</span>
+
+## Load them directly into R
+r &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/stack">stack</a></span>(datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>])</code></pre></div>
 </div>
 <div id="products" class="section level2">
 <h2 class="hasAnchor">

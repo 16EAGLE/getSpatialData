@@ -67,7 +67,7 @@ reference:
   desc: Data preparation and preprocessing
   contents:
   - prepSentinel
-  - crop_file
+  - cropFAST
 - title: Session Login
   desc:  Define login credentials that can be used throughout the running session
   contents:

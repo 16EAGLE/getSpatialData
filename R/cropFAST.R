@@ -15,7 +15,7 @@
 #' @author Jakob Schwalb-Willmann
 #'
 #' @importFrom gdalUtils gdal_setInstallation gdalbuildvrt
-#' @importFrom raster extent intersect
+#' @importFrom raster raster extent intersect
 #'
 #' @examples
 #' \dontrun{
@@ -50,7 +50,7 @@ cropFAST <- function(file, ext, verbose = TRUE, ...){
     if(!inherits(ext, "Extent")) out("No object of class 'Extent' could be derived from argument 'ext'.", type = 3)
   }
   if(!file.exists(file)) out(paste0("'", file, "' does not exist."), type = 3) else{
-    if(is.null(intersect(extent(r), ext))) out("Extents of raster from 'file' and 'ext' do not overlap.", type = 3)
+    if(is.null(intersect(extent(raster(file)), ext))) out("Extents of raster from 'file' and 'ext' do not overlap.", type = 3)
   }
 
   gdal.path <- getOption("gdalUtils_gdalPath")[[1]]$path

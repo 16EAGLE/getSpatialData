@@ -113,9 +113,9 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   ## Redirect, if direct ESPA order download
   if(!is.null(espa_order)){
-    prod.id <- sapply(espa_order, function(x, user = username, pass = password){
-      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))[[1]][[1]]$name
-    }, USE.NAMES = F)
+    prod.id <- as.vector(unlist(sapply(espa_order, function(x, user = username, pass = password){
+      sapply(content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))[[1]], function(y) y$name, USE.NAMES = F)
+    }, USE.NAMES = F)))
     level <- unique(sapply(espa_order, function(x, user = username, pass = password){
       y <- unlist(content(gSD.get(paste0(getOption("gSD.api")$espa, "order/", x), user, pass))$product_opts)
       y <- y[grep("products", names(y))]

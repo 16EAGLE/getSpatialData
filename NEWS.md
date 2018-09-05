@@ -9,6 +9,7 @@ Introduction of function for data preparation
 <br>
 **Bug fixes:**
 * `getMODIS_data()` now native, deprecated FTP LAADS DAAC services replaced by https requests
+* `getLandsat_data()`: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument
 
 <br>
 

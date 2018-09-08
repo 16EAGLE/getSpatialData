@@ -17,6 +17,6 @@ aoi_data
 This dataset is a list containing three objects of different class, all representing the same AOI. \code{getSpatialData} handles AOIs provided as matrix, sf or sp object. An AOI can be set globally for the running session (see \link{set_aoi}) or directly passed to a query function (e.g. \link{getSentinel_query})
 }
 \details{
-You can load the AOI objects using data("aoi")
+You can load the AOI objects using data("aoi_data")
 }
 \keyword{datasets}

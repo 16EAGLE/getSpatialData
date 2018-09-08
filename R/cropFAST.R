@@ -66,6 +66,7 @@ cropFAST <- function(file, ext, verbose = TRUE, ...){
     temp.env <- tempfile(fileext = ".vrt")
     catch <- gdalbuildvrt(file, temp.env, te = c(ext@xmin, ext@ymin, ext@xmax, ext@ymax))
     x <- stack(temp.env)
+    if(exists("filename")) writeRaster(x, ...)
     if(nlayers(x) == 1) raster(x) else x
   }
 }

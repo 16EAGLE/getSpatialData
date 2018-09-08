@@ -8,5 +8,5 @@
 #'   \item \code{aoi_sp}, a \code{SpatialPolygons} single multi-point polygon, projected in lat/lon
 #'   \item \code{aoi_matrix}, a two-column (longitute & latitude), multi-row matrix without projection
 #' }
-#' @details You can load the AOI objects using data("aoi")
+#' @details You can load the AOI objects using data("aoi_data")
 "aoi_data"

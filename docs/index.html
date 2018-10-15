@@ -292,7 +292,7 @@ records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSen
 <span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/unique">unique</a></span>(records<span class="op">$</span>processinglevel) <span class="co">#use one of the, e.g. to see available processing levels</span>
 
 records_filtered &lt;-<span class="st"> </span>records[<span class="kw">which</span>(records<span class="op">$</span>processinglevel <span class="op">==</span><span class="st"> "Level-1C"</span>),] <span class="co">#filter by Level</span>
-records_filtered &lt;-<span class="st"> </span>records_filtered[records_filtered<span class="op">$</span>cloudcoverpercentage <span class="op">&lt;=</span><span class="st"> </span><span class="dv">30</span>, ] <span class="co">#filter by clouds</span>
+records_filtered &lt;-<span class="st"> </span>records_filtered[<span class="kw">as.numeric</span>(records_filtered<span class="op">$</span>cloudcoverpercentage) <span class="op">&lt;=</span><span class="st"> </span><span class="dv">30</span>, ] <span class="co">#filter by clouds</span>
 
 ## View records table
 <span class="kw">View</span>(records)

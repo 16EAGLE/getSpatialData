@@ -141,7 +141,7 @@ colnames(records) #see all available filter attributes
 unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 
 records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
-records_filtered <- records_filtered[records_filtered$cloudcoverpercentage <= 30, ] #filter by clouds
+records_filtered <- records_filtered[as.numeric(records_filtered$cloudcoverpercentage) <= 30, ] #filter by clouds
 
 ## View records table
 View(records)

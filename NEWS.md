@@ -10,6 +10,7 @@ Introduction of function for data preparation
 **Bug fixes:**
 * `getMODIS_data()` now native, deprecated FTP LAADS DAAC services replaced by https requests
 * `getLandsat_data()`: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument
+* `getSentinel_query()`: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows. See issue #6.
 
 <br>
 

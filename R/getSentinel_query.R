@@ -93,7 +93,9 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL,
       out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
     }
   }
+  aoi <- st_as_sfc(st_bbox(.make_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
   aoi <- .make_aoi(aoi, type = "matrix")
+
 
   ## check time_range and platform
   char_args <- list(time_range = time_range, platform = platform)

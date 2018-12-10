@@ -1,4 +1,4 @@
-#' Prepare Sentinel data to be ready-to-use
+#' Prepare Sentinel data to be ready-to-use (beta)
 #'
 #' \code{prepSentinel} makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
 #'

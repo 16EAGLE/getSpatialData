@@ -1,11 +1,12 @@
-#' Crop file to a spatial extent
+#' Crop file to a spatial extent (beta)
 #'
 #' \code{cropFAST} crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.
 #'
 #' @inheritParams getSentinel_data
 #' @param file Path to raster file.
 #' @param ext Extent object or such from which an extent can be extracted.
-#' @param ... additional arguments passed to \code{writeRaster}, e.g. \code{filename}.
+#' @param filename Filename of output, if it should be written to disk.
+#' @param ... additional arguments passed to \code{writeRaster}. Ignored, if \code{filename} ends with ".vrt".
 #'
 #' @details GDAL must be installed. If no GDAL installation is found, \code{cropFAST} is masking \code{raster::crop}.
 #' The input file on disk will not be changed.
@@ -42,7 +43,7 @@
 #' @seealso \link{getSentinel_data}
 #' @export
 
-cropFAST <- function(file, ext, verbose = TRUE, ...){
+cropFAST <- function(file, ext, filename, verbose = TRUE, ...){
 
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(!inherits(ext, "Extent")){
@@ -66,7 +67,7 @@ cropFAST <- function(file, ext, verbose = TRUE, ...){
     temp.env <- tempfile(fileext = ".vrt")
     catch <- gdalbuildvrt(file, temp.env, te = c(ext@xmin, ext@ymin, ext@xmax, ext@ymax))
     x <- stack(temp.env)
-    if(exists("filename")) writeRaster(x, ...)
+    if(!missing("filename")) if(!is.na(grep(".vrt", tolower(temp.env))[1])) file.rename(temp.env, filename) else writeRaster(x, ...)
     if(nlayers(x) == 1) raster(x) else x
   }
 }

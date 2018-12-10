@@ -4,8 +4,8 @@
 \alias{getSentinel_data}
 \title{Download Sentinel-1, Sentinel-2 and Sentinel-3 data}
 \usage{
-getSentinel_data(records, dir_out = NULL, force = FALSE, username = NULL,
-  password = NULL, hub = "auto", verbose = TRUE)
+getSentinel_data(records, dir_out = NULL, force = FALSE,
+  username = NULL, password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.}

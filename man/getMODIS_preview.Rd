@@ -4,7 +4,8 @@
 \alias{getMODIS_preview}
 \title{Preview a MOSIS image}
 \usage{
-getMODIS_preview(record, on_map = TRUE, show_aoi = TRUE, verbose = TRUE)
+getMODIS_preview(record, on_map = TRUE, show_aoi = TRUE,
+  verbose = TRUE)
 }
 \arguments{
 \item{record}{data.frame, single row data.frame collected from the return of \link{getMODIS_query}, representing the selected record and all its attributes.}

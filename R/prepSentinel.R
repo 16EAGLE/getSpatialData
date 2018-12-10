@@ -14,6 +14,7 @@
 #' @author Jakob Schwalb-Willmann
 #'
 #' @importFrom gdalUtils gdalbuildvrt gdal_translate
+#' @importFrom utils unzip
 #'
 #' @examples
 #' ## Load packages

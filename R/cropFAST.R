@@ -16,7 +16,7 @@
 #' @author Jakob Schwalb-Willmann
 #'
 #' @importFrom gdalUtils gdal_setInstallation gdalbuildvrt
-#' @importFrom raster raster extent intersect
+#' @importFrom raster raster extent intersect writeRaster crop nlayers
 #'
 #' @examples
 #' \dontrun{

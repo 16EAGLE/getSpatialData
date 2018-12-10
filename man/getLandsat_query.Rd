@@ -4,8 +4,8 @@
 \alias{getLandsat_query}
 \title{Query Landsat data}
 \usage{
-getLandsat_query(time_range, name = "all", aoi = NULL, username = NULL,
-  password = NULL, verbose = TRUE)
+getLandsat_query(time_range, name = "all", aoi = NULL,
+  username = NULL, password = NULL, verbose = TRUE)
 }
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}

@@ -46,8 +46,8 @@ The following functions are publicly available. They have been manually tested o
 
 
 #### Preprocessing
-* `prepSentinel()` – makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
-* `cropFAST()` – crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.
+* `prepSentinel()` **beta** – makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
+* `cropFAST()` **beta** – crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.
 
 
 #### Session Login

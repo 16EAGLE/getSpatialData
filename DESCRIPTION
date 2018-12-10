@@ -25,10 +25,6 @@ Imports:
 RoxygenNote: 6.1.1
 Suggests:
   devtools,
-  testthat,
-  shiny,
-  shinyjs,
-  shinydashboard,
-  shinycssloaders
+  testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/

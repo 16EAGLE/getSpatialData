@@ -7,7 +7,7 @@ Depends: R (>= 2.10)
 Authors@R: person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de",
   role = c("aut", "cre"))
 Description: Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.
-License: GPL-3
+License: GPL-3 | file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
@@ -22,9 +22,9 @@ Imports:
   gdalUtils,
   mapview,
   mapedit,
+  devtools
 RoxygenNote: 6.1.1
 Suggests: 
-  devtools,
   testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/

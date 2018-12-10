@@ -1,4 +1,7 @@
+^dev$
+^docs$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^\dev$
 ^\.travis\.yml$
+^\_pkgdown\.yml$
+^\.gitignore$

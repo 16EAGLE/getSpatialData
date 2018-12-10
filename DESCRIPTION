@@ -24,7 +24,7 @@ Imports:
   mapedit,
 RoxygenNote: 6.1.1
 Suggests: 
-  devtools
+  devtools,
   testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/

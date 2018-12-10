@@ -24,8 +24,8 @@ Imports:
   mapedit,
 RoxygenNote: 6.1.1
 Suggests:
-  testthat,
   devtools,
+  testthat,
   shiny,
   shinyjs,
   shinydashboard,

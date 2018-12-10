@@ -64,7 +64,7 @@ cropFAST <- function(file, ext, filename, verbose = TRUE, ...){
   } else{
 
     # do it in gdal
-    temp.env <- tempfile(fileext = ".vrt")
+    if(missing(filename)) temp.env <- tempfile(fileext = ".vrt") else temp.env <- paste0(paste0(head(strsplit(filename, "[.]")[[1]], n = -1), collapse = "/"), ".vrt")
     catch <- gdalbuildvrt(file, temp.env, te = c(ext@xmin, ext@ymin, ext@xmax, ext@ymax))
     x <- stack(temp.env)
     if(!missing("filename")) if(!is.na(grep(".vrt", tolower(temp.env))[1])) file.rename(temp.env, filename) else writeRaster(x, ...)

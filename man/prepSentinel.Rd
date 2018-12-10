@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepSentinel.R
 \name{prepSentinel}
 \alias{prepSentinel}
-\title{Prepare Sentinel data to be ready-to-use}
+\title{Prepare Sentinel data to be ready-to-use (beta)}
 \usage{
 prepSentinel(datasets, dir_out = NULL, format = "vrt",
   select.tiles = "all", overwrite = F, verbose = T)

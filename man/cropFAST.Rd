@@ -2,18 +2,20 @@
 % Please edit documentation in R/cropFAST.R
 \name{cropFAST}
 \alias{cropFAST}
-\title{Crop file to a spatial extent}
+\title{Crop file to a spatial extent (beta)}
 \usage{
-cropFAST(file, ext, verbose = TRUE, ...)
+cropFAST(file, ext, filename, verbose = TRUE, ...)
 }
 \arguments{
 \item{file}{Path to raster file.}
 
 \item{ext}{Extent object or such from which an extent can be extracted.}
 
+\item{filename}{Filename of output, if it should be written to disk.}
+
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 
-\item{...}{additional arguments passed to \code{writeRaster}, e.g. \code{filename}.}
+\item{...}{additional arguments passed to \code{writeRaster}. Ignored, if \code{filename} ends with ".vrt".}
 }
 \value{
 Raster* object.

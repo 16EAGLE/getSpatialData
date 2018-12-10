@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Crop file to a spatial extent — cropFAST • getSpatialData</title>
+<title>Crop file to a spatial extent (beta) — cropFAST • getSpatialData</title>
 
 <!-- jquery -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script>
@@ -30,7 +30,7 @@
 
 
 
-<meta property="og:title" content="Crop file to a spatial extent — cropFAST" />
+<meta property="og:title" content="Crop file to a spatial extent (beta) — cropFAST" />
 
 <meta property="og:description" content="cropFAST crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets." />
 <meta name="twitter:card" content="summary" />
@@ -133,7 +133,7 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Crop file to a spatial extent</h1>
+    <h1>Crop file to a spatial extent (beta)</h1>
     
     <div class="hidden name"><code>cropFAST.Rd</code></div>
     </div>
@@ -144,7 +144,7 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>cropFAST</span>(<span class='no'>file</span>, <span class='no'>ext</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
+    <pre class="usage"><span class='fu'>cropFAST</span>(<span class='no'>file</span>, <span class='no'>ext</span>, <span class='no'>filename</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -158,12 +158,16 @@
       <td><p>Extent object or such from which an extent can be extracted.</p></td>
     </tr>
     <tr>
+      <th>filename</th>
+      <td><p>Filename of output, if it should be written to disk.</p></td>
+    </tr>
+    <tr>
       <th>verbose</th>
       <td><p>logical, if <code>TRUE</code>, details on the function's progress will be visibile on the console. Default is TRUE.</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>additional arguments passed to <code>writeRaster</code>, e.g. <code>filename</code>.</p></td>
+      <td><p>additional arguments passed to <code>writeRaster</code>. Ignored, if <code>filename</code> ends with ".vrt".</p></td>
     </tr>
     </table>
     

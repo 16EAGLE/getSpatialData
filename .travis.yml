@@ -18,6 +18,7 @@ before_install:
 # - sudo apt-get install libproj-dev
   - sudo apt-get install libudunits2-dev
   - sudo apt-get install libssh2-1-dev
+  - sudo apt-get install netcdf-bin
   - R -e 'install.packages("devtools")'
   - R -e 'install.packages("covr")'
 

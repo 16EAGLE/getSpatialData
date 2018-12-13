@@ -1,5 +1,6 @@
 # getSpatialData
 
+[![CRAN version](https://www.r-pkg.org/badges/version/getSpatialData)](https://CRAN.R-project.org/package=getSpatialData)
 [![Build Status](https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master)](https://travis-ci.org/16EAGLE/getSpatialData) 
 [![Coverage](https://codecov.io/gh/16eagle/getSpatialData/branch/master/graph/badge.svg)](https://codecov.io/gh/16EAGLE/getSpatialData)
 

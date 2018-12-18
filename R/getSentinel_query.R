@@ -166,6 +166,7 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, username = NULL,
       rdf[1, match(names(x), rn)] <- sapply(x, as.character)
       return(rdf)
     }))
+    return.df <- cbind(return.df, online = as.logical(toupper(sapply(return.df$uuid, function(x) content(gSD.get(paste0(cred[3], "/odata/v1/Products('", x, "')/Online/$value"),  cred[1], cred[2])), USE.NAMES = F))))
   }
 
   if(is.TRUE(give.return)) return(return.df)

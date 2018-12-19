@@ -146,8 +146,9 @@
     
     </div>
 
-    <pre class="usage"><span class='fu'>getSentinel_query</span>(<span class='no'>time_range</span>, <span class='no'>platform</span>, <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>hub</span> <span class='kw'>=</span> <span class='st'>"auto"</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+    <pre class="usage"><span class='fu'>getSentinel_query</span>(<span class='no'>time_range</span>, <span class='no'>platform</span>, <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>check_avail</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>hub</span> <span class='kw'>=</span> <span class='st'>"auto"</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -163,6 +164,10 @@
     <tr>
       <th>aoi</th>
       <td><p>sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not <code>+proj=longlat +datum=WGS84 +no_defs</code>, it is reprojected to the latter. Use <a href='gSD_settings.html'>set_aoi</a> instead to once define an AOI globally for all queries within the running session. If <code>aoi</code> is undefined, the AOI that has been set using <a href='gSD_settings.html'>set_aoi</a> is used.</p></td>
+    </tr>
+    <tr>
+      <th>check_avail</th>
+      <td><p>logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column <code>online</code> to the returned data frame of records. Default is <code>FALSE</code>, since check increases query request time.</p></td>
     </tr>
     <tr>
       <th>username</th>

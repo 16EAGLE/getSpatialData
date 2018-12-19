@@ -7,6 +7,11 @@ Introduction of function for data preparation
 * `cropFAST()`: fastly crop large-scale datasets to a spatial extent
 
 <br>
+**New features:**
+* `getSentinel_query()`: argument "check_avail" added to check on-demand availability of Sentinel datasets or if they had been moved to the Copernicus Long-Term Archive (LTA). Deactivated by default since check increases query request time.
+* `getSentinel_data()`: checks for on-demand availability of requested datasets first before attempting download.
+
+<br>
 **Bug fixes:**
 * `getMODIS_data()` now native, deprecated FTP LAADS DAAC services replaced by https requests
 * `getLandsat_data()`: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument

@@ -1,6 +1,6 @@
-#' Session-wide archive and AOI settings
+#' Session-wide settings and checks
 #'
-#' Defines session-wide archive and AOI settings that are used by all \code{getSpatialData} functions
+#' Functions that define session-wide archive and AOI settings that are used by all \code{getSpatialData} functions and check for the availability of used online services.
 #'
 #' @param dir_archive character, directory to the \code{getSpatialData} archive folder.
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
@@ -15,6 +15,8 @@
 #' \code{view_aoi} displays the defined session AOI on an interactive \code{mapview}/\code{leaflet} map.
 #'
 #' \code{get_aoi} returns the defined session AOI.
+#' 
+#' \code{services_avail} returns a \code{data.frame} containing the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "nominal".
 #'
 #' @return None.
 #' @author Jakob Schwalb-Willmann
@@ -101,4 +103,28 @@ get_aoi <- function(type = "sf"){
   if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)
   aoi <- getOption("gSD.aoi")
   .make_aoi(aoi, type = type, quiet = T)
+}
+
+#' @rdname gSD_settings
+#' @importFrom httr GET
+#' @export
+services_avail <- function(){
+  urls <- getOption("gSD.api")
+  urls <- urls[names(urls) != "aws.l8.sl"]
+  x <- lapply(urls, GET)
+  status <- sapply(x, function(y) y$status_code)
+  status.out <- status
+  status.out["aws.l8"] <- if(status["aws.l8"] == 404 | status["aws.l8"] == 200) "nominal" else "unavailable"
+  status.out[status == 200] <- "nominal"
+  status.out[status == 301] <- "maintenance"
+  status.out[status == 503] <- "unavailable"
+  
+  sn <- toupper(names(status.out))
+  sn[sn == "DHUS"] <- "ESA operational"
+  sn[sn == "S3"] <- "ESA pre-operational"
+  
+  names(status.out) <- NULL
+  status.df <- cbind(sn, status.out)
+  colnames(status.df) <- c("Service", "Status")
+  return(status.df)
 }

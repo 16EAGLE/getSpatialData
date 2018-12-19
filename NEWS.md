@@ -3,6 +3,7 @@ Introduction of function for data preparation
 
 <br>
 **New functions:**
+* `services_avail`: checks and returns the status of all online services used by getSpatialData. Can be used to check if a service is undergoing maintenance or is unavailable due to unknown reasons.
 * `getSentinel_restore`: restore Sentinel datasets that have been archived to Copernocus LTA
 * `prepSentinel()`: automatically prepare Sentinel data to be ready-to-use
 * `cropFAST()`: fastly crop large-scale datasets to a spatial extent

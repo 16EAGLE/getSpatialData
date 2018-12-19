@@ -6,7 +6,8 @@
 \alias{set_aoi}
 \alias{view_aoi}
 \alias{get_aoi}
-\title{Session-wide archive and AOI settings}
+\alias{services_avail}
+\title{Session-wide settings and checks}
 \usage{
 set_archive(dir_archive)
 
@@ -15,6 +16,8 @@ set_aoi(aoi)
 view_aoi(color = "green")
 
 get_aoi(type = "sf")
+
+services_avail()
 }
 \arguments{
 \item{dir_archive}{character, directory to the \code{getSpatialData} archive folder.}
@@ -29,7 +32,7 @@ get_aoi(type = "sf")
 None.
 }
 \description{
-Defines session-wide archive and AOI settings that are used by all \code{getSpatialData} functions
+Functions that define session-wide archive and AOI settings that are used by all \code{getSpatialData} functions and check for the availability of used online services.
 }
 \details{
 \code{set_archive} defines the session directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
@@ -39,6 +42,8 @@ Defines session-wide archive and AOI settings that are used by all \code{getSpat
 \code{view_aoi} displays the defined session AOI on an interactive \code{mapview}/\code{leaflet} map.
 
 \code{get_aoi} returns the defined session AOI.
+
+\code{services_avail} returns a \code{data.frame} containing the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "nominal".
 }
 \examples{
 ## set archive directory

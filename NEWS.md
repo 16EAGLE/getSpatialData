@@ -3,6 +3,7 @@ Introduction of function for data preparation
 
 <br>
 **New functions:**
+* `getSentinel_restore`: restore Sentinel datasets that have been archived to Copernocus LTA
 * `prepSentinel()`: automatically prepare Sentinel data to be ready-to-use
 * `cropFAST()`: fastly crop large-scale datasets to a spatial extent
 

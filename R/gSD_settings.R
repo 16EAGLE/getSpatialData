@@ -6,6 +6,7 @@
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
 #' @param type character, AOI object type, either "matrix", "sf" or "sp".
 #' @param color chracter, polygon filling color.
+#' @param value logical, if \code{FALSE}, nothing is returned.
 #'
 #' @details
 #' \code{set_archive} defines the session directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
@@ -107,24 +108,27 @@ get_aoi <- function(type = "sf"){
 
 #' @rdname gSD_settings
 #' @importFrom httr GET
+#' @importFrom cli cat_boxx
 #' @export
-services_avail <- function(){
+services_avail <- function(value = F){
   urls <- getOption("gSD.api")
   urls <- urls[names(urls) != "aws.l8.sl"]
   x <- lapply(urls, GET)
-  status <- sapply(x, function(y) y$status_code)
-  status.out <- status
-  status.out["aws.l8"] <- if(status["aws.l8"] == 404 | status["aws.l8"] == 200) "nominal" else "unavailable"
-  status.out[status == 200] <- "nominal"
-  status.out[status == 301] <- "maintenance"
-  status.out[status == 503] <- "unavailable"
   
-  sn <- toupper(names(status.out))
-  sn[sn == "DHUS"] <- "ESA operational"
-  sn[sn == "S3"] <- "ESA pre-operational"
+  df <- sapply(x, function(y) y$status_code)
+  df <- cbind.data.frame(c("ESA Operational (DHUS)", "ESA pre-operational (S3)", "USGS ESPA", "USGS EarthExplorer", "AWS Landsat 8", "NASA LAADS"),
+                         "available", df, names(df), "green", stringsAsFactors=F)
+  rownames(df) <- NULL
+  colnames(df) <- c("service", "status", "code", "id",  "colour")
   
-  names(status.out) <- NULL
-  status.df <- cbind(sn, status.out)
-  colnames(status.df) <- c("Service", "Status")
-  return(status.df)
+  if(!any(c(df[df$id == "aws.l8",]$code == 404,  df[df$id == "aws.l8",]$code == 200))){
+    df[df$id == "aws.l8",c(2,5)] <- c("unavailable", "red")
+  }
+  
+  df[df$code == 301,c(2,5)] <- c("maintenance", "orange")
+  df[df$code == 503,c(2,5)] <- c("unavailable", "red")
+  df[df$code == 400,c(2,5)] <- c("retry", "blue")
+  
+  catch <- apply(df, MARGIN = 1, function(x, nc = max(nchar(df$service))) cat_bullet(paste0(x[1], ":", paste0(rep(" ", times = nc-nchar(x[1])), collapse = ""), " '", x[2], "'"), bullet_col = x[5]))
+  if(isTRUE(value)) return(df[,-c(3:5)])
 }

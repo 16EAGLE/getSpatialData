@@ -17,7 +17,7 @@ view_aoi(color = "green")
 
 get_aoi(type = "sf")
 
-services_avail()
+services_avail(value = F)
 }
 \arguments{
 \item{dir_archive}{character, directory to the \code{getSpatialData} archive folder.}
@@ -27,6 +27,8 @@ services_avail()
 \item{color}{chracter, polygon filling color.}
 
 \item{type}{character, AOI object type, either "matrix", "sf" or "sp".}
+
+\item{value}{logical, if \code{FALSE}, nothing is returned.}
 }
 \value{
 None.

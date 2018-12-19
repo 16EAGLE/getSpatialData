@@ -21,6 +21,7 @@ Imports:
   gdalUtils,
   mapview,
   mapedit,
+  cli,
   devtools
 RoxygenNote: 6.1.1
 Suggests: 

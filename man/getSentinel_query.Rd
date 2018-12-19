@@ -4,8 +4,9 @@
 \alias{getSentinel_query}
 \title{Query Sentinel-1, Sentinel-2 and Sentinel-3 data}
 \usage{
-getSentinel_query(time_range, platform, aoi = NULL, username = NULL,
-  password = NULL, hub = "auto", verbose = TRUE)
+getSentinel_query(time_range, platform, aoi = NULL,
+  check_avail = FALSE, username = NULL, password = NULL,
+  hub = "auto", verbose = TRUE)
 }
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
@@ -13,6 +14,8 @@ getSentinel_query(time_range, platform, aoi = NULL, username = NULL,
 \item{platform}{character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
+
+\item{check_avail}{logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{online} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.}
 
 \item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
 

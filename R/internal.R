@@ -11,7 +11,7 @@
 out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = getOption("gSD.verbose")){
   if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
   if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
-  else{if(type == 3){stop(input,call. = FALSE)}else{if(ll == 1){
+  else{if(type == 3){stop(input, call. = FALSE)}else{if(ll == 1){
     if(msg == FALSE){ cat(paste0(sign,input),sep="\n")
     } else{message(paste0(sign,input))}}}}
 }
@@ -143,6 +143,18 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
     pw <- "s3guest"
   }
   return(c(user, pw, x))
+}
+
+
+#' get odata for uuid
+#'
+#' @param uuid one or multiple uuids
+#' @param cred return of .CopHub_select c(user, password, API ulr)
+#' @param field field to be checked
+#' @keywords internal
+#' @noRd
+.get_odata <- function(uuid, cred, field = ""){
+  lapply(uuid, function(x) content(gSD.get(paste0(cred[3], "/odata/v1/Products('", x, "')/", field),  cred[1], cred[2])))
 }
 
 

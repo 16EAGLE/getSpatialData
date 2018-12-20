@@ -108,7 +108,7 @@ get_aoi <- function(type = "sf"){
 
 #' @rdname gSD_settings
 #' @importFrom httr GET
-#' @importFrom cli cat_boxx
+#' @importFrom cli cat_bullet
 #' @export
 services_avail <- function(value = F){
   urls <- getOption("gSD.api")

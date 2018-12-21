@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Session-wide settings and checks — gSD_settings • getSpatialData</title>
+<title>Extract Sentinel zip archives — extractSentinel • getSpatialData</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Session-wide settings and checks — gSD_settings" />
+<meta property="og:title" content="Extract Sentinel zip archives — extractSentinel" />
 
-<meta property="og:description" content="Functions that define session-wide archive and AOI settings that are used by all getSpatialData functions and check for the availability of used online services." />
+<meta property="og:description" content="extractSentinel unzips Sentinel zip archives downloaded using getSentinel_data." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -135,87 +135,58 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Session-wide settings and checks</h1>
+    <h1>Extract Sentinel zip archives</h1>
     
-    <div class="hidden name"><code>gSD_settings.Rd</code></div>
+    <div class="hidden name"><code>extractSentinel.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p>Functions that define session-wide archive and AOI settings that are used by all <code>getSpatialData</code> functions and check for the availability of used online services.</p>
+    <p><code>extractSentinel</code> unzips Sentinel zip archives downloaded using <a href='getSentinel_data.html'>getSentinel_data</a>.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>set_archive</span>(<span class='no'>dir_archive</span>)
-
-<span class='fu'>set_aoi</span>(<span class='no'>aoi</span>)
-
-<span class='fu'>view_aoi</span>(<span class='kw'>color</span> <span class='kw'>=</span> <span class='st'>"green"</span>)
-
-<span class='fu'>get_aoi</span>(<span class='kw'>type</span> <span class='kw'>=</span> <span class='st'>"sf"</span>)
-
-<span class='fu'>services_avail</span>(<span class='kw'>value</span> <span class='kw'>=</span> <span class='no'>F</span>)</pre>
+    <pre class="usage"><span class='fu'>extractSentinel</span>(<span class='no'>datasets</span>, <span class='kw'>dir_out</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>junkpaths</span> <span class='kw'>=</span> <span class='no'>T</span>,
+  <span class='kw'>list_only</span> <span class='kw'>=</span> <span class='no'>F</span>, <span class='kw'>pattern</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='no'>T</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>dir_archive</th>
-      <td><p>character, directory to the <code>getSpatialData</code> archive folder.</p></td>
+      <th>datasets</th>
+      <td><p>character vector or list, containing paths to datasets (.zip, as downloaded by <code>getSentinel_data</code>) that should be extracted.</p></td>
     </tr>
     <tr>
-      <th>aoi</th>
-      <td><p>nothing, if an interactve <code>mapedit</code> viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not <code>+proj=longlat +datum=WGS84 +no_defs</code>, it is reprojected to the latter.</p></td>
+      <th>dir_out</th>
+      <td><p>character, full path to target directory. By default, extracted .SAFE folders are stored in the same directory as the zip originals (recommended).</p></td>
     </tr>
     <tr>
-      <th>color</th>
-      <td><p>chracter, polygon filling color.</p></td>
+      <th>junkpaths</th>
+      <td><p>logical, reduces the folder structure inside the extracted SAFE folder to one level. Although loosing the original folder structure, this is recommended especially on windows machine due to issues that can occure with very long paths.</p></td>
     </tr>
     <tr>
-      <th>type</th>
-      <td><p>character, AOI object type, either "matrix", "sf" or "sp".</p></td>
+      <th>list_only</th>
+      <td><p>logical, if <code>TRUE</code>, extracting is skipped and just the files contained in <code>datasets</code> are returned.</p></td>
     </tr>
     <tr>
-      <th>value</th>
-      <td><p>logical, if <code>FALSE</code>, nothing is returned.</p></td>
+      <th>pattern</th>
+      <td><p>character, pattern (e.g. "xml") of files to be extracted.</p></td>
+    </tr>
+    <tr>
+      <th>verbose</th>
+      <td><p>logical, if <code>TRUE</code>, details on the function's progress will be visibile on the console. Default is TRUE.</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>None.</p>
-    
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p><code>set_archive</code> defines the session directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.</p>
-<p><code>set_aoi</code> defines a session AOI that is used for querying data within the running session (if no other AOI is provided with a query function call). If called without argument, an interactive <code>mapedit</code> viewer is opened letting you draw an AOI polygon. Otherwise, the function supports <code>sf</code>, <code>sp</code> or matrix objects as <code>aoi</code> input  (see argument <code>aoi</code>).</p>
-<p><code>view_aoi</code> displays the defined session AOI on an interactive <code>mapview</code>/<code>leaflet</code> map.</p>
-<p><code>get_aoi</code> returns the defined session AOI.</p>
-<p><code>services_avail</code> returns a <code>data.frame</code> containing the status of all online services used by <code>getSpatialData</code>. Services that are operating as usual are labeled "nominal".</p>
+    <p>List containing paths to the extracted .SAFE folders and all contained files.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p>getSentinel_query getLandsat_query</p></div>
+    <div class='dont-index'><p>prepSentinel</p></div>
     
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>## set archive directory</span>
-<span class='no'>dir.arc</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/tempfile'>tempdir</a></span>()
-<span class='fu'>set_archive</span>(<span class='no'>dir.arc</span>)
-
-<span class='co'>## set aoi (example aoi)</span>
-<span class='fu'><a href='https://www.rdocumentation.org/packages/utils/topics/data'>data</a></span>(<span class='st'>"aoi_data"</span>)
-<span class='fu'>set_aoi</span>(<span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>1</span>]])</div><span class='co'># NOT RUN {</span>
-<span class='co'>## draw aoi interactively</span>
-<span class='fu'>set_aoi</span>() <span class='co'># just call without an argument</span>
-
-<span class='co'>## view aoi</span>
-<span class='fu'>view_aoi</span>()
-
-<span class='co'>## return aoi</span>
-<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='fu'>get_aoi</span>(<span class='kw'>type</span> <span class='kw'>=</span> <span class='st'>"sf"</span>)
-<span class='co'># }</span><div class='input'>
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -224,12 +195,8 @@
       
       <li><a href="#value">Value</a></li>
 
-      <li><a href="#details">Details</a></li>
-
       <li><a href="#see-also">See also</a></li>
-      
-      <li><a href="#examples">Examples</a></li>
-    </ul>
+          </ul>
 
     <h2>Author</h2>
     <p>Jakob Schwalb-Willmann</p>

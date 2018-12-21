@@ -116,7 +116,7 @@ services_avail <- function(value = F){
   x <- lapply(urls, GET)
   
   df <- sapply(x, function(y) y$status_code)
-  df <- cbind.data.frame(c("ESA Operational (DHUS)", "ESA pre-operational (S3)", "USGS ESPA", "USGS EarthExplorer", "AWS Landsat 8", "NASA LAADS"),
+  df <- cbind.data.frame(c("ESA operational (DHUS)", "ESA pre-operational (S3)", "USGS-EROS ESPA", "USGS EarthExplorer", "AWS Landsat 8", "NASA DAAC LAADS"),
                          "available", df, names(df), "green", stringsAsFactors=F)
   rownames(df) <- NULL
   colnames(df) <- c("service", "status", "code", "id",  "colour")

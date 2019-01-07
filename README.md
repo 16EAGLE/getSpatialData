@@ -11,6 +11,8 @@
 
 For all public functions [documentation is available](http://jxsw.de/getSpatialData). See also the [list of data sources](http://jxsw.de/getSpatialData/#products) that are or will be implemented.
 
+<b><font color="red">Please note:</font> Due to the temporary shutdown of the United States federal government, the on-demand processing through ESPA is currently not available. Thus, the `getLandsat_data()` function can currently download Level 1 data only.</b>
+
 ## Installation
 
 To install the current beta version, use `devtools`.

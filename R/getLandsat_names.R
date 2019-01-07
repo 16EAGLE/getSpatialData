@@ -66,5 +66,5 @@ getLandsat_names <- function(username = NULL, password = NULL){
     if(is.null(password)) password = getPass()
     api.key <- .ERS_login(username, password)
   }
-  .EE_ds(api.key, "LANDSAT_")
+  grep("LSR", .EE_ds(api.key, "LANDSAT_"), value = T, invert = T) #not show LSR, since higher level products are queried at ESPA directly
 }

@@ -104,7 +104,7 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
       tryCatch({
         t <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = username, password = password)
         if(names(content(t)) == "not_implemented") return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
-      }, error = function(e) return(NA))
+      }, error = function(e) return("l1"))
     }, USE.NAMES = F))
     return.df <- cbind(return.df, avail.products, stringsAsFactors = FALSE)
     colnames(return.df)[ncol(return.df)] <- "levels_available"

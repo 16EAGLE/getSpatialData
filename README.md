@@ -229,6 +229,16 @@ The following products are being evaluated to be implemented within the package.
 | GIMMS NDVI3g | NASA | https://nex.nasa.gov/nex/projects/1349/ | evaluated | R: `GIMMS`? |
 
 
-## Ideas
+## Contribution
 
-Ideas on possible data sources to be included, technical ideas or other are welcome! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 
+Contribute! I'm happy about any kind of contribution, from feature ideas, ideas on possible data sources, technical ideas or other to bug fixes, code suggestions or larger code contributions! Open an issue to start a discussion: <https://github.com/16eagle/getSpatialData/issues> 
+
+
+## Mentioned
+
+`getSpatialData` has been mentioned here:
+
+Kwok, R., 2018. Ecology’s remote-sensing revolution. Nature 556, 137. https://doi.org/10.1038/d41586-018-03924-9
+
+
+

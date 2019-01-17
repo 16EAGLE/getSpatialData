@@ -23,7 +23,7 @@ devtools::install_github("16EAGLE/getSpatialData")
 
 ## Available Functions
 
-The following functions are publicly available. They have been manually tested on Linux (Ubuntu 16.04 LTS, 17.10) and Windows 10 and are being constantly build and checked through Travis (R-devel and R-release). The `get*` function familiy allows to connect to a specific service to query for product names, query for records by time and AOI, preview images and download imagery and meta datasets. Session functions define session-wide settings that are visible for every function in the running session, e.g. to define one specific AOI that can be used for different queries without defining it with each function call.
+The following functions are publicly available and tested on Linux (Ubuntu 16.04 LTS, 17.10, 18.04 LTS) and Windows 10.
 
 #### Sentinel
 

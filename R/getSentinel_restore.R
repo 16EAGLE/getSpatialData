@@ -15,7 +15,7 @@
 #'
 #' @seealso \link{getSentinel_query}
 #' @export
-#' 
+
 getSentinel_restore <- function(record, username = NULL, password = NULL, hub = "auto", verbose = TRUE){
   
   ## Global Copernicus Hub login

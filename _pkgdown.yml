@@ -49,6 +49,7 @@ reference:
   - getSentinel_query
   - getSentinel_preview
   - getSentinel_data
+  - getSentinel_restore
 - title: Landsat
   desc:  Query, preview and download Landsat data
   contents:
@@ -66,19 +67,21 @@ reference:
 - title: Preprocessing
   desc: Data preparation and preprocessing
   contents:
+  - extractSentinel
   - prepSentinel
   - cropFAST
 - title: Session Login
   desc:  Define login credentials that can be used throughout the running session
   contents:
   - starts_with("login")
-- title: Session Settings
-  desc:  Define settings for the running session
+- title: Session Tools
+  desc:  Define settings for the running session and get session information
   contents:
   - set_archive
   - set_aoi
   - view_aoi
   - get_aoi
+  - services_avail
 - title: General
   contents:
   - aoi_data

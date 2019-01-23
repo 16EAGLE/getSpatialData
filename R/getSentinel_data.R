@@ -74,16 +74,16 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
 
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)){username <- getOption("gSD.cophub_user")}
-    if(is.null(password)){password <- getOption("gSD.cophub_pass")}
+    if(is.null(username)) username <- getOption("gSD.cophub_user")
+    if(is.null(password)) password <- getOption("gSD.cophub_pass")
   }
-  if(!is.character(username)){out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)}
-  if(!is.null(password)){password = password}else{password = getPass()}
+  if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
+  if(!is.null(password)) password = password else password = getPass()
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   if(length(unique(records$platformname)) > 1) out("Platform name differs. Platform name needs to be unique per call, e.g. 'Sentinel-1' only, as returned by getSentinel_query().", type=3)
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"), "/", unique(records$platformname), "/")}
+    if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/", unique(records$platformname), "/") else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
 

@@ -9,7 +9,7 @@
 \alias{services_avail}
 \title{Session-wide settings and checks}
 \usage{
-set_archive(dir_archive)
+set_archive(dir_archive, create = T)
 
 set_aoi(aoi)
 
@@ -21,6 +21,8 @@ services_avail(value = F)
 }
 \arguments{
 \item{dir_archive}{character, directory to the \code{getSpatialData} archive folder.}
+
+\item{create}{logical, whether to create directory, if not existing or not.}
 
 \item{aoi}{nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.}
 

@@ -12,12 +12,18 @@ Introduction of function for data preparation
 **New features:**
 * `getSentinel_query()`: argument "check_avail" added to check on-demand availability of Sentinel datasets or if they had been moved to the Copernicus Long-Term Archive (LTA). Deactivated by default since check increases query request time.
 * `getSentinel_data()`: checks for on-demand availability of requested datasets first before attempting download.
+* `set_archive()`: added argument `create` to control whether archive directory should be created or not.
 
 <br>
 **Bug fixes:**
 * `getMODIS_data()` now native, deprecated FTP LAADS DAAC services replaced by https requests
 * `getLandsat_data()`: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument
 * `getSentinel_query()`: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows. See issue #6.
+* all `_data` functions and `set_archive()` now expand paths shortend with swung dashed to avoid problems with tools::md5sum
+
+<br>
+**Contributions:**
+* Bug indication by Benjmain Leutner
 
 <br>
 

@@ -76,11 +76,11 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   ## Global USGS login
   if(is.TRUE(getOption("gSD.usgs_set"))){
-    if(is.null(username)){username <- getOption("gSD.usgs_user")}
-    if(is.null(password)){password <- getOption("gSD.usgs_pass")}
+    if(is.null(username)) username <- getOption("gSD.usgs_user")
+    if(is.null(password)) password <- getOption("gSD.usgs_pass")
   }
-  if(!is.character(username)){out("Argument 'username' needs to be of level 'character'. You can use 'login_USGS()' to define your login credentials globally.", type=3)}
-  if(!is.null(password)){password = password}else{password = getPass()}
+  if(!is.character(username)) out("Argument 'username' needs to be of level 'character'. You can use 'login_USGS()' to define your login credentials globally.", type=3)
+  if(!is.null(password)) password = password else password = getPass()
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
 
@@ -130,7 +130,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"), "/LANDSAT/", toupper(level), "/")}
+    if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/LANDSAT/", toupper(level), "/") else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
   if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)

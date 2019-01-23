@@ -3,6 +3,7 @@
 #' Functions that define session-wide archive and AOI settings that are used by all \code{getSpatialData} functions and check for the availability of used online services.
 #'
 #' @param dir_archive character, directory to the \code{getSpatialData} archive folder.
+#' @param create logical, whether to create directory, if not existing or not.
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
 #' @param type character, AOI object type, either "matrix", "sf" or "sp".
 #' @param color chracter, polygon filling color.
@@ -47,10 +48,11 @@
 #'
 #' @seealso getSentinel_query getLandsat_query
 #'
-set_archive <- function(dir_archive){
+set_archive <- function(dir_archive, create = T){
 
   if(!is.character(dir_archive)){out(paste0("Argument 'dir_archive' needs to be of type 'character'."), type = 3)}
-  if(!dir.exists(dir_archive)) out("The defined directory does not exist.", type=3)
+  if(!dir.exists(dir_archive)) if(isTRUE(create)) dir.create(dir_archive, recursive = T) else out("The defined directory does not exist.", type=3)
+  dir_archive <- path.expand(dir_archive)  
 
   dir_get <- paste0(dir_archive, "/get_data")
   dir_prep <- paste0(dir_archive, "/prep_data")

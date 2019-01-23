@@ -55,7 +55,7 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
 
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)){dir_out <- paste0(getOption("gSD.archive_get"), "/MODIS/")}
+    if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/MODIS/") else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
   if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)

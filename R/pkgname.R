@@ -7,6 +7,7 @@
 #' \strong{Sentinel}
 #' \itemize{
 #'   \item \link{getSentinel_query} querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found records (rows) and their attributes (columns).
+#'   \item \link{getSentinel_restore} requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument \code{check_avail} of \link{getSentinel_query}).
 #'   \item \link{getSentinel_preview} uses the output of \code{getSentinel_query} to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 #'   \item \link{getSentinel_data} uses the output of \code{getSentinel_query} to download Sentinel data.
 #' }

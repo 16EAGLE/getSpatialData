@@ -141,7 +141,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   if(source == "espa"){
 
     ## files
-    dir.ds <- sapply(prod.id, function(x, d = dir_out, l = level) paste0(d, "/", x, "_", toupper(l)), USE.NAMES = F)
+    dir.ds <- sapply(prod.id, function(x, d = dir_out, l = level) paste0(d, "/", x, "_LEVEL_", toupper(l)), USE.NAMES = F)
     catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
     file.ds <- sapply(dir.ds, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
 

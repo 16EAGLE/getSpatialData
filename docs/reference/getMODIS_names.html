@@ -171,7 +171,8 @@
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>## Load packages</span>
+    <pre class="examples"><span class='co'># NOT RUN {</span>
+<span class='co'>## Load packages</span>
 <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>getSpatialData</span>)
 <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>sf</span>)
 
@@ -179,7 +180,8 @@
 <span class='fu'><a href='gSD_settings.html'>set_aoi</a></span>(<span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>1</span>]])
 <span class='no'>time_range</span> <span class='kw'>&lt;-</span>  <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"2017-08-01"</span>, <span class='st'>"2017-08-30"</span>)
 
-<span class='co'>## Login to USGS ERS</span></div><span class='co'># NOT RUN {</span>
+<span class='co'>## Login to USGS ERS</span>
+<span class='co'># }</span><span class='co'># NOT RUN {</span>
 <span class='fu'><a href='gSD_login.html'>login_USGS</a></span>(<span class='st'>"username"</span>)
 
 <span class='co'>## set archive directory</span>
@@ -197,8 +199,9 @@
 
 <span class='co'>## download records 1 and 2</span>
 <span class='no'>files</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getMODIS_data.html'>getMODIS_data</a></span>(<span class='no'>query</span>[<span class='fl'>1</span>:<span class='fl'>2</span>,])
-<span class='co'># }</span><div class='input'>
-</div></pre>
+<span class='co'># }</span># NOT RUN {
+# }
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

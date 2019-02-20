@@ -192,7 +192,8 @@
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>## Load packages</span>
+    <pre class="examples"><span class='co'># NOT RUN {</span>
+<span class='co'>## Load packages</span>
 <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>getSpatialData</span>)
 <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>raster</span>)
 <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>sf</span>)
@@ -214,7 +215,8 @@
 <span class='no'>time_range</span> <span class='kw'>&lt;-</span>  <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"2017-08-01"</span>, <span class='st'>"2017-08-30"</span>)
 <span class='no'>platform</span> <span class='kw'>&lt;-</span> <span class='st'>"Sentinel-2"</span>
 
-<span class='co'>## set login credentials and an archive directory</span></div><span class='co'># NOT RUN {</span>
+<span class='co'>## set login credentials and an archive directory</span>
+<span class='co'># }</span><span class='co'># NOT RUN {</span>
 <span class='fu'><a href='gSD_login.html'>login_CopHub</a></span>(<span class='kw'>username</span> <span class='kw'>=</span> <span class='st'>"username"</span>) <span class='co'>#asks for password or define 'password'</span>
 <span class='fu'><a href='gSD_settings.html'>set_archive</a></span>(<span class='st'>"/path/to/archive/"</span>)
 
@@ -240,8 +242,9 @@
 
 <span class='co'>## Load them to R</span>
 <span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/raster/topics/stack'>stack</a></span>(<span class='no'>datasets_prep</span><span class='kw'>[[</span><span class='fl'>1</span>]]<span class='kw'>[[</span><span class='fl'>1</span>]][<span class='fl'>1</span>]) <span class='co'>#first dataset, first tile, 10m resoultion</span>
-<span class='co'># }</span><div class='input'>
-</div></pre>
+<span class='co'># }</span># NOT RUN {
+# }
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

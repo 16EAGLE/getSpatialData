@@ -14,7 +14,11 @@ navbar:
     - icon: fa-home fa-lg
       href: index.html
     - text: "Get Started"
-      href: index.html#get-started
+      menu:
+      -  text: Sentinel query, preview and download
+         href: index.html#sentinel-query-preview-and-download
+      -  text: Parallelized download of MODIS data (user example)
+         href: index.html#parallelized-download-of-modis-data-user-example
     - text: "Functions"
       href: reference/index.html
     - text: "Changelog"

@@ -42,8 +42,20 @@
      
   </a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Get Started
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
 <li>
-  <a href="index.html#get-started">Get Started</a>
+      <a href="index.html#sentinel-query-preview-and-download">Sentinel query, preview and download</a>
+    </li>
+    <li>
+      <a href="index.html#parallelized-download-of-modis-data-user-example">Parallelized download of MODIS data (user example)</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="reference/index.html">Functions</a>
@@ -254,6 +266,9 @@
 <div id="get-started" class="section level2">
 <h2 class="hasAnchor">
 <a href="#get-started" class="anchor"></a>Get Started</h2>
+<div id="sentinel-query-preview-and-download" class="section level4">
+<h4 class="hasAnchor">
+<a href="#sentinel-query-preview-and-download" class="anchor"></a>Sentinel query, preview and download</h4>
 <p>The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Load packages
 <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(getSpatialData)
@@ -280,16 +295,13 @@ aoi &lt;-<span class="st"> </span>aoi_data[[<span class="dv">1</span>]] <span cl
 <p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_create_aoi.png"></p>
 <p align="center"><sub>Figure 2: Screenshot of the RStudio Viewer, displaying the mapedit editor allowing the user to draw a session AOI</sub></p>
 <p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## After defining a session AOI, define time range and platform
-time_range &lt;-<span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"2017-08-01"</span>, <span class="st">"2017-08-30"</span>)
-platform &lt;-<span class="st"> "Sentinel-2"</span> <span class="co">#or "Sentinel-1" or "Sentinel-3"</span>
-
-## set login credentials and archive directory
-<span class="kw"><a href="reference/gSD_login.html">login_CopHub</a></span>(<span class="dt">username =</span> <span class="st">"username"</span>) <span class="co">#asks for password or define 'password'</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## set login credentials and archive directory
+<span class="kw"><a href="reference/gSD_login.html">login_CopHub</a></span>(<span class="dt">username =</span> <span class="st">"your_username"</span>) <span class="co">#asks you for password</span>
 <span class="kw"><a href="reference/gSD_settings.html">set_archive</a></span>(<span class="st">"/path/to/archive/"</span>)
 
 ## Use getSentinel_query to search for data (using the session AOI)
-records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSentinel_query.html">getSentinel_query</a></span>(<span class="dt">time_range =</span> time_range, <span class="dt">platform =</span> platform)
+records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSentinel_query.html">getSentinel_query</a></span>(<span class="dt">time_range =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"2017-08-01"</span>, <span class="st">"2017-08-30"</span>), 
+                             <span class="dt">platform =</span> <span class="st">"Sentinel-2"</span>) <span class="co">#or "Sentinel-1" or "Sentinel-3"</span>
 
 ## Filter the records
 <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/colnames">colnames</a></span>(records) <span class="co">#see all available filter attributes</span>
@@ -335,6 +347,58 @@ datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span cl
 
 ## Load them directly into R
 r &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/stack">stack</a></span>(datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>])</code></pre></div>
+</div>
+<div id="parallelized-download-of-modis-data-user-example" class="section level4">
+<h4 class="hasAnchor">
+<a href="#parallelized-download-of-modis-data-user-example" class="anchor"></a>Parallelized download of MODIS data (user example)</h4>
+<p>The following example shows how to query and then download MODIS imagery in parallel. This increases the overall download speed if enough bandwith is available to the client. The example has been contributed by <a href="https://twitter.com/CarinaKuebert">Carina Kuebert</a>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Load packages for working on multi-core
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(parallel)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(doParallel)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(foreach)
+
+## getSpatialData
+<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(getSpatialData)
+
+
+#### specify which files to download ####
+<span class="co"># specify outdir (where files will be downloaded to)</span>
+outdir &lt;-<span class="st"> "/path/to/download/directory/"</span>
+
+<span class="co"># load example aoi</span>
+<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/data">data</a></span>(<span class="st">"aoi_data"</span>)
+<span class="kw"><a href="reference/gSD_settings.html">set_aoi</a></span>(aoi_data[[<span class="dv">1</span>]]) 
+<span class="kw"><a href="reference/gSD_settings.html">view_aoi</a></span>()
+
+<span class="co"># check, if service is available</span>
+<span class="kw"><a href="reference/gSD_settings.html">services_avail</a></span>()
+
+## USGS login
+<span class="kw"><a href="reference/gSD_login.html">login_USGS</a></span>(<span class="dt">username =</span> <span class="st">"your_username"</span>)
+
+<span class="co"># get available products </span>
+product_names &lt;-<span class="st"> </span><span class="kw"><a href="reference/getMODIS_names.html">getMODIS_names</a></span>()
+
+<span class="co"># query for records for your AOI, time range and product</span>
+time_range &lt;-<span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"2019-01-01"</span>, <span class="st">"2019-01-10"</span>)
+records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getMODIS_query.html">getMODIS_query</a></span>(<span class="dt">time_range =</span> time_range, <span class="dt">name =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/grep">grep</a></span>(<span class="st">"MOD09GA"</span>, product_names, <span class="dt">value =</span> T))
+
+
+#### initiate cluster for paralell download ####
+no_cores &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/parallel/topics/detectCores">detectCores</a></span>() <span class="op">-</span><span class="st"> </span><span class="dv">1</span>
+cl &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/parallel/topics/makeCluster">makeCluster</a></span>(no_cores, <span class="dt">type =</span> <span class="st">"PSOCK"</span>)
+<span class="kw"><a href="https://www.rdocumentation.org/packages/doParallel/topics/registerDoParallel">registerDoParallel</a></span>(cl)
+
+files &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/foreach/topics/foreach">foreach</a></span>(<span class="dt">i =</span> <span class="dv">1</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/ncell">nrow</a></span>(records[]), 
+                 <span class="dt">.combine=</span>c, 
+                 <span class="dt">.packages=</span><span class="st">'getSpatialData'</span>) <span class="op">%dopar%</span><span class="st"> </span>{
+                   <span class="kw"><a href="reference/getMODIS_data.html">getMODIS_data</a></span>(records[i, ], <span class="dt">dir_out =</span> outdir)
+                 }
+
+
+#### stop cluster ####
+<span class="kw"><a href="https://www.rdocumentation.org/packages/parallel/topics/makeCluster">stopCluster</a></span>(cl)</code></pre></div>
+</div>
 </div>
 <div id="products" class="section level2">
 <h2 class="hasAnchor">

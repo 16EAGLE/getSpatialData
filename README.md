@@ -90,6 +90,8 @@ The following universal semantics on computational steps are used by `getSpatial
 
 ## Get Started
 
+#### Sentinel query, preview and download
+
 The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.
 
 ```R
@@ -128,16 +130,13 @@ set_aoi() #call set_aoi() without argument, which opens a mapedit editor:
 
 
 ```R
-## After defining a session AOI, define time range and platform
-time_range <-  c("2017-08-01", "2017-08-30")
-platform <- "Sentinel-2" #or "Sentinel-1" or "Sentinel-3"
-
 ## set login credentials and archive directory
-login_CopHub(username = "username") #asks for password or define 'password'
+login_CopHub(username = "your_username") #asks you for password
 set_archive("/path/to/archive/")
 
 ## Use getSentinel_query to search for data (using the session AOI)
-records <- getSentinel_query(time_range = time_range, platform = platform)
+records <- getSentinel_query(time_range = c("2017-08-01", "2017-08-30"), 
+                             platform = "Sentinel-2") #or "Sentinel-1" or "Sentinel-3"
 
 ## Filter the records
 colnames(records) #see all available filter attributes
@@ -205,6 +204,60 @@ datasets_prep[[1]][[1]][3] #first dataset, first tile, 60 m resolution
 r <- stack(datasets_prep[[1]][[1]][1])
 
 ```
+
+#### Parallelized download of MODIS data (user example)
+
+The following example shows how to query and then download MODIS imagery in parallel. This increases the overall download speed if enough bandwith is available to the client. The example has been contributed by <a href="https://twitter.com/CarinaKuebert">Carina Kuebert</a>.
+
+```R
+## Load packages for working on multi-core
+library(parallel)
+library(doParallel)
+library(foreach)
+
+## getSpatialData
+library(getSpatialData)
+
+
+#### specify which files to download ####
+# specify outdir (where files will be downloaded to)
+outdir <- "/path/to/download/directory/"
+
+# load example aoi
+data("aoi_data")
+set_aoi(aoi_data[[1]]) 
+view_aoi()
+
+# check, if service is available
+services_avail()
+
+## USGS login
+login_USGS(username = "your_username")
+
+# get available products 
+product_names <- getMODIS_names()
+
+# query for records for your AOI, time range and product
+time_range <-  c("2019-01-01", "2019-01-10")
+records <- getMODIS_query(time_range = time_range, name = grep("MOD09GA", product_names, value = T))
+
+
+#### initiate cluster for paralell download ####
+no_cores <- detectCores() - 1
+cl <- makeCluster(no_cores, type = "PSOCK")
+registerDoParallel(cl)
+
+files <- foreach(i = 1:nrow(records[]), 
+                 .combine=c, 
+                 .packages='getSpatialData') %dopar% {
+                   getMODIS_data(records[i, ], dir_out = outdir)
+                 }
+
+
+#### stop cluster ####
+stopCluster(cl)
+```
+
 
 ## Products
 

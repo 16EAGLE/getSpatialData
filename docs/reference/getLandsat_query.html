@@ -159,7 +159,7 @@
     </div>
 
     <pre class="usage"><span class='fu'>getLandsat_query</span>(<span class='no'>time_range</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"all"</span>, <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+  <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -183,6 +183,14 @@
     <tr>
       <th>password</th>
       <td><p>character, the password to the specified user account. If <code>NULL</code> (default) and no seesion-wide password is defined, it is asked interactively ((see <a href='gSD_login.html'>login_USGS</a> for details on registration).</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>one of the following filters by which the collected records should be filtered before return:</p><ul>
+<li><p><code>level_filter</code>, character, filtering records by processing level. Either "all" for all levels (default) or a vector of levels</p></li>
+<li><p><code>maxCloudScene</code>, numeric, filtering records by maximum scene cloud coverage (in percent). Default is 100.</p></li>
+<li><p><code>maxCloudLand</code>, numeric, filtering records by maximum land cloud coverage (in percent). Default is 100.</p></li>
+</ul></td>
     </tr>
     <tr>
       <th>verbose</th>

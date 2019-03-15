@@ -5,7 +5,7 @@
 \title{Query Landsat data}
 \usage{
 getLandsat_query(time_range, name = "all", aoi = NULL,
-  username = NULL, password = NULL, verbose = TRUE)
+  username = NULL, password = NULL, ..., verbose = TRUE)
 }
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
@@ -17,6 +17,13 @@ getLandsat_query(time_range, name = "all", aoi = NULL,
 \item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
 
 \item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
+
+\item{...}{one of the following filters by which the collected records should be filtered before return:
+\itemize{
+  \item \code{level_filter}, character, filtering records by processing level. Either "all" for all levels (default) or a vector of levels
+  \item \code{maxCloudScene}, numeric, filtering records by maximum scene cloud coverage (in percent). Default is 100.
+  \item \code{maxCloudLand}, numeric, filtering records by maximum land cloud coverage (in percent). Default is 100.
+}}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }

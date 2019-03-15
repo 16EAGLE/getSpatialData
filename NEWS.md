@@ -1,5 +1,5 @@
 ## getSpatialData 0.0.4 (under development)
-Introduction of function for data preparation
+Introduction of functions for data preparation, feature enhancements
 
 <br>
 **New functions:**
@@ -13,6 +13,8 @@ Introduction of function for data preparation
 * `getSentinel_query()`: argument "check_avail" added to check on-demand availability of Sentinel datasets or if they had been moved to the Copernicus Long-Term Archive (LTA). Deactivated by default since check increases query request time.
 * `getSentinel_data()`: checks for on-demand availability of requested datasets first before attempting download.
 * `set_archive()`: added argument `create` to control whether archive directory should be created or not.
+* `getLandsat_query()`: added quick filters for filtering records by level or cloud cover (@SteveMHill)
+* `getLandsat_data()`: ESPA orde placement of records with diverging products level in one single call now possible (@SteveMHill)
 
 <br>
 **Bug fixes:**
@@ -20,9 +22,11 @@ Introduction of function for data preparation
 * `getLandsat_data()`: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument
 * `getSentinel_query()`: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows. See issue #6.
 * all `_data` functions and `set_archive()` now expand paths shortend with swung dashed to avoid problems with tools::md5sum
+* `getLandsat_data()`: ESPA orders are not double-placed anymore (@SteveMHill) (issue #20)
 
 <br>
 **Contributions:**
+* Code contributions by Steven Hill (@SteveMHill)
 * Bug indication by Benjmain Leutner
 
 <br>

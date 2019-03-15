@@ -16,6 +16,18 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
     } else{message(paste0(sign,input))}}}}
 }
 
+#' first character to upper
+#' 
+#' @param x character
+#' 
+#' #' @keywords internal
+#' @noRd
+
+firstup <- function(x){
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  return(x)
+}
+
 #' Simplifies check of variables being FALSE
 #'
 #' @param evaluate variable or expression to be evaluated
@@ -87,7 +99,7 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
   post.str <-"x <- POST(url"
   if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
   post.str <- paste0(post.str, ", body = body)")
-  eval(parse(text = post.str))
+  #eval(parse(text = post.str))
 
   if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
   stop_for_status(x, "connect to server.")
@@ -395,10 +407,13 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
   out(paste0("Collecting from ", toString(length(coll.uni)), " collection(s) [", paste0(coll.uni, collapse = ", "), "], resulting in ", toString(length(coll.uni)), " order(s)..."))
   req.coll <- lapply(coll.uni, function(x, c = coll, rd = req.data) rd[which(c == x)])
 
+  reqlevel <- sapply(strsplit(level, '[, ]+'), function(x) toString(paste0('\"', x, '\"')))
+  reqlevel <- paste0(reqlevel, collapse=",")
+  
   ## build request
-  req.body <- lapply(req.coll, function(x, p = level, f = format){
+  req.body <- lapply(req.coll, function(x, p = reqlevel, f = format){
     i <- paste0(sapply(x, function(y) y[2], USE.NAMES = F), collapse = '", "')
-    paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": ["', p, '"]}, "format": "', f, '"}')
+    paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": [', p, ']}, "format": "', f, '"}')
   })
 
   ## order

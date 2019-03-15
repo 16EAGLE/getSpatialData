@@ -6,7 +6,13 @@
 #' @param name character, optional. Identifies the name of the product to be queried. If set to "all" (default), every available Landsat product is searched for results and included in the output. Use \link{getLandsat_names} to revcieve a vector with all available Landsat products from Earth Explorer, if you want to select a specific one.
 #' @param username character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).
-#'
+#' @param ... one of the following filters by which the collected records should be filtered before return:
+#' \itemize{
+#'   \item \code{level_filter}, character, filtering records by processing level. Either "all" for all levels (default) or a vector of levels
+#'   \item \code{maxCloudScene}, numeric, filtering records by maximum scene cloud coverage (in percent). Default is 100.
+#'   \item \code{maxCloudLand}, numeric, filtering records by maximum land cloud coverage (in percent). Default is 100.
+#' }
+#' 
 #' @return A data frame of found records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getLandsat functions for previewing or downloading.
 #'
 #' @author Jakob Schwalb-Willmann
@@ -58,7 +64,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_preview} \link{getLandsat_data}
 #' @export
 
-getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = NULL, password = NULL, verbose = TRUE){
+getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = NULL, password = NULL, ..., verbose = TRUE){
 
   ## Global USGS login
   if(is.null(username)){
@@ -90,11 +96,18 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(length(time_range) != 2) out("Argument 'time_range' must contain two elements (start and stop time).", type = 3)
   if(length(name) != 1) out("Argument 'name' must contain a single element of type character.", type = 3)
-
+  
   if(name == "all") name <- getLandsat_names()
   meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
                    "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
-
+  
+  ## check ... filters
+  df.filters <- list(...)
+  if(is.null(df.filters$level_filter)) df.filters$level_filter <- "all"
+  if(is.null(df.filters$maxCloudScene)) df.filters$maxCloudScene <- 100
+  if(is.null(df.filters$maxCloudLand)) df.filters$maxCloudLand <- 100
+  
+  ## query
   return.df <- .EE_query(aoi, time_range, name, api.key, meta.fields)
   if(!is.null(return.df)){
 
@@ -103,8 +116,8 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     avail.products <- as.character(sapply(return.df$displayId, function(x){
       tryCatch({
         t <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = username, password = password)
-        if(names(content(t)) == "not_implemented") return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
-      }, error = function(e) return("l1"))
+        if(all(names(content(t)) == "not_implemented")) return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
+        }, error = function(e) return("l1"))
     }, USE.NAMES = F))
     return.df <- cbind(return.df, avail.products, stringsAsFactors = FALSE)
     colnames(return.df)[ncol(return.df)] <- "levels_available"
@@ -115,7 +128,19 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
       z <- strsplit(y, " ")[[1]]
       z[length(z)]
     }, USE.NAMES = F))
-
+    
+    # only return levels defined in level_filter
+    if(all(df.filters$level_filter != "all")){
+      lfilter <- sapply(strsplit(df.filters$level_filter, ','), function(x) paste0("'", x, "'"))
+      lcol <- paste(lfilter, collapse = ".*" )
+      ind <- grep(lcol, return.df$levels_available)
+      return.df <- return.df[ind,]
+    }
+    
+    # cloud cover filter
+    if(df.filters$maxCloudLand < 100 ){return.df <- return.df[return.df$LandCloudCover <= df.filters$maxCloudLand,]}
+    if(df.filters$maxCloudScene < 100 ){return.df <- return.df[return.df$SceneCloudCover <= df.filters$maxCloudScene,]}
+    
     return(return.df)
   } else { out("No results could be obtained for this request.", msg = T) }
 }

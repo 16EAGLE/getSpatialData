@@ -92,7 +92,9 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   if(is.null(espa_order)){
     if(missing(records)) out("Argument 'records' must be defined (except if an ESPA order is given).", type = 3)
-    for(x in records$levels_available) if(length(grep(level, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one record in 'records'. Check column 'levels_available'."), type = 3)
+    levels <- sapply(strsplit(level, ','), function(x) paste0("'", x, "'"))
+    levels <- paste(level, collapse = ".*" )
+    for(x in records$levels_available) if(length(grep(levels, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one record in 'records'. Check column 'levels_available'."), type = 3)
   }
 
 
@@ -100,13 +102,13 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   if(!is.null(espa_order)){ source <- "espa"
   } else{
     if(source == "auto"){
-      if(level == "l1"){
+      if(all(level == "l1")){
         if(all(sapply(records$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
           source <- "aws"
         } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'records' contains records that do not originate from Landsat-8.", type = 3)
       } else source <- "espa"
     } else{
-      if(level == "l1" & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
+      if(any(level == "l1") & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
     }
   }
 
@@ -122,7 +124,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
       names(y) <- NULL
       return(y)
     }, USE.NAMES = F))
-    if(length(level) > 1) out(paste0("The provided order IDs refer to orders of different processing levels ['", paste0(level, collapse = "', '"), "']. Please use order IDs of identical levels per call."), type = 3)
+    #if(length(level) > 1) out(paste0("The provided order IDs refer to orders of different processing levels ['", paste0(level, collapse = "', '"), "']. Please use order IDs of identical levels per call."), type = 3)
   } else{
     prod.id <- records$displayId
   }
@@ -130,7 +132,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
-    if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/LANDSAT/", toupper(level), "/") else dir_out <- path.expand(dir_out)
+    if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/LANDSAT/", toupper(paste0(level,collapse = "_"))) else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
   if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)
@@ -141,7 +143,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   if(source == "espa"){
 
     ## files
-    dir.ds <- sapply(prod.id, function(x, d = dir_out, l = level) paste0(d, "/", x, "_LEVEL_", toupper(l)), USE.NAMES = F)
+    dir.ds <- sapply(prod.id, function(x, d = dir_out, l = paste0(firstup(level), collapse = "_")) paste0(d, "/", x, "_LEVEL_", l), USE.NAMES = F)
     catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
     file.ds <- sapply(dir.ds, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
 

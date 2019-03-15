@@ -11,7 +11,7 @@ getLandsat_data(records, level = "sr", source = "auto",
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.}
 
-\item{level}{character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.}
+\item{level}{character, one or multiple product levels to be requested. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.}
 
 \item{source}{character, either:
 \itemize{

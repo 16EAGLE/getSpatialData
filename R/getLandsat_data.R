@@ -5,7 +5,7 @@
 #' @inheritParams getLandsat_query
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
-#' @param level character, the requested product level. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.
+#' @param level character, one or multiple product levels to be requested. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.
 #' @param source character, either:
 #' \itemize{
 #'    \item "auto" for automatic selection of data source depending on \code{level}

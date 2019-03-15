@@ -170,5 +170,11 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
     if(isTRUE(check_avail)) records$online <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
   }
 
+  # convert expected numeric fields
+  fields.numeric <- names(records)[match(c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
+                                           "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage"),
+                                         names(records))]
+  records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+  
   if(is.TRUE(give.return)) return(records)
 }

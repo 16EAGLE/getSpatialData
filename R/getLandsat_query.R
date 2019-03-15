@@ -129,6 +129,11 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
       z[length(z)]
     }, USE.NAMES = F))
     
+    # convert expected numeric fields
+    fields.numeric <- names(return.df)[match(c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality"),
+                                             names(return.df))]
+    return.df[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(return.df[,x]))
+    
     # only return levels defined in level_filter
     if(all(df.filters$level_filter != "all")){
       lfilter <- sapply(strsplit(df.filters$level_filter, ','), function(x) paste0("'", x, "'"))

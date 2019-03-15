@@ -15,6 +15,7 @@ Introduction of functions for data preparation, feature enhancements
 * `set_archive()`: added argument `create` to control whether archive directory should be created or not.
 * `getLandsat_query()`: added quick filters for filtering records by level or cloud cover (@SteveMHill)
 * `getLandsat_data()`: ESPA orde placement of records with diverging products level in one single call now possible (@SteveMHill)
+* `_query()` functions: Fields known to be of type numeric (e.g. cloud cover percentages) are now converted into numeric
 
 <br>
 **Bug fixes:**

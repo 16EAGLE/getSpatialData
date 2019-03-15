@@ -30,11 +30,15 @@ Login to services supported by \code{getSpatialData} once for the running sessio
 Login credentials will be saved and made available for all \code{getSpatialData} functions during the whole session. They will be erased when quitting the session. Alternatively, login credentials can be set individually with each \code{get*} function call.
 }
 \examples{
+library(getSpatialData)
+
+\dontrun{
 ## Define user credentials for the Copernicus Open Access Hub
 login_CopHub(username = "my_user_name", password = "my_password")
 
 ## Define USGS user credentials
 login_USGS(username = "my_user_name", password = "my_password")
+}
 }
 \seealso{
 getSentinel_query getLandsat_query

@@ -27,7 +27,7 @@ Introduction of functions for data preparation, feature enhancements
 <br>
 **Contributions:**
 * Code contributions by Steven Hill (@SteveMHill)
-* Bug indication by Benjmain Leutner
+* Bug indication by Benjmain Leutner (@bleutner)
 
 <br>
 

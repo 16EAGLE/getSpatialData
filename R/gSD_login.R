@@ -21,11 +21,15 @@
 #' @export
 #' @name gSD_login
 #' @examples
+#' library(getSpatialData)
+#' 
+#' \dontrun{
 #' ## Define user credentials for the Copernicus Open Access Hub
 #' login_CopHub(username = "my_user_name", password = "my_password")
 #'
 #' ## Define USGS user credentials
 #' login_USGS(username = "my_user_name", password = "my_password")
+#' }
 
 #' @seealso getSentinel_query getLandsat_query
 #'

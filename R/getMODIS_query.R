@@ -83,13 +83,12 @@ getMODIS_query <- function(time_range, name = "all" , aoi = NULL, username = NUL
                    "Auto Quality Flag", "Auto Quality Flag Explanation", "Science Quality Flag",
                    "Science Quality Flag Expln","Missing Data Percentage")
 
-  return.df <- .EE_query(aoi, time_range, name, api.key, meta.fields)
+  records <- .EE_query(aoi, time_range, name, api.key, meta.fields)
   
   # convert expected numeric fields
-  fields.numeric <- names(return.df)[match(c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage"), 
-                                           names(return.df))]
-  return.df[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(return.df[,x]))
+  fields.numeric <- names(records)[sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
+  records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
   
-  if(!is.null(return.df)){ return(return.df)
+  if(!is.null(records)){ return(records)
   } else { out("No results could be obtained for this request.", msg = T) }
 }

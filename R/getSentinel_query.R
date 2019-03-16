@@ -171,9 +171,8 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
   }
 
   # convert expected numeric fields
-  fields.numeric <- names(records)[match(c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
-                                           "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage"),
-                                         names(records))]
+  fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
+                                           "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage")) x %in% y, USE.NAMES = F)]
   records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
   
   if(is.TRUE(give.return)) return(records)

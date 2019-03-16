@@ -108,44 +108,43 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
   if(is.null(df.filters$maxCloudLand)) df.filters$maxCloudLand <- 100
   
   ## query
-  return.df <- .EE_query(aoi, time_range, name, api.key, meta.fields)
-  if(!is.null(return.df)){
+  records <- .EE_query(aoi, time_range, name, api.key, meta.fields)
+  if(!is.null(records)){
 
     ## Connect to ESPA to revieve available products for (no use of entityId, displayId instead)
     out("Recieving available product levels from USGS-EROS ESPA...")
-    avail.products <- as.character(sapply(return.df$displayId, function(x){
+    avail.products <- as.character(sapply(records$displayId, function(x){
       tryCatch({
         t <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = username, password = password)
         if(all(names(content(t)) == "not_implemented")) return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
         }, error = function(e) return("l1"))
     }, USE.NAMES = F))
-    return.df <- cbind(return.df, avail.products, stringsAsFactors = FALSE)
-    colnames(return.df)[ncol(return.df)] <- "levels_available"
+    records <- cbind(records, avail.products, stringsAsFactors = FALSE)
+    colnames(records)[ncol(records)] <- "levels_available"
 
     ## Correct WRS fields
-    wrs.sub <- grep("WRS", colnames(return.df))
-    return.df[,wrs.sub] <- apply(return.df[,wrs.sub], MARGIN = 2, function(x) sapply(x, function(y){
+    wrs.sub <- grep("WRS", colnames(records))
+    records[,wrs.sub] <- apply(records[,wrs.sub], MARGIN = 2, function(x) sapply(x, function(y){
       z <- strsplit(y, " ")[[1]]
       z[length(z)]
     }, USE.NAMES = F))
     
     # convert expected numeric fields
-    fields.numeric <- names(return.df)[match(c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality"),
-                                             names(return.df))]
-    return.df[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(return.df[,x]))
+    fields.numeric <- names(records)[sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
+    records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
     # only return levels defined in level_filter
     if(all(df.filters$level_filter != "all")){
       lfilter <- sapply(strsplit(df.filters$level_filter, ','), function(x) paste0("'", x, "'"))
       lcol <- paste(lfilter, collapse = ".*" )
-      ind <- grep(lcol, return.df$levels_available)
-      return.df <- return.df[ind,]
+      ind <- grep(lcol, records$levels_available)
+      records <- records[ind,]
     }
     
     # cloud cover filter
-    if(df.filters$maxCloudLand < 100 ){return.df <- return.df[return.df$LandCloudCover <= df.filters$maxCloudLand,]}
-    if(df.filters$maxCloudScene < 100 ){return.df <- return.df[return.df$SceneCloudCover <= df.filters$maxCloudScene,]}
+    if(df.filters$maxCloudLand < 100 ){records <- records[records$LandCloudCover <= df.filters$maxCloudLand,]}
+    if(df.filters$maxCloudScene < 100 ){records <- records[records$SceneCloudCover <= df.filters$maxCloudScene,]}
     
-    return(return.df)
+    return(records)
   } else { out("No results could be obtained for this request.", msg = T) }
 }

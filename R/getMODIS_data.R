@@ -44,6 +44,7 @@
 #' }
 #'
 #' @importFrom getPass getPass
+#' @importFrom httr http_error
 #'
 #' @seealso \link{getMODIS_names} \link{getMODIS_query} \link{getMODIS_preview}
 #' @export
@@ -68,12 +69,31 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
     colnames(y) <- names(x)
     fn <- gsub("Entity ID: ", "", strsplit(y$summary, ", ")[[1]][1]) #positiona
     ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
+    
     paste0(root, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
            "/", substr(ydoy, 5, nchar(ydoy)), "/", fn)
+    
   })
 
+  # change URLs if erroring
+  url.files <- sapply(url.files, function(x){
+    if(http_error(x)){
+      
+      fn.names <- gSD.get(paste0(paste0(head(strsplit(x, "/")[[1]], n = -1), collapse = "/"), ".csv"))
+      fn.names <- sapply(gsub("\r", "", strsplit(content(fn.names), "\n")[[1]][-1]), function(x) strsplit(x, ",")[[1]][1], USE.NAMES = F)
+      
+      # assign correct fn
+      fn <- grep(paste0(strsplit(tail(strsplit(x, "/")[[1]], n=1), "[.]")[[1]][1:4], collapse = "."), fn.names, value = T)
+      
+      # redefine URL and file
+      return(paste0(paste0(head(strsplit(x, "/")[[1]], n=-1), collapse = "/"), "/", fn))
+    } else return(x)
+  })
+  
+  
   dir.ds <- sapply(url.files, function(x, d = dir_out) paste0(d, "/", gsub(".hdf", "", tail(strsplit(x, "/")[[1]], n=1)[1])), USE.NAMES = F)
   catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
+  
   file.ds <- unlist(mapply(url = url.files, dir = dir.ds, FUN = function(url, dir){
     file <- paste0(dir, "/", tail(strsplit(url, "/")[[1]], n=1))
     gSD.download(name = tail(strsplit(url, "/")[[1]], n=1), url.file = url, file = file)

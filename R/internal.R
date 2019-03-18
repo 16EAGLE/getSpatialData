@@ -300,6 +300,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
 #' preview EE record
 #'
 #' @param record record
+#' @param preview_crs preview_crs
 #' @param on_map on_map
 #' @param show_aoi show_aoi
 #' @param verbose verbose
@@ -307,12 +308,12 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
 #' @importFrom getPass getPass
 #' @importFrom httr GET write_disk authenticate
 #' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
-#' @importFrom sf st_as_sfc st_crs as_Spatial
+#' @importFrom sf st_as_sfc st_crs as_Spatial st_transform st_coordinates
 #' @importFrom mapview viewRGB addFeatures
 #'
 #' @keywords internal
 #' @noRd
-.EE_preview <- function(record, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
+.EE_preview <- function(record, preview_crs = NULL, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Intercept false inputs and get inputs
@@ -334,13 +335,13 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
     if(is.TRUE(on_map)){
 
       ## create footprint
-      footprint <- st_as_sfc(list(record$spatialFootprint))
-      st_crs(footprint) <- 4326
-      footprint <- as_Spatial(footprint)
-
-      ## create preview
-      crs(preview) <- crs(footprint)
-      extent(preview) <- extent(footprint)
+      footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
+      if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
+      
+      crs(preview) <- crs(as_Spatial(footprint))
+      footprint <- st_coordinates(footprint)
+      
+      extent(preview) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
       #preview <- aggregate(preview, 2) # make it faster
 
       ## create map

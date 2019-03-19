@@ -133,6 +133,6 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username
   } else{
 
     ## create simple RGB plot
-    plotRGB(preview)
+    plotRGB(r.prev)
   }
 }

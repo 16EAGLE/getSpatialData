@@ -343,7 +343,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
       extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
       
       ## create map
-      map <- suppressWarnings(viewRGB(preview, r=1, g=2, b=3))
+      map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
 
       if(is.TRUE(show_aoi)){
         if(is.FALSE(getOption("gSD.aoi_set"))){
@@ -358,7 +358,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
     } else{
 
       ## create simple RGB plot
-      plotRGB(preview)
+      plotRGB(r.prev)
     }
   }
 }

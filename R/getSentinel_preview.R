@@ -67,7 +67,7 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr GET write_disk authenticate
-#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
+#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue crop xyFromCell values
 #' @importFrom sf st_as_sfc st_crs as_Spatial
 #' @importFrom mapview viewRGB addFeatures
 #'
@@ -99,22 +99,26 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username
   ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
   gSD.get(url.icon, cred[1], cred[2], dir.file = file_dir)
-  preview <- stack(file_dir)
-  #NAvalue(preview) <- 0
-
+  r.prev <- stack(file_dir)
+  #r.prev <- trim(r.prev, values = 0)
+  
+  v.prev <- values(r.prev)
+  rm.prev <- apply((v.prev == 0), MARGIN = 1, function(x) all(x))
+  cc.keep <- xyFromCell(r.prev, which(rm.prev == F))
+  
+  r.prev <- crop(r.prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
+  
   if(is.TRUE(on_map)){
 
     ## create footprint
-    footprint <- st_as_sfc(list(record$footprint))
-    st_crs(footprint) <- 4326
-    footprint <- as_Spatial(footprint)
-
-    ## create preview
-    crs(preview) <- crs(footprint)
-    extent(preview) <- extent(footprint)
-
+    footprint <- st_as_sfc(list(record$footprint), crs = 4326)
+    crs(r.prev) <- crs(as_Spatial(footprint))
+    footprint <- st_coordinates(footprint)
+    
+    extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
+    
     ## create map
-    map <- viewRGB(preview, r=1, g=2, b=3)
+    map <- viewRGB(r.prev, r=1, g=2, b=3)
 
     if(is.TRUE(show_aoi)){
       if(is.FALSE(getOption("gSD.aoi_set"))){

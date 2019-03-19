@@ -329,8 +329,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
     ## Recieve preview
     file_dir <- paste0(tempfile(),".jpg")
     gSD.get(url.icon, dir.file = file_dir)
-    preview <- stack(file_dir)
-    #NAvalue(preview) <- 0
+    r.prev <- stack(file_dir)
 
     if(is.TRUE(on_map)){
 
@@ -338,12 +337,11 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
       footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
       if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
       
-      crs(preview) <- crs(as_Spatial(footprint))
+      crs(r.prev) <- crs(as_Spatial(footprint))
       footprint <- st_coordinates(footprint)
       
-      extent(preview) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
-      #preview <- aggregate(preview, 2) # make it faster
-
+      extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
+      
       ## create map
       map <- suppressWarnings(viewRGB(preview, r=1, g=2, b=3))
 

@@ -94,10 +94,18 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
   dir.ds <- sapply(url.files, function(x, d = dir_out) paste0(d, "/", gsub(".hdf", "", tail(strsplit(x, "/")[[1]], n=1)[1])), USE.NAMES = F)
   catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
   
-  file.ds <- unlist(mapply(url = url.files, dir = dir.ds, FUN = function(url, dir){
-    file <- paste0(dir, "/", tail(strsplit(url, "/")[[1]], n=1))
-    gSD.download(name = tail(strsplit(url, "/")[[1]], n=1), url.file = url, file = file)
-    return(file)
+  file.ds <- unlist(mapply(u = url.files, dir = dir.ds, i.item = 1:length(url.files), FUN = function(u, dir, i.item, n.item = length(url.files)){
+    
+    # create console index of current item
+    head.out <- paste0("[", i.item, "/", n.item, "] ")
+    f <- paste0(dir, "/", tail(strsplit(u, "/")[[1]], n=1))
+    
+    if(file.exists(f) & !isTRUE(force)){
+      out(paste0(head.out, "Skipping download of '", tail(strsplit(u, "/")[[1]], n=1), "', since '", f, "' already exists..."), msg = T)
+    } else{
+      gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f, head.out = head.out)
+    }
+    return(f)
   }, SIMPLIFY = F))
   names(file.ds) <- NULL
 

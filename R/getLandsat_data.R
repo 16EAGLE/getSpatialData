@@ -146,11 +146,19 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
     dir.ds <- sapply(prod.id, function(x, d = dir_out, l = paste0(firstup(level), collapse = "_")) paste0(d, "/", x, "_LEVEL_", l), USE.NAMES = F)
     catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
     file.ds <- sapply(dir.ds, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
-
+    
     if(!isTRUE(force)){
-      sub.avoid <- which(file.exists(file.ds) == T)
-      if(is.null(espa_order)) records <- records[!file.exists(file.ds),]
-      file.down <- file.ds[!file.exists(file.ds)]
+      items.exist <- file.exists(file.ds)
+      items.skip <- which(items.exist == T)
+      items.order <- which(items.exist == F)
+      
+      catch <- mapply(x = prod.id[items.skip], y = file.ds[items.skip], i.item = items.skip, function(x, y, i.item, n.item = length(items.exist)){
+        out(paste0("[", i.item, "/", n.item, "] Skipping download of '", x, "', since '", y, "' already exists..."), msg = T)
+      }, SIMPLIFY = F)
+      if(is.null(espa_order)) records <- records[items.order,]
+      file.down <- file.ds[items.order]
+    } else{
+      file.down <- file.ds
     }
 
     if(length(file.down) != 0){
@@ -159,7 +167,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
       } else{
         order.list <- espa_order
       }
-      .ESPA_download(order.list = order.list, username = username, password = password, file.down = file.down, dir_out = dir_out)
+      .ESPA_download(order.list = order.list, username = username, password = password, file.down = file.down, dir_out = dir_out, items.order = items.order, n.item = length(items.exist))
     }
   }
 
@@ -167,12 +175,12 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   ## AWS
   if(source == "aws"){
 
-    out("Checking availability of requested records on AWS...")
+    out("Accessing AWS download URLs of requested records...")
     file.gz <- tempfile(fileext = ".gz")
     aws.scenes <- gSD.get(getOption("gSD.api")$aws.l8.sl, dir.file = file.gz)
     aws.scenes <- readLines(file.gz) #much faster than read.csv
 
-    out("Recieving download AWS URLs of requested records...")
+    out("Collecting AWS download URLs of requested records...")
     url.index <- mapply(x = records$entityId, d = records$displayId, function(x, d, ds = aws.scenes){
       c.cat <- tail(strsplit(d, "_")[[1]], n=1)
       y <- grep(x, ds, value = T)
@@ -199,10 +207,22 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
     dir.ds <- sapply(url.index, function(x, d = dir_out, l = level) paste0(d, "/", tail(strsplit(x, "/")[[1]], n=2)[1], "_", toupper(l)), USE.NAMES = F)
     catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
-    file.ds <- mapply(url = url.files, dir = dir.ds, FUN = function(url, dir){
+    
+    file.ds <- mapply(url = url.files, dir = dir.ds, i.item = 1:length(url.files), FUN = function(url, dir, i.item, n.item = length(url.files)){
       files <- sapply(url, function(x, d = dir) paste0(d, "/", tail(strsplit(x, "/")[[1]], n=1)), USE.NAMES = F)
-      sub.make <- !file.exists(files)
-      mapply(u = url[sub.make], f = files[sub.make], FUN = function(u, f) gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f), SIMPLIFY = F)
+      
+      # Download files
+      mapply(u = url, f = files, FUN = function(u, f){
+        
+        # create console index of current item
+        head.out <- paste0("[", i.item, "/", n.item, "] ")
+        
+        if(file.exists(f) & !isTRUE(force)){
+          out(paste0(head.out, "Skipping download of '", tail(strsplit(u, "/")[[1]], n=1), "', since '", f, "' already exists..."), msg = T)
+        } else{
+          gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f, head.out = head.out)
+        }
+      }, SIMPLIFY = F)
       return(files)
     }, SIMPLIFY = F)
   }

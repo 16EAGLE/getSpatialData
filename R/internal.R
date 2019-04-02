@@ -115,9 +115,9 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.download <- function(name, url.file, file, url.checksum = NULL){
+gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = NULL){
 
-  out(paste0("Attempting to download '", name, "' to '", file, "'..."), msg = T)
+  out(paste0(if(!is.null(head.out)) head.out else "", "Attempting to download '", name, "' to '", file, "'..."), msg = T)
   file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
   gSD.get(url.file, dir.file = file.tmp, prog = T)
 
@@ -437,7 +437,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
 #' @keywords internal
 #' @noRd
 ## check order(s)
-.ESPA_download <- function(order.list, username, password, file.down, delay = 10, dir_out){
+.ESPA_download <- function(order.list, username, password, file.down, delay = 10, dir_out, items.order = NULL, n.item = NULL){
 
   remain.active = TRUE; ini = TRUE; show.status = TRUE
   while(remain.active){
@@ -483,12 +483,14 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL){
 
         items.get <- items.df[sub.download,]
         out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "'."), msg = T)
-        items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
-
-          y <- rbind.data.frame(x, stringsAsFactors = F)
-          colnames(y) <- names(x)
-          gSD.download(name = y$name, url.file = y$product_dload_url, url.checksum = y$cksum_download_url, file = y$file)
-        })
+        #items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
+        items.df$recieved[sub.download] <- mapply(name = items.get$name, uf = items.get$product_dload_url, uc = items.get$cksum_download_url,
+                                                  file = items.get$file, i.item = items.order, function(name, uf, uc, file, i.item){
+                                                    
+                                                    # create console index of current item                                                    
+                                                    head.out <- paste0("[", i.item, "/", n.item, "] ")
+                                                    gSD.download(name = name, url.file = uf, url.checksum = uc, file = y$file, head.out = head.out)
+                                                  })
         show.status <- TRUE
       } else{
         if(isTRUE(show.status)){

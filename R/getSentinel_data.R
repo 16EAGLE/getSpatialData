@@ -118,11 +118,15 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
     if(down.retry != max.retry) out("Reattempting failed downloads...", msg =T)
 
     for(i in which(down.status == F)){
+      
+      # create console index of current item
+      head.out <- paste0("[", toString(i), "/", toString(length(down.status)), "] ")
+      
       if(!file.exists(file.ds[i]) | force == T){
         if(file.exists(file.ds[i])) file.remove(file.ds[i]) #remove in case of force being TRUE
 
         file.tmp <- tempfile(tmpdir = dir_out, fileext = ".zip")
-        out(paste0("Downloading '", records$identifier[i], "' to '", file.ds[i], "'..."), msg = T)
+        out(paste0(head.out, "Attempting to download '", records$identifier[i], "' to '", file.ds[i], "'..."), msg = T)
         gSD.get(records$url[i], cred[1], cred[2], dir.file = file.tmp, prog = T) #file.ds[i]
 
         if(as.character(md5sum(file.tmp)) == tolower(md5[i])){ #file.ds[i]
@@ -134,7 +138,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
           file.remove(file.ds[i])
         }
       } else{
-        out(paste0("Skipping '", records$identifier[i], "', since '", file.ds[i], "' already exists..."), msg = T)
+        out(paste0(head.out, "Skipping download of '", records$identifier[i], "', since '", file.ds[i], "' already exists..."), msg = T)
         down.status[i] <- T
       }
     }

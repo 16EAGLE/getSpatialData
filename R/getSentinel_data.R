@@ -98,10 +98,10 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   cred <- .CopHub_select(hub, platform, username, password)
 
   ## check availability
-  if(is.null(records$online)) records$online <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
-  if(any(!records$online)){
-    out(paste0("Datasets '", paste0(records$identifier[!records$online], collapse = "', '"), "' are not available on-demand, since they have been archived."), type = if(all(!records$online)) 3 else 2 )
-    records <- records[records$online,]
+  if(is.null(records$available)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+  if(any(!records$available)){
+    out(paste0("Datasets '", paste0(records$identifier[!records$available], collapse = "', '"), "' are not available on-demand, since they have been archived."), type = if(all(!records$available)) 3 else 2 )
+    records <- records[records$available,]
   }
   
   ## assemble md5 checksum url

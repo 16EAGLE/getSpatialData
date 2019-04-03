@@ -94,8 +94,10 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
 
   ## Manage API access
   platform <- unique(records$platformname)
+  gnss <- unique(records$gnss)
   if(length(platform) > 1){out(paste0("Argument 'records' contains multiple platforms: ", paste0(platform,collapse = ", "), ". Please use only a single platform per call."), type = 3)}
-  cred <- .CopHub_select(hub, platform, username, password)
+  if(length(gnss) > 1) out("Some records are GNSS records, while others are not. Please do not join non-GNNS and GNNS records and call getSentinel_data separately for both.", type = 3)
+  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else platform, user = username, pw = password)
 
   ## check availability
   if(is.null(records$available)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
@@ -107,7 +109,8 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   ## assemble md5 checksum url
   url.md5 <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
   md5 <- sapply(url.md5, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
-  file.ds <- sapply(records$identifier, function(x) paste0(dir_out, "/", x, ".zip"), USE.NAMES = F) #download to file
+  #file.ds <- sapply(records$identifier, function(x) paste0(dir_out, "/", x, ".zip"), USE.NAMES = F) #download to file
+  file.ds <- sapply(records$filename, function(x) paste0(dir_out, "/", x), USE.NAMES = F) #download to file
 
   ## download not parallelized (2 downstreams max)
   down.status <- rep(FALSE, length(records$url))

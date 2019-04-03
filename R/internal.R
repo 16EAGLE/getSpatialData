@@ -135,6 +135,13 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = N
   return(TRUE)
 }
 
+#' check if url
+#'
+#' @param url a url
+#' @keywords internal
+#' @noRd
+is.url <- function(url) grepl("www.|http:|https:", url)
+
 #' get Copernicus Hub API url and credentials from user input
 #'
 #' @param x API keyword or URL
@@ -144,17 +151,33 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = N
 #' @keywords internal
 #' @noRd
 .CopHub_select <- function(x, p, user, pw){ #cophub_api
-  if(x == "auto"){
-    if(p == "Sentinel-1" | p == "Sentinel-2"){x <- "operational"
-    }else{x <- "pre-ops"}
+  if(is.url(x)){
+    url <- x
+  } else{
+    if(x == "auto"){
+      if(p == "Sentinel-1" | p == "Sentinel-2") x <- "dhus"
+      if(p == "Sentinel-3") x <- "s3"
+      if(p == "Sentinel-5" | p == "Sentinel-5 Precursor") x <- "s5p"
+      if(p == "GNSS") x <- "gnss"
+    }
+    if(x == "dhus"){url <- getOption("gSD.api")$dhus}
+    if(x == "s3"){
+      url <- getOption("gSD.api")$s3
+      user <- "s3guest"
+      pw <- "s3guest"
+    }
+    if(x == "s5p"){
+      url <- getOption("gSD.api")$s5p
+      user <- "s5pguest"
+      pw <- "s5pguest"
+    }
+    if(x == "gnss"){
+      url <- getOption("gSD.api")$gnss
+      user <- "gnssguest"
+      pw <- "gnssguest"
+    }
   }
-  if(x == "operational"){x <- getOption("gSD.api")$dhus}
-  if(x == "pre-ops"){
-    x <- getOption("gSD.api")$s3
-    user <- "s3guest"
-    pw <- "s3guest"
-  }
-  return(c(user, pw, x))
+  return(c(user, pw, url, x))
 }
 
 
@@ -552,6 +575,8 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = N
   op.gSD <- list(
     gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
                    s3 = 'https://scihub.copernicus.eu/s3/',
+                   s5p = 'https://s5phub.copernicus.eu/',
+                   gnss = 'https://scihub.copernicus.eu/gnss/',
                    espa = 'https://espa.cr.usgs.gov/api/v0/',
                    ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/',
                    aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',

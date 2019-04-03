@@ -14,6 +14,7 @@ Introduction of functions for data preparation, feature enhancements, bug fixes
 
 * `getSentinel_query()`: argument "check_avail" added to check on-demand availability of Sentinel datasets or if they had been moved to the Copernicus Long-Term Archive (LTA). Deactivated by default since check increases query request time.
 * `getSentinel_data()`: checks for on-demand availability of requested datasets first before attempting download.
+* `getSentinel_query()` and `getSentinel_data()`: added Sentinel-5 precursor and Sentinel GNSS on-board GPS data support
 * `set_archive()`: added argument `create` to control whether archive directory should be created or not.
 * `getLandsat_query()`: added quick filters for filtering records by level or cloud cover (contribution by @SteveMHill)
 * `getLandsat_data()`: ESPA order placement of records with diverging products level in one single call now possible (contribution by  @SteveMHill)

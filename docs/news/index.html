@@ -151,13 +151,13 @@
     <div id="getspatialdata-0-0-4-under-development" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-4-under-development" class="anchor"></a>getSpatialData 0.0.4 (under development)</h2>
-<p>Introduction of functions for data preparation, feature enhancements</p>
+<p>Introduction of functions for data preparation, feature enhancements, bug fixes</p>
 <p><br><strong>New functions:</strong></p>
 <ul>
 <li>
-<code>services_avail</code>: checks and returns the status of all online services used by getSpatialData. Can be used to check if a service is undergoing maintenance or is unavailable due to unknown reasons.</li>
+<code><a href="../reference/gSD_settings.html">services_avail()</a></code>: checks and returns the status of all online services used by getSpatialData. Can be used to check if a service is undergoing maintenance or is unavailable due to unknown reasons.</li>
 <li>
-<code>getSentinel_restore</code>: restore Sentinel datasets that have been archived to Copernocus LTA</li>
+<code><a href="../reference/getSentinel_restore.html">getSentinel_restore()</a></code>: restore Sentinel datasets that have been archived to Copernocus LTA</li>
 <li>
 <code><a href="../reference/prepSentinel.html">prepSentinel()</a></code>: automatically prepare Sentinel data to be ready-to-use</li>
 <li>
@@ -172,28 +172,43 @@
 <li>
 <code><a href="../reference/gSD_settings.html">set_archive()</a></code>: added argument <code>create</code> to control whether archive directory should be created or not.</li>
 <li>
-<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: added quick filters for filtering records by level or cloud cover (<a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: added quick filters for filtering records by level or cloud cover (contribution by <a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
 <li>
-<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA orde placement of records with diverging products level in one single call now possible (<a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA order placement of records with diverging products level in one single call now possible (contribution by <a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
 <li>
 <code>_query()</code> functions: Fields known to be of type numeric (e.g. cloud cover percentages) are now converted into numeric</li>
+<li>
+<code>_data()</code> functions: added number of downloaded item vs total number of downloads to console output</li>
 </ul>
-<p><br><strong>Bug fixes:</strong></p>
+<p><br><strong>Major bug fixes:</strong></p>
 <ul>
 <li>
 <code><a href="../reference/getMODIS_data.html">getMODIS_data()</a></code> now native, deprecated FTP LAADS DAAC services replaced by https requests</li>
 <li>
-<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument</li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: bug that caused the function to download only the first product of an order when using order IDs with espa_order as argument</li>
 <li>
-<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows. See issue #6.</li>
+<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows (issue #6)</li>
+<li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: bug in translating the AOI geometry into query, causing eastwards shifted query results (issue #17)</li>
 <li>all <code>_data</code> functions and <code><a href="../reference/gSD_settings.html">set_archive()</a></code> now expand paths shortend with swung dashed to avoid problems with tools::md5sum</li>
 <li>
-<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA orders are not double-placed anymore (<a href='https://github.com/SteveMHill'>@SteveMHill</a>) (issue #20)</li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: bug causing false file name subsetting (issue 19)</li>
+<li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA orders are not double-placed anymore (contribution by <a href='https://github.com/SteveMHill'>@SteveMHill</a>) (issue #20)</li>
+<li>
+<code><a href="../reference/getMODIS_data.html">getMODIS_data()</a></code>: bug preventing successfull downloads of some MODIS products due to outdated EE URLs which are now checked and, if necessary, replaced with recent ones (issue #22)</li>
+<li>
+<code><a href="../reference/getMODIS_preview.html">getMODIS_preview()</a></code>: bug causing previews to be stretched to the wrong extents (issue #23)</li>
+<li>
+<code><a href="../reference/getSentinel_preview.html">getSentinel_preview()</a></code>: bug causing previews to be stretched to the wrong extents</li>
+<li>
+<code><a href="../reference/getSentinel_data.html">getSentinel_data()</a></code>: bug causing Sentinel downloads to fail due to the selection of the wrong LTA availability column (issue #27)</li>
 </ul>
 <p><br><strong>Contributions:</strong></p>
 <ul>
 <li>Code contributions by Steven Hill (<a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
-<li>Bug indication by Benjmain Leutner (<a href='https://github.com/bleutner'>@bleutner</a>)</li>
+<li>Bug indication by <a href='https://github.com/bleutner'>@bleutner</a>, <a href='https://github.com/vanto1994'>@vanto1994</a>, <a href='https://github.com/mtreg'>@mtreg</a>, <a href='https://github.com/MatthiasSiewert'>@MatthiasSiewert</a>, <a href='https://github.com/RemoteSensingR'>@RemoteSensingR</a></li>
+<li>Feature ideas by <a href='https://github.com/kadyb'>@kadyb</a>, <a href='https://github.com/ptaconet'>@ptaconet</a></li>
 </ul>
 <p><br></p>
 <hr>

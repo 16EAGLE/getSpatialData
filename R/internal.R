@@ -489,7 +489,7 @@ gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = N
                                                     
                                                     # create console index of current item                                                    
                                                     head.out <- paste0("[", i.item, "/", n.item, "] ")
-                                                    gSD.download(name = name, url.file = uf, url.checksum = uc, file = y$file, head.out = head.out)
+                                                    gSD.download(name = name, url.file = uf, url.checksum = uc, file = file, head.out = head.out)
                                                   })
         show.status <- TRUE
       } else{

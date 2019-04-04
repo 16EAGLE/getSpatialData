@@ -113,7 +113,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   ## assemble file name
   file_ext <-  ".zip"
   if(isTRUE(gnss)){
-    file.ext <- ".TGZ"
+    file_ext <- ".TGZ"
   } else{
     if(isTRUE(grepl("Sentinel-5 Precursor", platform))) file_ext <-  ".nc" 
   }
@@ -121,9 +121,6 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
     paste0(dir_out, "/", x, file_ext)
   }, USE.NAMES = F) #download to file
   
-  
-  file.ds <- sapply(records$filename, function(x) paste0(dir_out, "/", x), USE.NAMES = F) #download to file
-
   ## download not parallelized (2 downstreams max)
   down.status <- rep(FALSE, length(records$url))
   max.retry <- 3  #maximum retries berfore giving up

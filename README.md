@@ -15,7 +15,7 @@ For all public functions [documentation is available](http://jxsw.de/getSpatialD
 
 To install the current beta version, use `devtools`.
 
-```s
+```R
 devtools::install_github("16EAGLE/getSpatialData")
 ```
 
@@ -25,7 +25,7 @@ The following functions are publicly available and tested on Linux (Ubuntu 16.04
 
 #### Sentinel
 
-* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, Sentinel-2 and Sentinel-3 data and returns a data frame containing the found records (rows) and their attributes (columns).
+* `getSentinel_query()` – querys the Copernicus Open Access Hubs for Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5 Precursor and Sentinel GNSS data and returns a data frame containing the found records (rows) and their attributes (columns).
 * `getSentinel_restore()` requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument `check_avail` of `getSentinel_query`).
 * `getSentinel_preview()` – uses the output of `getSentinel_query()` to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
 * `getSentinel_data()` – uses the output of `getSentinel_query()` to download Sentinel data.
@@ -92,7 +92,7 @@ The following universal semantics on computational steps are used by `getSpatial
 
 #### Sentinel query, preview and download
 
-The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.
+The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2, Sentinel-3 or Sentinel-5P. The workflow for dealing with MODIS and Landsat data using `getSpatialData` is very similar. See the <a href="http://jxsw.de/getSpatialData/reference/index.html">function reference</a> for detailed examples.
 
 ```R
 ## Load packages
@@ -265,7 +265,7 @@ The following products are being evaluated to be implemented within the package.
 
 | Product(s) | Source | Access | Status | Client(s) | 
 | ---------- | --------------- | --- | -------| ----------- |
-| Sentinel (-1/-2/-3) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | native |
+| Sentinel (-1/-2/-3,-5P, GNSS) | ESA Copernicus | <a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a>  | implemented | native |
 | MODIS | NASA/USGS | <a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a> | implemented | native |
 | Landsat | USGS | <a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api">USGS EarthExplorer json API</a>, <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a> | implemented | native |
 | Global Forest Change | Hansen et al. | http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis | evaluated | R: `gfcanalysis`? |

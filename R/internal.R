@@ -157,7 +157,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if(x == "auto"){
       if(p == "Sentinel-1" | p == "Sentinel-2") x <- "dhus"
       if(p == "Sentinel-3") x <- "s3"
-      if(p == "Sentinel-5" | p == "Sentinel-5 Precursor") x <- "s5p"
+      if(p == "Sentinel-5P" | p == "Sentinel-5 Precursor") x <- "s5p"
       if(p == "GNSS") x <- "gnss"
     }
     if(x == "dhus"){url <- getOption("gSD.api")$dhus}
@@ -582,6 +582,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                    aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',
                    aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
                    laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
+    gSD.api.names = list(dhus = "ESA Copernicus Open Hub",
+                         s3 = "ESA Copernicus S3 Hub",
+                         s5p = "ESA Copernicus S5P Hub",
+                         gnss = "ESA Copernicus GNSS Hub",
+                         espa = "USGS-EROS ESPA",
+                         ee = "USGS EarthExplorer",
+                         aws.l8 = "AWS Landsat 8",
+                         laads = "NASA DAAC LAADS"),
     gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
                        mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),

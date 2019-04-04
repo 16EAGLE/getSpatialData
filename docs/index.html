@@ -127,7 +127,7 @@
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
 <p>To install the current beta version, use <code>devtools</code>.</p>
-<div class="sourceCode"><pre class="sourceCode s"><code class="sourceCode gnuassembler"><span class="kw">devtools::</span>install_github(<span class="st">"16EAGLE/getSpatialData"</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/reexports">install_github</a></span>(<span class="st">"16EAGLE/getSpatialData"</span>)</code></pre></div>
 </div>
 <div id="available-functions" class="section level2">
 <h2 class="hasAnchor">
@@ -138,7 +138,7 @@
 <a href="#sentinel" class="anchor"></a>Sentinel</h4>
 <ul>
 <li>
-<code><a href="reference/getSentinel_query.html">getSentinel_query()</a></code> – querys the Copernicus Open Access Hubs for Sentinel-1, Sentinel-2 and Sentinel-3 data and returns a data frame containing the found records (rows) and their attributes (columns).</li>
+<code><a href="reference/getSentinel_query.html">getSentinel_query()</a></code> – querys the Copernicus Open Access Hubs for Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5 Precursor and Sentinel GNSS data and returns a data frame containing the found records (rows) and their attributes (columns).</li>
 <li>
 <code><a href="reference/getSentinel_restore.html">getSentinel_restore()</a></code> requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument <code>check_avail</code> of <code>getSentinel_query</code>).</li>
 <li>
@@ -269,7 +269,7 @@
 <div id="sentinel-query-preview-and-download" class="section level4">
 <h4 class="hasAnchor">
 <a href="#sentinel-query-preview-and-download" class="anchor"></a>Sentinel query, preview and download</h4>
-<p>The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2 or Sentinel-3.</p>
+<p>The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2, Sentinel-3 or Sentinel-5P. The workflow for dealing with MODIS and Landsat data using <code>getSpatialData</code> is very similar. See the <a href="http://jxsw.de/getSpatialData/reference/index.html">function reference</a> for detailed examples.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Load packages
 <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(getSpatialData)
 <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(raster)
@@ -421,7 +421,7 @@ files &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocum
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Sentinel (-1/-2/-3)</td>
+<td>Sentinel (-1/-2/-3,-5P, GNSS)</td>
 <td>ESA Copernicus</td>
 <td><a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a></td>
 <td>implemented</td>

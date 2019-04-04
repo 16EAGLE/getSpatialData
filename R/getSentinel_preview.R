@@ -1,6 +1,6 @@
 #' Preview a Sentinel image
 #'
-#' \code{getSentinel_preview} previews single image as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
+#' \code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
 #'
 #' @inheritParams getSentinel_query
 #' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.

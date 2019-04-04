@@ -2,7 +2,7 @@
 Introduction of functions for data preparation, feature enhancements, bug fixes
 
 <br>
-**New functions:**
+#### New functions:
 
 * `services_avail()`: checks and returns the status of all online services used by getSpatialData. Can be used to check if a service is undergoing maintenance or is unavailable due to unknown reasons.
 * `getSentinel_restore()`: restore Sentinel datasets that have been archived to Copernocus LTA
@@ -10,7 +10,7 @@ Introduction of functions for data preparation, feature enhancements, bug fixes
 * `cropFAST()`: fastly crop large-scale datasets to a spatial extent
 
 <br>
-**New features:**
+#### New features:
 
 * `getSentinel_query()`: argument "check_avail" added to check on-demand availability of Sentinel datasets or if they had been moved to the Copernicus Long-Term Archive (LTA). Deactivated by default since check increases query request time.
 * `getSentinel_data()`: checks for on-demand availability of requested datasets first before attempting download.
@@ -22,7 +22,7 @@ Introduction of functions for data preparation, feature enhancements, bug fixes
 * `_data()` functions: added number of downloaded item vs total number of downloads to console output
 
 <br>
-**Major bug fixes:**
+#### Major bug fixes:
 
 * `getMODIS_data()` now native, deprecated FTP LAADS DAAC services replaced by https requests
 * `getLandsat_data()`: bug that caused the function to download only the first product of an order when using order IDs with espa_order as argument
@@ -38,7 +38,7 @@ Introduction of functions for data preparation, feature enhancements, bug fixes
 
 
 <br>
-**Contributions:**
+#### Contributions:
 
 * Code contributions by Steven Hill (@SteveMHill)
 * Bug indication by @bleutner, @vanto1994, @mtreg, @MatthiasSiewert, @RemoteSensingR
@@ -52,7 +52,7 @@ Introduction of functions for data preparation, feature enhancements, bug fixes
 getLandsat* and getMODIS* function bundles for USGS EE client
 
 <br>
-**New functions:**
+#### New functions:
 
 * `getLandsat_names()`: obtain Landsat product names
 * `getLandsat_query()`: query USGS Earth Explorer for Landsat data
@@ -65,26 +65,26 @@ getLandsat* and getMODIS* function bundles for USGS EE client
 * `login_USGS()`: session-wide login to USGS services
 
 <br>
-**New features:**
+#### New features:
 
 * `getLandsat_query()` and `getMODIS_query()`: argument "name" is now optional and set to "all" by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column "dataset_name".
 
 <br>
-**Bug fixes:**
+#### Bug fixes:
 
 * RGB clouring of preview functions is now correct
 * `getLandsat_query()` and `getMODIS_query()` output now more than 10 products per query (maximum is 50 000)
 * `getSentinel_query()` paging error (always maxiumu of 200 records) solved
 
 <br>
-**Minor Changes:**
+#### Minor Changes:
 
 * clearer login functions naming (removed 'set_' prefix)
 * all request are now internally channeld through gSD.get/gSD.post
 * clearer semantics, changed "products" argument to "records"
 
 <br>
-**Contributions:**
+#### Contributions:
 
 * Bug fix by Francesco Pirotti (@fpirotti, #2)
 
@@ -96,19 +96,19 @@ getLandsat* and getMODIS* function bundles for USGS EE client
 initial session-wide tool functions
 
 <br>
-**New functions:**
+#### New functions:
 
 * `set_archive()`: defines getSpatialData archive folder
 * `set_aoi()`: defines session AOI from sp, sf or matrix object or mapedit GUI input
 * `view_aoi()`: displays AOI in a mapview viewer
 
 <br>
-**New features:**
+#### New features:
 
 * `getSentinel_preview()` displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.
 
 <br>
-**Contributions:**
+#### Contributions:
 
 * Feature idea by Mike Treglia (@mtreg, #1)
 
@@ -120,7 +120,7 @@ initial session-wide tool functions
 getSentinel* function bundle for ESA Copernicus R client
 
 <br>
-**New functions:**
+#### New functions:
 
 * `getSentinel_query()`: query function for Sentinel-1, -2, -3
 * `getSentinel_preview()`: preview (quick look) function for Sentinel-1, -2, -3
@@ -128,7 +128,7 @@ getSentinel* function bundle for ESA Copernicus R client
 * `login_CopHub()`: session login for getSentinel* functions
 
 <br>
-**Removed features:**
+#### Removed features:
 
 * early-dev. python bindings, getSentinel* is fully R-native now
 

@@ -23,7 +23,7 @@ getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
    \item "dhus" to look for operational Open Hub records only,
    \item "s3" to look for Sentinel-3 pre-operational records only,
-   \item "s5p" to look for Sentinel-5 precursor pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
 }}
@@ -34,7 +34,7 @@ getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
 None. A plot/view display is generated.
 }
 \description{
-\code{getSentinel_preview} previews single image as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
+\code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
 }
 \examples{
 ## Load packages

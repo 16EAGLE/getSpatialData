@@ -7,7 +7,7 @@
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
 #' @param type character, AOI object type, either "matrix", "sf" or "sp".
 #' @param color chracter, polygon filling color.
-#' @param value logical, if \code{FALSE}, nothing is returned.
+#' @param value logical, whether to return a data frame containing service status or not. Default is \code{FALSE}.
 #'
 #' @details
 #' \code{set_archive} defines the session directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
@@ -18,7 +18,7 @@
 #'
 #' \code{get_aoi} returns the defined session AOI.
 #' 
-#' \code{services_avail} returns a \code{data.frame} containing the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "nominal".
+#' \code{services_avail} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
 #'
 #' @return None.
 #' @author Jakob Schwalb-Willmann
@@ -109,28 +109,38 @@ get_aoi <- function(type = "sf"){
 }
 
 #' @rdname gSD_settings
-#' @importFrom httr GET
+#' @importFrom httr GET http_status
 #' @importFrom cli cat_bullet
 #' @export
 services_avail <- function(value = F){
+  
+  # check login
+  if(!all(c(getOption("gSD.usgs_set"), getOption("gSD.cophub_set")))) out("You have to be logged in at both Copernicus Hub and USGS to use services_avail(). See login_CopHub() and login_USGS() for details.", type = 3)
+  
+  # get service URLs
   urls <- getOption("gSD.api")
   urls <- urls[names(urls) != "aws.l8.sl"]
-  x <- lapply(urls, GET)
+  urls$aws.l8 <- gsub("c1/L8/", "", urls$aws.l8)
   
-  df <- sapply(x, function(y) y$status_code)
-  df <- cbind.data.frame(c("ESA operational (DHUS)", "ESA pre-operational (S3)", "USGS-EROS ESPA", "USGS EarthExplorer", "AWS Landsat 8", "NASA DAAC LAADS"),
-                         "available", df, names(df), "green", stringsAsFactors=F)
-  rownames(df) <- NULL
-  colnames(df) <- c("service", "status", "code", "id",  "colour")
+  # get service status
+  response <- lapply(urls, GET)
+  df <- do.call(rbind, lapply(response, function(x) rbind.data.frame(http_status(x))))
+  df$code <- sapply(response, function(y) y$status_code)
+  df$service <- unlist(getOption("gSD.api.names")[rownames(df)])
+  df$id <- rownames(df)
   
-  if(!any(c(df[df$id == "aws.l8",]$code == 404,  df[df$id == "aws.l8",]$code == 200))){
-    df[df$id == "aws.l8",c(2,5)] <- c("unavailable", "red")
-  }
+  # interpret service status
+  df$status <- "available"
+  df$colour <- "green"
+  df$remark <- "Connection established"
   
-  df[df$code == 301,c(2,5)] <- c("maintenance", "orange")
-  df[df$code == 503,c(2,5)] <- c("unavailable", "red")
-  df[df$code == 400,c(2,5)] <- c("retry", "blue")
+  df[df$code != 200, c("status", "colour", "remark")] <- c("unavailable", "red", as.character(df$message[df$code != 200]))
+  df[df$code == 301, c("status", "colour")] <- c("maintenance", "orange")
   
-  catch <- apply(df, MARGIN = 1, function(x, nc = max(nchar(df$service))) cat_bullet(paste0(x[1], ":", paste0(rep(" ", times = nc-nchar(x[1])), collapse = ""), " '", x[2], "'"), bullet_col = x[5]))
-  if(isTRUE(value)) return(df[,-c(3:5)])
+  catch <- apply(df, MARGIN = 1, function(x, nc = max(nchar(df$service)), names = colnames(df)){
+    y <- rbind.data.frame(x, stringsAsFactors = F)
+    colnames(y) <- names
+    cat_bullet(paste0(y$service, ":", paste0(rep(" ", times = nc-nchar(y$service)), collapse = ""), "  '", y$status, "' ", paste0(rep(" ", times = (12-nchar(y$status))), collapse = ""), "'", y$remark, "'"), bullet_col = y$colour)
+  })
+  if(isTRUE(value)) return(df[c("service", "status", "remark", "category", "reason", "message", "code")])
 }

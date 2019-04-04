@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Query Sentinel-1, Sentinel-2 and Sentinel-3 data — getSentinel_query • getSpatialData</title>
+<title>Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records — getSentinel_query • getSpatialData</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Query Sentinel-1, Sentinel-2 and Sentinel-3 data — getSentinel_query" />
+<meta property="og:title" content="Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records — getSentinel_query" />
 
-<meta property="og:description" content="getSentinel_query queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered." />
+<meta property="og:description" content="getSentinel_query queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -147,14 +147,14 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Query Sentinel-1, Sentinel-2 and Sentinel-3 data</h1>
+    <h1>Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records</h1>
     
     <div class="hidden name"><code>getSentinel_query.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p><code>getSentinel_query</code> queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.</p>
+    <p><code>getSentinel_query</code> queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered.</p>
     
     </div>
 
@@ -171,7 +171,7 @@
     </tr>
     <tr>
       <th>platform</th>
-      <td><p>character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5".</p></td>
+      <td><p>character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5P".</p></td>
     </tr>
     <tr>
       <th>aoi</th>
@@ -199,7 +199,7 @@
 <li><p>"auto" (default) to automatically select a suitable Copernicus hub depending on the selected <code>platform</code>,</p></li>
 <li><p>"dhus" to look for operational Open Hub records only,</p></li>
 <li><p>"s3" to look for Sentinel-3 pre-operational records only,</p></li>
-<li><p>"s5p" to look for Sentinel-5 precursor pre-operational records only,</p></li>
+<li><p>"s5p" to look for Sentinel-5P precursor pre-operational records only,</p></li>
 <li><p>"GNSS" to look for GNSS RINEX records only,</p></li>
 <li><p>or a valid API URL.</p></li>
 </ul></td>
@@ -216,7 +216,7 @@
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>To query for records of remote sensing instruments by <code>time_range</code>, <code>platform</code> and <code>aoi</code>, argument <code>gnss</code> should be <code>FALSE</code> (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument <code>gnss</code> to <code>TRUE</code>. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3 and https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification).</p>
+    <p>To query for records of remote sensing instruments by <code>time_range</code>, <code>platform</code> and <code>aoi</code>, argument <code>gnss</code> should be <code>FALSE</code> (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument <code>gnss</code> to <code>TRUE</code>. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see <a href='https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3'>https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3</a> and <a href='https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification'>https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification</a>).</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

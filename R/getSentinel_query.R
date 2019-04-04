@@ -1,9 +1,9 @@
-#' Query Sentinel-1, Sentinel-2 and Sentinel-3 data
+#' Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records
 #'
-#' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
+#' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered.
 #'
 #' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"
-#' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5".
+#' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5P".
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param check_avail logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.
 #' @param gnss logical, whether to query for GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see \code{details}).
@@ -14,7 +14,7 @@
 #'    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
 #'    \item "dhus" to look for operational Open Hub records only,
 #'    \item "s3" to look for Sentinel-3 pre-operational records only,
-#'    \item "s5p" to look for Sentinel-5 precursor pre-operational records only,
+#'    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
 #'    \item "GNSS" to look for GNSS RINEX records only,
 #'    \item or a valid API URL.
 #' }
@@ -23,7 +23,7 @@
 #' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.
 #'
 #' @details 
-#' To query for records of remote sensing instruments by \code{time_range}, \code{platform} and \code{aoi}, argument \code{gnss} should be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \link{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \link{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
+#' To query for records of remote sensing instruments by \code{time_range}, \code{platform} and \code{aoi}, argument \code{gnss} should be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
 #' 
 #'
 #' @author Jakob Schwalb-Willmann
@@ -118,10 +118,11 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
   char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(length(time_range) != 2){out("Argument 'time_range' must contain two elements (start and stop time).", type = 3)}
-  if(!(platform %in% c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5"))) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5'", type = 3)
+  if(!(platform %in% c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P"))) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5P'", type = 3)
   
   ## url assembler function
   cop.url <- function(ext.xy, url.root, platform, time.range, row.start){
+    if(platform == "Sentinel-5P") platform <- "Sentinel-5"
     qs <- list(url.root = paste0(url.root, "/"),
                search = c("search?start=", "&rows=100&q="),  #"search?q=", #start=0&rows=1000&
                and = "%20AND%20",

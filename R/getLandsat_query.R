@@ -1,4 +1,4 @@
-#' Query Landsat data
+#' Query Landsat records
 #'
 #' \code{getLandsat_query} queries the USGS Earth Explorer for Landsat data by some basic input search parameters. The function returns a data frame that can be further filtered.
 #'

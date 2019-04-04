@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_query.R
 \name{getSentinel_query}
 \alias{getSentinel_query}
-\title{Query Sentinel-1, Sentinel-2 and Sentinel-3 data}
+\title{Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records}
 \usage{
 getSentinel_query(time_range, platform, aoi = NULL,
   check_avail = FALSE, gnss = FALSE, username = NULL,
@@ -11,7 +11,7 @@ getSentinel_query(time_range, platform, aoi = NULL,
 \arguments{
 \item{time_range}{character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"}
 
-\item{platform}{character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5".}
+\item{platform}{character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5P".}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
@@ -28,7 +28,7 @@ getSentinel_query(time_range, platform, aoi = NULL,
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
    \item "dhus" to look for operational Open Hub records only,
    \item "s3" to look for Sentinel-3 pre-operational records only,
-   \item "s5p" to look for Sentinel-5 precursor pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
 }}
@@ -39,10 +39,10 @@ getSentinel_query(time_range, platform, aoi = NULL,
 A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.
 }
 \description{
-\code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
+\code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered.
 }
 \details{
-To query for records of remote sensing instruments by \code{time_range}, \code{platform} and \code{aoi}, argument \code{gnss} should be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \link{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \link{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
+To query for records of remote sensing instruments by \code{time_range}, \code{platform} and \code{aoi}, argument \code{gnss} should be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
 }
 \examples{
 ## Load packages

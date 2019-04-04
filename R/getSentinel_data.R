@@ -1,6 +1,6 @@
-#' Download Sentinel-1, Sentinel-2 and Sentinel-3 data
+#' Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data
 #'
-#' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs for Sentinel. The datasets are identified by the query return of \link{getSentinel_query}.
+#' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_query}.
 #'
 #' @inheritParams getSentinel_query
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.
@@ -109,7 +109,19 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   ## assemble md5 checksum url
   url.md5 <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
   md5 <- sapply(url.md5, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
-  #file.ds <- sapply(records$identifier, function(x) paste0(dir_out, "/", x, ".zip"), USE.NAMES = F) #download to file
+  
+  ## assemble file name
+  file_ext <-  ".zip"
+  if(isTRUE(gnss)){
+    file.ext <- ".TGZ"
+  } else{
+    if(isTRUE(grepl("Sentinel-5 Precursor", platform))) file_ext <-  ".nc" 
+  }
+  file.ds <- sapply(records$identifier, function(x){
+    paste0(dir_out, "/", x, file_ext)
+  }, USE.NAMES = F) #download to file
+  
+  
   file.ds <- sapply(records$filename, function(x) paste0(dir_out, "/", x), USE.NAMES = F) #download to file
 
   ## download not parallelized (2 downstreams max)

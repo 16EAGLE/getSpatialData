@@ -2,7 +2,7 @@
 % Please edit documentation in R/getSentinel_data.R
 \name{getSentinel_data}
 \alias{getSentinel_data}
-\title{Download Sentinel-1, Sentinel-2 and Sentinel-3 data}
+\title{Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data}
 \usage{
 getSentinel_data(records, dir_out = NULL, force = FALSE,
   username = NULL, password = NULL, hub = "auto", verbose = TRUE)
@@ -23,7 +23,7 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
    \item "dhus" to look for operational Open Hub records only,
    \item "s3" to look for Sentinel-3 pre-operational records only,
-   \item "s5p" to look for Sentinel-5 precursor pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
 }}
@@ -34,7 +34,7 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
 Character vector of paths to the downloaded files.
 }
 \description{
-\code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs for Sentinel. The datasets are identified by the query return of \link{getSentinel_query}.
+\code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_query}.
 }
 \examples{
 ## Load packages

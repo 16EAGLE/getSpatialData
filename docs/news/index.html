@@ -152,7 +152,6 @@
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-4-under-development" class="anchor"></a>getSpatialData 0.0.4 (under development)</h2>
 <p>Introduction of functions for data preparation, feature enhancements, bug fixes</p>
-<p><br></p>
 <div id="new-functions" class="section level4">
 <h4 class="hasAnchor">
 <a href="#new-functions" class="anchor"></a>New functions:</h4>
@@ -166,7 +165,6 @@
 <li>
 <code><a href="../reference/cropFAST.html">cropFAST()</a></code>: fastly crop large-scale datasets to a spatial extent</li>
 </ul>
-<p><br></p>
 </div>
 <div id="new-features" class="section level4">
 <h4 class="hasAnchor">
@@ -189,7 +187,6 @@
 <li>
 <code>_data()</code> functions: added number of downloaded item vs total number of downloads to console output</li>
 </ul>
-<p><br></p>
 </div>
 <div id="major-bug-fixes" class="section level4">
 <h4 class="hasAnchor">
@@ -217,7 +214,6 @@
 <li>
 <code><a href="../reference/getSentinel_data.html">getSentinel_data()</a></code>: bug causing Sentinel downloads to fail due to the selection of the wrong LTA availability column (issue #27)</li>
 </ul>
-<p><br></p>
 </div>
 <div id="contributions" class="section level4">
 <h4 class="hasAnchor">
@@ -227,7 +223,6 @@
 <li>Bug indication by <a href='https://github.com/bleutner'>@bleutner</a>, <a href='https://github.com/vanto1994'>@vanto1994</a>, <a href='https://github.com/mtreg'>@mtreg</a>, <a href='https://github.com/MatthiasSiewert'>@MatthiasSiewert</a>, <a href='https://github.com/RemoteSensingR'>@RemoteSensingR</a></li>
 <li>Feature ideas by <a href='https://github.com/kadyb'>@kadyb</a>, <a href='https://github.com/ptaconet'>@ptaconet</a></li>
 </ul>
-<p><br></p>
 <hr>
 </div>
 </div>
@@ -235,7 +230,6 @@
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-3" class="anchor"></a>getSpatialData 0.0.3</h2>
 <p>getLandsat* and getMODIS* function bundles for USGS EE client</p>
-<p><br></p>
 <div id="new-functions-1" class="section level4">
 <h4 class="hasAnchor">
 <a href="#new-functions-1" class="anchor"></a>New functions:</h4>
@@ -259,7 +253,6 @@
 <li>
 <code><a href="../reference/gSD_login.html">login_USGS()</a></code>: session-wide login to USGS services</li>
 </ul>
-<p><br></p>
 </div>
 <div id="new-features-1" class="section level4">
 <h4 class="hasAnchor">
@@ -268,7 +261,6 @@
 <li>
 <code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code> and <code><a href="../reference/getMODIS_query.html">getMODIS_query()</a></code>: argument “name” is now optional and set to “all” by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column “dataset_name”.</li>
 </ul>
-<p><br></p>
 </div>
 <div id="bug-fixes" class="section level4">
 <h4 class="hasAnchor">
@@ -280,7 +272,6 @@
 <li>
 <code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code> paging error (always maxiumu of 200 records) solved</li>
 </ul>
-<p><br></p>
 </div>
 <div id="minor-changes" class="section level4">
 <h4 class="hasAnchor">
@@ -290,7 +281,6 @@
 <li>all request are now internally channeld through gSD.get/gSD.post</li>
 <li>clearer semantics, changed “products” argument to “records”</li>
 </ul>
-<p><br></p>
 </div>
 <div id="contributions-1" class="section level4">
 <h4 class="hasAnchor">
@@ -298,7 +288,6 @@
 <ul>
 <li>Bug fix by Francesco Pirotti (<a href='https://github.com/fpirotti'>@fpirotti</a>, #2)</li>
 </ul>
-<p><br></p>
 <hr>
 </div>
 </div>
@@ -306,7 +295,6 @@
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-2" class="anchor"></a>getSpatialData 0.0.2</h2>
 <p>initial session-wide tool functions</p>
-<p><br></p>
 <div id="new-functions-2" class="section level4">
 <h4 class="hasAnchor">
 <a href="#new-functions-2" class="anchor"></a>New functions:</h4>
@@ -318,7 +306,6 @@
 <li>
 <code><a href="../reference/gSD_settings.html">view_aoi()</a></code>: displays AOI in a mapview viewer</li>
 </ul>
-<p><br></p>
 </div>
 <div id="new-features-2" class="section level4">
 <h4 class="hasAnchor">
@@ -327,7 +314,6 @@
 <li>
 <code><a href="../reference/getSentinel_preview.html">getSentinel_preview()</a></code> displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.</li>
 </ul>
-<p><br></p>
 </div>
 <div id="contributions-2" class="section level4">
 <h4 class="hasAnchor">
@@ -335,7 +321,6 @@
 <ul>
 <li>Feature idea by Mike Treglia (<a href='https://github.com/mtreg'>@mtreg</a>, #1)</li>
 </ul>
-<p><br></p>
 <hr>
 </div>
 </div>
@@ -343,7 +328,6 @@
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-1" class="anchor"></a>getSpatialData 0.0.1</h2>
 <p>getSentinel* function bundle for ESA Copernicus R client</p>
-<p><br></p>
 <div id="new-functions-3" class="section level4">
 <h4 class="hasAnchor">
 <a href="#new-functions-3" class="anchor"></a>New functions:</h4>
@@ -357,7 +341,6 @@
 <li>
 <code><a href="../reference/gSD_login.html">login_CopHub()</a></code>: session login for getSentinel* functions</li>
 </ul>
-<p><br></p>
 </div>
 <div id="removed-features" class="section level4">
 <h4 class="hasAnchor">
@@ -365,7 +348,6 @@
 <ul>
 <li>early-dev. python bindings, getSentinel* is fully R-native now</li>
 </ul>
-<p><br></p>
 <hr>
 <p>This document should provide a broad overview on changes that are applied to the getSpatialData R package. There is no warranty for completeness, since minor changes might not be included. All improvement and feature descriptions are bundled per release version. The document is currently maintained by Jakob Schwalb-Willmann.</p>
 </div>

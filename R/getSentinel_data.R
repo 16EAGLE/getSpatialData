@@ -4,7 +4,7 @@
 #'
 #' @inheritParams getSentinel_query
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.
-#' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
+#' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #'
 #' @return Character vector of paths to the downloaded files.
@@ -73,9 +73,9 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
                              hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)) username <- getOption("gSD.cophub_user")
-    if(is.null(password)) password <- getOption("gSD.cophub_pass")
+  if(is.TRUE(getOption("gSD.dhus_set"))){
+    if(is.null(username)) username <- getOption("gSD.dhus_user")
+    if(is.null(password)) password <- getOption("gSD.dhus_pass")
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)) password = password else password = getPass()
@@ -138,8 +138,8 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
         if(file.exists(file.ds[i])) file.remove(file.ds[i]) #remove in case of force being TRUE
 
         file.tmp <- tempfile(tmpdir = dir_out, fileext = ".zip")
-        out(paste0(head.out, "Attempting to download '", records$identifier[i], "' to '", file.ds[i], "'..."), msg = T)
-        gSD.get(records$url[i], cred[1], cred[2], dir.file = file.tmp, prog = T) #file.ds[i]
+        out(paste0(head.out, "Downloading '", records$identifier[i], "' to '", file.ds[i], "'..."), msg = T)
+        gSD.get(records$url[i], cred[1], cred[2], dir.file = file.tmp, prog = getOption("gSD.verbose")) #file.ds[i]
 
         if(as.character(md5sum(file.tmp)) == tolower(md5[i])){ #file.ds[i]
           out("Successfull download, MD5 check sums match.", msg = T)

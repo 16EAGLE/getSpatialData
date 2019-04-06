@@ -19,9 +19,9 @@
 getSentinel_restore <- function(record, username = NULL, password = NULL, hub = "auto", verbose = TRUE){
   
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)) username <- getOption("gSD.cophub_user")
-    if(is.null(password)) password <- getOption("gSD.cophub_pass")
+  if(is.TRUE(getOption("gSD.dhus_set"))){
+    if(is.null(username)) username <- getOption("gSD.dhus_user")
+    if(is.null(password)) password <- getOption("gSD.dhus_pass")
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)){ password = password} else{ password = getPass()}

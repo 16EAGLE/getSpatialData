@@ -73,7 +73,7 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
   get.str <-"x <- try(GET(url"
   if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
   if(!is.null(dir.file)) get.str <- paste0(get.str, ", write_disk(dir.file)")
-  if(is.TRUE(prog)) get.str <- paste0(get.str, ", progress()")
+  if(isTRUE(prog)) get.str <- paste0(get.str, ", progress()")
   get.str <- paste0(get.str, "), silent = T)")
   eval(parse(text = get.str))
   
@@ -115,11 +115,11 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = NULL){
+gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = NULL, prog = T){
   
-  out(paste0(if(!is.null(head.out)) head.out else "", "Attempting to download '", name, "' to '", file, "'..."), msg = T)
+  out(paste0(if(!is.null(head.out)) head.out else "", "Downloading '", name, "' to '", file, "'..."), msg = T)
   file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-  gSD.get(url.file, dir.file = file.tmp, prog = T)
+  gSD.get(url.file, dir.file = file.tmp, prog = prog)
   
   if(!is.null(url.checksum)){
     md5 <- strsplit(content(gSD.get(url.checksum), as = "text", encoding = "UTF-8"), " ")[[1]][1]
@@ -356,7 +356,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     gSD.get(url.icon, dir.file = file_dir)
     r.prev <- stack(file_dir)
     
-    if(is.TRUE(on_map)){
+    if(isTRUE(on_map)){
       
       ## create footprint
       footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
@@ -370,8 +370,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       ## create map
       map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
       
-      if(is.TRUE(show_aoi)){
-        if(is.FALSE(getOption("gSD.aoi_set"))){
+      if(isTRUE(show_aoi)){
+        if(isFALSE(getOption("gSD.aoi_set"))){
           out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
         } else{
           aoi.sf <- getOption("gSD.aoi")
@@ -545,14 +545,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if(inherits(aoi, "matrix")){
     if(!all(aoi[1,] == aoi[length(aoi[,1]),])) aoi <- rbind(aoi, aoi[1,])
     aoi <- st_sfc(st_polygon(list(aoi)), crs = 4326)
-    if(is.FALSE(quiet)) out(paste0("Argument 'aoi' is a matrix, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
+    if(isFALSE(quiet)) out(paste0("Argument 'aoi' is a matrix, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
   }
   if(inherits(aoi, "Spatial")) aoi <- st_as_sf(aoi)
   
   ## check projection
   if(is.na(st_crs(aoi))){
     st_crs(aoi) <- 4326
-    if(is.FALSE(quiet)) out(paste0("Argument 'aoi' has no projection, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
+    if(isFALSE(quiet)) out(paste0("Argument 'aoi' has no projection, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
   }
   if(length(grep("WGS84", grep("longlat", st_crs(aoi)$proj4string, value = T), value = T)) != 1){
     aoi <- st_transform(aoi, 4326)
@@ -596,9 +596,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
                        mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),
     gSD.verbose = FALSE,
-    gSD.cophub_user = FALSE,
-    gSD.cophub_pass = FALSE,
-    gSD.cophub_set = FALSE,
+    gSD.dhus_user = FALSE,
+    gSD.dhus_pass = FALSE,
+    gSD.dhus_set = FALSE,
     gSD.usgs_user = FALSE,
     gSD.usgs_pass = FALSE,
     gSD.usgs_set = FALSE,
@@ -623,5 +623,5 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .onUnload <- function(libname, pkgname) {
   
   ## logout from USGS
-  if(is.TRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
+  if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }

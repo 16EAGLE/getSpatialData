@@ -18,7 +18,7 @@
 #'    \item "GNSS" to look for GNSS RINEX records only,
 #'    \item or a valid API URL.
 #' }
-#' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
+#' @param verbose logical, whether to display details on the function's progress or output on the console.
 #'
 #' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.
 #'
@@ -91,9 +91,9 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
                               hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)) username <- getOption("gSD.cophub_user")
-    if(is.null(password)) password <- getOption("gSD.cophub_pass")
+  if(is.TRUE(getOption("gSD.dhus_set"))){
+    if(is.null(username)) username <- getOption("gSD.dhus_user")
+    if(is.null(password)) password <- getOption("gSD.dhus_pass")
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)){ password = password} else{ password = getPass()}
@@ -118,7 +118,7 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
   char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(length(time_range) != 2){out("Argument 'time_range' must contain two elements (start and stop time).", type = 3)}
-  if(!(platform %in% c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P"))) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5P'", type = 3)
+  if(!(tolower(platform) %in% c("sentinel-1", "sentinel-2", "sentinel-3", "sentinel-5p"))) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5P'", type = 3)
   
   ## url assembler function
   cop.url <- function(ext.xy, url.root, platform, time.range, row.start){

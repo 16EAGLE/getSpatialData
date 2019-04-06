@@ -2,6 +2,7 @@
 #'
 #' Functions that define session-wide archive and AOI settings that are used by all \code{getSpatialData} functions and check for the availability of used online services.
 #'
+#' @inheritParams getSentinel_query
 #' @param dir_archive character, directory to the \code{getSpatialData} archive folder.
 #' @param create logical, whether to create directory, if not existing or not.
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
@@ -112,15 +113,19 @@ get_aoi <- function(type = "sf"){
 #' @importFrom httr GET http_status
 #' @importFrom cli cat_bullet
 #' @export
-services_avail <- function(value = F){
+services_avail <- function(value = F, verbose = T){
+  
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
   # get service URLs
   urls <- getOption("gSD.api")
   urls <- urls[names(urls) != "aws.l8.sl"]
   urls$aws.l8 <- gsub("c1/L8/", "", urls$aws.l8)
   
-  # get service status
+  # get service status (login for ESPA)
   response <- lapply(urls, function(x) try(gSD.get(x), silent = T))
+  if(isTRUE(getOption("gSD.usgs_set"))) response$espa <- try(gSD.get(urls$espa, username = getOption("gSD.usgs_user"), password = getOption("gSD.usgs_pass")))
+  
   df <- do.call(rbind, lapply(response, function(x) if(!inherits(x, "try-error")) rbind.data.frame(http_status(x), stringsAsFactors = F) else NA))
   df$code <- sapply(response, function(y) if(!inherits(y, "try-error")) y$status_code else NA)
   df$service <- unlist(getOption("gSD.api.names")[rownames(df)])
@@ -139,10 +144,12 @@ services_avail <- function(value = F){
   df[df$code == 0, c("status", "colour", "remark")] <- c("untested", "blue", "Login required, use login_USGS() first")
   df[df$code == 301, c("status", "colour")] <- c("maintenance", "orange")
   
-  catch <- apply(df, MARGIN = 1, function(x, nc = max(nchar(df$service)), names = colnames(df)){
-    y <- rbind.data.frame(x, stringsAsFactors = F)
-    colnames(y) <- names
-    cat_bullet(paste0(y$service, ":", paste0(rep(" ", times = nc-nchar(y$service)), collapse = ""), "  '", y$status, "' ", paste0(rep(" ", times = (12-nchar(y$status))), collapse = ""), "'", y$remark, "'"), bullet_col = y$colour)
-  })
+  if(isTRUE(getOption("gSD.verbose"))){
+    catch <- apply(df, MARGIN = 1, function(x, nc = max(nchar(df$service)), names = colnames(df)){
+      y <- rbind.data.frame(x, stringsAsFactors = F)
+      colnames(y) <- names
+      cat_bullet(paste0(y$service, ":", paste0(rep(" ", times = nc-nchar(y$service)), collapse = ""), "  '", y$status, "' ", paste0(rep(" ", times = (12-nchar(y$status))), collapse = ""), "'", y$remark, "'"), bullet_col = y$colour)
+    })
+  }
   if(isTRUE(value)) return(df[c("service", "status", "remark", "category", "reason", "message", "code")])
 }

@@ -103,7 +103,7 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
     if(file.exists(f) & !isTRUE(force)){
       out(paste0(head.out, "Skipping download of '", tail(strsplit(u, "/")[[1]], n=1), "', since '", f, "' already exists..."), msg = T)
     } else{
-      gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f, head.out = head.out)
+      gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f, head.out = head.out, prog = getOption("gSD.verbose"))
     }
     return(f)
   }, SIMPLIFY = F))

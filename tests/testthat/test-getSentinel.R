@@ -1,32 +1,13 @@
-if(runAuthTests){
-
-  context("getSentinel_* (dhus)")
-  test_that("getSentinel_* (Sentinel-1)", {
-    expect_is(records <- getSentinel_query(aoi = vars.global$aoi , time_range = vars.global$time_range, platform = vars.sentinel$platform.a, username = vars.auth$dhus.user, password = vars.auth$dhus.pass), "data.frame")
+context("getSentinel_*")
+for(i in 1:length(vars.sentinel$platforms)){
+  test_that(paste0("getSentinel_* (", vars.sentinel$platforms[i], ")"), {
+    expect_is(records <- getSentinel_query(aoi = vars.global$aoi , time_range = vars.global$time_range, platform = vars.sentinel$platforms[i],
+                                           username = vars.sentinel$user[i], password = vars.sentinel$pass[i]), "data.frame")
     expect_gt(nrow(records), 0)
-    expect_null(x <- getSentinel_preview(record = records[1,], username = vars.auth$dhus.user, password = vars.auth$dhus.pass, on_map = F, show_aoi = F))
-    expect_is(x <- recordPlot(), "recordedplot")
-  })
-
-  test_that("getSentinel_* (Sentinel-2)", {
-    expect_is(records <- getSentinel_query(aoi = vars.global$aoi , time_range = vars.global$time_range, platform = vars.sentinel$platform.b, username = vars.auth$dhus.user, password = vars.auth$dhus.pass), "data.frame")
-    expect_gt(nrow(records), 0)
-    expect_null(x <- getSentinel_preview(record = records[1,], username = vars.auth$dhus.user, password = vars.auth$dhus.pass, on_map = F, show_aoi = F))
-    expect_is(x <- recordPlot(), "recordedplot")
+    expect_null(x <- getSentinel_preview(record = records[1,], username = vars.sentinel$user[i], password = vars.sentinel$pass[i], on_map = F, show_aoi = F))
+    if(isTRUE(vars.sentinel$expect.prev[i])) expect_is(x <- recordPlot(), "recordedplot")
+    if(isTRUE(test.run$downloads)) expect_is(x <- getSentinel_data(records[1,], dir_out = vars.global$dir.arc, username = vars.sentinel$user[i], password = vars.sentinel$pass[i], verbose = F), "character")
   })
 }
 
-context("getSentinel_* (pre-ops)")
-test_that("getSentinel_* (Sentinel-3)", {
-  expect_is(records <- getSentinel_query(aoi = vars.global$aoi , time_range = vars.global$time_range, platform = vars.sentinel$platform.c, username = vars.auth$s3.user, password = vars.auth$s3.pass), "data.frame")
-  expect_gt(nrow(records), 0)
-  expect_null(x <- getSentinel_preview(record = records[1,], username = vars.auth$s3.user, password = vars.auth$s3.pass, on_map = F, show_aoi = F))
-  expect_is(x <- recordPlot(), "recordedplot")
-})
-
-# test_that("getSentinel_data: download and checksum dataset", {
-#   records <- getSentinel_query(aoi = aoi, time_range = time_range, platform = platform, username = username, password = password)
-#   records_filtered <- records[which(records$processinglevel == "Level-1C"),] #filter by Level
-#   expect_is(x <- getSentinel_data(records = records_filtered[5,], dir_out = dir.arc, username = username, password = password), "character")
-# })
 

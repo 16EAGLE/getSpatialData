@@ -42,9 +42,9 @@ login_CopHub <- function(username, password = NULL){
   }
   
   # save credentials
-  options(gSD.cophub_user=username)
-  options(gSD.cophub_pass=password)
-  options(gSD.cophub_set=TRUE)
+  options(gSD.dhus_user=username)
+  options(gSD.dhus_pass=password)
+  options(gSD.dhus_set=TRUE)
   
   # verify credentials
   x <- try(gSD.get(paste0(getOption("gSD.api")$dhus, "odata/v1/"), username, password), silent = T)

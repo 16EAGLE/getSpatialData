@@ -1,13 +1,14 @@
 #' Preview a Sentinel image
 #'
-#' \code{getSentinel_preview} previews single image as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
+#' \code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them. Optionally, the preview RGB image can also be returned to the user.
 #'
 #' @inheritParams getSentinel_query
 #' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.
 #' @param on_map logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.
-#' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.
+#' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.#' @param return_preview logical, if \code{TRUE}, the preview image is returned georeferenced
+#' @param return_preview logical, if \code{TRUE}, the preview image is returned to the user. Default is FALSE.
 #'
-#' @return None. A plot/view display is generated.
+#' @return By default only a plot/view display is generated. If \code{return_preview = TRUE} then the georeferenced preview icon is returned as raster stack.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -73,66 +74,78 @@
 #'
 #' @export
 
-getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, username = NULL, password = NULL,
+getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_preview = FALSE, username = NULL, password = NULL,
                                 hub = "auto", verbose = TRUE){
-
+  
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)){username <- getOption("gSD.cophub_user")}
-    if(is.null(password)){password <- getOption("gSD.cophub_pass")}
+  if(is.TRUE(getOption("gSD.dhus_set"))){
+    if(is.null(username)){username <- getOption("gSD.dhus_user")}
+    if(is.null(password)){password <- getOption("gSD.dhus_pass")}
   }
   if(!is.character(username)){out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)}
   if(!is.null(password)){password = password}else{password = getPass()}
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-
+  
   ## Intercept false inputs and get inputs
   url.icon <- record$url.icon
   if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
   if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
   char_args <- list(url.icon = url.icon)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
-
+  
   ## Manage API access
   platform <- record$platformname
   cred <- .CopHub_select(hub, platform, username, password)
-
+  
   ## Recieve preview
   file_dir <- paste0(tempfile(),".jpg")
-  gSD.get(url.icon, cred[1], cred[2], dir.file = file_dir)
-  r.prev <- stack(file_dir)
-  #r.prev <- trim(r.prev, values = 0)
-  
-  v.prev <- values(r.prev)
-  rm.prev <- apply((v.prev == 0), MARGIN = 1, function(x) all(x))
-  cc.keep <- xyFromCell(r.prev, which(rm.prev == F))
-  
-  r.prev <- crop(r.prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
-  
-  if(is.TRUE(on_map)){
-
-    ## create footprint
-    footprint <- st_as_sfc(list(record$footprint), crs = 4326)
-    crs(r.prev) <- crs(as_Spatial(footprint))
-    footprint <- st_coordinates(footprint)
-    
-    extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
-    
-    ## create map
-    map <- viewRGB(r.prev, r=1, g=2, b=3)
-
-    if(is.TRUE(show_aoi)){
-      if(is.FALSE(getOption("gSD.aoi_set"))){
-        out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-      } else{
-        aoi.sf <- getOption("gSD.aoi")
-        #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
-        map <- addFeatures(map, aoi.sf)
-      }
-    }
-    map # display mapview or leaflet output
+  catch <- try(gSD.get(url = url.icon, username = cred[1], password = cred[2], dir.file = file_dir), silent = T)
+  if(inherits(catch, "try-error")){
+    out(paste0("There seems to be no preview available for '", record$title, "'."), msg = T)
   } else{
-
-    ## create simple RGB plot
-    plotRGB(r.prev)
+    
+    r.prev <- stack(file_dir)
+    #r.prev <- trim(r.prev, values = 0)
+    
+    v.prev <- values(r.prev)
+    rm.prev <- apply((v.prev == 0), MARGIN = 1, function(x) all(x))
+    cc.keep <- xyFromCell(r.prev, which(rm.prev == F))
+    
+    r.prev <- crop(r.prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
+    
+    if(is.TRUE(on_map) | isTRUE(return_preview)){
+      
+      ## create footprint
+      footprint <- st_as_sfc(list(record$footprint), crs = 4326)
+      crs(r.prev) <- crs(as_Spatial(footprint))
+      footprint <- st_coordinates(footprint)
+      
+      extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
+      
+      if(isTRUE(on_map)) {
+        ## create map
+        map <- viewRGB(r.prev, r=1, g=2, b=3)
+        
+        if(is.TRUE(show_aoi)){
+          if(is.FALSE(getOption("gSD.aoi_set"))){
+            out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+          } else{
+            aoi.sf <- getOption("gSD.aoi")
+            #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
+            map <- addFeatures(map, aoi.sf)
+          }
+        }
+        map # display mapview or leaflet output
+      }
+      
+      if (isTRUE(return_preview)) {
+        return(r.prev)
+      }
+      
+    } else{
+      
+      ## create simple RGB plot
+      plotRGB(r.prev)
+    }
   }
 }

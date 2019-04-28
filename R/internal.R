@@ -636,6 +636,69 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 
 
 
+#' bridge between sensor and calc HOT
+#' 
+#' @param sensor sensor
+#' @param sceneCloudCoverCol sceneCloudCoverCol
+#' @param records records 
+#' @param aoi aoi
+#' @param maxDeviation maxDeviation
+#' @param sceneCloudCoverCol sceneCloudCoverCol
+#' @param cloudPrbThreshold cloudPrbThreshold
+#' @param slopeDefault slopeDefault
+#' @param interceptDefault interceptDefault
+#' @param dir_out dir_out
+#' @param username username
+#' @param password password
+#' @param verbose verbose
+#' @keywords internal
+#' @noRd
+
+.hotBridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20, sceneCloudCoverCol,
+                       cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, 
+                       dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
+  
+  ## Check input
+  aoiClass <- class(aoi)
+  if (aoiClass[1] != "sf" && aoiClass != "sp" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  if (is.null)
+  
+  numRecords <- NROW(records)
+  quarterNumRecords <- round(numRecords/4)
+  processingTime <- c()
+  previewSize <- c()
+  ## Do HOT cloud cover assessment consecutively
+  records <- do.call(rbind,lapply(1:numRecords,function(i) {
+    startTime <- Sys.time()
+    # get preview of current record
+    currRecord <- records[i,]
+    
+    if (sensor == "Sentinel-2") {
+      preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                     username=username,password=password,verbose=verbose)
+    } else if (sensor == "Landsat") {
+      preview <- getLandsat_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                    username=username,password=password,verbose=verbose)
+    } else if (sensor == "MODIS") {
+      preview <- getMODIS_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                  username=username,password=password,verbose=verbose)
+    }
+    previewSize <- c(previewSize,object.size(preview))
+    # pass preview to HOT function
+    currRecCloudCover <- calc_hot_cloudcov(records=records,preview=preview,aoi=aoi,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
+                                           slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
+    endTime <- Sys.time()
+    if (i <= 5) {elapsed <- round(as.numeric(difftime(endTime,startTime,units="mins")))}
+    processingTime <- c(processingTime,elapsed)
+    if (numRecords >= 10 && i == 5) {
+      .calcProcTime(numRecords=numRecords,quarterNumRecords=quarterNumRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+    }
+    return(currRecCloudCover)
+  }))
+}
+
+
+
 #' calc processing time
 #' 
 #' @param numRecords numRecords
@@ -644,6 +707,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param processingTime processingTime
 #' @param previewSize previewSize
 #' @keywords internal
+#' @importFrom utils object.size
 #' @noRd
 .calcProcTime <- function(numRecords,quarterNumRecords,i,processingTime,previewSize) {
   processedUpdate <- "records are processed "
@@ -657,6 +721,4 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (i == quarterNumRecords * 2) {out(paste0(i,processedUpdate,"(approx. 50 % of all records"))}
   if (i == quarterNumRecords * 3) {out(paste0(i,processedUpdate,"(approx. 75 % of all records"))}
 }
-
-
 

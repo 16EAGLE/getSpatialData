@@ -680,8 +680,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     currRecCloudCover <- calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
                                            slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
     endTime <- Sys.time()
-    if (i <= 5) {elapsed <- round(as.numeric(difftime(endTime,startTime,units="mins")))}
-    processingTime <- c(processingTime,elapsed)
+    if (i <= 5) {
+      elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
+      processingTime <- c(processingTime,elapsed)
+    }
+    print(i)
     if (numRecords >= 10 && i == 5) {
       .calcProcTime(numRecords=numRecords,quarterNumRecords=quarterNumRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
@@ -704,14 +707,15 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .calcProcTime <- function(numRecords,quarterNumRecords,i,processingTime,previewSize) {
   processedUpdate <- "records are processed "
-  meanProcessingTime <- mean(processingTime)
-  meanPreviewSize <- mean(previewSize)
+  meanProcessingTime <- round(mean(processingTime))
+  meanPreviewSize <- mean(previewSize) / 1000000
   stillToGoFor <- numRecords - 5
-  sumProcessingTime <- meanProcessingTime * (stillToGoFor)
-  sumDataDownload <- meanPreviewSize * (stillToGoFor)
-  out(paste0("5 records are processed.\nProcessing time for all remaining records in sum:",sumProcessingTime,"\nData amount to be downloaded:",sumDataDownload))
-  if (i == quarterNumRecords) {out(paste0(i,processedUpdate,"(approx. 25 % of all records)"))}
-  if (i == quarterNumRecords * 2) {out(paste0(i,processedUpdate,"(approx. 50 % of all records"))}
-  if (i == quarterNumRecords * 3) {out(paste0(i,processedUpdate,"(approx. 75 % of all records"))}
+  sumProcessingTime <- meanProcessingTime * stillToGoFor
+  if (sumProcessingTime < 1) {sumProcessingTime <- "less than 1"}
+  sumDataDownload <- meanPreviewSize * stillToGoFor
+  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum: ",sumProcessingTime," minutes\nData amount to be downloaded: ",sumDataDownload," MB\n"))
+  if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)\n"))}
+  if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records\n"))}
+  if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records\n"))}
 }
 

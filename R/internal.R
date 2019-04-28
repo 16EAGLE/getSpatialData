@@ -661,8 +661,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   ## Check input
   aoiClass <- class(aoi)
   if (aoiClass[1] != "sf" && aoiClass != "sp" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
-  if (is.null)
-  
+
   numRecords <- NROW(records)
   quarterNumRecords <- round(numRecords/4)
   processingTime <- c()

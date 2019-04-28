@@ -6,8 +6,9 @@
 #' @param record data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected record and all its attributes.
 #' @param on_map logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.
 #' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.
+#' @param return_preview logical, if \code{TRUE}, the preview image is returned to the user. Default is FALSE.
 #'
-#' @return None. A plot/view display is generated.
+#' @return By default only a plot/view display is generated. If \code{return_preview = TRUE} then the georeferenced preview icon is returned as raster stack.
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -56,7 +57,12 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_data}
 #' @export
 
-getLandsat_preview <- function(record, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
-
-  .EE_preview(record = record, on_map = on_map, show_aoi = show_aoi, verbose = verbose)
+getLandsat_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_preview = FALSE, verbose = TRUE){
+  
+  if(isTRUE(return_preview)) {
+    r.prev <- .EE_preview(record = record, on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
+    return(r.prev)
+  } else {
+    .EE_preview(record = record, on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
+  }
 }

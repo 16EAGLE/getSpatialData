@@ -688,6 +688,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if (numRecords >= 10 && i == 5) {
       .calcProcTime(numRecords=numRecords,quarterNumRecords=quarterNumRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
+    if (numRecords >=10) {
+      if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)\n"))}
+      if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records\n"))}
+      if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records\n"))}
+    }
     return(currRecCloudCover)
   }))
   return(records)
@@ -714,8 +719,5 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (sumProcessingTime < 1) {sumProcessingTime <- "less than 1"}
   sumDataDownload <- meanPreviewSize * stillToGoFor
   out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum: ",sumProcessingTime," minutes\nData amount to be downloaded: ",sumDataDownload," MB\n"))
-  if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)\n"))}
-  if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records\n"))}
-  if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records\n"))}
 }
 

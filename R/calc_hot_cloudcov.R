@@ -65,8 +65,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   rThresh <- 40 # from the 80 blue bins take the 40 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   valDf <- valDf[intersect(which(valDf[,1] != 0),which(valDf[,2] != 0)),] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
-  bBins <- lapply(2:bThresh,function(x){which(df[[2]] == x)}) # these are the bins of interest for blue DNs
-  bBins <- lapply(bBins,function(x){data.frame(red=df[x,1],blue=df[x,2])}) # get the red and blue DNs where bins are valid
+  bBins <- lapply(2:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
   redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frames by red
   redMax <- lapply(redMax,function(x){
     if (NROW(x) >= rThresh) {

@@ -102,8 +102,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
     return(record)
   }
   ## Calculate cloud probability layer for the whole scene
-  intercept <- as.numeric(dfLAD[1])
-  slope <- as.numeric(dfLAD[2])
+  intercept <- as.numeric(regrVals[1])
+  slope <- as.numeric(regrVals[2])
   try(nominator <- abs(slope * bBand - rBand + intercept))
   try(denominator <- sqrt(1 + slope^2))
   try(HOT <- nominator / denominator)

@@ -684,15 +684,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
       processingTime <- c(processingTime,elapsed)
     }
-    print(i)
     if (numRecords >= 10 && i == 5) {
-      .calcProcTime(numRecords=numRecords,quarterNumRecords=quarterNumRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+      .calcProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     if (numRecords >=10) {
-      processedUpdate <- "records are processed "
-      if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)\n"))}
-      if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records\n"))}
-      if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records\n"))}
+      processedUpdate <- " records are processed "
+      if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)"))}
+      if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records)"))}
+      if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records)"))}
     }
     return(currRecCloudCover)
   }))
@@ -715,8 +714,12 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   meanPreviewSize <- mean(previewSize) / 1000000
   stillToGoFor <- numRecords - 5
   sumProcessingTime <- meanProcessingTime * stillToGoFor
-  if (sumProcessingTime < 1) {sumProcessingTime <- "less than 1"}
+  if (sumProcessingTime < 1) {
+    sumProcessingTime <- "less than 1 minute"
+  } else {
+    sumProcessingTime <- paste0(sumProcessingTime," minutes")
+  }
   sumDataDownload <- meanPreviewSize * stillToGoFor
-  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum: ",sumProcessingTime," minutes\nData amount to be downloaded: ",sumDataDownload," MB\n"))
+  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum: ",sumProcessingTime,"\nData amount to be downloaded: ",sumDataDownload," MB\n"))
 }
 

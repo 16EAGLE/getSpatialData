@@ -43,14 +43,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   if (is.na(crs)) {
     out("Preview seems not to be geo-referenced. No projection found.",type=3)
   }
-  # ensure correct projection of aoi
-  if(class(aoi)[[1]] != "sf") {aoi <- st_as_sf(aoi)}
-  if (st_crs(aoi) != crs) {
-    try(aoi <- st_transform(aoi,crs))
-    if (inherits(aoi,error)) {
-      out(paste0("Reprojection of aoi failed.",crsError,crs),type=3) 
-    }
-  }
   
   ##### HOT
   ## Prepare RGB or RB stack

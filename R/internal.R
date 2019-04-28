@@ -668,16 +668,19 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if (sensor == "Sentinel-2") {
       preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                      username=username,password=password,verbose=verbose)
+      identifier <- 1
     } else if (sensor == "Landsat") {
       preview <- getLandsat_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                     username=username,password=password,verbose=verbose)
+      identifier <- 15
     } else if (sensor == "MODIS") {
       preview <- getMODIS_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                   username=username,password=password,verbose=verbose)
+      identifier <- 15
     }
     previewSize <- c(previewSize,object.size(preview))
     # pass preview to HOT function
-    currRecCloudCover <- calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
+    currRecCloudCover <- calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,identifier=identifier,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
                                            slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
     endTime <- Sys.time()
     if (i <= 5) {

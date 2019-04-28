@@ -14,7 +14,7 @@
 #'  
 #' @export
 
-calcLandsat_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, 
+calcLandsat_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, cloudPrbThreshold = 40, 
                                      slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, 
                                      username = NULL, password = NULL, verbose = TRUE) {
   

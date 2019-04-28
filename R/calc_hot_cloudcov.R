@@ -122,7 +122,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, numRecords = 1, maxDe
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
   # calculate scene cc % while deviation between HOT cc % and provided cc % larger 3 (positive or negative)
   numTry <- 1
-  ccDeviationFromProvider <- 10 # this value does not matter at the beginning. Start with random value.
+  ccDeviationFromProvider <- 10 # this value does not matter at the beginning. Start with random value
+  
   while (numTry <= 30 && (ccDeviationFromProvider >= 3 || ccDeviationFromProvider <= -3)) { # iterate maximum 30 times
     if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
@@ -147,9 +148,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, numRecords = 1, maxDe
   }
   cMaskMatAoi <- as.matrix(cMask)
   cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc %
-}) # result is a list of cloud cover percentage within study area
-
-
   
-  
+  ##### Add aoi cloud cover percentage to record data.frame
+  record[[AOIcloudcoverpercentage]] <- cPercent
+
+  return(record)
+
 }

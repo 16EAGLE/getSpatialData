@@ -694,6 +694,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     }
     return(currRecCloudCover)
   }))
+  return(records)
 }
 
 

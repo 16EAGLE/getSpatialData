@@ -638,19 +638,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 
 #' bridge between sensor and calc HOT
 #' 
+#' @inheritParams calcSentinel_aoi_cloudcov
 #' @param sensor sensor
 #' @param sceneCloudCoverCol sceneCloudCoverCol
-#' @param records records 
-#' @param aoi aoi
-#' @param maxDeviation maxDeviation
-#' @param sceneCloudCoverCol sceneCloudCoverCol
-#' @param cloudPrbThreshold cloudPrbThreshold
-#' @param slopeDefault slopeDefault
-#' @param interceptDefault interceptDefault
-#' @param dir_out dir_out
-#' @param username username
-#' @param password password
-#' @param verbose verbose
 #'
 #' @keywords internal
 #' 

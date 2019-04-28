@@ -689,6 +689,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       .calcProcTime(numRecords=numRecords,quarterNumRecords=quarterNumRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     if (numRecords >=10) {
+      processedUpdate <- "records are processed "
       if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)\n"))}
       if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records\n"))}
       if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records\n"))}
@@ -703,15 +704,13 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' calc processing time
 #' 
 #' @param numRecords numRecords
-#' @param quarterNumRecords quarterNumRecords
 #' @param i record number in the loop
 #' @param processingTime processingTime
 #' @param previewSize previewSize
 #' @keywords internal
 #' @importFrom utils object.size
 #' @noRd
-.calcProcTime <- function(numRecords,quarterNumRecords,i,processingTime,previewSize) {
-  processedUpdate <- "records are processed "
+.calcProcTime <- function(numRecords,i,processingTime,previewSize) {
   meanProcessingTime <- round(mean(processingTime))
   meanPreviewSize <- mean(previewSize) / 1000000
   stillToGoFor <- numRecords - 5

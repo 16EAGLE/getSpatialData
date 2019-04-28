@@ -12,7 +12,8 @@
 #' 
 #' @param record data.frame, single line representing one record from a records data.frame.
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
-#' @param aoi sp or sf or matrix, the aoi.
+#' @param aoi sp or sf, the aoi.
+#' @param identifier numeric, column number where a unique identifier of the scenes is located, sensor-specific
 #' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover % given by the data distributor. Default is \code{maxDeviation = 20}.
 #' @param sceneCloudCoverCol character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.
 #' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 %) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}
@@ -31,7 +32,7 @@
 #' 
 #' @export
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, num_records = 1, verbose = TRUE) {
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, num_records = 1, verbose = TRUE) {
   
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"
@@ -108,7 +109,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   try(denominator <- sqrt(1 + slope^2))
   try(HOT <- nominator / denominator)
   if (inherits(HOT,error) || inherits(nominator,error) || inherits(denominator,error)) {
-    out(paste0("Could not calculate HOT layer of this record:\n",record[[1]]),type=2)
+    out(paste0("Could not calculate HOT layer of this record:\n",record[[identifier]]),type=2)
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
   # calculate scene cc % while deviation between HOT cc % and provided cc % larger 3 (positive or negative)
@@ -119,7 +120,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
     if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
     if (inherits(cMask,error)) {
-      out(paste0("HOT could not be calculated for this record:\n",record[[1]]),type=2)
+      out(paste0("HOT could not be calculated for this record:\n",record[[identifier]]),type=2)
     }
     cMaskMat <- raster::as.matrix(cMask)
     cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100 # calculate cloud percentage within whole scene for comparison with actual cloud cover for whole scene calculated by data provider

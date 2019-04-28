@@ -83,12 +83,13 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   lad <- try(L1pack::lad(meanRed ~ meanBlue,method="BR"))
   if (inherits(lad,error)) {
     if (slopeDefault == 0) {
-      useDefaultVals <- FALSE
+      hotFailed <- TRUE # shit
     } else {
-      useDefaultVals <- TRUE
-      regrVals <- c(interceptDefault,slopeDefault) # if LAD did not work take default intercept and slope values
+      hotFailed <- FALSE
     }
+    regrVals <- c(interceptDefault,slopeDefault) # if LAD did not work take default intercept and slope values
   } else {
+    hotFailed <- FALSE
     regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
   }
   
@@ -142,7 +143,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc %
   
   ##### Add aoi cloud cover percentage to record data.frame
-  record[[AOIcloudcoverpercentage]] <- cPercent
+  if (isFALSE(hotFailed)) {
+    record[[AOIcloudcoverpercentage]] <- cPercent
+  } else {
+    record[[AOIcloudcoverpercentage]] <- 9999
+  }
 
   return(record)
 

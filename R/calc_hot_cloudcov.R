@@ -26,7 +26,7 @@
 #' @author Henrik Fisser
 #' 
 #' @importFrom sf st_crs st_as_sf st_transform
-#' @importFrom raster projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
+#' @importFrom raster projection projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit
 #' 
@@ -37,21 +37,18 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"
   crsError <- " Desired coordinate system:\n"
-  crs <- st_crs("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
   cloudPrbThresh <- 40 # this threshold 
   
-  # ensure correct projections
+  crs <- raster::projection(preview)
+  if (is.na(crs)) {
+    out("Preview seems not to be geo-referenced. No projection found.",type=3)
+  }
+  # ensure correct projection of aoi
   if(class(aoi)[[1]] != "sf") {aoi <- st_as_sf(aoi)}
   if (st_crs(aoi) != crs) {
     try(aoi <- st_transform(aoi,crs))
     if (inherits(aoi,error)) {
-      out("Reprojection of aoi failed.",crsError,crs,type=3) 
-    }
-  }
-  if (raster::projection(preview) != crs) {
-    try(preview <- raster::projectRaster(preview,crs=crs))
-    if (inherits(preview,error)) {
-      out("Reprojection of preview image failed.",crsError,crs,type=3)
+      out(paste0("Reprojection of aoi failed.",crsError,crs),type=3) 
     }
   }
   

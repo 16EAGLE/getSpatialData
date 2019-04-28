@@ -651,7 +651,10 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param username username
 #' @param password password
 #' @param verbose verbose
+#'
 #' @keywords internal
+#' 
+#' @importFrom utils object.size
 #' @noRd
 
 .hotBridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20, sceneCloudCoverCol,

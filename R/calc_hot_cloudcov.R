@@ -123,7 +123,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
     }
     cMaskMat <- raster::as.matrix(cMask)
     cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100 # calculate cloud percentage within whole scene for comparison with actual cloud cover for whole scene calculated by data provider
-    ccDeviationFromProvider <- as.numeric(records[x,sceneCloudCoverColumn]) - as.numeric(cPercent) # difference between scene cloud cover from HOT and from data provider
+    ccDeviationFromProvider <- as.numeric(records[1,sceneCloudCoverCol]) - as.numeric(cPercent) # difference between scene cloud cover from HOT and from data provider
     if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
       cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc % is lower than provided cc %
     } else if (ccDeviationFromProvider <= -maxDeviation) { # if deviation is smaller negative maxDeviation
@@ -134,7 +134,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   ## Calculate cloud cover percentage
   cMask <- mask(cMask,aoi)
   if (!is.null(dir_out)) { # save cloud mask if desired
-    maskFilename <- paste0(dir_out,"\\",records[x,1],"_cloud_mask.tif")
+    maskFilename <- paste0(dir_out,"\\",records[1,1],"_cloud_mask.tif")
     writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
   }
   cMaskMatAoi <- as.matrix(cMask)

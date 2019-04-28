@@ -644,7 +644,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #'
 #' @keywords internal
 #' 
-#' @importFrom raster crs
 #' @importFrom utils object.size
 #' @noRd
 

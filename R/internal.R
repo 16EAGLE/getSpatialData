@@ -677,7 +677,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     }
     previewSize <- c(previewSize,object.size(preview))
     # pass preview to HOT function
-    currRecCloudCover <- calc_hot_cloudcov(records=records,preview=preview,aoi=aoi,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
+    currRecCloudCover <- calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
                                            slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
     endTime <- Sys.time()
     if (i <= 5) {elapsed <- round(as.numeric(difftime(endTime,startTime,units="mins")))}

@@ -7,7 +7,9 @@
 #' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
 #' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
 #' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
-#'
+#' 
+#' @note Mainly thought for internal use and only tested for preview images. 
+#' 
 #' @inheritParams calcSentinel_aoi_cloudcov
 #'        
 #' @return A data.frame, one line as the input with one additional column holding the estimated cloud cover within the aoi

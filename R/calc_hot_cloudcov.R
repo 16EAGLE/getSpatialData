@@ -26,7 +26,7 @@
 #' @author Henrik Fisser
 #' 
 #' @importFrom sf st_crs st_as_sf st_transform
-#' @importFrom raster projection projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
+#' @importFrom raster crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit
 #' 
@@ -39,7 +39,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   crsError <- " Desired coordinate system:\n"
   cloudPrbThresh <- 40 # this threshold 
   
-  crs <- raster::projection(preview)
+  crs <- raster::crs(preview)
   if (is.na(crs)) {
     out("Preview seems not to be geo-referenced. No projection found.",type=3)
   }

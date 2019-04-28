@@ -98,7 +98,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked == 0) {
     record[[AOIcloudcoverpercentage]] <- 100
-    out(paste0("The following record has no observations within aoi, cloud cover percentage was set to 100 thus: \n",record[[1]]))
+    out(paste0("The following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[1]]),msg=TRUE)
     return(record)
   }
   ## Calculate cloud probability layer for the whole scene
@@ -134,7 +134,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sc
   ## Calculate cloud cover percentage
   cMask <- mask(cMask,aoi)
   if (!is.null(dir_out)) { # save cloud mask if desired
-    maskFilename <- paste0(dir_out,"\\",records[1,1],"_cloud_mask.tif")
+    maskFilename <- paste0(dir_out,"\\",record[1,1],"_cloud_mask.tif")
     writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
   }
   cMaskMatAoi <- as.matrix(cMask)

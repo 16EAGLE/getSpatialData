@@ -26,6 +26,7 @@ calcSentinel_aoi_cloudcov <- function(records, aoi = NULL, save_masks = TRUE, di
   urlCol <- "url.icon" # the column of the preview icon url
   tileID <- "tileid" # for later use the column name holding the tile ID
   sceneCloudCoverCol <- "cloudcoverpercentage" # for later use the column name holding the scene cloud cover
+  numRecords <- NROW(records)
   
   # some data.frames have no tile id column or NA values in tile id column
   # thus, in all cases the tile id is extracted from the title of the record
@@ -44,7 +45,7 @@ calcSentinel_aoi_cloudcov <- function(records, aoi = NULL, save_masks = TRUE, di
     getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                         username=username,password=password,verbose=verbose)
     # pass preview to HOT function
-    currRecCC <- calc_hot_cloudcov(records = records, aoi = aoi, save_masks = save_masks, dir_out = dir_out, verbose = verbose)
+    currRecCC <- calc_hot_cloudcov(records=records,aoi=aoi,numRecords,maxDeviation,sceneCloudCoverCol,save_masks=save_masks,dir_out=dir_out,verbose=verbose)
   }))
   
 }

@@ -68,7 +68,7 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr GET write_disk authenticate
-#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue crop xyFromCell values projection
+#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue crop xyFromCell values
 #' @importFrom sf st_as_sfc st_crs as_Spatial
 #' @importFrom mapview viewRGB addFeatures
 #'
@@ -122,8 +122,7 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_p
       
       extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
       
-      crs <- st_crs("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
-      projection(r.prev) <- crs
+      crs(r.prev) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
       
       if(isTRUE(on_map)) {
         ## create map

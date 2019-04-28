@@ -16,7 +16,7 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom st_crs sf st_as_sf st_transform
+#' @importFrom sf st_crs st_as_sf st_transform
 #' @importFrom raster projectRaster nlayers stack values na.omit mask maxValue minValue as.matrix writeRaster
 #' @importFrom L1pack lad
 #' 

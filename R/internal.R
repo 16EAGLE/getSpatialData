@@ -634,3 +634,29 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }
 
+
+
+#' calc processing time
+#' 
+#' @param numRecords numRecords
+#' @param quarterNumRecords quarterNumRecords
+#' @param i record number in the loop
+#' @param processingTime processingTime
+#' @param previewSize previewSize
+#' @keywords internal
+#' @noRd
+.calcProcTime <- function(numRecords,quarterNumRecords,i,processingTime,previewSize) {
+  processedUpdate <- "records are processed "
+  meanProcessingTime <- mean(processingTime)
+  meanPreviewSize <- mean(previewSize)
+  stillToGoFor <- numRecords - 5
+  sumProcessingTime <- meanProcessingTime * (stillToGoFor)
+  sumDataDownload <- meanPreviewSize * (stillToGoFor)
+  out(paste0("5 records are processed.\nProcessing time for all remaining records in sum:",sumProcessingTime,"\nData amount to be downloaded:",sumDataDownload))
+  if (i == quarterNumRecords) {out(paste0(i,processedUpdate,"(approx. 25 % of all records)"))}
+  if (i == quarterNumRecords * 2) {out(paste0(i,processedUpdate,"(approx. 50 % of all records"))}
+  if (i == quarterNumRecords * 3) {out(paste0(i,processedUpdate,"(approx. 75 % of all records"))}
+}
+
+
+

@@ -1,4 +1,4 @@
-#' Calculate the cloud cover of Sentinel-2 within an aoi
+#' Calculate the cloud cover of Sentinel-2 data within an aoi
 #' 
 #' \code{calcSentinel_aoi_cloudcov} estimates the cloud cover of Sentinel-2 data based on preview images using the haze-optimal transformation (HOT)
 #' 
@@ -20,51 +20,18 @@
 #'
 #' @author Henrik Fisser
 #' 
-#' @importFrom stringi stri_split_fixed
-#' @importFrom utils object.size
-#' 
 #' @export
 
-calcSentinel_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
+calcSentinel_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, 
+                                      slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, 
+                                      username = NULL, password = NULL, verbose = TRUE) {
   
-  ## Define Sentinel-2-specific parameters
-  tileID <- "tileid" # for later use the column name holding the tile ID
   sceneCloudCoverCol <- "cloudcoverpercentage" # for later use the column name holding the scene cloud cover
-  numRecords <- NROW(records)
+  sensor <- "Sentinel-2"
   
-  # some data.frames have no tile id column or NA values in tile id column
-  # thus, in all cases the tile id is extracted from the title of the record
-  records <- lapply(records,function(x) {
-    titleSplit <- stringi::stri_split_fixed(x[["title"]],"_")
-    tileid <- sapply(1:length(titleSplit),function(i) {
-      id <- titleSplit[[i]][6] # get tileid from filename column
-    })
-    x[[tileID]] <- tileid
-    return <- x
-  })
-  
-  numRecords <- NROW(records)
-  quarterNumRecords <- round(numRecords/4)
-  processingTime <- c()
-  previewSize <- c()
-  ## Do HOT cloud cover assessment consecutively
-  records <- do.call(rbind,lapply(1:numRecords,function(i) {
-    startTime <- Sys.time()
-    # get preview of current record
-    currRecord <- records[i,]
-    preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
-                        username=username,password=password,verbose=verbose)
-    previewSize <- c(previewSize,object.size(preview))
-    # pass preview to HOT function
-    currRecCloudCover <- calc_hot_cloudcov(records=records,preview=preview,aoi=aoi,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
-                                           slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
-    endTime <- Sys.time()
-    if (i <= 5) {elapsed <- round(as.numeric(difftime(endTime,startTime,units="mins")))}
-    processingTime <- c(processingTime,elapsed)
-    if (numRecords >= 10 && i == 5) {
-      .calcProcTime(numRecords=numRecords,quarterNumRecords=quarterNumRecords,i=i,processingTime=processingTime,previewSize=previewSize)
-    }
-  }))
+  records <- .hotBridge(sensor=sensor,sceneCloudCoverCol=sceneCloudCoverCol,records=records,aoi=aoi,maxDeviation=maxDeviation,
+                        cloudPrbThreshold=cloudPrbThreshold,slopeDefault=slopeDefault,
+                        interceptDefault=interceptDefault,dir_out=dir_out,username=username,password=password,verbose=verbose)
   
   return(records)
 }

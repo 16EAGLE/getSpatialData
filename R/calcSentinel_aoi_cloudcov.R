@@ -20,6 +20,8 @@
 #'
 #' @author Henrik Fisser
 #' 
+#' @seealso \link{getSentinel_query} \link{getSentinel_preview} \link{getSentinel_data}
+#' 
 #' @export
 
 calcSentinel_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, 

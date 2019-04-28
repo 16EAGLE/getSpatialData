@@ -9,6 +9,8 @@
 #' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi
 #'
 #' @author Henrik Fisser
+#' 
+#' @seealso \link{getMODIS_query} \link{getMODIS_preview} \link{getMODIS_data}
 #'  
 #' @export
 

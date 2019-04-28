@@ -1,14 +1,16 @@
 #' Calculate the cloud cover of Landsat data within an aoi
 #' 
-#' \code{calcSentinel_aoi_cloudcov} estimates the cloud cover of Landsat data based on preview images using the haze-optimal transformation (HOT)
+#' \code{calcLandsat_aoi_cloudcov} estimates the cloud cover of Landsat data based on preview images using the haze-optimal transformation (HOT)
 #' 
 #' @details The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
 #'  
-#' @inheritParams calcSentinel_aoi_cloudcov
+#' @inheritParams calcLandsat_aoi_cloudcov
 #' 
 #' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi
 #'
 #' @author Henrik Fisser
+#' 
+#' @seealso \link{getLandsat_query} \link{getLandsat_preview} \link{getLandsat_data}
 #'  
 #' @export
 

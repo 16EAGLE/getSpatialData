@@ -11,7 +11,6 @@
 #' @param record data.frame, one line holding a single record from a records data.frame.
 #' @param preview raster, the preview image (RGB) of \code{record}. Should be: layer 1 = red, layer 2 = green, layer 3 = blue. If only two layers are provided, it is assumed: layer 1 = red, layer 2 = blue.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param num_records numeric, indicating how many records are going to be processed when calling the function iteratively. It is used for processing time estimation. Default is 1.
 #' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover % given by the data distributor. Default is \code{maxDeviation = 20}.
 #' @param sceneCloudCoverCol string, the clear name of the cloud cover column in the \code{record} data.frame provided by the data distributor.
 #' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 %) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}
@@ -30,7 +29,7 @@
 #' 
 #' @export
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, numRecords = 1, maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, dir_out = NULL, num_records = 1, slopeDefault = 1.4, interceptDefault = -10, verbose = TRUE) {
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, dir_out = NULL, num_records = 1, slopeDefault = 1.4, interceptDefault = -10, verbose = TRUE) {
   
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"

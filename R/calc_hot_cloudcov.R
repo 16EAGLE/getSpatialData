@@ -48,15 +48,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, save_masks = TRUE, di
       out("Reprojection of preview image failed.",crsError,crs,type=3)
     }
   }
-  ## Calculate least-alternate deviation (LAD) regression
-  # this step computes first safe clear-sky pixels adpated from the bins method from Zhu & Helmer 2018
-  # the procedure was adapted slightly because here it is being computed with discontinuous DN values. Suitable values for
-  # r and b were investigated systemetically. For HOT slope values of more than 1.5 were investigated to be most
-  # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
-  # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values of < 1 may lead for example to 
-  # a confusion of bright or reddish land surfaces with clouds
   
-  # prepare RGB or RB stack
+  ##### HOT
+  ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
   if (nlyrs == 3) {
     bBand <- preview[[3]]
@@ -66,6 +60,13 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, save_masks = TRUE, di
     rBand <- preview[[1]]
   }
   prvStck <- stack(bBand,rBand)
+  ## Calculate least-alternate deviation (LAD) regression
+  # this step computes first safe clear-sky pixels adpated from the bins method from Zhu & Helmer 2018
+  # the procedure was adapted slightly because here it is being computed with discontinuous DN values. Suitable values for
+  # r and b were investigated systemetically. For HOT slope values of more than 1.5 were investigated to be most
+  # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
+  # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values of < 1 may lead for example to 
+  # a confusion of bright or reddish land surfaces with clouds
   bThresh <- 80 # for dividing the 80 lowest blue DN values into equal interval bins
   rThresh <- 40 # from the 80 blue bins take the 40 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
@@ -85,9 +86,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, save_masks = TRUE, di
   meanBlue <- sapply(redMax,function(x){mean(x[["blue"]])})
   lad <- try(L1pack::lad(meanRed ~ meanBlue,method="BR"))
   if (inherits(lad,error)) {
-    si <- c(interceptDefault,slopeDefault) # if LAD did not work take default intercept and slope values
+    regrVals <- c(interceptDefault,slopeDefault) # if LAD did not work take default intercept and slope values
   } else {
-    si <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
+    regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
   }
   
   

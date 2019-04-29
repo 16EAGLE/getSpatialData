@@ -19,6 +19,8 @@ calcSentinel_aoi_cloudcov(records, aoi = NULL, maxDeviation = 20,
 
 \item{slopeDefault}{numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 % for the given record.}
 
+\item{interceptDefault}{numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.}
+
 \item{dir_out}{character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.}
 
 \item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
@@ -26,8 +28,6 @@ calcSentinel_aoi_cloudcov(records, aoi = NULL, maxDeviation = 20,
 \item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
-
-\item{intercept}{Default, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.}
 }
 \value{
 A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi.

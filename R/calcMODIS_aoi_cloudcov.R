@@ -4,7 +4,7 @@
 #' 
 #' @details The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
 #'  
-#' @inheritParams calcMODIS_aoi_cloudcov
+#' @inheritParams calcSentinel_aoi_cloudcov
 #' 
 #' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi
 #'

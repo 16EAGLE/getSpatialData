@@ -655,12 +655,13 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   ## Check input
   aoiClass <- class(aoi)
   if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  if (!class(records) == "data.frame") {out(paste0("Records has to be of class 'data.frame' in the format as returned within the getSpatialData package. But is of class: ",class(records)),type=3)}
 
   numRecords <- NROW(records)
-  out(paste0("\n",numRecords," records will be processed..."))
-  quarterNumRecords <- round(numRecords/4)
+  out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
   processingTime <- c()
   previewSize <- c()
+  prgbar <- txtProgressBar(0,numRecords,char="=",style=3,title="HOT Progress",label="0")
   ## Do HOT cloud cover assessment consecutively
   records <- do.call(rbind,lapply(1:numRecords,function(i) {
     startTime <- Sys.time()
@@ -692,11 +693,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if (numRecords >= 10 && i == 5) {
       .calcProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
-    if (numRecords >=10) {
-      processedUpdate <- " records are processed "
-      if (i == quarterNumRecords) {out(paste0("\n",i,processedUpdate,"(approx. 25 % of all records)"))}
-      if (i == quarterNumRecords * 2) {out(paste0("\n",i,processedUpdate,"(approx. 50 % of all records)"))}
-      if (i == quarterNumRecords * 3) {out(paste0("\n",i,processedUpdate,"(approx. 75 % of all records)"))}
+    if (i > 5) {
+      setTxtProgressBar(prgbar,i)
     }
     return(currRecCloudCover)
   }))
@@ -722,9 +720,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (sumProcessingTime < 1) {
     sumProcessingTime <- "less than 1 minute"
   } else {
-    sumProcessingTime <- paste0(sumProcessingTime," minutes")
+    sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
   sumDataDownload <- meanPreviewSize * stillToGoFor
-  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum: ",sumProcessingTime,"\nData amount to be downloaded: ",sumDataDownload," MB\n"))
+  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
 }
 

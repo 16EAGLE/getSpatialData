@@ -18,7 +18,7 @@ calcMODIS_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, clou
                                      slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, 
                                      username = NULL, password = NULL, verbose = TRUE) {
   
-  sceneCloudCoverCol <- "HIER MUSS WAS HIN" # for later use the column name holding the scene cloud cover
+  sceneCloudCoverCol <- "SceneCloudCover" # for later use the column name holding the scene cloud cover
   sensor <- "MODIS"
   
   records <- .hotBridge(sensor=sensor,sceneCloudCoverCol=sceneCloudCoverCol,records=records,aoi=aoi,maxDeviation=maxDeviation,

@@ -37,7 +37,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"
   crsError <- " Desired coordinate system:\n"
-  cloudPrbThresh <- 40 # this threshold 
+  currTitle <- record[[identifier]]
+  cloudPrbThresh <- 40 # this threshold
+  maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   
   crs <- raster::crs(preview)
   if (is.na(crs)) {
@@ -99,7 +101,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked == 0) {
     record[[AOIcloudcoverpercentage]] <- 100
-    out(paste0("The following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[1]]),msg=TRUE)
+    out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
   }
   ## Calculate cloud probability layer for the whole scene
@@ -109,43 +111,48 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   try(denominator <- sqrt(1 + slope^2))
   try(HOT <- nominator / denominator)
   if (inherits(HOT,error) || inherits(nominator,error) || inherits(denominator,error)) {
-    out(paste0("Could not calculate HOT layer of this record:\n",record[[identifier]]),type=2)
+    hotFailed <- TRUE
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
-  # calculate scene cc % while deviation between HOT cc % and provided cc % larger 3 (positive or negative)
+  # calculate scene cc % while deviation between HOT cc % and provided cc % larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 10 # this value does not matter at the beginning. Start with random value
-  
-  while (numTry <= 30 && (ccDeviationFromProvider >= 3 || ccDeviationFromProvider <= -3)) { # iterate maximum 30 times
+  while (numTry <= maxTry && (ccDeviationFromProvider >= 3 || ccDeviationFromProvider <= -3)) { # iterate maximum 30 times
     if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
     if (inherits(cMask,error)) {
-      out(paste0("HOT could not be calculated for this record:\n",record[[identifier]]),type=2)
+      hotFailed <- TRUE
     }
     cMaskMat <- raster::as.matrix(cMask)
     cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100 # calculate cloud percentage within whole scene for comparison with actual cloud cover for whole scene calculated by data provider
-    ccDeviationFromProvider <- as.numeric(records[1,sceneCloudCoverCol]) - as.numeric(cPercent) # difference between scene cloud cover from HOT and from data provider
-    if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
-      cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc % is lower than provided cc %
-    } else if (ccDeviationFromProvider <= -maxDeviation) { # if deviation is smaller negative maxDeviation
-      cloudPrbThreshold <- cloudPrbThreshold + 1 # increase threshold value because HOT cc % is higher than provided
+    try(ccDeviationFromProvider <- as.numeric(records[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
+    if (inherits(ccDeviationFromProvider,error) || is.na(ccDeviationFromProvider) || is.null(ccDeviationFromProvider)) {
+      ccDeviationFromProvider <- maxDeviation - 1 # escape the loop by setting the value artificially because calculation failed
+      hotFailed <- TRUE
+    } else {
+      if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
+        cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc % is lower than provided cc %
+      } else if (ccDeviationFromProvider <= -maxDeviation) { # if deviation is smaller negative maxDeviation
+        cloudPrbThreshold <- cloudPrbThreshold + 1 # increase threshold value because HOT cc % is higher than provided
+      }
     }
     numTry <- numTry + 1
   }
   ## Calculate cloud cover percentage
-  cMask <- mask(cMask,aoi)
-  if (!is.null(dir_out)) { # save cloud mask if desired
-    maskFilename <- paste0(dir_out,"\\",record[1,identifier],"_cloud_mask.tif")
-    writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
-  }
-  cMaskMatAoi <- as.matrix(cMask)
-  cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc %
-  
-  ##### Add aoi cloud cover percentage to record data.frame
   if (isFALSE(hotFailed)) {
+    cMask <- mask(cMask,aoi)
+    if (!is.null(dir_out)) { # save cloud mask if desired
+      maskFilename <- paste0(dir_out,"\\",record[1,identifier],"_cloud_mask.tif")
+      writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
+    }
+    cMaskMatAoi <- as.matrix(cMask)
+    cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc %
+    
+    ##### Add aoi cloud cover percentage to record data.frame
     record[[AOIcloudcoverpercentage]] <- cPercent
   } else {
     record[[AOIcloudcoverpercentage]] <- 9999
+    out(paste0("\nHOT could not be calculated for this record:\n",currTitle),type=2)
   }
 
   return(record)

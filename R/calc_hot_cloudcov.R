@@ -14,10 +14,10 @@
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
 #' @param identifier numeric, column number where a unique identifier of the scenes is located, sensor-specific.
-#' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover % given by the data distributor. Default is \code{maxDeviation = 20}.
+#' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 20}.
 #' @param sceneCloudCoverCol character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.
-#' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 %) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}.
-#' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 % for the given record.
+#' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}.
+#' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
 #' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
@@ -114,7 +114,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     hotFailed <- TRUE
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
-  # calculate scene cc % while deviation between HOT cc % and provided cc % larger maximum deviation from provider (positive or negative)
+  # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 10 # this value does not matter at the beginning. Start with random value
   while (numTry <= maxTry && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
@@ -131,9 +131,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
       hotFailed <- TRUE
     } else {
       if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
-        cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc % is lower than provided cc %
+        cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc \% is lower than provided cc \%
       } else if (ccDeviationFromProvider <= -maxDeviation) { # if deviation is smaller negative maxDeviation
-        cloudPrbThreshold <- cloudPrbThreshold + 1 # increase threshold value because HOT cc % is higher than provided
+        cloudPrbThreshold <- cloudPrbThreshold + 1 # increase threshold value because HOT cc \% is higher than provided
       }
     }
     numTry <- numTry + 1
@@ -146,7 +146,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
     }
     cMaskMatAoi <- as.matrix(cMask)
-    cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc %
+    cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc \%
     
     ##### Add aoi cloud cover percentage to record data.frame
     record[[AOIcloudcoverpercentage]] <- cPercent

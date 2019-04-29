@@ -5,14 +5,17 @@
 \title{Preview a Sentinel image}
 \usage{
 getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
-  username = NULL, password = NULL, hub = "auto", verbose = TRUE)
+  return_preview = FALSE, username = NULL, password = NULL,
+  hub = "auto", verbose = TRUE)
 }
 \arguments{
 \item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.}
 
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
-\item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
+\item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.#' @param return_preview logical, if \code{TRUE}, the preview image is returned georeferenced}
+
+\item{return_preview}{logical, if \code{TRUE}, the preview image is returned to the user. Default is FALSE.}
 
 \item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
 
@@ -23,10 +26,10 @@ getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }
 \value{
-None. A plot/view display is generated.
+By default only a plot/view display is generated. If \code{return_preview = TRUE} then the georeferenced preview icon is returned as raster stack.
 }
 \description{
-\code{getSentinel_preview} previews single image as RGB plot which had been queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
+\code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them. Optionally, the preview RGB image can also be returned to the user.
 }
 \examples{
 ## Load packages

@@ -14,7 +14,7 @@
 #'
 #' @author Henrik Fisser
 #' 
-#' @seealso \link{getLandsat_query} \link{getLandsat_preview} \link{getLandsat_data}
+#' @seealso \link{calc_hot_cloudcov} \link{getLandsat_query} \link{getLandsat_preview} \link{getLandsat_data}
 #'  
 #' @export
 

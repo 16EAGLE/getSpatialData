@@ -117,7 +117,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # calculate scene cc % while deviation between HOT cc % and provided cc % larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 10 # this value does not matter at the beginning. Start with random value
-  while (numTry <= maxTry && (ccDeviationFromProvider >= 3 || ccDeviationFromProvider <= -3)) { # iterate maximum 30 times
+  while (numTry <= maxTry && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
     if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
     if (inherits(cMask,error)) {

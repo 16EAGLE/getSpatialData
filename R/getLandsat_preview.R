@@ -59,10 +59,12 @@
 
 getLandsat_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_preview = FALSE, verbose = TRUE){
   
+  preview_crs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  
   if(isTRUE(return_preview)) {
-    r.prev <- .EE_preview(record = record, on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
+    r.prev <- .EE_preview(record = record, preview_crs = preview_crs, on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
     return(r.prev)
   } else {
-    .EE_preview(record = record, on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
+    .EE_preview(record = record, preview_crs = preview_crs, on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
   }
 }

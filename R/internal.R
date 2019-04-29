@@ -657,6 +657,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
 
   numRecords <- NROW(records)
+  out(paste0("\n",numRecords," records will be processed..."))
   quarterNumRecords <- round(numRecords/4)
   processingTime <- c()
   previewSize <- c()
@@ -714,7 +715,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom utils object.size
 #' @noRd
 .calcProcTime <- function(numRecords,i,processingTime,previewSize) {
-  meanProcessingTime <- round(mean(processingTime))
+  meanProcessingTime <- mean(processingTime)
   meanPreviewSize <- mean(previewSize) / 1000000
   stillToGoFor <- numRecords - 5
   sumProcessingTime <- meanProcessingTime * stillToGoFor

@@ -678,7 +678,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       identifier <- 15
     } else if (sensor == "MODIS") {
       preview <- getMODIS_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
-                                  username=username,password=password,verbose=verbose)
+                                  verbose=verbose)
       identifier <- 15
     }
     previewSize <- c(previewSize,object.size(preview))

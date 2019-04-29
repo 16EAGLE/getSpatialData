@@ -135,7 +135,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   ## Calculate cloud cover percentage
   cMask <- mask(cMask,aoi)
   if (!is.null(dir_out)) { # save cloud mask if desired
-    maskFilename <- paste0(dir_out,"\\",record[1,1],"_cloud_mask.tif")
+    maskFilename <- paste0(dir_out,"\\",record[1,identifier],"_cloud_mask.tif")
     writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
   }
   cMaskMatAoi <- as.matrix(cMask)

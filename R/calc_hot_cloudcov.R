@@ -149,7 +149,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc \%
     
     ##### Add aoi cloud cover percentage to record data.frame
-    record[[AOIcloudcoverpercentage]] <- cPercent
+    record[[AOIcloudcoverpercentage]] <- as.numeric(cPercent)
   } else {
     record[[AOIcloudcoverpercentage]] <- 9999
     out(paste0("\nHOT could not be calculated for this record:\n",currTitle),type=2)

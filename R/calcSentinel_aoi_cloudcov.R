@@ -3,6 +3,10 @@
 #' \code{calcSentinel_aoi_cloudcov} estimates the cloud cover of Sentinel-2 data based on preview images using the haze-optimal transformation (HOT)
 #' 
 #' @details The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
+#' Haze-optimal transformation (HOT) procedure is applied based on 
+#' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
+#' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
+#' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
@@ -19,7 +23,7 @@
 #'
 #' @author Henrik Fisser
 #' 
-#' @seealso \link{getSentinel_query} \link{getSentinel_preview} \link{getSentinel_data}
+#' @seealso \link{calc_hot_cloudcov} \link{getSentinel_query} \link{getSentinel_preview} \link{getSentinel_data}
 #' 
 #' @export
 

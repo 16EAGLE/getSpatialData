@@ -9,7 +9,7 @@ calcLandsat_aoi_cloudcov(records, aoi = NULL, maxDeviation = 20,
   dir_out = NULL, username = NULL, password = NULL, verbose = TRUE)
 }
 \value{
-A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi
+A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi.
 }
 \description{
 \code{calcLandsat_aoi_cloudcov} estimates the cloud cover of Landsat data based on preview images using the haze-optimal transformation (HOT)

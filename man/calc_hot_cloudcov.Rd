@@ -16,24 +16,24 @@ calc_hot_cloudcov(record, preview, aoi = NULL, identifier = NULL,
 
 \item{aoi}{sp or sf, the aoi.}
 
-\item{identifier}{numeric, column number where a unique identifier of the scenes is located, sensor-specific}
+\item{identifier}{numeric, column number where a unique identifier of the scenes is located, sensor-specific.}
 
 \item{maxDeviation}{numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover % given by the data distributor. Default is \code{maxDeviation = 20}.}
 
 \item{sceneCloudCoverCol}{character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.}
 
-\item{cloudPrbThreshold}{numeric, the threshold of the HOT cloud probability layer (0-100 %) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}}
+\item{cloudPrbThreshold}{numeric, the threshold of the HOT cloud probability layer (0-100 %) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}.}
 
 \item{slopeDefault}{numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 % for the given record.}
-
-\item{interceptDefault, }{value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.}
 
 \item{dir_out}{character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+
+\item{intercept}{Default, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.}
 }
 \value{
-A data.frame, one line as the input with one additional column holding the estimated cloud cover within the aoi
+A data.frame, one line as the input with one additional column holding the estimated cloud cover within the aoi.
 }
 \description{
 \code{calc_hot_cloudcov} estimates the cloud cover of a satellite image raster using the haze-optimal transformation (HOT) within an aoi

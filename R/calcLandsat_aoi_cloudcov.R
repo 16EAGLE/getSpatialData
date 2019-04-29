@@ -6,7 +6,7 @@
 #'  
 #' @inheritParams calcLandsat_aoi_cloudcov
 #' 
-#' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi
+#' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi.
 #'
 #' @author Henrik Fisser
 #' 

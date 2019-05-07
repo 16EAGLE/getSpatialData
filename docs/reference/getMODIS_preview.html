@@ -63,7 +63,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">getSpatialData</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.4</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.5</span>
       </span>
     </div>
 
@@ -159,7 +159,7 @@
     </div>
 
     <pre class="usage"><span class='fu'>getMODIS_preview</span>(<span class='no'>record</span>, <span class='kw'>on_map</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>, <span class='kw'>show_aoi</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
-  <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+  <span class='kw'>return_preview</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -177,14 +177,18 @@
       <td><p>logical, if <code>TRUE</code>, the session AOI defined with <a href='gSD_settings.html'>set_aoi</a> is drawn to the map viewer. Ignored, if <code>on_map = FALSE</code> or if no AOI has been defined with <code>set_aoi</code>. Default is <code>TRUE</code>.</p></td>
     </tr>
     <tr>
+      <th>return_preview</th>
+      <td><p>logical, if <code>TRUE</code>, the preview image is returned to the user. Default is FALSE.</p></td>
+    </tr>
+    <tr>
       <th>verbose</th>
-      <td><p>logical, if <code>TRUE</code>, details on the function's progress will be visibile on the console. Default is TRUE.</p></td>
+      <td><p>logical, whether to display details on the function's progress or output on the console.</p></td>
     </tr>
     </table>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>None. A plot/view display is generated.</p>
+    <p>By default only a plot/view display is generated. If <code>return_preview = TRUE</code> then the georeferenced preview icon is returned as raster stack.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

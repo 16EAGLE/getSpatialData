@@ -1,4 +1,10 @@
-## getSpatialData 0.0.4 (under development)
+## getSpatialData 0.0.5 (under development)
+Introduction of cloud cover assessment functions
+
+**to be updated**
+
+
+## getSpatialData 0.0.4
 Introduction of functions for data preparation, feature enhancements, bug fixes
 
 

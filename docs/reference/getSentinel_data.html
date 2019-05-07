@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Download Sentinel-1, Sentinel-2 and Sentinel-3 data — getSentinel_data • getSpatialData</title>
+<title>Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data — getSentinel_data • getSpatialData</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Download Sentinel-1, Sentinel-2 and Sentinel-3 data — getSentinel_data" />
+<meta property="og:title" content="Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data — getSentinel_data" />
 
-<meta property="og:description" content="getSentinel_data downloads Sentinel data from the Copernicus Open Access Hubs for Sentinel. The datasets are identified by the query return of getSentinel_query." />
+<meta property="og:description" content="getSentinel_data downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by getSentinel_query." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -147,14 +147,14 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Download Sentinel-1, Sentinel-2 and Sentinel-3 data</h1>
+    <h1>Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data</h1>
     
     <div class="hidden name"><code>getSentinel_data.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p><code>getSentinel_data</code> downloads Sentinel data from the Copernicus Open Access Hubs for Sentinel. The datasets are identified by the query return of <a href='getSentinel_query.html'>getSentinel_query</a>.</p>
+    <p><code>getSentinel_data</code> downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by <a href='getSentinel_query.html'>getSentinel_query</a>.</p>
     
     </div>
 
@@ -186,7 +186,14 @@
     </tr>
     <tr>
       <th>hub</th>
-      <td><p>character, either "auto" to access the Copernicus Open Access Hubs by <code>platform</code> input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".</p></td>
+      <td><p>character, either</p><ul>
+<li><p>"auto" (default) to automatically select a suitable Copernicus hub depending on the selected <code>platform</code>,</p></li>
+<li><p>"dhus" to look for operational Open Hub records only,</p></li>
+<li><p>"s3" to look for Sentinel-3 pre-operational records only,</p></li>
+<li><p>"s5p" to look for Sentinel-5P precursor pre-operational records only,</p></li>
+<li><p>"GNSS" to look for GNSS RINEX records only,</p></li>
+<li><p>or a valid API URL.</p></li>
+</ul></td>
     </tr>
     <tr>
       <th>verbose</th>

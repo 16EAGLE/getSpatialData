@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Query Sentinel-1, Sentinel-2 and Sentinel-3 data — getSentinel_query • getSpatialData</title>
+<title>Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records — getSentinel_query • getSpatialData</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,9 +30,9 @@
 
 
 
-<meta property="og:title" content="Query Sentinel-1, Sentinel-2 and Sentinel-3 data — getSentinel_query" />
+<meta property="og:title" content="Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records — getSentinel_query" />
 
-<meta property="og:description" content="getSentinel_query queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered." />
+<meta property="og:description" content="getSentinel_query queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered." />
 <meta name="twitter:card" content="summary" />
 
 
@@ -147,20 +147,20 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Query Sentinel-1, Sentinel-2 and Sentinel-3 data</h1>
+    <h1>Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records</h1>
     
     <div class="hidden name"><code>getSentinel_query.Rd</code></div>
     </div>
 
     <div class="ref-description">
     
-    <p><code>getSentinel_query</code> queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.</p>
+    <p><code>getSentinel_query</code> queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered.</p>
     
     </div>
 
     <pre class="usage"><span class='fu'>getSentinel_query</span>(<span class='no'>time_range</span>, <span class='no'>platform</span>, <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>check_avail</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>hub</span> <span class='kw'>=</span> <span class='st'>"auto"</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+  <span class='kw'>check_avail</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>gnss</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>hub</span> <span class='kw'>=</span> <span class='st'>"auto"</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -171,7 +171,7 @@
     </tr>
     <tr>
       <th>platform</th>
-      <td><p>character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".</p></td>
+      <td><p>character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5P".</p></td>
     </tr>
     <tr>
       <th>aoi</th>
@@ -179,7 +179,11 @@
     </tr>
     <tr>
       <th>check_avail</th>
-      <td><p>logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column <code>online</code> to the returned data frame of records. Default is <code>FALSE</code>, since check increases query request time.</p></td>
+      <td><p>logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column <code>available</code> to the returned data frame of records. Default is <code>FALSE</code>, since check increases query request time.</p></td>
+    </tr>
+    <tr>
+      <th>gnss</th>
+      <td><p>logical, whether to query for GNSS RINEX records instead of remote sensing instrument records. If <code>TRUE</code>, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and <code>aoi</code> settings are ignored. If <code>FALSE</code> (default), remote sensing instrument records, queried including <code>aoi</code> settings, are returned (see <code>details</code>).</p></td>
     </tr>
     <tr>
       <th>username</th>
@@ -191,7 +195,14 @@
     </tr>
     <tr>
       <th>hub</th>
-      <td><p>character, either "auto" to access the Copernicus Open Access Hubs by <code>platform</code> input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".</p></td>
+      <td><p>character, either</p><ul>
+<li><p>"auto" (default) to automatically select a suitable Copernicus hub depending on the selected <code>platform</code>,</p></li>
+<li><p>"dhus" to look for operational Open Hub records only,</p></li>
+<li><p>"s3" to look for Sentinel-3 pre-operational records only,</p></li>
+<li><p>"s5p" to look for Sentinel-5P precursor pre-operational records only,</p></li>
+<li><p>"GNSS" to look for GNSS RINEX records only,</p></li>
+<li><p>or a valid API URL.</p></li>
+</ul></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -202,6 +213,10 @@
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.</p>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>To query for records of remote sensing instruments by <code>time_range</code>, <code>platform</code> and <code>aoi</code>, argument <code>gnss</code> should be <code>FALSE</code> (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument <code>gnss</code> to <code>TRUE</code>. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see <a href='https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3'>https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3</a> and <a href='https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification'>https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification</a>).</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
@@ -269,6 +284,8 @@
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
+
+      <li><a href="#details">Details</a></li>
 
       <li><a href="#see-also">See also</a></li>
       

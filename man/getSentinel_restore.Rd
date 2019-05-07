@@ -14,7 +14,15 @@ getSentinel_restore(record, username = NULL, password = NULL,
 
 \item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
 
-\item{hub}{character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".}
+\item{hub}{character, either
+\itemize{
+   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+   \item "dhus" to look for operational Open Hub records only,
+   \item "s3" to look for Sentinel-3 pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
+   \item "GNSS" to look for GNSS RINEX records only,
+   \item or a valid API URL.
+}}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }

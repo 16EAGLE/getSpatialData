@@ -1,17 +1,30 @@
-#' Query Sentinel-1, Sentinel-2 and Sentinel-3 data
+#' Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records
 #'
-#' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel data by some basic input search parameters. The function returns a data frame that can be further filtered.
+#' \code{getSentinel_query} queries the Copernicus Open Access Hubs for Sentinel records by some basic input search parameters. The function returns a data frame of records that can be further filtered.
 #'
 #' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"
-#' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2" or "Sentinel-3".
+#' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5P".
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param check_avail logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{online} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.
+#' @param check_avail logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.
+#' @param gnss logical, whether to query for GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see \code{details}).
 #' @param username character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
-#' @param hub character, either "auto" to access the Copernicus Open Access Hubs by \code{platform} input, "operational" to look for ESA's operational products from the Open Hub,  "pre-ops" to look for pre-operational products from the Pre-Ops Hub (e.g. currently all Sentinel-3 products), or an valid API URL. Default is "auto".
-#' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
+#' @param hub character, either
+#' \itemize{
+#'    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+#'    \item "dhus" to look for operational Open Hub records only,
+#'    \item "s3" to look for Sentinel-3 pre-operational records only,
+#'    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
+#'    \item "GNSS" to look for GNSS RINEX records only,
+#'    \item or a valid API URL.
+#' }
+#' @param verbose logical, whether to display details on the function's progress or output on the console.
 #'
 #' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. Records can be handed to the other getSentinel functions for previewing and downloading.
+#'
+#' @details 
+#' To query for records of remote sensing instruments by \code{time_range}, \code{platform} and \code{aoi}, argument \code{gnss} should be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
+#' 
 #'
 #' @author Jakob Schwalb-Willmann
 #'
@@ -74,52 +87,58 @@
 #' @seealso \link{getSentinel_data}
 #' @export
 
-getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FALSE,  username = NULL, password = NULL,
+getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FALSE, gnss = FALSE, username = NULL, password = NULL,
                               hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)) username <- getOption("gSD.cophub_user")
-    if(is.null(password)) password <- getOption("gSD.cophub_pass")
+  if(is.TRUE(getOption("gSD.dhus_set"))){
+    if(is.null(username)) username <- getOption("gSD.dhus_user")
+    if(is.null(password)) password <- getOption("gSD.dhus_pass")
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)){ password = password} else{ password = getPass()}
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
 
   ## Global AOI
-  if(is.null(aoi)){
-    if(is.TRUE(getOption("gSD.aoi_set"))){
-      aoi <- getOption("gSD.aoi")
-    } else{
-      out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
+  if(!isTRUE(gnss)){
+    if(is.null(aoi)){
+      if(is.TRUE(getOption("gSD.aoi_set"))){
+        aoi <- getOption("gSD.aoi")
+      } else{
+        out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
+      }
     }
+    aoi <- st_as_sfc(st_bbox(.make_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
+    aoi <- .make_aoi(aoi, type = "matrix")
+  } else{
+    aoi <- NULL
   }
-  aoi <- st_as_sfc(st_bbox(.make_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
-  aoi <- .make_aoi(aoi, type = "matrix")
-
 
   ## check time_range and platform
   char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(length(time_range) != 2){out("Argument 'time_range' must contain two elements (start and stop time).", type = 3)}
-
+  if(!(tolower(platform) %in% c("sentinel-1", "sentinel-2", "sentinel-3", "sentinel-5p"))) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5P'", type = 3)
+  
   ## url assembler function
   cop.url <- function(ext.xy, url.root, platform, time.range, row.start){
+    if(platform == "Sentinel-5P") platform <- "Sentinel-5"
     qs <- list(url.root = paste0(url.root, "/"),
                search = c("search?start=", "&rows=100&q="),  #"search?q=", #start=0&rows=1000&
                and = "%20AND%20",
                aoi.poly = c("footprint:%22Intersects(POLYGON((", ")))%22"),
                platformname = "platformname:",
                time = list("[" = "beginposition:%5b", "to" = "%20TO%20", "]" = "%5d"))
-    aoi.str <- paste0(apply(ext.xy, MARGIN = 1, function(x) paste0(x, collapse = "%20")), collapse = ",")
     time.range <- sapply(time.range, function(x) paste0(x, "T00:00:00.000Z"), USE.NAMES = F)
-    return(paste0(qs$url.root, qs$search[1], toString(row.start), qs$search[2], "(", qs$aoi.poly[1], aoi.str, qs$aoi.poly[2], qs$and,
+    if(!is.null(ext.xy)) aoi.str <- paste0(apply(ext.xy, MARGIN = 1, function(x) paste0(x, collapse = "%20")), collapse = ",")
+    
+    return(paste0(qs$url.root, qs$search[1], toString(row.start), qs$search[2], "(", if(!is.null(ext.xy)) paste0(qs$aoi.poly[1], aoi.str, qs$aoi.poly[2], qs$and) else "",
                   qs$platformname, platform, qs$and,
                   qs$time$`[`, time.range[1], qs$time$to, time.range[2], qs$time$`]`, ")"))
   }
 
   ## Manage API access
-  cred <- .CopHub_select(hub, platform, username, password)
+  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else platform, user = username, pw = password)
 
   ## query API
   row.start <- -100; re.query <- T; give.return <- T
@@ -167,13 +186,13 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
       rdf[1, match(names(x), rn)] <- sapply(x, as.character)
       return(rdf)
     }))
-    if(isTRUE(check_avail)) records$online <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+    if(isTRUE(check_avail)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+    
+    # convert expected numeric fields
+    fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
+                                                                              "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage")) x %in% y, USE.NAMES = F)]
+    records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+    records$gnss <- gnss
   }
-
-  # convert expected numeric fields
-  fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
-                                           "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage")) x %in% y, USE.NAMES = F)]
-  records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
-  
   if(is.TRUE(give.return)) return(records)
 }

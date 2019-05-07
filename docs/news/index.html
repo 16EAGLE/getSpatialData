@@ -151,58 +151,88 @@
     <div id="getspatialdata-0-0-4-under-development" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-4-under-development" class="anchor"></a>getSpatialData 0.0.4 (under development)</h2>
-<p>Introduction of functions for data preparation, feature enhancements</p>
-<p><br><strong>New functions:</strong></p>
+<p>Introduction of functions for data preparation, feature enhancements, bug fixes</p>
+<div id="new-functions" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-functions" class="anchor"></a>New functions:</h4>
 <ul>
 <li>
-<code>services_avail</code>: checks and returns the status of all online services used by getSpatialData. Can be used to check if a service is undergoing maintenance or is unavailable due to unknown reasons.</li>
+<code><a href="../reference/gSD_settings.html">services_avail()</a></code>: checks and returns the status of all online services used by getSpatialData. Can be used to check if a service is undergoing maintenance or is unavailable due to unknown reasons.</li>
 <li>
-<code>getSentinel_restore</code>: restore Sentinel datasets that have been archived to Copernocus LTA</li>
+<code><a href="../reference/getSentinel_restore.html">getSentinel_restore()</a></code>: restore Sentinel datasets that have been archived to Copernocus LTA</li>
 <li>
 <code><a href="../reference/prepSentinel.html">prepSentinel()</a></code>: automatically prepare Sentinel data to be ready-to-use</li>
 <li>
 <code><a href="../reference/cropFAST.html">cropFAST()</a></code>: fastly crop large-scale datasets to a spatial extent</li>
 </ul>
-<p><br><strong>New features:</strong></p>
+</div>
+<div id="new-features" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-features" class="anchor"></a>New features:</h4>
 <ul>
 <li>
 <code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: argument “check_avail” added to check on-demand availability of Sentinel datasets or if they had been moved to the Copernicus Long-Term Archive (LTA). Deactivated by default since check increases query request time.</li>
 <li>
 <code><a href="../reference/getSentinel_data.html">getSentinel_data()</a></code>: checks for on-demand availability of requested datasets first before attempting download.</li>
 <li>
+<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code> and <code><a href="../reference/getSentinel_data.html">getSentinel_data()</a></code>: added Sentinel-5 precursor and Sentinel GNSS on-board GPS data support</li>
+<li>
 <code><a href="../reference/gSD_settings.html">set_archive()</a></code>: added argument <code>create</code> to control whether archive directory should be created or not.</li>
 <li>
-<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: added quick filters for filtering records by level or cloud cover (<a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: added quick filters for filtering records by level or cloud cover (contribution by <a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
 <li>
-<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA orde placement of records with diverging products level in one single call now possible (<a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA order placement of records with diverging products level in one single call now possible (contribution by <a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
 <li>
 <code>_query()</code> functions: Fields known to be of type numeric (e.g. cloud cover percentages) are now converted into numeric</li>
+<li>
+<code>_data()</code> functions: added number of downloaded item vs total number of downloads to console output</li>
 </ul>
-<p><br><strong>Bug fixes:</strong></p>
+</div>
+<div id="major-bug-fixes" class="section level4">
+<h4 class="hasAnchor">
+<a href="#major-bug-fixes" class="anchor"></a>Major bug fixes:</h4>
 <ul>
 <li>
 <code><a href="../reference/getMODIS_data.html">getMODIS_data()</a></code> now native, deprecated FTP LAADS DAAC services replaced by https requests</li>
 <li>
-<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: bug solved that caused the function to download only the first product of an order when using order IDs with espa_order as argument</li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: bug that caused the function to download only the first product of an order when using order IDs with espa_order as argument</li>
 <li>
-<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows. See issue #6.</li>
+<code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: AOIs are not directly used for the query anymore, instead a bounding box is used to prevent exceeding the maximum of 200 polygon points that DHUS allows (issue #6)</li>
+<li>
+<code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code>: bug in translating the AOI geometry into query, causing eastwards shifted query results (issue #17)</li>
 <li>all <code>_data</code> functions and <code><a href="../reference/gSD_settings.html">set_archive()</a></code> now expand paths shortend with swung dashed to avoid problems with tools::md5sum</li>
 <li>
-<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA orders are not double-placed anymore (<a href='https://github.com/SteveMHill'>@SteveMHill</a>) (issue #20)</li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: bug causing false file name subsetting (issue 19)</li>
+<li>
+<code><a href="../reference/getLandsat_data.html">getLandsat_data()</a></code>: ESPA orders are not double-placed anymore (contribution by <a href='https://github.com/SteveMHill'>@SteveMHill</a>) (issue #20)</li>
+<li>
+<code><a href="../reference/getMODIS_data.html">getMODIS_data()</a></code>: bug preventing successfull downloads of some MODIS products due to outdated EE URLs which are now checked and, if necessary, replaced with recent ones (issue #22)</li>
+<li>
+<code><a href="../reference/getMODIS_preview.html">getMODIS_preview()</a></code>: bug causing previews to be stretched to the wrong extents (issue #23)</li>
+<li>
+<code><a href="../reference/getSentinel_preview.html">getSentinel_preview()</a></code>: bug causing previews to be stretched to the wrong extents</li>
+<li>
+<code><a href="../reference/getSentinel_data.html">getSentinel_data()</a></code>: bug causing Sentinel downloads to fail due to the selection of the wrong LTA availability column (issue #27)</li>
 </ul>
-<p><br><strong>Contributions:</strong></p>
+</div>
+<div id="contributions" class="section level4">
+<h4 class="hasAnchor">
+<a href="#contributions" class="anchor"></a>Contributions:</h4>
 <ul>
 <li>Code contributions by Steven Hill (<a href='https://github.com/SteveMHill'>@SteveMHill</a>)</li>
-<li>Bug indication by Benjmain Leutner (<a href='https://github.com/bleutner'>@bleutner</a>)</li>
+<li>Bug indication by <a href='https://github.com/bleutner'>@bleutner</a>, <a href='https://github.com/vanto1994'>@vanto1994</a>, <a href='https://github.com/mtreg'>@mtreg</a>, <a href='https://github.com/MatthiasSiewert'>@MatthiasSiewert</a>, <a href='https://github.com/RemoteSensingR'>@RemoteSensingR</a></li>
+<li>Feature ideas by <a href='https://github.com/kadyb'>@kadyb</a>, <a href='https://github.com/ptaconet'>@ptaconet</a></li>
 </ul>
-<p><br></p>
 <hr>
+</div>
 </div>
     <div id="getspatialdata-0-0-3" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-3" class="anchor"></a>getSpatialData 0.0.3</h2>
 <p>getLandsat* and getMODIS* function bundles for USGS EE client</p>
-<p><br><strong>New functions:</strong></p>
+<div id="new-functions-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-functions-1" class="anchor"></a>New functions:</h4>
 <ul>
 <li>
 <code><a href="../reference/getLandsat_names.html">getLandsat_names()</a></code>: obtain Landsat product names</li>
@@ -223,12 +253,18 @@
 <li>
 <code><a href="../reference/gSD_login.html">login_USGS()</a></code>: session-wide login to USGS services</li>
 </ul>
-<p><br><strong>New features:</strong></p>
+</div>
+<div id="new-features-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-features-1" class="anchor"></a>New features:</h4>
 <ul>
 <li>
 <code><a href="../reference/getLandsat_query.html">getLandsat_query()</a></code> and <code><a href="../reference/getMODIS_query.html">getMODIS_query()</a></code>: argument “name” is now optional and set to “all” by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column “dataset_name”.</li>
 </ul>
-<p><br><strong>Bug fixes:</strong></p>
+</div>
+<div id="bug-fixes" class="section level4">
+<h4 class="hasAnchor">
+<a href="#bug-fixes" class="anchor"></a>Bug fixes:</h4>
 <ul>
 <li>RGB clouring of preview functions is now correct</li>
 <li>
@@ -236,24 +272,32 @@
 <li>
 <code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code> paging error (always maxiumu of 200 records) solved</li>
 </ul>
-<p><br><strong>Minor Changes:</strong></p>
+</div>
+<div id="minor-changes" class="section level4">
+<h4 class="hasAnchor">
+<a href="#minor-changes" class="anchor"></a>Minor Changes:</h4>
 <ul>
 <li>clearer login functions naming (removed ‘set_’ prefix)</li>
 <li>all request are now internally channeld through gSD.get/gSD.post</li>
 <li>clearer semantics, changed “products” argument to “records”</li>
 </ul>
-<p><br><strong>Contributions:</strong></p>
+</div>
+<div id="contributions-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#contributions-1" class="anchor"></a>Contributions:</h4>
 <ul>
 <li>Bug fix by Francesco Pirotti (<a href='https://github.com/fpirotti'>@fpirotti</a>, #2)</li>
 </ul>
-<p><br></p>
 <hr>
+</div>
 </div>
     <div id="getspatialdata-0-0-2" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-2" class="anchor"></a>getSpatialData 0.0.2</h2>
 <p>initial session-wide tool functions</p>
-<p><br><strong>New functions:</strong></p>
+<div id="new-functions-2" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-functions-2" class="anchor"></a>New functions:</h4>
 <ul>
 <li>
 <code><a href="../reference/gSD_settings.html">set_archive()</a></code>: defines getSpatialData archive folder</li>
@@ -262,23 +306,31 @@
 <li>
 <code><a href="../reference/gSD_settings.html">view_aoi()</a></code>: displays AOI in a mapview viewer</li>
 </ul>
-<p><br><strong>New features:</strong></p>
+</div>
+<div id="new-features-2" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-features-2" class="anchor"></a>New features:</h4>
 <ul>
 <li>
 <code><a href="../reference/getSentinel_preview.html">getSentinel_preview()</a></code> displays previews as corner-referenced RGB images on a mapview map in relation to session AOI by default. With show_aoi = F the session AOI is not displayed. With on_map = F a simple RGB plot is displayed instead.</li>
 </ul>
-<p><br><strong>Contributions:</strong></p>
+</div>
+<div id="contributions-2" class="section level4">
+<h4 class="hasAnchor">
+<a href="#contributions-2" class="anchor"></a>Contributions:</h4>
 <ul>
 <li>Feature idea by Mike Treglia (<a href='https://github.com/mtreg'>@mtreg</a>, #1)</li>
 </ul>
-<p><br></p>
 <hr>
+</div>
 </div>
     <div id="getspatialdata-0-0-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getspatialdata-0-0-1" class="anchor"></a>getSpatialData 0.0.1</h2>
 <p>getSentinel* function bundle for ESA Copernicus R client</p>
-<p><br><strong>New functions:</strong></p>
+<div id="new-functions-3" class="section level4">
+<h4 class="hasAnchor">
+<a href="#new-functions-3" class="anchor"></a>New functions:</h4>
 <ul>
 <li>
 <code><a href="../reference/getSentinel_query.html">getSentinel_query()</a></code>: query function for Sentinel-1, -2, -3</li>
@@ -289,13 +341,16 @@
 <li>
 <code><a href="../reference/gSD_login.html">login_CopHub()</a></code>: session login for getSentinel* functions</li>
 </ul>
-<p><br><strong>Removed features:</strong></p>
+</div>
+<div id="removed-features" class="section level4">
+<h4 class="hasAnchor">
+<a href="#removed-features" class="anchor"></a>Removed features:</h4>
 <ul>
 <li>early-dev. python bindings, getSentinel* is fully R-native now</li>
 </ul>
-<p><br></p>
 <hr>
 <p>This document should provide a broad overview on changes that are applied to the getSpatialData R package. There is no warranty for completeness, since minor changes might not be included. All improvement and feature descriptions are bundled per release version. The document is currently maintained by Jakob Schwalb-Willmann.</p>
+</div>
 </div>
   </div>
 

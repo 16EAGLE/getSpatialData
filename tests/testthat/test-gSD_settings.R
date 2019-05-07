@@ -1,20 +1,23 @@
-if(runAuthTests){
+context("gSD_login")
+test_that("login_CopHub", {
+  if(isTRUE(test.run$authentify)){
+    expect_null(x <- login_CopHub(username = test.cred$dhus.user, password = test.cred$dhus.pass))
+    expect_true(getOption("gSD.dhus_set"))
+    expect_is(username <- getOption("gSD.dhus_user"), "character")
+    expect_is(password <- getOption("gSD.dhus_pass"), "character")
+  }
+  expect_error(x <- login_CopHub(username = "", password = "abc"))
+})
 
-  context("gSD_login")
-  test_that("login_CopHub", {
-    expect_is(x <- login_CopHub(username = vars.auth$dhus.user, password = vars.auth$dhus.pass), "list")
-    expect_true(getOption("gSD.cophub_set"))
-    expect_is(username <- getOption("gSD.cophub_user"), "character")
-    expect_is(password <- getOption("gSD.cophub_pass"), "character")
-  })
-
-  test_that("login_USGS", {
-    expect_is(x <- login_USGS(username = vars.auth$ee.user, password = vars.auth$ee.pass), "list")
+test_that("login_USGS", {
+  if(isTRUE(test.run$authentify)){
+    expect_null(x <- login_USGS(username = test.cred$ee.user, password = test.cred$ee.pass))
     expect_true(getOption("gSD.usgs_set"))
     expect_is(username <- getOption("gSD.usgs_user"), "character")
     expect_is(password <- getOption("gSD.usgs_pass"), "character")
-  })
-}
+  }
+  expect_error(x <- login_USGS(username = "", password = "abc"))
+})
 
 
 context("gSD_settings")
@@ -38,4 +41,9 @@ test_that("get_aoi", {
   expect_is(x <- get_aoi(), "sfc_POLYGON")
   expect_is(x <- get_aoi(type = "sp"), "SpatialPolygons")
   expect_is(x <- get_aoi(type = "matrix"), "matrix")
+})
+
+test_that("services_avail", {
+  expect_null(x <- services_avail(verbose = F))
+  expect_is(x <- services_avail(value = T, verbose = F), "data.frame")
 })

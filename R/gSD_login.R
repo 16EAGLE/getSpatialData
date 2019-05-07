@@ -34,32 +34,42 @@
 #' @seealso getSentinel_query getLandsat_query
 #'
 login_CopHub <- function(username, password = NULL){
-
+  
   if(is.null(password)){password <- getPass()}
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
-
-  options(gSD.cophub_user=username)
-  options(gSD.cophub_pass=password)
-  options(gSD.cophub_set=TRUE)
+  
+  # save credentials
+  options(gSD.dhus_user=username)
+  options(gSD.dhus_pass=password)
+  options(gSD.dhus_set=TRUE)
+  
+  # verify credentials
+  x <- try(gSD.get(paste0(getOption("gSD.api")$dhus, "odata/v1/"), username, password), silent = T)
+  if(inherits(x, "try-error")) out("Login failed. Please retry later or call services_avail() to check if ESA Copernicus services are currently unavailable.", type=3)
+  
+  out("Login successfull. ESA Copernicus credentials have been saved for the current session.", msg = T)
 }
 
 
 #' @rdname gSD_login
 #' @export
 login_USGS <- function(username, password = NULL){
-
+  
   if(is.null(password)){password <- getPass()}
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
-
+  
   ## verify
   options(gSD.usgs_apikey=.ERS_login(username, password))
+  
+  # save credentials
   options(gSD.usgs_user=username)
   options(gSD.usgs_pass=password)
   options(gSD.usgs_set=TRUE)
+  out("Login successfull. USGS ERS credentials have been saved for the current session.", msg = T)
 }

@@ -19,9 +19,9 @@
 getSentinel_restore <- function(record, username = NULL, password = NULL, hub = "auto", verbose = TRUE){
   
   ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.cophub_set"))){
-    if(is.null(username)) username <- getOption("gSD.cophub_user")
-    if(is.null(password)) password <- getOption("gSD.cophub_pass")
+  if(is.TRUE(getOption("gSD.dhus_set"))){
+    if(is.null(username)) username <- getOption("gSD.dhus_user")
+    if(is.null(password)) password <- getOption("gSD.dhus_pass")
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)){ password = password} else{ password = getPass()}
@@ -35,8 +35,8 @@ getSentinel_restore <- function(record, username = NULL, password = NULL, hub = 
   cred <- .CopHub_select(hub, record$platformname, username, password)
   
   ## check availability
-  if(is.null(record$online)) record$online <- as.logical(toupper(unlist(.get_odata(record$uuid, cred, field = "Online/$value"))))
-  if(isTRUE(record$online)){
+  if(is.null(record$available)) record$available <- as.logical(toupper(unlist(.get_odata(record$uuid, cred, field = "Online/$value"))))
+  if(isTRUE(record$available)){
     out("Dataset is available on-demand and can be downloaded without restoring from LTA.")
   } else {
     request <- try(gSD.get(paste0(cred[3], "/odata/v1/Products('", record$uuid, "')/$value")), silent = T)

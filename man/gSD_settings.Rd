@@ -30,7 +30,7 @@ services_avail(value = F)
 
 \item{type}{character, AOI object type, either "matrix", "sf" or "sp".}
 
-\item{value}{logical, if \code{FALSE}, nothing is returned.}
+\item{value}{logical, whether to return a data frame containing service status or not. Default is \code{FALSE}.}
 }
 \value{
 None.
@@ -47,7 +47,7 @@ Functions that define session-wide archive and AOI settings that are used by all
 
 \code{get_aoi} returns the defined session AOI.
 
-\code{services_avail} returns a \code{data.frame} containing the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "nominal".
+\code{services_avail} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
 }
 \examples{
 ## set archive directory

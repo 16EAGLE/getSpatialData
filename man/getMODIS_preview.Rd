@@ -5,7 +5,7 @@
 \title{Preview a MOSIS image}
 \usage{
 getMODIS_preview(record, on_map = TRUE, show_aoi = TRUE,
-  verbose = TRUE)
+  return_preview = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{record}{data.frame, single row data.frame collected from the return of \link{getMODIS_query}, representing the selected record and all its attributes.}
@@ -14,10 +14,12 @@ getMODIS_preview(record, on_map = TRUE, show_aoi = TRUE,
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
 
-\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+\item{return_preview}{logical, if \code{TRUE}, the preview image is returned to the user. Default is FALSE.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
-None. A plot/view display is generated.
+By default only a plot/view display is generated. If \code{return_preview = TRUE} then the georeferenced preview icon is returned as raster stack.
 }
 \description{
 \code{getMODIS_preview} previews a single MODIS record as image on a map or as RGB plot. The function is useful to apply visual checks to records before downloading them.

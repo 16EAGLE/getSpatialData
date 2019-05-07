@@ -328,6 +328,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param preview_crs preview_crs
 #' @param on_map on_map
 #' @param show_aoi show_aoi
+#' @param return_preview return_preview
 #' @param verbose verbose
 #'
 #' @importFrom getPass getPass
@@ -338,7 +339,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #'
 #' @keywords internal
 #' @noRd
-.EE_preview <- function(record, preview_crs = NULL, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
+.EE_preview <- function(record, preview_crs = NULL, on_map = TRUE, show_aoi = TRUE, return_preview = FALSE, verbose = TRUE){
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
   ## Intercept false inputs and get inputs
@@ -356,8 +357,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     gSD.get(url.icon, dir.file = file_dir)
     r.prev <- stack(file_dir)
     
-    if(isTRUE(on_map)){
-      
+    if(isTRUE(on_map) | isTRUE(return_preview)){
+
       ## create footprint
       footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
       if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
@@ -366,20 +367,28 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       footprint <- st_coordinates(footprint)
       
       extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
-      
-      ## create map
-      map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
-      
-      if(isTRUE(show_aoi)){
-        if(isFALSE(getOption("gSD.aoi_set"))){
-          out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-        } else{
-          aoi.sf <- getOption("gSD.aoi")
-          #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
-          map <- addFeatures(map, aoi.sf)
+      crs(r.prev) <- preview_crs
+
+      if(isTRUE(on_map)) {
+        ## create map
+        map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
+        
+        if(isTRUE(show_aoi)){
+          if(isFALSE(getOption("gSD.aoi_set"))){
+            out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+          } else{
+            aoi.sf <- getOption("gSD.aoi")
+            #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
+            map <- addFeatures(map, aoi.sf)
+          }
         }
+        map # display mapview or leaflet output
       }
-      map # display mapview or leaflet output
+      
+      if (isTRUE(return_preview)) {
+        return(r.prev)
+      }
+      
     } else{
       
       ## create simple RGB plot
@@ -625,3 +634,94 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   ## logout from USGS
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }
+
+#' bridge between sensor and calc HOT
+#' 
+#' @inheritParams calcSentinel_aoi_cloudcov
+#' @param sensor sensor
+#' @param sceneCloudCoverCol sceneCloudCoverCol
+#'
+#' @keywords internal
+#' 
+#' @importFrom utils object.size
+#' @noRd
+.hotBridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20,
+                       cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, 
+                       dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
+  
+  ## Check input
+  aoiClass <- class(aoi)
+  classNumErr <-  "has to be of class 'numeric'. But is: "
+  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  if (!class(records) == "data.frame") {out(paste0("Records has to be of class 'data.frame' in the format as returned within the getSpatialData package. But is of class: ",class(records)),type=3)}
+  if (!is.numeric(cloudPrbThreshold)) {out(paste0("cloudPrbThreshold",classNumErr,class(cloudPrbThreshold)),type=3)}
+  if (!is.numeric(slopeDefault)) {out(paste0("slopeDefault",classNumErr,class(slopeDefault)),type=3)}
+  if (!is.numeric(interceptDefault)) {out(paste0("interceptDefault",classNumErr,class(interceptDefault)),type=3)}
+
+  numRecords <- nrow(records)
+  out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
+  processingTime <- c()
+  previewSize <- c()
+  prgbar <- txtProgressBar(0,numRecords,char="=",style=3,title="HOT Progress",label="0")
+  ## Do HOT cloud cover assessment consecutively
+  records <- do.call(rbind,lapply(1:numRecords,function(i) {
+    startTime <- Sys.time()
+    # get preview of current record
+    currRecord <- records[i,]
+    
+    if (sensor == "Sentinel-2") {
+      preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                     username=username,password=password,verbose=verbose)
+      identifier <- 1
+    } else if (sensor == "Landsat") {
+      preview <- getLandsat_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                    verbose=verbose)
+      identifier <- 15
+    } else if (sensor == "MODIS") {
+      preview <- getMODIS_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                  verbose=verbose)
+      identifier <- 15
+    }
+    previewSize <- c(previewSize,object.size(preview))
+    # pass preview to HOT function
+    currRecCloudCover <- calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,identifier=identifier,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
+                                           slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
+    endTime <- Sys.time()
+    if (i <= 5) {
+      elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
+      processingTime <- c(processingTime,elapsed)
+    }
+    if (numRecords >= 10 && i == 5) {
+      .calcProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+    }
+    if (i > 5) {
+      setTxtProgressBar(prgbar,i)
+    }
+    return(currRecCloudCover)
+  }))
+  return(records)
+}
+
+#' calc processing time
+#' 
+#' @param numRecords numRecords
+#' @param i record number in the loop
+#' @param processingTime processingTime
+#' @param previewSize previewSize
+#' @keywords internal
+#' @importFrom utils object.size
+#' @noRd
+.calcProcTime <- function(numRecords,i,processingTime,previewSize) {
+  meanProcessingTime <- mean(processingTime)
+  meanPreviewSize <- mean(previewSize) / 1000000
+  stillToGoFor <- numRecords - 5
+  sumProcessingTime <- meanProcessingTime * stillToGoFor
+  if (sumProcessingTime < 1) {
+    sumProcessingTime <- "less than 1 minute"
+  } else {
+    sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
+  }
+  sumDataDownload <- meanPreviewSize * stillToGoFor
+  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
+}
+

@@ -22,7 +22,9 @@ Imports:
   mapview,
   mapedit,
   cli,
-  devtools
+  devtools,
+  L1pack,
+  stats
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

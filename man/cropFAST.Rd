@@ -13,7 +13,7 @@ cropFAST(file, ext, filename, verbose = TRUE, ...)
 
 \item{filename}{Filename of output, if it should be written to disk.}
 
-\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 
 \item{...}{additional arguments passed to \code{writeRaster}. Ignored, if \code{filename} ends with ".vrt".}
 }

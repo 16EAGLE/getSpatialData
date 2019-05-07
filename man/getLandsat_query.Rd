@@ -25,7 +25,7 @@ getLandsat_query(time_range, name = "all", aoi = NULL,
   \item \code{maxCloudLand}, numeric, filtering records by maximum land cloud coverage (in percent). Default is 100.
 }}
 
-\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 A data frame of found records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getLandsat functions for previewing or downloading.

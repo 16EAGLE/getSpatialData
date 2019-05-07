@@ -30,7 +30,7 @@ getLandsat_data(records, level = "sr", source = "auto",
 
 \item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
 
-\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the downloaded files.

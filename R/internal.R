@@ -34,8 +34,7 @@ firstup <- function(x){
 #'
 #' @keywords internal
 #' @noRd
-is.FALSE <- function(evaluate){if(evaluate == FALSE){return(TRUE)}else{return(FALSE)}}
-
+is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
 
 #' Simplifies check of variables being TRUE
 #'
@@ -43,8 +42,7 @@ is.FALSE <- function(evaluate){if(evaluate == FALSE){return(TRUE)}else{return(FA
 #'
 #' @keywords internal
 #' @noRd
-is.TRUE <- function(evaluate){if(evaluate == TRUE){return(TRUE)}else{return(FALSE)}}
-
+is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
 
 #' Checks, if specific command is available
 #'
@@ -83,7 +81,6 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
   #message_for_status(x); cat("\n")
   return(x)
 }
-
 
 #' gSD.post
 #' @param url url

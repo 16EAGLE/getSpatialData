@@ -10,7 +10,7 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.}
 
-\item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
+\item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.}
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
@@ -28,7 +28,7 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
    \item or a valid API URL.
 }}
 
-\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the downloaded files.

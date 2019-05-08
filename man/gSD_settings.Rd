@@ -17,7 +17,7 @@ view_aoi(color = "green")
 
 get_aoi(type = "sf")
 
-services_avail(value = F)
+services_avail(value = F, verbose = T)
 }
 \arguments{
 \item{dir_archive}{character, directory to the \code{getSpatialData} archive folder.}
@@ -31,6 +31,8 @@ services_avail(value = F)
 \item{type}{character, AOI object type, either "matrix", "sf" or "sp".}
 
 \item{value}{logical, whether to return a data frame containing service status or not. Default is \code{FALSE}.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None.

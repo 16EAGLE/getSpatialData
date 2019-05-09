@@ -68,6 +68,12 @@ reference:
   - getMODIS_query
   - getMODIS_preview
   - getMODIS_data
+- title: Aoi cloud cover
+  desc: Calculate cloud cover of Sentinel, Landsat or MODIS within an aoi (pre-download)
+  contents:
+  - calcSentinel_aoi_cloudcov
+  - calcLandsat_aoi_cloudcov
+  - calcMODIS_aoi_cloudcov
 - title: Preprocessing
   desc: Data preparation and preprocessing
   contents:

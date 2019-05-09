@@ -56,7 +56,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     bBand <- preview[[2]]
     rBand <- preview[[1]]
   } else {
-    out(paste0("An RGB or RB image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,". HOT could not be calculated for record: ",currTitle),type=3)
+    out(paste0("An RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
   ## Calculate least-alternate deviation (LAD) regression
@@ -70,16 +70,16 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   rThresh <- 40 # from the 80 blue bins take the 40 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   valDf <- valDf[intersect(which(valDf[,1] != 0),which(valDf[,2] != 0)),] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
-  bBins <- lapply(2:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
   redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
     redNrow <- NROW(x)
     if (redNrow >= rThresh) {
-      x[redNrow:redNrow-rThresh,] # more or as many red values are available as rThresh. Take values from last value (highest in order) to last value minus rThresh
+      x <- x[redNrow:(redNrow-rThresh),] # more or as many red values as rThresh are available. Take values from last value (highest in order) to last value minus rThresh
     } else {
       # in case less than rThresh values are available take the maximum number of available values
-      x[redNrow:redNrow-redNrow,] # do it complicated in order to remain with same order
+      x <- x[redNrow:(redNrow-redNrow),] # do it complicated in order to order from high to low
     }
   })
   meanRed <- sapply(redMax,function(x){mean(x[["red"]])})
@@ -87,7 +87,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   lad <- try(L1pack::lad(meanRed ~ meanBlue,method="BR")) # run least-alternate deviation regression
   if (inherits(lad,error)) {
     if (slopeDefault == 0) {
-      hotFailed <- TRUE # shit
+      hotFailed <- TRUE # shit. Remember this and handle at the end
     } else {
       hotFailed <- FALSE
     }

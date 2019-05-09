@@ -1,6 +1,6 @@
-#' Calculate the cloud cover of Sentinel-2 data within an aoi
+#' Calculate the cloud cover of Sentinel data within an aoi
 #' 
-#' \code{calcSentinel_aoi_cloudcov} estimates the cloud cover of Sentinel-2 data based on preview images using the haze-optimal transformation (HOT)
+#' \code{calcSentinel_aoi_cloudcov} estimates the cloud cover of Sentinel data based on preview images using the haze-optimal transformation (HOT)
 #' 
 #' @details The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
 #' Haze-optimal transformation (HOT) procedure is applied based on 
@@ -23,7 +23,7 @@
 #'
 #' @author Henrik Fisser
 #' 
-#' @seealso \link{calc_hot_cloudcov} \link{getSentinel_query} \link{getSentinel_preview} \link{getSentinel_data}
+#' @seealso \link{calc_hot_cloudcov}, \link{getSentinel_query}, \link{getSentinel_preview}, \link{getSentinel_data}
 #' 
 #' @export
 
@@ -32,8 +32,12 @@ calcSentinel_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, c
                                       username = NULL, password = NULL, verbose = TRUE) {
   
   sceneCloudCoverCol <- "cloudcoverpercentage" # for later use the column name holding the scene cloud cover
-  sensor <- "Sentinel-2"
-  
+  if (substr(records[1,"title"],1,2) == "S2") {
+    sensor <- "Sentinel"
+  } else {
+    sensor <- "Sentinel-3"
+  }
+
   records <- .hotBridge(sensor=sensor,sceneCloudCoverCol=sceneCloudCoverCol,records=records,aoi=aoi,maxDeviation=maxDeviation,
                         cloudPrbThreshold=cloudPrbThreshold,slopeDefault=slopeDefault,
                         interceptDefault=interceptDefault,dir_out=dir_out,username=username,password=password,verbose=verbose)

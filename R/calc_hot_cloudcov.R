@@ -36,7 +36,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"
-  crsError <- " Desired coordinate system:\n"
   currTitle <- record[[identifier]]
   cloudPrbThresh <- 40 # this threshold
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold

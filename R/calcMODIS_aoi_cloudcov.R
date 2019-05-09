@@ -14,7 +14,7 @@
 #'
 #' @author Henrik Fisser
 #' 
-#' @seealso \link{calc_hot_cloudcov} \link{getMODIS_query} \link{getMODIS_preview} \link{getMODIS_data}
+#' @seealso \link{calc_hot_cloudcov}, \link{getMODIS_query}, \link{getMODIS_preview}, \link{getMODIS_data}
 #'  
 #' @export
 

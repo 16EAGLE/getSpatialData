@@ -2,7 +2,7 @@
 #' 
 #' \code{calcSentinel_aoi_cloudcov} estimates the cloud cover of Sentinel data based on preview images using the haze-optimal transformation (HOT)
 #' 
-#' @details The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
+#' @details Cloud cover of optical remote sensing data is normally provided scene-wide by the data dissiminator. This function uses HOT in order to derive a local cloud cover \% within an aoi. The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
 #' Haze-optimal transformation (HOT) procedure is applied based on 
 #' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
 #' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
@@ -22,6 +22,61 @@
 #' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi.
 #'
 #' @author Henrik Fisser
+#' 
+#' @examples
+#' ## Load packages
+#' library(getSpatialData)
+#' library(raster)
+#' library(sf)
+#' library(sp)
+#'
+#' ## Define an AOI (either matrix, sf or sp object)
+#' data("aoi_data") # example aoi
+#'
+#' aoi <- aoi_data[[3]] # AOI as matrix object, or better:
+#' aoi <- aoi_data[[2]] # AOI as sp object, or:
+#' aoi <- aoi_data[[1]] # AOI as sf object
+#' # or, simply call set_aoi() without argument to interactively draw an AOI
+#'
+#' ## set AOI for this session
+#' set_aoi(aoi)
+#' view_aoi() #view AOI in viewer
+#'
+#' ## Define time range and platform
+#' time_range <-  c("2017-08-01", "2017-08-30")
+#' platform <- "Sentinel-2"
+#'
+#' ## set login credentials and an archive directory
+#' \dontrun{
+#' login_CopHub(username = "username") #asks for password or define 'password'
+#' set_archive("/path/to/archive/")
+#'
+#' ## Use getSentinel_query to search for data (using the session AOI)
+#' records <- getSentinel_query(time_range = time_range, platform = platform)
+#'
+#' ## Get an overview of the records
+#' View(records) #get an overview about the search records
+#' colnames(records) #see all available filter attributes
+#' unique(records$processinglevel) #use one of the, e.g. to see available processing levels
+#' 
+#' ## Calculate cloud cover within the aoi
+#' records_aoi_cloudcov <- calcSentinel_aoi_cloudcov(records = records, aoi = aoi) # run the cloud cover calculation with default parameters
+#' 
+#' ## Filter the records
+#' records_filtered <- records_aoi_cloudcov[which(records_aoi_cloudcov$processinglevel == "Level-1C"),] #filter by Level
+#'
+#' ## Preview a single record
+#' getSentinel_preview(record = records_filtered[5,])
+#'
+#' ## Download some datasets
+#' datasets <- getSentinel_data(records = records_filtered[c(4,5,6),])
+#'
+#' ## Make them ready to use
+#' datasets_prep <- prepSentinel(datasets, format = "tiff")
+#'
+#' ## Load them to R
+#' r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
+#' }
 #' 
 #' @seealso \link{calc_hot_cloudcov}, \link{getSentinel_query}, \link{getSentinel_preview}, \link{getSentinel_data}
 #' 

@@ -672,7 +672,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     # get preview of current record
     currRecord <- records[i,]
     
-    if (sensor == "Sentinel-2") {
+    if (sensor == "Sentinel-2" || "Sentinel-3") {
       preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                      username=username,password=password,verbose=verbose)
       identifier <- 1
@@ -695,7 +695,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       processingTime <- c(processingTime,elapsed)
     }
     if (numRecords >= 10 && i == 5) {
-      .calcProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+      .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     if (i > 5) {
       setTxtProgressBar(prgbar,i)
@@ -716,7 +716,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @keywords internal
 #' @importFrom utils object.size
 #' @noRd
-.calcProcTime <- function(numRecords,i,processingTime,previewSize) {
+
+.calcHOTProcTime <- function(numRecords,i,processingTime,previewSize) {
   meanProcessingTime <- mean(processingTime)
   meanPreviewSize <- mean(previewSize) / 1000000
   stillToGoFor <- numRecords - 5

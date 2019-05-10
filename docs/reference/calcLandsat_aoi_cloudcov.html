@@ -213,7 +213,7 @@
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
+    <p>Cloud cover of optical remote sensing data is normally provided scene-wide by the data dissiminator. This function uses HOT in order to derive a local cloud cover % within an aoi. The estimation of the cloud cover is done on the red and blue information of the preview images provided by the respective data dissiminator.
 Haze-optimal transformation (HOT) procedure is applied based on 
 Zhu &amp; Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
 "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
@@ -221,9 +221,55 @@ HOT seperates clear-sky pixels first from a threshold, calculates a least altern
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><a href='calc_hot_cloudcov.html'>calc_hot_cloudcov</a> <a href='getLandsat_query.html'>getLandsat_query</a> <a href='getLandsat_preview.html'>getLandsat_preview</a> <a href='getLandsat_data.html'>getLandsat_data</a></p></div>
+    <div class='dont-index'><p><a href='calc_hot_cloudcov.html'>calc_hot_cloudcov</a>, <a href='getLandsat_query.html'>getLandsat_query</a>, <a href='getLandsat_preview.html'>getLandsat_preview</a>, <a href='getLandsat_data.html'>getLandsat_data</a></p></div>
     
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><span class='co'># NOT RUN {</span>
+<span class='co'>## Load packages</span>
+<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>getSpatialData</span>)
+<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/library'>library</a></span>(<span class='no'>sf</span>)
+
+<span class='co'>## set aoi and time range for the query</span>
+<span class='fu'><a href='gSD_settings.html'>set_aoi</a></span>(<span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>1</span>]])
+<span class='no'>time_range</span> <span class='kw'>&lt;-</span>  <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='st'>"2017-08-01"</span>, <span class='st'>"2017-08-30"</span>)
+
+<span class='co'>## Login to USGS ERS</span>
+<span class='co'># }</span><span class='co'># NOT RUN {</span>
+<span class='fu'><a href='gSD_login.html'>login_USGS</a></span>(<span class='st'>"username"</span>)
+
+<span class='co'>## set archive directory</span>
+<span class='fu'><a href='gSD_settings.html'>set_archive</a></span>(<span class='st'>"/path/to/archive/"</span>)
+
+<span class='co'>## get available products and select one</span>
+<span class='no'>product_names</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getLandsat_names.html'>getLandsat_names</a></span>()
+
+<span class='co'>## query for records for your AOI, time range and product</span>
+<span class='no'>records</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getLandsat_query.html'>getLandsat_query</a></span>(<span class='kw'>time_range</span> <span class='kw'>=</span> <span class='no'>time_range</span>, <span class='kw'>name</span> <span class='kw'>=</span> <span class='no'>product_names</span>[<span class='fl'>7</span>])
+
+<span class='co'>## Calculate cloud cover within the aoi</span>
+<span class='no'>records_aoi_cloudcov</span> <span class='kw'>&lt;-</span> <span class='fu'>calcLandsat_aoi_cloudcov</span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>records</span>, <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='no'>aoi</span>) <span class='co'># run the cloud cover calculation with default parameters</span>
+
+<span class='co'>## preview a record</span>
+<span class='fu'><a href='getLandsat_preview.html'>getLandsat_preview</a></span>(<span class='no'>records_aoi_cloudcov</span>[<span class='fl'>5</span>,])
+
+<span class='co'>#print available levels for a record</span>
+<span class='no'>query</span>[<span class='fl'>5</span>,]$<span class='no'>levels_available</span>
+
+<span class='co'>## download record 5 with level "l1" (will direct to AWS automaticaly)</span>
+<span class='no'>files</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getLandsat_data.html'>getLandsat_data</a></span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>query</span>[<span class='fl'>5</span>,], <span class='kw'>level</span> <span class='kw'>=</span> <span class='st'>"l1"</span>, <span class='kw'>source</span> <span class='kw'>=</span> <span class='st'>"auto"</span>)
+
+<span class='co'>## download record 5 with level "sr" (will be processed on demand by ESPA)</span>
+<span class='no'>files</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getLandsat_data.html'>getLandsat_data</a></span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>query</span>[<span class='fl'>5</span>,], <span class='kw'>level</span> <span class='kw'>=</span> <span class='st'>"sr"</span>, <span class='kw'>source</span> <span class='kw'>=</span> <span class='st'>"auto"</span>)
+<span class='co'># this can take very long, since the function will wait,</span>
+<span class='co'># until the processing by ESPA is done</span>
+
+<span class='co'>## you can abort the function while it is waiting for ESPA and resume later:</span>
+<span class='no'>files</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getLandsat_data.html'>getLandsat_data</a></span>(<span class='kw'>espa_order</span> <span class='kw'>=</span> <span class='st'>"espa-XYZA@host.com-YOUR-ORDER-ID"</span>)
+<span class='co'># the order IDs are displayed and send by mail, use them to resume the task</span>
+<span class='co'># }</span># NOT RUN {
+# }
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -235,7 +281,9 @@ HOT seperates clear-sky pixels first from a threshold, calculates a least altern
       <li><a href="#details">Details</a></li>
 
       <li><a href="#see-also">See also</a></li>
-          </ul>
+      
+      <li><a href="#examples">Examples</a></li>
+    </ul>
 
     <h2>Author</h2>
     <p>Henrik Fisser</p>

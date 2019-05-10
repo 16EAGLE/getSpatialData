@@ -46,7 +46,7 @@ Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zh
 HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
 }
 \note{
-Mainly thought for internal use and only tested for preview images.
+Mainly thought for internal use in getSpatialData and only tested for preview images of Sentinel, Landsat, MODIS.
 }
 \author{
 Henrik Fisser

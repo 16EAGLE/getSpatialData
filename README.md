@@ -48,6 +48,12 @@ The following functions are publicly available and tested on Linux (Ubuntu 16.04
 * `getMODIS_data()` – uses the output of getMODIS_query() to order and download MODIS data from LAADS.
 
 
+#### Aoi cloud cover
+* `calcSentinel_aoi_cloudcov()` - calculates the cloud cover of Sentinel-2 or Sentinel-3 records (returned by `getSentinel_query()`) within an area of interest (aoi) using preview thumbnails. The cloud detection is performed through the haze-optimal transformation (HOT) based on the red and blue band.
+* `calcLandsat_aoi_cloudcov()` - calculates the cloud cover of Landsat records (returned by `getLandsat_query()`) within an area of interest (aoi) using preview thumbnails. The cloud detection is performed through the haze-optimal transformation (HOT) based on the red and blue band.
+* `calcMODIS_aoi_cloudcov()` calculates the cloud cover of MODIS records (returned by `getMODIS_query()`) within an area of interest (aoi) using preview thumbnails. The cloud detection is performed through the haze-optimal transformation (HOT) based on the red and blue band.
+
+
 #### Preprocessing
 * `prepSentinel()` **beta** – makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.
 * `cropFAST()` **beta** – crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.

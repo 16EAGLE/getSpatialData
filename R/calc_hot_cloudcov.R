@@ -8,7 +8,7 @@
 #' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
 #' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
 #' 
-#' @note Mainly thought for internal use and only tested for preview images. 
+#' @note Mainly thought for internal use in getSpatialData and only tested for preview images of Sentinel, Landsat, MODIS.
 #' 
 #' @param record data.frame, single line representing one record from a records data.frame.
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
@@ -36,8 +36,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"
-  crsError <- " Desired coordinate system:\n"
   currTitle <- record[[identifier]]
+  hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   cloudPrbThresh <- 40 # this threshold
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   
@@ -52,9 +52,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (nlyrs == 3) {
     bBand <- preview[[3]]
     rBand <- preview[[1]]
-  } else if (nlayers) {
+  } else if (nlyrs == 2) {
     bBand <- preview[[2]]
     rBand <- preview[[1]]
+  } else {
+    out(paste0("An RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
   ## Calculate least-alternate deviation (LAD) regression
@@ -68,23 +70,24 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   rThresh <- 40 # from the 80 blue bins take the 40 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   valDf <- valDf[intersect(which(valDf[,1] != 0),which(valDf[,2] != 0)),] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
-  bBins <- lapply(2:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
-  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frames by red
+  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
-    if (NROW(x) >= rThresh) {
-      x[NROW(x):(NROW(x)-rThresh),] # in case less than rThresh values are available take the maximum number of available values
+    redNrow <- NROW(x)
+    if (redNrow >= rThresh) {
+      x <- x[redNrow:(redNrow-rThresh),] # more or as many red values as rThresh are available. Take values from last value (highest in order) to last value minus rThresh
     } else {
-      r <- NROW(x)
-      x[NROW(x):(NROW(x)-r),]
+      # in case less than rThresh values are available take the maximum number of available values
+      x <- x[redNrow:(redNrow-redNrow),] # do it complicated in order to order from high to low
     }
   })
   meanRed <- sapply(redMax,function(x){mean(x[["red"]])})
   meanBlue <- sapply(redMax,function(x){mean(x[["blue"]])})
-  lad <- try(L1pack::lad(meanRed ~ meanBlue,method="BR"))
+  lad <- try(L1pack::lad(meanRed ~ meanBlue,method="BR")) # run least-alternate deviation regression
   if (inherits(lad,error)) {
     if (slopeDefault == 0) {
-      hotFailed <- TRUE # shit
+      hotFailed <- TRUE # shit. Remember this and handle at the end
     } else {
       hotFailed <- FALSE
     }
@@ -152,7 +155,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     record[[AOIcloudcoverpercentage]] <- as.numeric(cPercent)
   } else {
     record[[AOIcloudcoverpercentage]] <- 9999
-    out(paste0("\nHOT could not be calculated for this record:\n",currTitle),type=2)
+    out(hotFailWarning,type=2)
   }
 
   return(record)

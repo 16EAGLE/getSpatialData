@@ -17,12 +17,7 @@
 
 getMODIS_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_preview = FALSE, verbose = TRUE){
   
-  if (isTRUE(return_preview)) {
-    r.prev <- .EE_preview(record = record, preview_crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs", 
-                          on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
-    return(r.prev)
-  } else {
-    .EE_preview(record = record, preview_crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs", 
-                on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
-  }
+  r.prev <- .EE_preview(record = record, preview_crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs", 
+                        on_map = on_map, show_aoi = show_aoi, return_preview = return_preview, verbose = verbose)
+  if(isTRUE(return_preview)) return(r.prev)
 }

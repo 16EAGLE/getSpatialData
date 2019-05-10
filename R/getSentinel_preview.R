@@ -121,7 +121,7 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_p
       footprint <- st_coordinates(footprint)
       
       extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
-      crs(r.prev) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" # necessary?
+      #crs(r.prev) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" # necessary?
       
       if(isTRUE(on_map)) {
         ## create map

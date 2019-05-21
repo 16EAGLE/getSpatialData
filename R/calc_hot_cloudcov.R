@@ -128,7 +128,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     cMaskMat <- raster::as.matrix(cMask)
     cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100 # calculate cloud percentage within whole scene for comparison with actual cloud cover for whole scene calculated by data provider
-    try(ccDeviationFromProvider <- as.numeric(records[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
+    try(ccDeviationFromProvider <- as.numeric(record[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
     if (inherits(ccDeviationFromProvider,error) || is.na(ccDeviationFromProvider) || is.null(ccDeviationFromProvider)) {
       ccDeviationFromProvider <- maxDeviation - 1 # escape the loop by setting the value artificially because calculation failed
       hotFailed <- TRUE

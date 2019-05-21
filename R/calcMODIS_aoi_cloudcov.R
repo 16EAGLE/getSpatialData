@@ -38,7 +38,7 @@
 #' records <- getMODIS_query(time_range = time_range, name = product)
 #' 
 #' ## Calculate cloud cover within the aoi
-#' records_aoi_cloudcov <- calcMODIS_aoi_cloudcov(records = records, aoi = aoi) # run the cloud cover calculation with default parameters
+#' records_aoi_cloudcov <- calcMODIS_aoi_cloudcov(records = records, aoi = aoi) # cloud cov. calc.
 #'
 #' ## preview a record
 #' getMODIS_preview(records_aoi_cloudcov[1,])

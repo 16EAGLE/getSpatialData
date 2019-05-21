@@ -60,7 +60,7 @@
 #' unique(records$processinglevel) #use one of the, e.g. to see available processing levels
 #' 
 #' ## Calculate cloud cover within the aoi
-#' records_aoi_cloudcov <- calcSentinel_aoi_cloudcov(records = records, aoi = aoi) # run the cloud cover calculation with default parameters
+#' records_aoi_cloudcov <- calcSentinel_aoi_cloudcov(records = records, aoi = aoi) # cloud cov. calc.
 #' 
 #' ## Filter the records
 #' records_filtered <- records_aoi_cloudcov[which(records_aoi_cloudcov$processinglevel == "Level-1C"),] #filter by Level

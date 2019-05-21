@@ -640,7 +640,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #'
 #' @keywords internal
 #' 
-#' @importFrom utils object.size
+#' @importFrom utils object.size setTxtProgressBar txtProgressBar
 #' @noRd
 .hotBridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20,
                        cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, 

@@ -7,7 +7,7 @@
 calc_hot_cloudcov(record, preview, aoi = NULL, identifier = NULL,
   maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40,
   slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL,
-  num_records = 1, verbose = TRUE)
+  verbose = TRUE)
 }
 \arguments{
 \item{record}{data.frame, single line representing one record from a records data.frame.}

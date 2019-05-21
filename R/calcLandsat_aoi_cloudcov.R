@@ -38,10 +38,10 @@
 #' records <- getLandsat_query(time_range = time_range, name = product_names[7])
 #' 
 #' ## Calculate cloud cover within the aoi
-#' records_aoi_cloudcov <- calcLandsat_aoi_cloudcov(records = records, aoi = aoi) #cloud cov. calc.
+#' records_cloudcov <- calcLandsat_aoi_cloudcov(records = records, aoi = aoi) #cloud cov. calc.
 #' 
 #' ## preview a record
-#' getLandsat_preview(records_aoi_cloudcov[5,])
+#' getLandsat_preview(records_cloudcov[5,])
 #'
 #' #print available levels for a record
 #' query[5,]$levels_available

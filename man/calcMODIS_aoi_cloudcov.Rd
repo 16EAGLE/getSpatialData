@@ -66,13 +66,13 @@ product <- grep("MOD13Q1", product_names, value = T)
 records <- getMODIS_query(time_range = time_range, name = product)
 
 ## Calculate cloud cover within the aoi
-records_aoi_cloudcov <- calcMODIS_aoi_cloudcov(records = records, aoi = aoi) # run the cloud cover calculation with default parameters
+records_cloudcov <- calcMODIS_aoi_cloudcov(records = records, aoi = aoi) # cloud cov. calc.
 
 ## preview a record
-getMODIS_preview(records_aoi_cloudcov[1,])
+getMODIS_preview(records_cloudcov[1,])
 
 ## download records 1 and 2
-files <- getMODIS_data(records_aoi_cloudcov[1:2,])
+files <- getMODIS_data(records_cloudcov[1:2,])
 }
 
 }

@@ -109,30 +109,75 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 }
 
 #' gSD.download
-#' @param name name
-#' @param url url
-#' @param file file
+#' @param x file record
+#' @param names column names of record
+#' @param prog logical
+#' @param force logical
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = NULL, prog = T){
+gSD.download <- function(x, names, prog = T, force = F){
   
-  out(paste0(if(!is.null(head.out)) head.out else "", "Downloading '", name, "' to '", file, "'..."), msg = T)
-  file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-  gSD.get(url.file, dir.file = file.tmp, prog = prog)
+  x <- as.list(x)
+  names(x) <- names
   
-  if(!is.null(url.checksum)){
-    md5 <- strsplit(content(gSD.get(url.checksum), as = "text", encoding = "UTF-8"), " ")[[1]][1]
-    if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
-    } else{
-      out(paste0("Download failed, MD5 check sums do not match. Will retry."), type = 2)
-      file.remove(file.tmp)
-      return(FALSE)
+  if(file.exists(x$gSD.file) & !isTRUE(force)){
+    out(paste0(x$gSD.head, "Skipping download of '", x$gSD.name, "', since '", x$gSD.file, "' already exists..."), msg = T)
+    return(TRUE)
+  } else{
+  
+    out(paste0(x$gSD.head, "Downloading '", x$gSD.name, "' to '", x$gSD.file, "'..."), msg = T)
+    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(x$gSD.file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+    gSD.get(x$gSD.url.ds, dir.file = file.tmp, prog = prog)
+    
+    if(!is.null(x$gSD.md5)){
+      if(as.character(md5sum(file.tmp)) == tolower(x$gSD.md5)){ out("Successfull download, MD5 check sums match.", msg = T)
+      } else{
+        out(paste0("Download failed, MD5 check sums do not match."), type = 2)
+        file.remove(file.tmp)
+        return(FALSE)
+      }
     }
-  } #else out("Download finished. MD5 check sums not available (file integrity could not be checked).", msg = T)
+  }
   
-  file.rename(file.tmp, file)
+  file.rename(file.tmp, x$gSD.file)
   return(TRUE)
+}
+
+#' gSD.retry
+#' @param files files data.frame
+#' @param ... additional arguments
+#' @param FUN function to retry
+#' @param n.retry How many retries?
+#' @importFrom tools md5sum
+#' @keywords internal
+#' @noRd
+gSD.retry <- function(files, FUN, ..., n.retry = 3){
+  
+  files$gSD.attempts <- NA
+  i.retry <- n.retry
+  retry <- T
+  
+  out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Attempting downloads..."))
+  while(isTRUE(retry) & i.retry > 0){
+    
+    # download per record
+    files$gSD.downloaded <- apply(files, MARGIN = 1, FUN, ...)
+    files[which(files$gSD.downloaded == TRUE & is.na(files$gSD.attempts)), "gSD.attempts"] <- (n.retry-i.retry)+1
+    
+    if(all(files$gSD.downloaded == TRUE)){
+      retry <- F
+    } else{
+      
+      files <- files[files$gSD.downloaded == F,]
+      i.retry <- i.retry-1
+      
+      out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Reattempting failed downloads..."))
+    }
+  }
+  
+  files$gSD.attempts[files$gSD.downloaded == F] <- n.retry
+  return(files)
 }
 
 #' check if url

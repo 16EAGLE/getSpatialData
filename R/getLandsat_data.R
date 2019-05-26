@@ -14,6 +14,7 @@
 #' }
 #' @param espa_order character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
+#' @param n.retry numeric, maximum number of download (re-)attempts. If the downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
 #'
 #' @return Character vector of paths to the downloaded files.
 #'
@@ -72,7 +73,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
 #' @export
 #'
-getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, espa_order = NULL, force = FALSE, username = NULL, password = NULL, verbose = TRUE){
+getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, espa_order = NULL, force = FALSE, username = NULL, password = NULL, n.retry = 3, verbose = TRUE){
 
   ## Global USGS login
   if(is.TRUE(getOption("gSD.usgs_set"))){
@@ -126,7 +127,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
     }, USE.NAMES = F))
     #if(length(level) > 1) out(paste0("The provided order IDs refer to orders of different processing levels ['", paste0(level, collapse = "', '"), "']. Please use order IDs of identical levels per call."), type = 3)
   } else{
-    prod.id <- records$displayId
+    records$gSD.prod.id <- records$displayId
   }
 
 
@@ -139,6 +140,8 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   if(!dir.exists(dir_out)) out("The defined archive directory does not exist.", type=3)
 
 
+  ######## APPPLY CHANGES DONE FOR getSentinel_data and for AWS in here also for ESPA and getMODIS_data (returning records and using gSD.retry)
+  
   ## ESPA
   if(source == "espa"){
 
@@ -174,14 +177,15 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
 
   ## AWS
   if(source == "aws"){
-
+    
+    ## get AWS scenes
     out("Accessing AWS download URLs of requested records...")
     file.gz <- tempfile(fileext = ".gz")
     aws.scenes <- gSD.get(getOption("gSD.api")$aws.l8.sl, dir.file = file.gz)
     aws.scenes <- readLines(file.gz) #much faster than read.csv
 
     out("Collecting AWS download URLs of requested records...")
-    url.index <- mapply(x = records$entityId, d = records$displayId, function(x, d, ds = aws.scenes){
+    records$gSD.url.index <- unlist(mapply(x = records$entityId, d = records$displayId, function(x, d, ds = aws.scenes){
       c.cat <- tail(strsplit(d, "_")[[1]], n=1)
       y <- grep(x, ds, value = T)
 
@@ -196,37 +200,54 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
       }
 
       tail(strsplit(y, ",")[[1]], n = 1)
-    }, SIMPLIFY = F)
+    }, SIMPLIFY = F, USE.NAMES = F))
 
-    url.files <- mapply(x = url.index, y = records$displayId, function(x, y){
+    ## create URLs
+    records$gSD.url.ds <- mapply(x = records$gSD.url.index, y = records$displayId, function(x, y){
       name = paste0(head(strsplit(grep("LC08", strsplit(x, "/")[[1]], value = T), "_")[[1]], n=-4), collapse = "_")
       z <- grep("href", grep(name, unlist(strsplit(strsplit(grep("body", xml_contents(content(gSD.get(x), encoding = "UTF-8")), value = T), ">")[[1]], "<"), recursive = T), value = T), value = T, invert = T)
       z <- unique(c(grep("TIF", z, value = T), grep("IMD", z, value = T), grep("ovr", z, value = T), grep("txt", z, value = T)))
       return(paste0(paste0(head(strsplit(x, "/")[[1]], n=-1), collapse = "/"), "/", z))
-    }, SIMPLIFY = F)
+    }, SIMPLIFY = F, USE.NAMES = F)
 
-    dir.ds <- sapply(url.index, function(x, d = dir_out, l = level) paste0(d, "/", tail(strsplit(x, "/")[[1]], n=2)[1], "_", toupper(l)), USE.NAMES = F)
-    catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
+    ## create dir names
+    records$gSD.dir.file <- sapply(records$gSD.url.index, function(x, d = dir_out, l = level) paste0(d, "/", tail(strsplit(x, "/")[[1]], n=2)[1], "_", toupper(l)), USE.NAMES = F)
+    catch <- sapply(records$gSD.dir.file, function(x) dir.create(x, showWarnings = F))
     
-    file.ds <- mapply(url = url.files, dir = dir.ds, i.item = 1:length(url.files), FUN = function(url, dir, i.item, n.item = length(url.files)){
-      files <- sapply(url, function(x, d = dir) paste0(d, "/", tail(strsplit(x, "/")[[1]], n=1)), USE.NAMES = F)
-      
-      # Download files
-      mapply(u = url, f = files, FUN = function(u, f){
-        
-        # create console index of current item
-        head.out <- paste0("[", i.item, "/", n.item, "] ")
-        
-        if(file.exists(f) & !isTRUE(force)){
-          out(paste0(head.out, "Skipping download of '", tail(strsplit(u, "/")[[1]], n=1), "', since '", f, "' already exists..."), msg = T)
-        } else{
-          gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f, head.out = head.out)
-        }
-      }, SIMPLIFY = F)
-      return(files)
+    ## create file names
+    records$gSD.file <- mapply(url = records$gSD.url.ds, dir = records$gSD.dir.file, i.item = 1:length(records$gSD.url.ds), FUN = function(url, dir, i.item, n.item = length(records$gSD.url.ds)){
+      sapply(url, function(x, d = dir) paste0(d, "/", tail(strsplit(x, "/")[[1]], n=1)), USE.NAMES = F)
     }, SIMPLIFY = F)
+    
+    ## create console items
+    records$gSD.name <- sapply(records$gSD.url.ds, function(u) sapply(u, function(x) tail(strsplit(x, "/")[[1]], n=1), USE.NAMES = F), USE.NAMES = F, simplify = F)
+    records$gSD.item <- 1:nrow(records)
+    records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
+    
+    # sep records per files and try to download them
+    records <- do.call(rbind, lapply(1:nrow(records), function(i){
+      x <- records[i,]
+      files <- data.frame(x$gSD.head, x$gSD.name, unlist(x$gSD.url.ds), unlist(x$gSD.file), stringsAsFactors = F)
+      colnames(files) <-  c("gSD.head", "gSD.name", "gSD.url.ds", "gSD.file")
+      files$gSD.head <- paste0(gsub("] ", "", files$gSD.head), paste0(" | File ", 1:nrow(files), "/", nrow(files), "] "))
+      
+      files <- gSD.retry(files, gSD.download, names = colnames(files), prog = getOption("gSD.verbose"), force = force, n.retry = n.retry)
+      x$gSD.attempts <- max(files$gSD.attempts)
+      x$gSD.downloaded <- all(files$gSD.downloaded)
+      return(x)
+    }))
   }
 
-  out(paste0("Requested records are stored in '", dir_out, "'."))
-  return(file.ds)
+  ## message the user
+  if(any(!records$gSD.downloaded)){
+    out(paste0("Some downloads have not been succesfull after ", max(records$gSD.attempts), " attempt(s) (see column 'gSD.downloaded'). Please retry later."), type = 2)
+  } else{
+    out(paste0("All downloads have been succesfull after ", max(records$gSD.attempts), " attempt(s)."), msg = T)
+  }
+  
+  ## remove internal fields
+  records <- records[,-sapply(c("gSD.url.ds", "gSD.name", "gSD.item", "gSD.head", "gSD.url.index"), function(x, names = colnames(records)) which(names == x), USE.NAMES = F)]
+  
+  out("Columns added to records: 'gSD.prod.id', 'gSD.dir.file', 'gSD.file', 'gSD.downloaded', 'gSD.attempts'")
+  return(records)
 }

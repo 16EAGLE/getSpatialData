@@ -666,7 +666,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     # get preview of current record
     currRecord <- records[i,]
     
-    if (sensor == "Sentinel-2" || "Sentinel-3") {
+    if (sensor == "Sentinel-2" || sensor == "Sentinel-3") {
       preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                      username=username,password=password,verbose=verbose)
       identifier <- 1

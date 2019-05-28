@@ -357,7 +357,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if(isTRUE(on_map) | isTRUE(return_preview)){
 
       ## create footprint
-      footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
+      footprint <- st_as_sfc(record$spatialFootprint, crs = 4326)
       if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
       
       crs(r.prev) <- crs(as_Spatial(footprint))

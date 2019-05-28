@@ -364,7 +364,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       footprint <- st_coordinates(footprint)
       
       extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
-      crs(r.prev) <- preview_crs
+      #crs(r.prev) <- preview_crs
 
       if(isTRUE(on_map)) {
         ## create map

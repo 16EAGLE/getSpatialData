@@ -102,7 +102,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   prevMasked <- mask(preview,aoi)
   prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
   maxValPrevMasked <- maxValue(prevMasked)
-  if (maxValPrevMasked == 0) {
+  if (maxValPrevMasked[1] == 0) {
     record[[AOIcloudcoverpercentage]] <- 100
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)

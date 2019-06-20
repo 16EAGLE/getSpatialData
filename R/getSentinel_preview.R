@@ -116,7 +116,7 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_p
     if(is.TRUE(on_map) | isTRUE(return_preview)){
       
       ## create footprint
-      footprint <- st_as_sfc(list(record$footprint), crs = 4326)
+      footprint <- st_as_sfc(record$footprint, crs = 4326)
       crs(r.prev) <- crs(as_Spatial(footprint))
       footprint <- st_coordinates(footprint)
       

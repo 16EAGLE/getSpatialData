@@ -649,12 +649,13 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   ## Check input
   aoiClass <- class(aoi)
   classNumErr <-  "has to be of class 'numeric'. But is: "
-  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
   if (!class(records) == "data.frame") {out(paste0("Records has to be of class 'data.frame' in the format as returned within the getSpatialData package. But is of class: ",class(records)),type=3)}
-  if (!is.numeric(cloudPrbThreshold)) {out(paste0("cloudPrbThreshold",classNumErr,class(cloudPrbThreshold)),type=3)}
-  if (!is.numeric(slopeDefault)) {out(paste0("slopeDefault",classNumErr,class(slopeDefault)),type=3)}
-  if (!is.numeric(interceptDefault)) {out(paste0("interceptDefault",classNumErr,class(interceptDefault)),type=3)}
-
+  params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
+  check_num <- sapply(1:length(params),function(i) {
+    if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
+  })
+  
   numRecords <- nrow(records)
   out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
   processingTime <- c()

@@ -28,7 +28,8 @@
 #' 
 #' @importFrom raster crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
 #' @importFrom L1pack lad
-#' @importFrom stats na.omit
+#' @importFrom stats na.omit qexp
+#' @importFrom hashmap hashmap
 #' 
 #' @export
 

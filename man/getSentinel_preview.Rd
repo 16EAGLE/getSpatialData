@@ -28,7 +28,7 @@ getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
    \item or a valid API URL.
 }}
 
-\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None. A plot/view display is generated.

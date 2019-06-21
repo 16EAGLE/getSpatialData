@@ -62,9 +62,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   ## Calculate least-alternate deviation (LAD) regression
   # this step computes first safe clear-sky pixels adpated from the bins method from Zhu & Helmer 2018
   # the procedure was adapted slightly because here it is being computed with discontinuous DN values. Suitable values for
-  # r and b were investigated systemetically. For HOT slope values of more than 1.5 were investigated to be most
+  # r and b were investigated systemetically. For HOT slope values of more than 1.4 were investigated to be most
   # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
-  # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values of < 1 may lead for example to 
+  # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
   # a confusion of bright or reddish land surfaces with clouds
   bThresh <- 80 # for dividing the 80 lowest blue DN values into equal interval bins
   rThresh <- 40 # from the 80 blue bins take the 40 highest red values
@@ -111,7 +111,28 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   ## Calculate cloud probability layer for the whole scene
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
-  try(nominator <- abs(slope * bBand - rBand + intercept))
+  
+  ## Handle slope values close to 1
+  # Sometimes the slope value is very close to 1. This may result from the bad quality of the preview
+  # It is handled by adding an adjustment power a to the slope in the linear function (nominator). This adjustment
+  # power is determined linear to the distance from 1. For slope values of <= 0.5 >= -0.5 and >= 1.5 a is 1 because this
+  # are safe values. If slope is 1, the slope default value is taken
+  t <- -0.8 # threshold between this value and -1 respectively both
+  t_high <- 1+(1-abs(t))
+  step <- 0.01
+  s <- round(slope,2) # round the slope value to two digits in order to look-up the closest adjustment power
+  a_vals <- (qexp((10:63)/63) * 5)[3:(length(seq(abs(t),1,step)))] # use an exponential increase of a towards 1
+  a_vals_decr <- sort(a_vals,decreasing=TRUE)
+  u <- rep(1,length(seq(-100,-t_high,step)))
+  v <- rep(1,length(seq(t,-t,step)))
+  a_vec <- c(u,a_vals,1,a_vals_decr,v,a_vals,1,a_vals_decr,u)
+  s_vec <- round(seq(-100,100,step),2)
+  a_hashmap <- hashmap(s_vec,a_vec)
+  a <- a_hashmap$find(s)
+  if (s == 1) {slope <- slopeDefault}
+  
+  ## Calculate HOT cloud probablity layer
+  try(nominator <- abs(slope^a * bBand - rBand + intercept))
   try(denominator <- sqrt(1 + slope^2))
   try(HOT <- nominator / denominator)
   if (inherits(HOT,error) || inherits(nominator,error) || inherits(denominator,error)) {

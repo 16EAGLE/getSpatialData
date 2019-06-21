@@ -152,17 +152,17 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     url <- x
   } else{
     if(x == "auto"){
-      if(p == "Sentinel-1" | p == "Sentinel-2") x <- "dhus"
-      if(p == "Sentinel-3") x <- "s3"
+      if(p == "Sentinel-1" | p == "Sentinel-2" | p == "Sentinel-3") x <- "dhus"
+      #if(p == "Sentinel-3") x <- "s3" # decommisioned
       if(p == "Sentinel-5P" | p == "Sentinel-5 Precursor") x <- "s5p"
       if(p == "GNSS") x <- "gnss"
     }
     if(x == "dhus"){url <- getOption("gSD.api")$dhus}
-    if(x == "s3"){
-      url <- getOption("gSD.api")$s3
-      user <- "s3guest"
-      pw <- "s3guest"
-    }
+    # if(x == "s3"){
+    #   url <- getOption("gSD.api")$s3
+    #   user <- "s3guest"
+    #   pw <- "s3guest"
+    # }
     if(x == "s5p"){
       url <- getOption("gSD.api")$s5p
       user <- "s5pguest"
@@ -573,7 +573,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   op <- options()
   op.gSD <- list(
     gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
-                   s3 = 'https://scihub.copernicus.eu/s3/',
+                   #s3 = 'https://scihub.copernicus.eu/s3/',
                    s5p = 'https://s5phub.copernicus.eu/',
                    gnss = 'https://scihub.copernicus.eu/gnss/',
                    espa = 'https://espa.cr.usgs.gov/api/v1/',
@@ -582,7 +582,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                    aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
                    laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
     gSD.api.names = list(dhus = "ESA Copernicus Open Hub",
-                         s3 = "ESA Copernicus S3 Hub",
+                         #s3 = "ESA Copernicus S3 Hub",
                          s5p = "ESA Copernicus S5P Hub",
                          gnss = "ESA Copernicus GNSS Hub",
                          espa = "USGS-EROS ESPA",

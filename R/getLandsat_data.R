@@ -146,9 +146,9 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   if(source == "espa"){
 
     ## files
-    dir.ds <- sapply(prod.id, function(x, d = dir_out, l = paste0(firstup(level), collapse = "_")) paste0(d, "/", x, "_LEVEL_", l), USE.NAMES = F)
-    catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
-    file.ds <- sapply(dir.ds, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
+    records$gSD.dir.file <- sapply(records$gSD.prod.id, function(x, d = dir_out, l = paste0(level, collapse = "_")) paste0(d, "/", x, "_LEVEL_", l), USE.NAMES = F)
+    catch <- sapply(records$gSD.dir.file, function(x) dir.create(x, showWarnings = F))
+    records$gSD.file <- sapply(records$gSD.dir.file, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
     
     if(!isTRUE(force)){
       items.exist <- file.exists(file.ds)

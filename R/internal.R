@@ -357,7 +357,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if(isTRUE(on_map) | isTRUE(return_preview)){
 
       ## create footprint
-      footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
+      footprint <- st_as_sfc(record$spatialFootprint, crs = 4326)
       if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
       
       crs(r.prev) <- crs(as_Spatial(footprint))
@@ -649,12 +649,13 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   ## Check input
   aoiClass <- class(aoi)
   classNumErr <-  "has to be of class 'numeric'. But is: "
-  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
   if (!class(records) == "data.frame") {out(paste0("Records has to be of class 'data.frame' in the format as returned within the getSpatialData package. But is of class: ",class(records)),type=3)}
-  if (!is.numeric(cloudPrbThreshold)) {out(paste0("cloudPrbThreshold",classNumErr,class(cloudPrbThreshold)),type=3)}
-  if (!is.numeric(slopeDefault)) {out(paste0("slopeDefault",classNumErr,class(slopeDefault)),type=3)}
-  if (!is.numeric(interceptDefault)) {out(paste0("interceptDefault",classNumErr,class(interceptDefault)),type=3)}
-
+  params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
+  check_num <- sapply(1:length(params),function(i) {
+    if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
+  })
+  
   numRecords <- nrow(records)
   out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
   processingTime <- c()
@@ -666,7 +667,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     # get preview of current record
     currRecord <- records[i,]
     
-    if (sensor == "Sentinel-2" || "Sentinel-3") {
+    if (sensor == "Sentinel-2" || sensor == "Sentinel-3") {
       preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                      username=username,password=password,verbose=verbose)
       identifier <- 1

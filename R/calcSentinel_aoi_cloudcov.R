@@ -88,7 +88,7 @@ calcSentinel_aoi_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20, c
   
   sceneCloudCoverCol <- "cloudcoverpercentage" # for later use the column name holding the scene cloud cover
   if (substr(records[1,"title"],1,2) == "S2") {
-    sensor <- "Sentinel"
+    sensor <- "Sentinel-2"
   } else {
     sensor <- "Sentinel-3"
   }

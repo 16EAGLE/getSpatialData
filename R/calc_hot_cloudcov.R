@@ -32,7 +32,7 @@
 #' 
 #' @export
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 20, sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
   AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
   error <- "try-error"
@@ -101,6 +101,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # non-valid pixels appear as 0 DNs in preview images, not as NAs
   prevMasked <- mask(preview,aoi)
   prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
+  NA_mask <- prevMasked[[1]] > 1 # for "NA" values in extent that appear as DN <1 in previews
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked[1] == 0) {
     record[[AOIcloudcoverpercentage]] <- 100
@@ -141,6 +142,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     numTry <- numTry + 1
   }
+  cMask[NA_mask==0] <- NA
+  
   ## Calculate cloud cover percentage
   if (isFALSE(hotFailed)) {
     cMask <- mask(cMask,aoi)
@@ -157,7 +160,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     record[[AOIcloudcoverpercentage]] <- 9999
     out(hotFailWarning,type=2)
   }
-
+  
   return(record)
-
+  
 }

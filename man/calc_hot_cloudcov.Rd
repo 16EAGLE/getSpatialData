@@ -5,9 +5,9 @@
 \title{Calculates the haze-optimal transformation cloud cover based on the red and blue band}
 \usage{
 calc_hot_cloudcov(record, preview, aoi = NULL, identifier = NULL,
-  maxDeviation = 20, sceneCloudCoverCol, cloudPrbThreshold = 40,
-  slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL,
-  verbose = TRUE)
+  maxDeviation = 20, sceneCloudCoverCol = NULL,
+  cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10,
+  dir_out = NULL, verbose = TRUE)
 }
 \arguments{
 \item{record}{data.frame, single line representing one record from a records data.frame.}

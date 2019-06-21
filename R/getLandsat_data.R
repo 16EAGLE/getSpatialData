@@ -73,7 +73,7 @@
 #' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
 #' @export
 #'
-getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, espa_order = NULL, force = FALSE, username = NULL, password = NULL, n.retry = 3, verbose = TRUE){
+getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, wait_for_espa = NULL, force = FALSE, username = NULL, password = NULL, n.retry = 3, verbose = TRUE){
 
   ## Global USGS login
   if(is.TRUE(getOption("gSD.usgs_set"))){
@@ -91,46 +91,25 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   char_args <- list(level = level, source = source)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
 
-  if(is.null(espa_order)){
-    if(missing(records)) out("Argument 'records' must be defined (except if an ESPA order is given).", type = 3)
-    levels <- sapply(strsplit(level, ','), function(x) paste0("'", x, "'"))
-    levels <- paste(level, collapse = ".*" )
-    for(x in records$levels_available) if(length(grep(levels, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one record in 'records'. Check column 'levels_available'."), type = 3)
-  }
-
+  if(missing(records)) out("Argument 'records' must be defined.", type = 3)
+  levels <- sapply(strsplit(level, ','), function(x) paste0("'", x, "'"))
+  levels <- paste(level, collapse = ".*" )
+  for(x in records$levels_available) if(length(grep(levels, x)) == 0) out(paste0("Requested product level '", level, "' is not available for at least one record in 'records'. Check column 'levels_available'."), type = 3)
+  
 
   ## check/set source (direct EE download needs machine-to-machine privilleges)
-  if(!is.null(espa_order)){ source <- "espa"
+  if(source == "auto"){
+    if(all(level == "l1")){
+      if(all(sapply(records$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
+        source <- "aws"
+      } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'records' contains records that do not originate from Landsat-8.", type = 3)
+    } else source <- "espa"
   } else{
-    if(source == "auto"){
-      if(all(level == "l1")){
-        if(all(sapply(records$displayId, function(x) if(length(grep("LC08", strsplit(x, "_")[[1]][1])) == 0) F else T, USE.NAMES = F))){
-          source <- "aws"
-        } else out("getLandsat_data currently supports download of Level 1 (level = 'l1') products for Landsat-8 only. Argument 'records' contains records that do not originate from Landsat-8.", type = 3)
-      } else source <- "espa"
-    } else{
-      if(any(level == "l1") & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
-    }
+    if(any(level == "l1") & source == "espa") out("Argument 'source' cannot be set to 'espa', if 'level' is set to 'l1'. ESPA is currently providing higher-level on-demand products only.", type = 3)
   }
 
-
-  ## Redirect, if direct ESPA order download
-  if(!is.null(espa_order)){
-    prod.id <- as.vector(unlist(sapply(espa_order, function(x, user = username, pass = password){
-      sapply(content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))[[1]], function(y) y$name, USE.NAMES = F)
-    }, USE.NAMES = F)))
-    level <- unique(sapply(espa_order, function(x, user = username, pass = password){
-      y <- unlist(content(gSD.get(paste0(getOption("gSD.api")$espa, "order/", x), user, pass))$product_opts)
-      y <- y[grep("products", names(y))]
-      names(y) <- NULL
-      return(y)
-    }, USE.NAMES = F))
-    #if(length(level) > 1) out(paste0("The provided order IDs refer to orders of different processing levels ['", paste0(level, collapse = "', '"), "']. Please use order IDs of identical levels per call."), type = 3)
-  } else{
-    records$gSD.prod.id <- records$displayId
-  }
-
-
+  records.names <- colnames(records)
+  
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/LANDSAT/", toupper(paste0(level,collapse = "_"))) else dir_out <- path.expand(dir_out)
@@ -139,39 +118,68 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
   if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined archive directory does not exist.", type=3)
 
-
-  ######## APPPLY CHANGES DONE FOR getSentinel_data and for AWS in here also for ESPA and getMODIS_data (returning records and using gSD.retry)
-  
   ## ESPA
   if(source == "espa"){
 
     ## files
-    records$gSD.dir.file <- sapply(records$gSD.prod.id, function(x, d = dir_out, l = paste0(level, collapse = "_")) paste0(d, "/", x, "_LEVEL_", l), USE.NAMES = F)
+    records$gSD.name <- records$displayId
+    records$gSD.dir.file <- sapply(records$gSD.name, function(x, d = dir_out, l = paste0(level, collapse = "_")) paste0(d, "/", x, "_LEVEL_", l), USE.NAMES = F)
     catch <- sapply(records$gSD.dir.file, function(x) dir.create(x, showWarnings = F))
     records$gSD.file <- sapply(records$gSD.dir.file, function(x) paste0(x, "/", tail(strsplit(x, "/")[[1]], n=1), ".tar.gz"), USE.NAMES = F)
     
-    if(!isTRUE(force)){
-      items.exist <- file.exists(file.ds)
-      items.skip <- which(items.exist == T)
-      items.order <- which(items.exist == F)
-      
-      catch <- mapply(x = prod.id[items.skip], y = file.ds[items.skip], i.item = items.skip, function(x, y, i.item, n.item = length(items.exist)){
-        out(paste0("[", i.item, "/", n.item, "] Skipping download of '", x, "', since '", y, "' already exists..."), msg = T)
-      }, SIMPLIFY = F)
-      if(is.null(espa_order)) records <- records[items.order,]
-      file.down <- file.ds[items.order]
-    } else{
-      file.down <- file.ds
-    }
+    ## assign item and head
+    records$gSD.item <- 1:nrow(records)
+    records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
+    records$gSD.order <- F
+    records$gSD.download <- F
 
-    if(length(file.down) != 0){
-      if(is.null(espa_order)){
-        order.list <- .ESPA_order(id = records$displayId, level = level, username = username, password = password, format = "gtiff", verbose = verbose)
-      } else{
-        order.list <- espa_order
+    ## spare existing once from being checked on ESPA
+    if(!isTRUE(force)) records$gSD.check <- !file.exists(records$gSD.file) else records$gSD.check <- T
+    
+    ## check query and skip, if not available
+    records <- do.call(rbind, lapply(1:nrow(records), function(i){
+      x <- records[i,]
+    
+      ## check if downloaded
+      if(isFALSE(x$gSD.check)){
+        out(paste0(x$gSD.head, "Skipping order and download of '", x$gSD.name, "', since '", x$gSD.file, "' already exists..."))
+        x$gSD.order <- F
+        x$gSD.download <- F
+        return(x)
       }
-      .ESPA_download(order.list = order.list, username = username, password = password, file.down = file.down, dir_out = dir_out, items.order = items.order, n.item = length(items.exist))
+      
+      if(!is.null(x$ESPA_orderID)){
+        out(paste0(x$gSD.head, "Staging '", x$gSD.name, "' for checking ESPA order status..."))
+        x$gSD.order <- F
+        x$gSD.download <- T
+        return(x)
+      }
+      
+      ## check if available via ESPA
+      response <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x$gSD.name), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
+      if(names(content(response)) == "not_implemented"){
+        out(paste0(x$gSD.head, "Skipping order and download of '", x$gSD.name, "', since it could not be found in the ESPA database."), type = 2)
+        x$gSD.order <- F
+        x$gSD.download <- F
+        return(x)
+        
+      } else{
+        out(paste0(x$gSD.head, "Staging '", x$gSD.name, "' for being ordered at ESPA..."))
+        x$gSD.order <- T
+        x$gSD.download <- T
+        return(x)
+      }
+    }))
+    
+    if(nrow(records[records$gSD.order,]) > 0){
+      records$ESPA_orderID <- .ESPA_order(records[records$gSD.order,]$gSD.name, level = level, username = username, password = password, format = "gtiff", verbose = verbose)
     }
+    
+    ## download
+    records <- .ESPA_download(records[records$gSD.download == T,], username = username, password = password, dir_out = dir_out, n.retry = n.retry)
+    
+    ## remove internal fields
+    records <- records[,-sapply(c("ESPA_orderID", "ESPA_status", "gSD.md5.url", "gSD.md5", "gSD.check", "gSD.order", "gSD.download", "gSD.url.ds", "gSD.name", "gSD.item", "gSD.head", "gSD.ondisk"), function(x, names = colnames(records)) which(names == x), USE.NAMES = F)]
   }
 
 
@@ -236,6 +244,9 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
       x$gSD.downloaded <- all(files$gSD.downloaded)
       return(x)
     }))
+    
+    ## remove internal fields
+    records <- records[,-sapply(c("gSD.url.ds", "gSD.name", "gSD.item", "gSD.head", "gSD.url.index"), function(x, names = colnames(records)) which(names == x), USE.NAMES = F)]
   }
 
   ## message the user
@@ -245,9 +256,6 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
     out(paste0("All downloads have been succesfull after ", max(records$gSD.attempts), " attempt(s)."), msg = T)
   }
   
-  ## remove internal fields
-  records <- records[,-sapply(c("gSD.url.ds", "gSD.name", "gSD.item", "gSD.head", "gSD.url.index"), function(x, names = colnames(records)) which(names == x), USE.NAMES = F)]
-  
-  out("Columns added to records: 'gSD.prod.id', 'gSD.dir.file', 'gSD.file', 'gSD.downloaded', 'gSD.attempts'")
+  out(paste0("Columns added to records: '", paste0(setdiff(colnames(records), records.names), collapse = "', '"), "'"))
   return(records)
 }

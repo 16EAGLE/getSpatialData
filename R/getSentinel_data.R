@@ -72,7 +72,7 @@
 
 getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = NULL, password = NULL,
                              hub = "auto", n.retry = 3, verbose = TRUE){
-
+  
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.dhus_set"))){
     if(is.null(username)) username <- getOption("gSD.dhus_user")
@@ -81,25 +81,28 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)) password = password else password = getPass()
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-
+  
   if(length(unique(records$platformname)) > 1) out("Platform name differs. Platform name needs to be unique per call, e.g. 'Sentinel-1' only, as returned by getSentinel_query().", type=3)
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/", unique(records$platformname), "/") else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
-
+  
   ## Intercept false inputs and get inputs
   char_args <- list("records$uuid" = records$uuid, "records$url" = records$url, "records$identifier" = records$identifier, dir_out = dir_out)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("'", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined output directory does not exist.", type=3)
-
+  
+  ## collect record column names
+  records.names <- colnames(records)
+  
   ## Manage API access
   platform <- unique(records$platformname)
   gnss <- unique(records$gnss)
   if(length(platform) > 1){out(paste0("Argument 'records' contains multiple platforms: ", paste0(platform,collapse = ", "), ". Please use only a single platform per call."), type = 3)}
   if(length(gnss) > 1) out("Some records are GNSS records, while others are not. Please do not join non-GNNS and GNNS records and call getSentinel_data separately for both.", type = 3)
   cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else platform, user = username, pw = password)
-
+  
   ## check availability
   if(is.null(records$available)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
   if(any(!records$available)){
@@ -109,7 +112,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   
   ## create urls and md5 checksums
   records$gSD.md5.url <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
-  records$gSD.md5 <- sapply(url.md5, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
+  records$gSD.md5 <- sapply(records$gSD.md5.url, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
   records$gSD.url.ds <- records$url
   
   ## create file names
@@ -141,6 +144,6 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   ## remove internal fields
   records <- records[,-sapply(c("gSD.url.ds", "gSD.name", "gSD.item", "gSD.head"), function(x, names = colnames(records)) which(names == x), USE.NAMES = F)]
   
-  out("Columns added to records: 'gSD.md5.url', 'gSD.md5', 'gSD.file', 'gSD.downloaded', 'gSD.attempts'")
+  out(paste0("Columns added to records: '", paste0(setdiff(colnames(records), records.names), collapse = "', '"), "'"))
   return(records)
 }

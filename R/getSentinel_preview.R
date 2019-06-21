@@ -69,7 +69,8 @@
 #' @importFrom httr GET write_disk authenticate
 #' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue crop xyFromCell values
 #' @importFrom sf st_as_sfc st_crs as_Spatial
-#' @importFrom mapview viewRGB addFeatures
+#' @importFrom mapview viewRGB
+#' @importFrom leafem addFeatures
 #'
 #' @export
 

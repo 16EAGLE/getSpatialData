@@ -149,7 +149,7 @@ gSD.download <- function(x, names, prog = T, force = F){
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.retry <- function(files, FUN, ..., n.retry = 3){
+gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   
   files$gSD.attempts <- NA
   i.retry <- n.retry
@@ -169,7 +169,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3){
       files <- files[files$gSD.downloaded == F,]
       i.retry <- i.retry-1
       
-      out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Reattempting failed downloads..."))
+      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Reattempting downloads..."))
     }
   }
   
@@ -376,7 +376,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom httr GET write_disk authenticate
 #' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
 #' @importFrom sf st_as_sfc st_crs as_Spatial st_transform st_coordinates
-#' @importFrom mapview viewRGB addFeatures
+#' @importFrom mapview viewRGB
+#' @importFrom leafem addFeatures
 #'
 #' @keywords internal
 #' @noRd
@@ -421,7 +422,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
           map <- addFeatures(map, aoi.sf)
         }
       }
-      map # display mapview or leaflet output
+      print(map) # display mapview or leaflet output
     } else{
       
       ## create simple RGB plot
@@ -503,72 +504,56 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #'
 #' @keywords internal
 #' @noRd
-## check order(s)
-.ESPA_download <- function(order.list, username, password, file.down, delay = 10, dir_out, items.order = NULL, n.item = NULL){
+.ESPA_download <- function(records, username, password, dir_out, delay = 10, wait_for_espa = NULL, n.retry = 3){
   
-  remain.active = TRUE; ini = TRUE; show.status = TRUE
-  while(remain.active){
+  records$gSD.downloaded <- F
+  records$gSD.attempts <- NA
+  continue <- T
+  while(!all(records$gSD.downloaded) & isTRUE(continue)){
     
     ## get tiems
-    items <- lapply(order.list, function(x, user = username, pass = password){
-      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))
-    })
+    items <- unlist(unlist(lapply(unique(records$ESPA_orderID), function(x){
+      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), username, password))
+    }), recursive = F), recursive = F)
+    records$gSD.md5.url <- records$gSD.url.ds <- NA
     
-    ## get items content
-    items <- lapply(items, function(x) lapply(x[[1]], function(y){
-      r <- unlist(y)
-      names(r) <- names(y)
-      return(r)
+    ## get tiems
+    records <- do.call(rbind, lapply(1:nrow(records), function(i){
+      x <- records[i,]
+      x.item <- items[[grep(x$displayId, items)]]
+      x$ESPA_status <- x.item$status
+      
+      if(x$ESPA_status == "complete"){
+        x$gSD.md5.url <- x.item$cksum_download_url
+        x$gSD.md5 <- sapply(x$gSD.md5.url, function(url) strsplit(content(gSD.get(x$gSD.md5.url), as = "text", encoding = "UTF-8"), " ")[[1]][1], USE.NAMES = F)
+        x$gSD.url.ds <- x.item$product_dload_url
+      }
+      return(x)
     }))
     
-    ## make items data.frame containing recieve status
-    items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
-    names.required <- sapply(file.down, function(x) head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_LEVEL_")[[1]], n=1), USE.NAMES = F) #paste0(head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_")[[1]], n=-1), collapse = "_"), USE.NAMES = F)
-    items <- items[sapply(names.required, function(x, y = items$name) which(y == x), USE.NAMES = F),]
-    items <- cbind(items, items$status == "complete")
-    items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
-    colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
-    
-    if(ini){
-      items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
-      colnames(items.df)[ncol(items.df)] <- "recieved"
-      ini <- FALSE
-    } else{
-      items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
+    ## download available records
+    if(nrow(records[records$ESPA_status == "complete" & records$gSD.downloaded == F,]) > 0){
+      records[records$ESPA_status == "complete" & records$gSD.downloaded == F,] <- gSD.retry(
+        records[records$ESPA_status == "complete" & records$gSD.downloaded == F,], gSD.download,
+        names = colnames(records), prog = getOption("gSD.verbose"), force = T, n.retry = n.retry)
     }
-    if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
-    items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
     
-    ## Items to download
-    if(all(items.df$available) & all(items.df$recieved)){
-      remain.active <- FALSE
-    } else{
-      
-      ## Download or wait for status
-      sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
-      if(length(sub.download) > 0){
-        
-        items.get <- items.df[sub.download,]
-        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "'."), msg = T)
-        #items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
-        items.df$recieved[sub.download] <- mapply(name = items.get$name, uf = items.get$product_dload_url, uc = items.get$cksum_download_url,
-                                                  file = items.get$file, i.item = items.order, function(name, uf, uc, file, i.item){
-                                                    
-                                                    # create console index of current item                                                    
-                                                    head.out <- paste0("[", i.item, "/", n.item, "] ")
-                                                    gSD.download(name = name, url.file = uf, url.checksum = uc, file = file, head.out = head.out)
-                                                  })
-        show.status <- TRUE
+    if(!all(records$gSD.downloaded)){
+      if(is.null(wait_for_espa)){
+        out("Some datasets are not ready to download from ESPA yet.", msg = T)
+        out("If getLandsat_data should not continue checking ESPA, it will return the records of all requested datasets (including their ESPA order IDs). Use the returned records to call getLandsat_data again later to continue checking/downloading from ESPA.")
+        wait_for_espa <- readline("Should getLandsat_data wait for all datasets to be ready for download? [y/n]: ")
+        if(wait_for_espa == "n") wait_for_espa <- F else wait_for_espa <- T
+      }
+      if(isTRUE(wait_for_espa)){
+        out(paste0("Waiting for dataset(s) '", paste0(records[records$ESPA_status == "complete" & records$gSD.downloaded == F,]$gSD.name, collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
+        Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
       } else{
-        if(isTRUE(show.status)){
-          out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
-          out("Note: It is also possible to terminate the function and call it again later by providing the displayed order ID(s) as input to 'espa_order'.", msg = T)
-        }
-        show.status <- FALSE
+        continue <- FALSE
       }
     }
-    Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
   }
+  return(records)
 }
 
 

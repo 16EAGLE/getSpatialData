@@ -5,7 +5,8 @@
 \title{Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data}
 \usage{
 getSentinel_data(records, dir_out = NULL, force = FALSE,
-  username = NULL, password = NULL, hub = "auto", verbose = TRUE)
+  username = NULL, password = NULL, hub = "auto", n.retry = 3,
+  verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.}
@@ -27,6 +28,8 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
 }}
+
+\item{n.retry}{numeric, maximum number of download (re-)attempts. If the downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }

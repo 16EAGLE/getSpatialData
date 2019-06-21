@@ -67,5 +67,5 @@ getLandsat_names <- function(username = NULL, password = NULL){
     api.key <- .ERS_login(username, password)
   }
   x <- grep("LSR", .EE_ds(api.key, "LANDSAT_"), value = T, invert = T) #not show LSR, since higher level products are queried at ESPA directly
-  if(length(x) == 0) out("Names could not be accessed, are you (still) logged in? USGS ERS sessions expire after some time, use login_USGS() or define arguments 'username' and 'password'.", type = 3)
+  if(length(x) == 0) out("Names could not be accessed, are you (still) logged in? USGS ERS sessions expire after some time, use login_USGS() or define arguments 'username' and 'password'.", type = 3) else return(x)
 }

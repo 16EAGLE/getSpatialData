@@ -29,7 +29,7 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
    \item or a valid API URL.
 }}
 
-\item{n.retry}{numeric, maximum number of download (re-)attempts. If the downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
+\item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }

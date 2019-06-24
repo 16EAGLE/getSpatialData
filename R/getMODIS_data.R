@@ -6,6 +6,7 @@
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getMODIS_query}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getMODIS_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
+#' @param n.retry numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
 #'
 #' @return Character vector of paths to the downloaded files.
 #'
@@ -49,7 +50,7 @@
 #' @seealso \link{getMODIS_names} \link{getMODIS_query} \link{getMODIS_preview}
 #' @export
 #'
-getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE){
+getMODIS_data <- function(records, dir_out = NULL, force = FALSE, n.retry = 3, verbose = TRUE){
 
   ## Argument checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -62,12 +63,15 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
   if(!is.character(dir_out)) out(paste0("Argument 'dir_out' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined archive directory does not exist.", type=3)
 
+  ## collect record column names
+  records.names <- colnames(records)
+  
   ## Assemple request
-  out(paste0("Starting download of product(s) '", paste0(records$displayId, collapse = "', "), "'."), msg = T)
-  url.files <- apply(records, MARGIN = 1, function(x, root = getOption("gSD.api")$laads){
+  out("Checking download URLs for requested records...")
+  records$dataset_url <- apply(records, MARGIN = 1, function(x, root = getOption("gSD.api")$laads){
     y <- rbind.data.frame(x, stringsAsFactors = F)
     colnames(y) <- names(x)
-    fn <- gsub("Entity ID: ", "", strsplit(y$summary, ", ")[[1]][1]) #positiona
+    fn <- gsub("Entity ID: ", "", strsplit(y$summary, ", ")[[1]][1]) #positional
     ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
     
     paste0(root, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
@@ -76,7 +80,7 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
   })
 
   # change URLs if erroring
-  url.files <- sapply(url.files, function(x){
+  records$dataset_url <- sapply(records$dataset_url, function(x){
     if(http_error(x)){
       
       fn.names <- gSD.get(paste0(paste0(head(strsplit(x, "/")[[1]], n = -1), collapse = "/"), ".csv"))
@@ -90,25 +94,22 @@ getMODIS_data <- function(records, dir_out = NULL, force = FALSE, verbose = TRUE
     } else return(x)
   })
   
-  
-  dir.ds <- sapply(url.files, function(x, d = dir_out) paste0(d, "/", gsub(".hdf", "", tail(strsplit(x, "/")[[1]], n=1)[1])), USE.NAMES = F)
-  catch <- sapply(dir.ds, function(x) dir.create(x, showWarnings = F))
-  
-  file.ds <- unlist(mapply(u = url.files, dir = dir.ds, i.item = 1:length(url.files), FUN = function(u, dir, i.item, n.item = length(url.files)){
-    
-    # create console index of current item
-    head.out <- paste0("[", i.item, "/", n.item, "] ")
-    f <- paste0(dir, "/", tail(strsplit(u, "/")[[1]], n=1))
-    
-    if(file.exists(f) & !isTRUE(force)){
-      out(paste0(head.out, "Skipping download of '", tail(strsplit(u, "/")[[1]], n=1), "', since '", f, "' already exists..."), msg = T)
-    } else{
-      gSD.download(name = tail(strsplit(u, "/")[[1]], n=1), url.file = u, file = f, head.out = head.out, prog = getOption("gSD.verbose"))
-    }
-    return(f)
-  }, SIMPLIFY = F))
-  names(file.ds) <- NULL
 
-  out(paste0("Requested records are stored in '", dir_out, "'."))
-  return(file.ds)
+  records$dataset_dir <- sapply(records$dataset_url, function(x, d = dir_out) paste0(d, "/", gsub(".hdf", "", tail(strsplit(x, "/")[[1]], n=1)[1])), USE.NAMES = F)
+  catch <- sapply(records$dataset_dir , function(x) dir.create(x, showWarnings = F))
+  
+  ## create file names
+  records$dataset_file <- unlist(mapply(url = records$dataset_url, dir = records$dataset_dir, FUN = function(url, dir){
+    paste0(dir, "/", tail(strsplit(url, "/")[[1]], n=1))
+  }, SIMPLIFY = F, USE.NAMES = F))
+  
+  ## create console items
+  records$dataset_name <- unlist(sapply(records$dataset_url, function(u) sapply(u, function(x) tail(strsplit(x, "/")[[1]], n=1), USE.NAMES = F), USE.NAMES = F, simplify = F))
+  records$gSD.item <- 1:nrow(records)
+  records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
+  
+  ## download per record
+  records <- gSD.retry(records, gSD.download, names = colnames(records), prog = getOption("gSD.verbose"), force = force, n.retry = n.retry)
+  
+  return(.download_summary(records, records.names))
 }

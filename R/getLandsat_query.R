@@ -60,11 +60,12 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr content
+#' @importFrom sf st_as_sfc st_sf
 #'
 #' @seealso \link{getLandsat_names} \link{getLandsat_preview} \link{getLandsat_data}
 #' @export
 
-getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = NULL, password = NULL, ..., verbose = TRUE){
+getLandsat_query <- function(time_range, name = "all" , aoi = NULL, as_sf = TRUE, username = NULL, password = NULL, ..., verbose = TRUE){
 
   ## Global USGS login
   if(is.null(username)){
@@ -132,6 +133,11 @@ getLandsat_query <- function(time_range, name = "all" , aoi = NULL, username = N
     # convert expected numeric fields
     fields.numeric <- names(records)[sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
     records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+    
+    # convert to sf
+    colnames(records)[colnames(records) == "spatialFootprint"] <- "footprint"
+    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+    if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
     
     # only return levels defined in level_filter
     if(all(df.filters$level_filter != "all")){

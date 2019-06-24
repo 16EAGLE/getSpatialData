@@ -118,17 +118,17 @@ gSD.download <- function(x, names, prog = T, force = F){
   x <- as.list(x)
   names(x) <- names
   
-  if(file.exists(x$gSD.file) & !isTRUE(force)){
-    out(paste0(x$gSD.head, "Skipping download of '", x$gSD.name, "', since '", x$gSD.file, "' already exists..."), msg = T)
+  if(file.exists(x$dataset_file) & !isTRUE(force)){
+    out(paste0(x$gSD.head, "Skipping download of '", x$dataset_name, "', since '", x$dataset_file, "' already exists..."), msg = T)
     return(TRUE)
   } else{
   
-    out(paste0(x$gSD.head, "Downloading '", x$gSD.name, "' to '", x$gSD.file, "'..."), msg = T)
-    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(x$gSD.file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-    gSD.get(x$gSD.url.ds, dir.file = file.tmp, prog = prog)
+    out(paste0(x$gSD.head, "Downloading '", x$dataset_name, "' to '", x$dataset_file, "'..."), msg = T)
+    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(x$dataset_file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+    gSD.get(x$dataset_url, dir.file = file.tmp, prog = prog)
     
-    if(!is.null(x$gSD.md5)){
-      if(as.character(md5sum(file.tmp)) == tolower(x$gSD.md5)){ out("Successfull download, MD5 check sums match.", msg = T)
+    if(!is.null(x$md5_checksum)){
+      if(as.character(md5sum(file.tmp)) == tolower(x$md5_checksum)){ out("Successfull download, MD5 check sums match.", msg = T)
       } else{
         out(paste0("Download failed, MD5 check sums do not match."), type = 2)
         file.remove(file.tmp)
@@ -137,7 +137,7 @@ gSD.download <- function(x, names, prog = T, force = F){
     }
   }
   
-  file.rename(file.tmp, x$gSD.file)
+  file.rename(file.tmp, x$dataset_file)
   return(TRUE)
 }
 
@@ -151,7 +151,7 @@ gSD.download <- function(x, names, prog = T, force = F){
 #' @noRd
 gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   
-  files$gSD.attempts <- NA
+  files$download_attempts <- NA
   i.retry <- n.retry
   retry <- T
   
@@ -159,22 +159,46 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   while(isTRUE(retry) & i.retry > 0){
     
     # download per record
-    files$gSD.downloaded <- apply(files, MARGIN = 1, FUN, ...)
-    files[which(files$gSD.downloaded == TRUE & is.na(files$gSD.attempts)), "gSD.attempts"] <- (n.retry-i.retry)+1
+    files$download_success <- apply(files, MARGIN = 1, FUN, ...)
+    files[which(files$download_success == TRUE & is.na(files$download_attempts)), "download_attempts"] <- (n.retry-i.retry)+1
     
-    if(all(files$gSD.downloaded == TRUE)){
+    if(all(files$download_success == TRUE)){
       retry <- F
     } else{
       
-      files <- files[files$gSD.downloaded == F,]
+      files <- files[files$download_success == F,]
       i.retry <- i.retry-1
       
       if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Reattempting downloads..."))
     }
   }
   
-  files$gSD.attempts[files$gSD.downloaded == F] <- n.retry
+  files$download_attempts[files$download_success == F] <- n.retry
   return(files)
+}
+
+#' download summary 
+#'
+#' @param records df
+#' @param records.names character
+#'
+#' @keywords internal
+#' @noRd
+.download_summary <- function(records, records.names){
+  
+  # remove internal columns
+  records <- records[,-grep("gSD", colnames(records))]
+  
+  if(!is.null(records$download_success)){
+    if(any(!records$download_success)){
+      out(paste0("Some downloads have not been succesfull after ", max(records$download_attempts), " attempt(s) (see column 'download_success'). Please retry later."), type = 2)
+    } else{
+      out(paste0("All downloads have been succesfull after ", max(records$download_attempts), " attempt(s)."), msg = T)
+    }
+  }
+  out(paste0("Columns added to records: '", paste0(setdiff(colnames(records), records.names), collapse = "', '"), "'"))
+  
+  return(records)
 }
 
 #' check if url
@@ -309,15 +333,15 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       x.names <- names(x)
       x.char <- as.character(x)
       
+      df <- rbind.data.frame(x.char, stringsAsFactors = F)
+      colnames(df) <- x.names
+      
       # Make sf polygon filed from spatialFootprint
       spf.sub <- grep("spatialFoot", x.names)
       spf <- unlist(x[spf.sub])
       spf <- as.numeric(spf[grep("coordinates", names(spf))])
-      spf.sf <- .make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T)
+      df[,spf.sub] <- st_as_text(.make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
       
-      df <- rbind.data.frame(x.char, stringsAsFactors = F)
-      colnames(df) <- x.names
-      df[,spf.sub] <- st_as_text(spf.sf)
       df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
       colnames(df)[ncol(df)] <- "product"
       return(df)
@@ -402,7 +426,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if(isTRUE(on_map)){
       
       ## create footprint
-      footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
+      footprint <- record$footprint
       if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
       
       crs(r.prev) <- crs(as_Spatial(footprint))
@@ -506,16 +530,16 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .ESPA_download <- function(records, username, password, dir_out, delay = 10, wait_for_espa = NULL, n.retry = 3){
   
-  records$gSD.downloaded <- F
-  records$gSD.attempts <- NA
+  records$download_success <- F
+  records$download_attempts <- NA
   continue <- T
-  while(!all(records$gSD.downloaded) & isTRUE(continue)){
+  while(!all(records$download_success) & isTRUE(continue)){
     
     ## get tiems
     items <- unlist(unlist(lapply(unique(records$ESPA_orderID), function(x){
       content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), username, password))
     }), recursive = F), recursive = F)
-    records$gSD.md5.url <- records$gSD.url.ds <- NA
+    records$md5_url <- records$dataset_url <- NA
     
     ## get tiems
     records <- do.call(rbind, lapply(1:nrow(records), function(i){
@@ -524,21 +548,21 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       x$ESPA_status <- x.item$status
       
       if(x$ESPA_status == "complete"){
-        x$gSD.md5.url <- x.item$cksum_download_url
-        x$gSD.md5 <- sapply(x$gSD.md5.url, function(url) strsplit(content(gSD.get(x$gSD.md5.url), as = "text", encoding = "UTF-8"), " ")[[1]][1], USE.NAMES = F)
-        x$gSD.url.ds <- x.item$product_dload_url
+        x$md5_url <- x.item$cksum_download_url
+        x$md5_checksum <- sapply(x$md5_url, function(url) strsplit(content(gSD.get(x$md5_url), as = "text", encoding = "UTF-8"), " ")[[1]][1], USE.NAMES = F)
+        x$dataset_url <- x.item$product_dload_url
       }
       return(x)
     }))
     
     ## download available records
-    if(nrow(records[records$ESPA_status == "complete" & records$gSD.downloaded == F,]) > 0){
-      records[records$ESPA_status == "complete" & records$gSD.downloaded == F,] <- gSD.retry(
-        records[records$ESPA_status == "complete" & records$gSD.downloaded == F,], gSD.download,
+    if(nrow(records[records$ESPA_status == "complete" & records$download_success == F,]) > 0){
+      records[records$ESPA_status == "complete" & records$download_success == F,] <- gSD.retry(
+        records[records$ESPA_status == "complete" & records$download_success == F,], gSD.download,
         names = colnames(records), prog = getOption("gSD.verbose"), force = T, n.retry = n.retry)
     }
     
-    if(!all(records$gSD.downloaded)){
+    if(!all(records$download_success)){
       if(is.null(wait_for_espa)){
         out("Some datasets are not ready to download from ESPA yet.", msg = T)
         out("If getLandsat_data should not continue checking ESPA, it will return the records of all requested datasets (including their ESPA order IDs). Use the returned records to call getLandsat_data again later to continue checking/downloading from ESPA.")
@@ -546,7 +570,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
         if(wait_for_espa == "n") wait_for_espa <- F else wait_for_espa <- T
       }
       if(isTRUE(wait_for_espa)){
-        out(paste0("Waiting for dataset(s) '", paste0(records[records$ESPA_status == "complete" & records$gSD.downloaded == F,]$gSD.name, collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
+        out(paste0("Waiting for dataset(s) '", paste0(records[records$ESPA_status == "complete" & records$download_success == F,]$dataset_name, collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
         Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
       } else{
         continue <- FALSE

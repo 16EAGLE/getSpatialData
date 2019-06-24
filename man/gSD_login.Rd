@@ -6,14 +6,16 @@
 \alias{login_USGS}
 \title{Session-wide login}
 \usage{
-login_CopHub(username, password = NULL)
+login_CopHub(username, password = NULL, verbose = TRUE)
 
-login_USGS(username, password = NULL)
+login_USGS(username, password = NULL, verbose = TRUE)
 }
 \arguments{
 \item{username}{character, username to the corresponding service. For details on registration, see details.}
 
 \item{password}{character, password to the corresponding service.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None.

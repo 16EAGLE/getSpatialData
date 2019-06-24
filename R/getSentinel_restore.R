@@ -35,8 +35,8 @@ getSentinel_restore <- function(record, username = NULL, password = NULL, hub = 
   cred <- .CopHub_select(hub, record$platformname, username, password)
   
   ## check availability
-  if(is.null(record$available)) record$available <- as.logical(toupper(unlist(.get_odata(record$uuid, cred, field = "Online/$value"))))
-  if(isTRUE(record$available)){
+  if(is.null(record$download_available)) record$download_available <- as.logical(toupper(unlist(.get_odata(record$uuid, cred, field = "Online/$value"))))
+  if(isTRUE(record$download_available)){
     out("Dataset is available on-demand and can be downloaded without restoring from LTA.")
   } else {
     request <- try(gSD.get(paste0(cred[3], "/odata/v1/Products('", record$uuid, "')/$value")), silent = T)

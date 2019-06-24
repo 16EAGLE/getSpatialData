@@ -4,7 +4,7 @@
 \alias{getLandsat_query}
 \title{Query Landsat records}
 \usage{
-getLandsat_query(time_range, name = "all", aoi = NULL,
+getLandsat_query(time_range, name = "all", aoi = NULL, as_sf = TRUE,
   username = NULL, password = NULL, ..., verbose = TRUE)
 }
 \arguments{
@@ -13,6 +13,8 @@ getLandsat_query(time_range, name = "all", aoi = NULL,
 \item{name}{character, optional. Identifies the name of the product to be queried. If set to "all" (default), every available Landsat product is searched for results and included in the output. Use \link{getLandsat_names} to revcieve a vector with all available Landsat products from Earth Explorer, if you want to select a specific one.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
+
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
 \item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
 

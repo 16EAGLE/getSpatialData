@@ -5,7 +5,7 @@
 \title{Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records}
 \usage{
 getSentinel_query(time_range, platform, aoi = NULL,
-  check_avail = FALSE, gnss = FALSE, username = NULL,
+  check_avail = FALSE, gnss = FALSE, as_sf = TRUE, username = NULL,
   password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
@@ -15,9 +15,11 @@ getSentinel_query(time_range, platform, aoi = NULL,
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
-\item{check_avail}{logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.}
+\item{check_avail}{logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{download_available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.}
 
 \item{gnss}{logical, whether to query for GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see \code{details}).}
+
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
 \item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
 

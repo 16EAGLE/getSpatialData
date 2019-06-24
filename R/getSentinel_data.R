@@ -6,7 +6,7 @@
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
-#' @param n.retry numeric, maximum number of download (re-)attempts. If the downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
+#' @param n.retry numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
 #'
 #' @return Character vector of paths to the downloaded files.
 #'
@@ -104,16 +104,16 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else platform, user = username, pw = password)
   
   ## check availability
-  if(is.null(records$available)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
-  if(any(!records$available)){
-    out(paste0("Datasets '", paste0(records$identifier[!records$available], collapse = "', '"), "' are not available on-demand, since they have been archived."), type = if(all(!records$available)) 3 else 2 )
-    records <- records[records$available,]
+  if(is.null(records$download_available)) records$download_available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+  if(any(!records$download_available)){
+    out(paste0("Datasets '", paste0(records$identifier[!records$download_available], collapse = "', '"), "' are not available on-demand, since they have been archived."), type = if(all(!records$download_available)) 3 else 2 )
+    records <- records[records$download_available,]
   }
   
   ## create urls and md5 checksums
-  records$gSD.md5.url <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
-  records$gSD.md5 <- sapply(records$gSD.md5.url, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
-  records$gSD.url.ds <- records$url
+  records$md5_url <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
+  records$md5_checksum <- sapply(records$md5_url, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
+  records$dataset_url <- records$url
   
   ## create file names
   file_ext <-  ".zip"
@@ -122,28 +122,17 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   } else{
     if(isTRUE(grepl("Sentinel-5 Precursor", platform))) file_ext <-  ".nc" 
   }
-  records$gSD.file <- sapply(records$identifier, function(x){
+  records$dataset_file <- sapply(records$identifier, function(x){
     paste0(dir_out, "/", x, file_ext)
   }, USE.NAMES = F) #download to file
   
   ## create console items
-  records$gSD.name <- records$identifier
+  records$dataset_name <- records$identifier
   records$gSD.item <- 1:nrow(records)
   records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
   
   ## download per record
   records <- gSD.retry(records, gSD.download, names = colnames(records), prog = getOption("gSD.verbose"), force = force, n.retry = n.retry)
   
-  ## message the user
-  if(any(!records$gSD.downloaded)){
-    out(paste0("Some downloads have not been succesfull after ", max(records$gSD.attempts), " attempt(s) (see column 'gSD.downloaded'). Please retry later."), type = 2)
-  } else{
-    out(paste0("All downloads have been succesfull after ", max(records$gSD.attempts), " attempt(s)."), msg = T)
-  }
-  
-  ## remove internal fields
-  records <- records[,-sapply(c("gSD.url.ds", "gSD.name", "gSD.item", "gSD.head"), function(x, names = colnames(records)) which(names == x), USE.NAMES = F)]
-  
-  out(paste0("Columns added to records: '", paste0(setdiff(colnames(records), records.names), collapse = "', '"), "'"))
-  return(records)
+  return(.download_summary(records, records.names))
 }

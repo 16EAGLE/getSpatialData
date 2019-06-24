@@ -28,7 +28,7 @@ getLandsat_data(records, level = "sr", source = "auto",
 
 \item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
 
-\item{n.retry}{numeric, maximum number of download (re-)attempts. If the downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
+\item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 

@@ -2,6 +2,7 @@
 #'
 #' Login to services supported by \code{getSpatialData} once for the running session.
 #'
+#' @inheritParams getSentinel_query
 #' @param username character, username to the corresponding service. For details on registration, see details.
 #' @param password character, password to the corresponding service.
 #'
@@ -33,8 +34,9 @@
 
 #' @seealso getSentinel_query getLandsat_query
 #'
-login_CopHub <- function(username, password = NULL){
+login_CopHub <- function(username, password = NULL, verbose = TRUE){
   
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(is.null(password)){password <- getPass()}
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){
@@ -56,8 +58,9 @@ login_CopHub <- function(username, password = NULL){
 
 #' @rdname gSD_login
 #' @export
-login_USGS <- function(username, password = NULL){
+login_USGS <- function(username, password = NULL, verbose = TRUE){
   
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(is.null(password)){password <- getPass()}
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){

@@ -5,8 +5,9 @@
 #' @param time_range character, containing two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. "2017-05-15"
 #' @param platform character, identifies the platform. Either "Sentinel-1", "Sentinel-2", "Sentinel-3" or "Sentinel-5P".
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param check_avail logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.
+#' @param check_avail logical, check if datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{download_available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.
 #' @param gnss logical, whether to query for GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see \code{details}).
+#' @param as_sf logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.
 #' @param username character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
 #' @param hub character, either
@@ -31,6 +32,7 @@
 #' @importFrom getPass getPass
 #' @importFrom httr GET content
 #' @importFrom xml2 xml_contents as_xml_document
+#' @importFrom sf st_as_sfc st_sf
 #'
 #' @examples
 #' ## Load packages
@@ -87,7 +89,7 @@
 #' @seealso \link{getSentinel_data}
 #' @export
 
-getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FALSE, gnss = FALSE, username = NULL, password = NULL,
+getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FALSE, gnss = FALSE, as_sf = TRUE, username = NULL, password = NULL,
                               hub = "auto", verbose = TRUE){
 
   ## Global Copernicus Hub login
@@ -186,7 +188,7 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
       rdf[1, match(names(x), rn)] <- sapply(x, as.character)
       return(rdf)
     }))
-    if(isTRUE(check_avail)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+    if(isTRUE(check_avail)) records$download_available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
     
     # convert expected numeric fields
     fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
@@ -194,5 +196,10 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
     records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
     records$gnss <- gnss
   }
+  
+  # sf geometry
+  records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+  if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
+  
   if(is.TRUE(give.return)) return(records)
 }

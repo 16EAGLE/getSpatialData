@@ -41,11 +41,12 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr content
+#' @importFrom sf st_as_sfc st_sf
 #'
 #' @seealso \link{getMODIS_names} \link{getMODIS_preview} \link{getMODIS_data}
 #' @export
 
-getMODIS_query <- function(time_range, name = "all" , aoi = NULL, username = NULL, password = NULL, verbose = TRUE){
+getMODIS_query <- function(time_range, name = "all", aoi = NULL, as_sf = TRUE, username = NULL, password = NULL, verbose = TRUE){
 
   ## Global USGS login
   if(is.null(username)){
@@ -88,6 +89,11 @@ getMODIS_query <- function(time_range, name = "all" , aoi = NULL, username = NUL
   # convert expected numeric fields
   fields.numeric <- names(records)[sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
   records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+  
+  # convert to sf
+  colnames(records)[colnames(records) == "spatialFootprint"] <- "footprint"
+  records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+  if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
   
   if(!is.null(records)){ return(records)
   } else { out("No results could be obtained for this request.", msg = T) }

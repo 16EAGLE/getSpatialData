@@ -36,7 +36,7 @@
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 20, sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
   scene_hot_cc_percent <- "Scene_HOT_cloudcov_percent"
-  aoi_hot_cc_percent <- "Aoi_HOT_cloudcov_percent" # for aoi cloud cover column
+  aoi_hot_cc_percent <- "Aoi_HOT_cloudcov_percent" 
   error <- "try-error"
   currTitle <- record[[identifier]]
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
@@ -183,7 +183,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     out(hotFailWarning,type=2)
   }
   record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
-  print(NCOL(record))
+  out(length(record),1)
   return(record)
   
 }

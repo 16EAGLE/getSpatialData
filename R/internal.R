@@ -632,17 +632,17 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }
 
-#' bridge between sensor and calc HOT
+#' bridge between sensor and a cloud cover calculator
 #' 
-#' @inheritParams calcSentinel_aoi_cloudcov
+#' @inheritParams calc_cloudcov
 #' @param sensor sensor
 #' @param sceneCloudCoverCol sceneCloudCoverCol
 #'
 #' @keywords internal
 #' 
-#' @importFrom utils object.size setTxtProgressBar txtProgressBar
+#' @importFrom utils object.size
 #' @noRd
-.hotBridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20,
+.cloudcov_bridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20,
                        cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, 
                        dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
@@ -660,9 +660,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
   processingTime <- c()
   previewSize <- c()
-  prgbar <- txtProgressBar(0,numRecords,char="=",style=3,title="HOT Progress",label="0")
   ## Do HOT cloud cover assessment consecutively
-  records <- do.call(rbind,lapply(1:numRecords,function(i) {
+  records <- do.call(rbind,pglapply(1:numRecords,function(i) {
     startTime <- Sys.time()
     # get preview of current record
     currRecord <- records[i,]
@@ -692,9 +691,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if (numRecords >= 10 && i == 5) {
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
-    if (i > 5) {
-      setTxtProgressBar(prgbar,i)
-    }
     return(currRecCloudCover)
   }))
   return(records)
@@ -722,5 +718,19 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   }
   sumDataDownload <- meanPreviewSize * stillToGoFor
   out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
+}
+
+#' calc cloud cover percentage value
+#' 
+#' @param cMask cMask raster
+#' @keywords internal
+#' @importFrom raster as.matrix
+#' @noRd
+
+.calc_cc_perc <- function(cMask) {
+  
+  cMaskMat <- as.matrix(cMask)
+  cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100
+
 }
 

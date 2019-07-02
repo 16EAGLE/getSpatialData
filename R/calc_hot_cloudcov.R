@@ -167,8 +167,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   cMask[NA_mask==0] <- NA
   
   ## Calculate cloud cover percentage
+  scene_cPercent <- .calc_cc_perc(cMask)
   if (isFALSE(hotFailed)) {
-    scene_cPercent <- .calc_cc_perc(cMask)
     cMask <- mask(cMask,aoi)
     if (!is.null(dir_out)) { # save cloud mask if desired
       maskFilename <- paste0(dir_out,"\\",record[1,identifier],"_cloud_mask.tif")
@@ -180,7 +180,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
     record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
   } else {
-    record[[scene_hot_cc_percent]] <- 9999
+    record[[scene_hot_cc_percent]] <- scene_cPercent
     record[[aoi_hot_cc_percent]] <- 9999
     out(hotFailWarning,type=2)
   }

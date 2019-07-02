@@ -19,8 +19,8 @@
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #' 
-#' @return A data.frame as the records input with one additional column holding the estimated cloud cover within the aoi.
-#'
+#' @return \code{records} data.frame with two added columns holding the estimated cloud cover for the whole preview and the aoi.
+#' 
 #' @author Henrik Fisser
 #' 
 #' @examples

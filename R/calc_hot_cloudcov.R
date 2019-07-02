@@ -109,7 +109,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (maxValPrevMasked[1] == 0) {
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999
-    record[[cloud_mask_path]] <- "no cloud mask calculated"
+    if (!is.null(dir_out)) {record[[cloud_mask_path]] <- "NONE"}
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
   }
@@ -174,7 +174,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (isFALSE(hotFailed)) {
     cMask <- mask(cMask,aoi)
     if (!is.null(dir_out)) { # save cloud mask if desired
-      maskFilename <- paste0(dir_out,"\\",record[1,identifier],"_cloud_mask.tif")
+      maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
       record[[cloud_mask_path]] <- maskFilename
     }

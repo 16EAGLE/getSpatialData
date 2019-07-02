@@ -35,7 +35,8 @@
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 20, sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
-  AOIcloudcoverpercentage <- "AOIcloudcoverpercentage" # for aoi cloud cover column
+  scene_hot_cc_percent <- "Scene_HOT_cloudcov_percent"
+  aoi_hot_cc_percent <- "Aoi_HOT_cloudcov_percent" # for aoi cloud cover column
   error <- "try-error"
   currTitle <- record[[identifier]]
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
@@ -105,7 +106,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   NA_mask <- prevMasked[[1]] > 1 # for "NA" values in extent that appear as DN <1 in previews
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked[1] == 0) {
-    record[[AOIcloudcoverpercentage]] <- 100
+    record[[aoi_hot_cc_percent]] <- 100
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
   }
@@ -149,8 +150,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     if (inherits(cMask,error)) {
       hotFailed <- TRUE
     }
-    cMaskMat <- raster::as.matrix(cMask)
-    cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100 # calculate cloud percentage within whole scene for comparison with actual cloud cover for whole scene calculated by data provider
+    cPercent <- .calc_cc_perc(cMask)
     try(ccDeviationFromProvider <- as.numeric(record[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
     if (inherits(ccDeviationFromProvider,error) || is.na(ccDeviationFromProvider) || is.null(ccDeviationFromProvider)) {
       ccDeviationFromProvider <- maxDeviation - 1 # escape the loop by setting the value artificially because calculation failed
@@ -168,18 +168,19 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   
   ## Calculate cloud cover percentage
   if (isFALSE(hotFailed)) {
+    scene_cPercent <- .calc_cc_perc(cMask)
     cMask <- mask(cMask,aoi)
     if (!is.null(dir_out)) { # save cloud mask if desired
       maskFilename <- paste0(dir_out,"\\",record[1,identifier],"_cloud_mask.tif")
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
     }
-    cMaskMatAoi <- as.matrix(cMask)
-    cPercent <- (length(which(cMaskMatAoi==0)) / length(which(!is.na(cMaskMatAoi)))) * 100 # aoi cc \%
-    
-    ##### Add aoi cloud cover percentage to record data.frame
-    record[[AOIcloudcoverpercentage]] <- as.numeric(cPercent)
+    aoi_cPercent <- .calc_cc_perc(cMask)
+      
+    ##### Add scene and aoi cloud cover percentage to record data.frame
+    record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
+    record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
   } else {
-    record[[AOIcloudcoverpercentage]] <- 9999
+    record[[aoi_hot_cc_percent]] <- 9999
     out(hotFailWarning,type=2)
   }
   

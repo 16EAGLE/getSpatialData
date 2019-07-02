@@ -661,7 +661,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   processingTime <- c()
   previewSize <- c()
   ## Do HOT cloud cover assessment consecutively
-  records <- do.call(rbind,pglapply(1:numRecords,function(i) {
+  records <- do.call(rbind,lapply(1:numRecords,function(i) {
     startTime <- Sys.time()
     # get preview of current record
     currRecord <- records[i,]

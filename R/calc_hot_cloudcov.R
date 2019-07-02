@@ -183,7 +183,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     out(hotFailWarning,type=2)
   }
   record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
-  
+  print(NCOL(record))
   return(record)
   
 }

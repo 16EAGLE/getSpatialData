@@ -107,6 +107,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked[1] == 0) {
     record[[aoi_hot_cc_percent]] <- 100
+    record[[scene_hot_cc_percent]] <- 9999
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
   }
@@ -183,7 +184,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     out(hotFailWarning,type=2)
   }
   record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
-  out(length(record),1)
   return(record)
   
 }

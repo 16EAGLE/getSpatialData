@@ -221,17 +221,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     url <- x
   } else{
     if(x == "auto"){
-      if(p == "Sentinel-1" | p == "Sentinel-2" | p == "Sentinel-3") x <- "dhus"
-      #if(p == "Sentinel-3") x <- "s3" # decommisioned
-      if(p == "Sentinel-5P" | p == "Sentinel-5 Precursor") x <- "s5p"
-      if(p == "GNSS") x <- "gnss"
+      x <- getOption("gSD.copnames")[getOption("gSD.copnames")$name == p, 2]
     }
     if(x == "dhus"){url <- getOption("gSD.api")$dhus}
-    # if(x == "s3"){
-    #   url <- getOption("gSD.api")$s3
-    #   user <- "s3guest"
-    #   pw <- "s3guest"
-    # }
     if(x == "s5p"){
       url <- getOption("gSD.api")$s5p
       user <- "s5pguest"
@@ -643,6 +635,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                          ee = "USGS EarthExplorer",
                          aws.l8 = "AWS Landsat 8",
                          laads = "NASA DAAC LAADS"),
+    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
+                              api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
     gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
                        mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),

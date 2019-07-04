@@ -47,7 +47,7 @@
 #' aoi <- get_aoi(type = "sf")
 #' }
 #'
-#' @seealso getSentinel_query getLandsat_query
+#' @seealso getSentinel_query getLandsat_query getMODIS_query
 #'
 set_archive <- function(dir_archive, create = T){
   

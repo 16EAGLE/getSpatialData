@@ -120,7 +120,7 @@ getSentinel_query <- function(time_range, platform, aoi = NULL, check_avail = FA
   char_args <- list(time_range = time_range, platform = platform)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(length(time_range) != 2){out("Argument 'time_range' must contain two elements (start and stop time).", type = 3)}
-  if(!(tolower(platform) %in% c("sentinel-1", "sentinel-2", "sentinel-3", "sentinel-5p"))) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5P'", type = 3)
+  if(!platform %in% getSentinel_names()) out("The selected platform is not supported. Select either 'Sentinel-1', 'Sentinel-2', 'Sentinel-3' or 'Sentinel-5P'", type = 3)
   
   ## url assembler function
   cop.url <- function(ext.xy, url.root, platform, time.range, row.start){

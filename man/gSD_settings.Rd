@@ -73,7 +73,7 @@ aoi <- get_aoi(type = "sf")
 
 }
 \seealso{
-getSentinel_query getLandsat_query
+getSentinel_query getLandsat_query getMODIS_query
 }
 \author{
 Jakob Schwalb-Willmann

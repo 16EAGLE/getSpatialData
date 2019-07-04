@@ -116,7 +116,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   ## Check if valid pixels are found within aoi
   # non-valid pixels appear as 0 DNs in preview images, not as NAs
   prevMasked <- mask(preview,aoi)
-  prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
+  #prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked[1] == 0) {
     record[[aoi_hot_cc_percent]] <- 100

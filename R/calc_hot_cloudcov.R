@@ -30,6 +30,7 @@
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
 #' @importFrom hashmap hashmap
+#' @importFrom sf st_as_sf st_transform
 #' 
 #' @export
 
@@ -48,6 +49,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (is.na(crs)) {
     out("Preview seems not to be geo-referenced. No projection found.",type=3)
   }
+  if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
+  if (inherits(aoi,error)) {out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)}
+  if (crs(aoi) != crs) {
+    aoi <- try(st_transform(aoi,crs))
+  }
+  if (inherits(aoi,error)) {out("Aoi reprojection failed",3)}
   
   ##### HOT
   ## Prepare RGB or RB stack

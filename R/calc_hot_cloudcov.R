@@ -31,10 +31,13 @@
 #' @importFrom stats na.omit qexp
 #' @importFrom hashmap hashmap
 #' @importFrom sf st_as_sf st_transform
+#' @importFrom sp proj4string
 #' 
 #' @export
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 20, sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 5, 
+                              sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, 
+                              interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
   scene_hot_cc_percent <- "Scene_HOT_cloudcov_percent"
   aoi_hot_cc_percent <- "Aoi_HOT_cloudcov_percent"
@@ -45,7 +48,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   cloudPrbThresh <- 40 # this threshold
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   
-  crs <- raster::crs(preview)
+  crs <- proj4string(preview)
   if (is.na(crs)) {
     out("Preview seems not to be geo-referenced. No projection found.",type=3)
   }
@@ -56,7 +59,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   }
   if (inherits(aoi,error)) {out("Aoi reprojection failed",3)}
   
-  ##### HOT
+  # Mask NA values in preview (represented as 0 here)
+  NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
+  preview <- mask(preview,NA_mask,maskvalue=0)
+  
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
   if (nlyrs == 3) {
@@ -111,7 +117,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # non-valid pixels appear as 0 DNs in preview images, not as NAs
   prevMasked <- mask(preview,aoi)
   prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
-  NA_mask <- prevMasked[[1]] > 1 # for "NA" values in extent that appear as DN <1 in previews
   maxValPrevMasked <- maxValue(prevMasked)
   if (maxValPrevMasked[1] == 0) {
     record[[aoi_hot_cc_percent]] <- 100
@@ -154,8 +159,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 100 # start with 100 to enter loop
-  while (numTry <= maxTry && ccDeviationFromProvider > abs(maxDeviation) && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
-    if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
+  while (numTry <= maxTry && abs(ccDeviationFromProvider) > maxDeviation && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
+    #if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
     if (inherits(cMask,error)) {
       hotFailed <- TRUE
@@ -167,6 +172,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
       hotFailed <- TRUE
     } else {
       if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
+        print("sdlha")
         cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc \% is lower than provided cc \%
       } else if (ccDeviationFromProvider <= -maxDeviation) { # if deviation is smaller negative maxDeviation
         cloudPrbThreshold <- cloudPrbThreshold + 1 # increase threshold value because HOT cc \% is higher than provided
@@ -174,10 +180,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     numTry <- numTry + 1
   }
-  cMask[NA_mask==0] <- NA
+  val0 <- cMask == 0
+  if (slope < 1) {
+    
+  }
+  
+  scene_cPercent <- .calc_cc_perc(cMask)
   
   ## Calculate cloud cover percentage
-  scene_cPercent <- .calc_cc_perc(cMask)
   if (isFALSE(hotFailed)) {
     cMask <- mask(cMask,aoi)
     if (!is.null(dir_out)) { # save cloud mask if desired

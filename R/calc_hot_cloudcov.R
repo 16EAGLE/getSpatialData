@@ -51,7 +51,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   }
   if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
   if (inherits(aoi,error)) {out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)}
-  if (crs(aoi) != crs) {
+  if (as.character(crs(aoi)) != as.character(crs)) {
     aoi <- try(st_transform(aoi,crs))
   }
   if (inherits(aoi,error)) {out("Aoi reprojection failed",3)}

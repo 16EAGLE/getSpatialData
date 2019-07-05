@@ -7,7 +7,7 @@
 \alias{getMODIS_names}
 \title{Get product names}
 \usage{
-get_names()
+get_names(grouped = FALSE)
 
 getSentinel_names()
 
@@ -16,15 +16,15 @@ getLandsat_names(username = NULL, password = NULL)
 getMODIS_names(username = NULL, password = NULL)
 }
 \arguments{
-\item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
+\item{username}{character, user name to login at the respective service.}
 
-\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
+\item{password}{character, password to login at the respective service.}
 }
 \value{
 A character vector
 }
 \description{
-\code{get_names} obtains names of available products from included services. The returned names can be used with the \link{get_query} functions for querying a specific product.
+\code{get_names} obtains names of available products from included services. The returned names can be used with the \link{get_records} functions for querying a specific product.
 }
 \examples{
 \dontrun{
@@ -47,7 +47,7 @@ products <- getMODIS_names()
 }
 }
 \seealso{
-getSentinel_query getLandsat_query getMODIS_query
+getSentinel_records getLandsat_records getMODIS_records
 }
 \author{
 Jakob Schwalb-Willmann

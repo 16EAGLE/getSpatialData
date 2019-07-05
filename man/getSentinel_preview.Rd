@@ -13,22 +13,6 @@ getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
-
-\item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
-
-\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
-
-\item{hub}{character, either
-\itemize{
-   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
-   \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
-   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
-   \item "GNSS" to look for GNSS RINEX records only,
-   \item or a valid API URL.
-}}
-
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None. A plot/view display is generated.

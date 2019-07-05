@@ -1,53 +1,21 @@
-#' Query MODIS data
-#'
-#' \code{getMODIS_query} queries USGS Earth Explorer for MODIS data by some basic input search parameters. The function returns a data frame that can be further filtered.
-#'
-#' @inheritParams getLandsat_query
-#' @param name character, optional. Identifies the name of the product to be queried. If set to "all" (default), every available MODIS product is searched for results and included in the output. Use \link{getMODIS_names} to revcieve a vector with all available MODIS products from Earth Explorer, if you want to select a specific one.
-#'
-#' @return A data frame of records. Each row represents one record. The data frame can be further filtered by its columnwise attributes. The selected rows can be handed over to the other getMODIS functions for previewing or downloading.
-#'
-#' @author Jakob Schwalb-Willmann
-#'
-#' @examples
-#' ## Load packages
-#' library(getSpatialData)
-#' library(sf)
-#'
-#' ## set aoi and time range for the query
-#' set_aoi(aoi_data[[1]])
-#' time_range <-  c("2017-08-01", "2017-08-30")
-#'
-#' ## Login to USGS ERS
-#' \dontrun{
-#' login_USGS("username")
-#'
-#' ## set archive directory
-#' set_archive("/path/to/archive/")
-#'
-#' ## get available products and select one
-#' product_names <- getMODIS_names()
-#' product <- grep("MOD13Q1", product_names, value = T)
-#'
-#' ## query for records for your AOI, time range and product
-#' query <- getMODIS_query(time_range = time_range, name = product)
-#'
-#' ## preview a record
-#' getMODIS_preview(query[1,])
-#'
-#' ## download records 1 and 2
-#' files <- getMODIS_data(query[1:2,])
-#' }
+#' @rdname get_records
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr content
 #' @importFrom sf st_as_sfc st_sf
 #'
-#' @seealso \link{getMODIS_names} \link{getMODIS_preview} \link{getMODIS_data}
 #' @export
 
-getMODIS_query <- function(time_range, name = "all", aoi = NULL, as_sf = TRUE, username = NULL, password = NULL, verbose = TRUE){
+getMODIS_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., verbose = TRUE){
 
+  # downward compatibility
+  if(missing(name)) name <- "all"
+  
+  ## check ... filters
+  extras <- list(...)
+  if(!is.null(extras$username)) username <- extras$username else username <- NULL
+  if(!is.null(extras$password)) password <- extras$password else password <- NULL
+  
   ## Global USGS login
   if(is.null(username)){
     if(is.TRUE(getOption("gSD.usgs_set"))){
@@ -97,4 +65,12 @@ getMODIS_query <- function(time_range, name = "all", aoi = NULL, as_sf = TRUE, u
   
   if(!is.null(records)){ return(records)
   } else { out("No results could be obtained for this request.", msg = T) }
+}
+
+
+#' @rdname getSpatialData-deprecated
+#' @export
+getMODIS_query <- function(...){
+  .Deprecated("getMODIS_records", "getSpatialData")
+  getMODIS_records(...)
 }

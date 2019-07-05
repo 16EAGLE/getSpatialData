@@ -1,11 +1,11 @@
 #' Download Landsat data
 #'
-#' \code{getLandsat_data} downloads Landsat data queried using \link{getLandsat_query} from different sources.
+#' \code{getLandsat_data} downloads Landsat data queried using \link{getLandsat_records} from different sources.
 #'
-#' @inheritParams getLandsat_query
-#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.
+#' @inheritParams getLandsat_records
+#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_records}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.
-#' @param level character, one or multiple product levels to be requested. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.
+#' @param level character, one or multiple product levels to be requested. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_records}.
 #' @param source character, either:
 #' \itemize{
 #'    \item "auto" for automatic selection of data source depending on \code{level}
@@ -43,7 +43,7 @@
 #' product_names <- getLandsat_names()
 #'
 #' ## query for records for your AOI, time range and product
-#' query <- getLandsat_query(time_range = time_range, name = product_names[7])
+#' query <- getLandsat_records(time_range = time_range, name = product_names[7])
 #'
 #' ## preview a record
 #' getLandsat_preview(query[5,])
@@ -70,7 +70,7 @@
 #' @importFrom httr content
 #' @importFrom utils head tail
 #'
-#' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
+#' @seealso \link{getLandsat_names} \link{getLandsat_records} \link{getLandsat_preview}
 #' @export
 #'
 getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, wait_for_espa = NULL, force = FALSE, username = NULL, password = NULL, n.retry = 3, verbose = TRUE){

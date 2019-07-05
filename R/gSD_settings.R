@@ -2,7 +2,7 @@
 #'
 #' Functions that define session-wide archive and AOI settings that are used by all \code{getSpatialData} functions and check for the availability of used online services.
 #'
-#' @inheritParams getSentinel_query
+#' @inheritParams getSentinel_records
 #' @param dir_archive character, directory to the \code{getSpatialData} archive folder.
 #' @param create logical, whether to create directory, if not existing or not.
 #' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
@@ -47,7 +47,7 @@
 #' aoi <- get_aoi(type = "sf")
 #' }
 #'
-#' @seealso getSentinel_query getLandsat_query getMODIS_query
+#' @seealso getSentinel_records getLandsat_records getMODIS_records
 #'
 set_archive <- function(dir_archive, create = T){
   

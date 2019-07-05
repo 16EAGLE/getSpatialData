@@ -1,9 +1,9 @@
 #' Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data
 #'
-#' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_query}.
+#' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_records}.
 #'
-#' @inheritParams getSentinel_query
-#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.
+#' @inheritParams getSentinel_records
+#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_records}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #' @param n.retry numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
@@ -43,8 +43,8 @@
 #' login_CopHub(username = "username") #asks for password or define 'password'
 #' set_archive("/path/to/archive/")
 #'
-#' ## Use getSentinel_query to search for data (using the session AOI)
-#' records <- getSentinel_query(time_range = time_range, platform = platform)
+#' ## Use getSentinel_records to search for data (using the session AOI)
+#' records <- getSentinel_records(time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the records
 #' View(records) #get an overview about the search records
@@ -67,7 +67,7 @@
 #' r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
 #' }
 #'
-#' @seealso \link{getSentinel_query}
+#' @seealso \link{getSentinel_records}
 #' @export
 
 getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = NULL, password = NULL,
@@ -82,7 +82,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   if(!is.null(password)) password = password else password = getPass()
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
-  if(length(unique(records$platformname)) > 1) out("Platform name differs. Platform name needs to be unique per call, e.g. 'Sentinel-1' only, as returned by getSentinel_query().", type=3)
+  if(length(unique(records$platformname)) > 1) out("Platform name differs. Platform name needs to be unique per call, e.g. 'Sentinel-1' only, as returned by getSentinel_records().", type=3)
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/", unique(records$platformname), "/") else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)

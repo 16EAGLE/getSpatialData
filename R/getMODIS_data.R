@@ -1,9 +1,9 @@
 #' Download MODIS data
 #'
-#' \code{getMODIS_data} downloads MODIS data queried using \link{getMODIS_query} from different sources.
+#' \code{getMODIS_data} downloads MODIS data queried using \link{getMODIS_records} from different sources.
 #'
-#' @inheritParams getMODIS_query
-#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getMODIS_query}.
+#' @inheritParams getMODIS_records
+#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getMODIS_records}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getMODIS_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #' @param n.retry numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
@@ -35,7 +35,7 @@
 #' product <- grep("MOD13Q1", product_names, value = T)
 #'
 #' ## query for records for your AOI, time range and product
-#' query <- getMODIS_query(time_range = time_range, name = product)
+#' query <- getMODIS_records(time_range = time_range, name = product)
 #'
 #' ## preview a record
 #' getMODIS_preview(query[1,])
@@ -47,7 +47,7 @@
 #' @importFrom getPass getPass
 #' @importFrom httr http_error
 #'
-#' @seealso \link{getMODIS_names} \link{getMODIS_query} \link{getMODIS_preview}
+#' @seealso \link{getMODIS_names} \link{getMODIS_records} \link{getMODIS_preview}
 #' @export
 #'
 getMODIS_data <- function(records, dir_out = NULL, force = FALSE, n.retry = 3, verbose = TRUE){

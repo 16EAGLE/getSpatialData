@@ -31,8 +31,6 @@ services_avail(value = F, verbose = T)
 \item{type}{character, AOI object type, either "matrix", "sf" or "sp".}
 
 \item{value}{logical, whether to return a data frame containing service status or not. Default is \code{FALSE}.}
-
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None.

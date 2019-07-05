@@ -15,23 +15,7 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
-\item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
-
-\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
-
-\item{hub}{character, either
-\itemize{
-   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
-   \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
-   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
-   \item "GNSS" to look for GNSS RINEX records only,
-   \item or a valid API URL.
-}}
-
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
-
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the downloaded files.

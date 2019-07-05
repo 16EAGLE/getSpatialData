@@ -1,9 +1,9 @@
 #' Preview a Sentinel image
 #'
-#' \code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
+#' \code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_records}. The function is useful to apply visual checks to records before downloading them.
 #'
-#' @inheritParams getSentinel_query
-#' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.
+#' @inheritParams getSentinel_records
+#' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_records}, representing the selected record and all its attributes.
 #' @param on_map logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.
 #' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.
 #'
@@ -39,8 +39,8 @@
 #' login_CopHub(username = "username") #asks for password or define 'password'
 #' set_archive("/path/to/archive/")
 #'
-#' ## Use getSentinel_query to search for data (using the session AOI)
-#' records <- getSentinel_query(time_range = time_range, platform = platform)
+#' ## Use getSentinel_records to search for data (using the session AOI)
+#' records <- getSentinel_records(time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the records
 #' View(records) #get an overview about the search records
@@ -63,7 +63,7 @@
 #' r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
 #' }
 #'
-#' @seealso \link{getSentinel_query}
+#' @seealso \link{getSentinel_records}
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr GET write_disk authenticate

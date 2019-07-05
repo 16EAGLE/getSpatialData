@@ -2,8 +2,8 @@
 #'
 #' \code{getLandsat_preview} previews a single Landsat record as image on a map or as RGB plot. The function is useful to apply visual checks to records before downloading them.
 #'
-#' @inheritParams getLandsat_query
-#' @param record data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected record and all its attributes.
+#' @inheritParams getLandsat_records
+#' @param record data.frame, single row data.frame collected from the return of \link{getLandsat_records}, representing the selected record and all its attributes.
 #' @param on_map logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.
 #' @param show_aoi logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.
 #'
@@ -31,7 +31,7 @@
 #' product_names <- getLandsat_names()
 #'
 #' ## query for records for your AOI, time range and product
-#' query <- getLandsat_query(time_range = time_range, name = product_names[7])
+#' query <- getLandsat_records(time_range = time_range, name = product_names[7])
 #'
 #' ## preview a record
 #' getLandsat_preview(query[5,])
@@ -53,7 +53,7 @@
 #' }
 #'
 #'
-#' @seealso \link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_data}
+#' @seealso \link{getLandsat_names} \link{getLandsat_records} \link{getLandsat_data}
 #' @export
 
 getLandsat_preview <- function(record, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){

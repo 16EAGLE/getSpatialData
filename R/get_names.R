@@ -1,7 +1,7 @@
 #' Get product names
 #'
-#' \code{get_names} obtains names of available products from included services. The returned names can be used with the \link{get_query} functions for querying a specific product.
-#' @inheritParams getLandsat_query
+#' \code{get_names} obtains names of available products from included services. The returned names can be used with the \link{get_records} functions for querying a specific product.
+#' @inheritParams gSD_login
 #'
 #' @return A character vector
 #'
@@ -25,15 +25,16 @@
 #' products <- getLandsat_names()
 #' products <- getMODIS_names()
 #' }
-#' @seealso getSentinel_query getLandsat_query getMODIS_query
+#' @seealso getSentinel_records getLandsat_records getMODIS_records
 #' 
 #' @name get_names
 #' @export
-get_names <- function(){
+get_names <- function(grouped = FALSE){
   .check_login(c("USGS", "Copernicus"))
-  list("Sentinel" = getSentinel_names(),
-       "Landsat" = getLandsat_names(),
-       "MODIS" = getMODIS_names())
+  products <- list("Sentinel" = getSentinel_names(),
+                   "Landsat" = getLandsat_names(),
+                   "MODIS" = getMODIS_names())
+  if(isTRUE(grouped)) products else unlist(products, use.names = F)
 }
 
 #' @rdname get_names

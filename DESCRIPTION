@@ -28,3 +28,26 @@ Suggests:
   testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/
+Collate: 
+    'aoi_data.R'
+    'checks.R'
+    'cropFAST.R'
+    'deprecated.R'
+    'extractSentinel.R'
+    'gSD_login.R'
+    'gSD_settings.R'
+    'get_records.R'
+    'getSentinel_records.R'
+    'getLandsat_records.R'
+    'getMODIS_records.R'
+    'getSentinel_data.R'
+    'getLandsat_data.R'
+    'getMODIS_data.R'
+    'getSentinel_preview.R'
+    'getLandsat_preview.R'
+    'getMODIS_preview.R'
+    'getSentinel_restore.R'
+    'get_names.R'
+    'internal.R'
+    'pkgname.R'
+    'prepSentinel.R'

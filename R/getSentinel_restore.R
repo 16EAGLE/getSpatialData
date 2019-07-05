@@ -1,9 +1,9 @@
 #' Restore Sentinel datasets from Copernicus LTA
 #'
-#' \code{getSentinel_restore} requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument \code{check_avail} of \link{getSentinel_query}).
+#' \code{getSentinel_restore} requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument \code{check_avail} of \link{getSentinel_records}).
 #'
-#' @inheritParams getSentinel_query
-#' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.
+#' @inheritParams getSentinel_records
+#' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_records}, representing the selected record and all its attributes.
 #'
 #' @return TRUE on success.
 #'
@@ -13,7 +13,7 @@
 #' @importFrom httr GET content
 #' @importFrom xml2 xml_contents as_xml_document
 #'
-#' @seealso \link{getSentinel_query}
+#' @seealso \link{getSentinel_records}
 #' @export
 
 getSentinel_restore <- function(record, username = NULL, password = NULL, hub = "auto", verbose = TRUE){
@@ -41,7 +41,7 @@ getSentinel_restore <- function(record, username = NULL, password = NULL, hub = 
   } else {
     request <- try(gSD.get(paste0(cred[3], "/odata/v1/Products('", record$uuid, "')/$value")), silent = T)
     if(inherits(request, "try-error")) out("The request is not accepted because the number of submitted requested exceeded the allowed user quota. Please retry later.", type = 3)
-    out("The restoring request has been successfully forwared to LTA. The record will be available for download as soon as it is restored from LTA. Use getSentinel_query() with check_avail=TRUE or getSentinel_data() to check availability.")
+    out("The restoring request has been successfully forwared to LTA. The record will be available for download as soon as it is restored from LTA. Use getSentinel_records() with check_avail=TRUE or getSentinel_data() to check availability.")
     return(TRUE)
   }
 }

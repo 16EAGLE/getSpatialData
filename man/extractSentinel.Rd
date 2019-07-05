@@ -17,8 +17,6 @@ extractSentinel(datasets, dir_out = NULL, junkpaths = T,
 \item{list_only}{logical, if \code{TRUE}, extracting is skipped and just the files contained in \code{datasets} are returned.}
 
 \item{pattern}{character, pattern (e.g. "xml") of files to be extracted.}
-
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 List containing paths to the extracted .SAFE folders and all contained files.

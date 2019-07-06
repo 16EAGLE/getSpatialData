@@ -42,6 +42,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   scene_hot_cc_percent <- "Scene_HOT_cloudcov_percent"
   aoi_hot_cc_percent <- "Aoi_HOT_cloudcov_percent"
   cloud_mask_path <- "Cloud_mask_path"
+  aoi_hot_cloud_mask <- "Aoi_HOT_cloud_mask"
+  na_case <- "NONE"
   error <- "try-error"
   currTitle <- record[[identifier]]
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
@@ -121,7 +123,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (maxValPrevMasked[1] == 0 || is.na(maxValPrevMasked[1])) {
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999
-    if (!is.null(dir_out)) {record[[cloud_mask_path]] <- "NONE"}
+    if (!is.null(dir_out)) {record[[cloud_mask_path]] <- na_case}
+    record[[aoi_hot_cloud_mask]] <- list(na_case)
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
   }
@@ -194,9 +197,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
       
     ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame
     record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
-    record[["HOT_aoi_cloud_mask"]] <- list(cMask)
+    record[[aoi_hot_cloud_mask]] <- list(cMask)
   } else {
     record[[aoi_hot_cc_percent]] <- 9999
+    record[[aoi_hot_cloud_mask]] <- list(na_case)
     out(hotFailWarning,type=2)
   }
   record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)

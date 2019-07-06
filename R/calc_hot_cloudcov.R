@@ -83,7 +83,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
   # a confusion of bright or reddish land surfaces with clouds
   bThresh <- 80 # for dividing the 80 lowest blue DN values into equal interval bins
-  rThresh <- 40 # from the 80 blue bins take the 40 highest red values
+  rThresh <- 10 # from the 80 blue bins take the 40 lowest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   valDf <- valDf[intersect(which(valDf[,1] != 0),which(valDf[,2] != 0)),] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
   bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
@@ -91,7 +91,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
     redNrow <- NROW(x)
-    if (redNrow >= rThresh) {
+    if (redNrow <= rThresh) {
       x <- x[redNrow:(redNrow-rThresh),] # more or as many red values as rThresh are available. Take values from last value (highest in order) to last value minus rThresh
     } else {
       # in case less than rThresh values are available take the maximum number of available values
@@ -118,7 +118,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   prevMasked <- mask(preview,aoi)
   #prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
   maxValPrevMasked <- maxValue(prevMasked)
-  if (maxValPrevMasked[1] == 0) {
+  if (maxValPrevMasked[1] == 0 || is.na(maxValPrevMasked[1])) {
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999
     if (!is.null(dir_out)) {record[[cloud_mask_path]] <- "NONE"}
@@ -159,6 +159,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 100 # start with 100 to enter loop
+  cloudPrbThreshold <- 40
   while (numTry <= maxTry && abs(ccDeviationFromProvider) > maxDeviation && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
     #if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
@@ -172,7 +173,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
       hotFailed <- TRUE
     } else {
       if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
-        print("sdlha")
         cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc \% is lower than provided cc \%
       } else if (ccDeviationFromProvider <= -maxDeviation) { # if deviation is smaller negative maxDeviation
         cloudPrbThreshold <- cloudPrbThreshold + 1 # increase threshold value because HOT cc \% is higher than provided

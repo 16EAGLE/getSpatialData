@@ -184,7 +184,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     numTry <- numTry + 1
   }
   scene_cPercent <- .calc_cc_perc(cMask)
-  
+  cMask[cMask==0] <- NA
   ## Calculate cloud cover percentage
   if (isFALSE(hotFailed)) {
     cMask <- mask(cMask,aoi)

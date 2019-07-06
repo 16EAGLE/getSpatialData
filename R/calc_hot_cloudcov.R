@@ -82,8 +82,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
   # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
   # a confusion of bright or reddish land surfaces with clouds
-  bThresh <- 80 # for dividing the 80 lowest blue DN values into equal interval bins
-  rThresh <- 10 # from the 80 blue bins take the 40 lowest red values
+  bThresh <- 20 # for dividing the 20 lowest blue DN values into equal interval bins
+  rThresh <- 20 # from the 20 blue bins take the 20 lowest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   valDf <- valDf[intersect(which(valDf[,1] != 0),which(valDf[,2] != 0)),] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
   bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
@@ -100,7 +100,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   })
   meanRed <- sapply(redMax,function(x){mean(x[["red"]])})
   meanBlue <- sapply(redMax,function(x){mean(x[["blue"]])})
-  lad <- try(L1pack::lad(meanRed ~ meanBlue,method="BR")) # run least-alternate deviation regression
+  lad <- try(L1pack::lad(meanBlue ~ meanRed,method="BR")) # run least-alternate deviation regression
   if (inherits(lad,error)) {
     if (slopeDefault == 0) {
       hotFailed <- TRUE # shit. Remember this and handle at the end
@@ -180,11 +180,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     numTry <- numTry + 1
   }
-  val0 <- cMask == 0
-  if (slope < 1) {
-    
-  }
-  
   scene_cPercent <- .calc_cc_perc(cMask)
   
   ## Calculate cloud cover percentage

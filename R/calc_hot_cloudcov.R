@@ -192,8 +192,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     aoi_cPercent <- .calc_cc_perc(cMask)
       
-    ##### Add scene and aoi cloud cover percentage to record data.frame
+    ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame
     record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
+    record[["HOT_aoi_cloud_mask"]] <- cMask
   } else {
     record[[aoi_hot_cc_percent]] <- 9999
     out(hotFailWarning,type=2)

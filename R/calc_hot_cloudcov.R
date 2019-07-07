@@ -54,13 +54,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (is.na(crs)) {
     out("Preview seems not to be geo-referenced. No projection found.",type=3)
   }
-  if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
-  if (inherits(aoi,error)) {out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)}
-  if (as.character(crs(aoi)) != as.character(crs)) {
-    aoi <- try(st_transform(aoi,crs))
-  }
-  if (inherits(aoi,error)) {out("Aoi reprojection failed",3)}
-  
+  aoi <- .handle_aoi(aoi,crs)
+    
   # Mask NA values in preview (represented as 0 here)
   NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
   preview <- mask(preview,NA_mask,maskvalue=0)
@@ -74,7 +69,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     bBand <- preview[[2]]
     rBand <- preview[[1]]
   } else {
-    out(paste0("An RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
+    out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
   ## Calculate least-alternate deviation (LAD) regression
@@ -124,7 +119,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999
     if (!is.null(dir_out)) {record[[cloud_mask_path]] <- na_case}
-    record[[aoi_hot_cloud_mask]] <- list(na_case)
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
   }
@@ -197,10 +191,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
       
     ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame
     record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
-    record[[aoi_hot_cloud_mask]] <- list(cMask)
   } else {
     record[[aoi_hot_cc_percent]] <- 9999
-    record[[aoi_hot_cloud_mask]] <- list(na_case)
     out(hotFailWarning,type=2)
   }
   record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)

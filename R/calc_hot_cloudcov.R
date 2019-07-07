@@ -14,7 +14,7 @@
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
 #' @param identifier numeric, column number where a unique identifier of the scenes is located, sensor-specific.
-#' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 20}.
+#' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
 #' @param sceneCloudCoverCol character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.
 #' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 40}. It will be dynamically adjusted according to the input in \code{maxDeviation}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
@@ -156,7 +156,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 100 # start with 100 to enter loop
-  cloudPrbThreshold <- 40
   while (numTry <= maxTry && abs(ccDeviationFromProvider) > maxDeviation && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
     #if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
@@ -178,17 +177,16 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     numTry <- numTry + 1
   }
   scene_cPercent <- .calc_cc_perc(cMask)
-  cMask[cMask==0] <- NA
   ## Calculate cloud cover percentage
   if (isFALSE(hotFailed)) {
-    cMask <- mask(cMask,aoi)
+    cMask <- mask(cMask,aoi)   
+    aoi_cPercent <- .calc_cc_perc(cMask)
     if (!is.null(dir_out)) { # save cloud mask if desired
+      cMask[cMask==0] <- NA
       maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
       record[[cloud_mask_path]] <- maskFilename
     }
-    aoi_cPercent <- .calc_cc_perc(cMask)
-      
     ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame
     record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
   } else {

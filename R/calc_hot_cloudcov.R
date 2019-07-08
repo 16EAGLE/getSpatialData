@@ -26,7 +26,7 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom raster crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
+#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
 #' @importFrom hashmap hashmap
@@ -59,7 +59,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # Mask NA values in preview (represented as 0 here)
   NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
   preview <- mask(preview,NA_mask,maskvalue=0)
-  
+
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
   if (nlyrs == 3) {
@@ -88,11 +88,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
     redNrow <- NROW(x)
-    if (redNrow <= rThresh) {
-      x <- x[redNrow:(redNrow-rThresh),] # more or as many red values as rThresh are available. Take values from last value (highest in order) to last value minus rThresh
+    if (redNrow >= rThresh) {
+      x <- try(x[redNrow:(redNrow-rThresh),]) # more or as many red values as rThresh are available. Take values from last value (highest in order) to last value minus rThresh
     } else {
       # in case less than rThresh values are available take the maximum number of available values
-      x <- x[redNrow:(redNrow-redNrow),] # do it complicated in order to order from high to low
+      x <- try(x[redNrow:1,]) # do it complicated in order to order from high to low
     }
   })
   meanRed <- sapply(redMax,function(x){mean(x[["red"]])})
@@ -109,13 +109,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     hotFailed <- FALSE
     regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
   }
-  
+
   ## Check if valid pixels are found within aoi
   # non-valid pixels appear as 0 DNs in preview images, not as NAs
   prevMasked <- mask(preview,aoi)
   #prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
   maxValPrevMasked <- maxValue(prevMasked)
-  if (maxValPrevMasked[1] == 0 || is.na(maxValPrevMasked[1])) {
+  cond <- maxValPrevMasked[1] == 0 || is.na(maxValPrevMasked[1])
+  if (isTRUE(cond)) {
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999
     if (!is.null(dir_out)) {record[[cloud_mask_path]] <- na_case}
@@ -181,11 +182,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (isFALSE(hotFailed)) {
     cMask <- mask(cMask,aoi)   
     aoi_cPercent <- .calc_cc_perc(cMask)
+    cMask[cMask==0] <- NAvalue(cMask)
     if (!is.null(dir_out)) { # save cloud mask if desired
-      #cMask[cMask==0] <- NA
       maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
-      cMask <- raster(file)
       record[[cloud_mask_path]] <- maskFilename
     }
     ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame

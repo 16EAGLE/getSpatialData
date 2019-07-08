@@ -17,6 +17,8 @@ prepSentinel(datasets, dir_out = NULL, format = "vrt",
 \item{select.tiles}{character, selecting one or multuple specific tiles to prepare. Older datasets archived by ESA contain multiple tiles. If \code{select.tiles} is set to one or multiple specific tiles contained within the selected datasets (e.g. "T32TNT"), only these tiles will be extracted and prepared. By default, all tiles are extracted and prepared. Ignored for datasets that contain only a single tile.}
 
 \item{overwrite}{logical, whether to overwrite existing files or not.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the prepared files.
@@ -51,8 +53,8 @@ platform <- "Sentinel-2"
 login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
-## Use getSentinel_query to search for data (using the session AOI)
-records <- getSentinel_query(time_range = time_range, platform = platform)
+## Use getSentinel_records to search for data (using the session AOI)
+records <- getSentinel_records(time_range = time_range, platform = platform)
 
 ## Get an overview of the records
 View(records) #get an overview about the search records

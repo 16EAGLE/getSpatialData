@@ -8,11 +8,13 @@ getMODIS_preview(record, on_map = TRUE, show_aoi = TRUE,
   verbose = TRUE)
 }
 \arguments{
-\item{record}{data.frame, single row data.frame collected from the return of \link{getMODIS_query}, representing the selected record and all its attributes.}
+\item{record}{data.frame, single row data.frame collected from the return of \link{getMODIS_records}, representing the selected record and all its attributes.}
 
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None. A plot/view display is generated.
@@ -21,7 +23,7 @@ None. A plot/view display is generated.
 \code{getMODIS_preview} previews a single MODIS record as image on a map or as RGB plot. The function is useful to apply visual checks to records before downloading them.
 }
 \seealso{
-\link{getMODIS_names} \link{getMODIS_query} \link{getMODIS_data}
+\link{getMODIS_names} \link{getMODIS_records} \link{getMODIS_data}
 }
 \author{
 Jakob Schwalb-Willmann

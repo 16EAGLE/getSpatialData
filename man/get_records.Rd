@@ -8,27 +8,29 @@
 \alias{getMODIS_records}
 \title{Query available product records}
 \usage{
-get_records(time_range, name, aoi = NULL, as_sf = TRUE, ...,
-  verbose = TRUE)
+get_records(time_range, name, aoi = NULL, as_sf = TRUE,
+  rename_cols = TRUE, ..., verbose = TRUE)
 
 getSentinel_records(time_range, name, aoi = NULL, as_sf = TRUE,
-  hub = "auto", check_avail = FALSE, gnss = FALSE, ...,
-  verbose = TRUE)
+  rename_cols = TRUE, hub = "auto", check_avail = FALSE,
+  gnss = FALSE, ..., verbose = TRUE)
 
-getLandsat_records(time_range, name, aoi = NULL, as_sf = TRUE, ...,
-  verbose = TRUE)
+getLandsat_records(time_range, name, aoi = NULL, as_sf = TRUE,
+  rename_cols = TRUE, ..., verbose = TRUE)
 
-getMODIS_records(time_range, name, aoi = NULL, as_sf = TRUE, ...,
-  verbose = TRUE)
+getMODIS_records(time_range, name, aoi = NULL, as_sf = TRUE,
+  rename_cols = TRUE, ..., verbose = TRUE)
 }
 \arguments{
 \item{time_range}{character, a vector of two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. \code{c("2017-05-15", "2017-06-15")}}
 
-\item{name}{character, product name. Use \code{\link{get_names}} to get a full list of all available products.}
+\item{name}{character, product name(s). Use \code{\link{get_names}} to get a full list of all available products. If multiple products are supplied, the returned records are combined across products.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
 \item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
+
+\item{rename_cols}{logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products recieved from different sources.}
 
 \item{...}{additional arguments}
 
@@ -56,19 +58,19 @@ A data frame of records (by default an \code{sf} data frame, see argument \code{
 }
 \section{Sentinel}{
 
-To querys Sentinel records, use your ESA Copernicus Open Access Hub \code{username} and \code{password}. If \code{username} is not defined (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
+To query Sentinel records, login session-wide with your ESA Copernicus Open Access Hub using \link{login_CopHub} first.
 
 To query for records of Sentinel remote sensing instruments by \code{time_range}, \code{name} and \code{aoi}, argument \code{gnss} must be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
 }
 
 \section{Landsat}{
 
-To query Landsat records, use your USGS EROS Registration System (ERS) \code{username} and \code{password}. If \code{username} is not defined (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).
+To query Landsat records, login session-wide with your SGS EROS Registration System (ERS) using \link{login_USGS} first.
 }
 
 \section{MODIS}{
 
-To query MODIS records, use your USGS EROS Registration System (ERS) \code{username} and \code{password}. If \code{username} is not defined (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).
+To query MODIS records, login session-wide with your SGS EROS Registration System (ERS) using \link{login_USGS} first.
 }
 
 \author{

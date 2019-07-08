@@ -8,11 +8,13 @@ getLandsat_preview(record, on_map = TRUE, show_aoi = TRUE,
   verbose = TRUE)
 }
 \arguments{
-\item{record}{data.frame, single row data.frame collected from the return of \link{getLandsat_query}, representing the selected record and all its attributes.}
+\item{record}{data.frame, single row data.frame collected from the return of \link{getLandsat_records}, representing the selected record and all its attributes.}
 
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None. A plot/view display is generated.
@@ -40,7 +42,7 @@ set_archive("/path/to/archive/")
 product_names <- getLandsat_names()
 
 ## query for records for your AOI, time range and product
-query <- getLandsat_query(time_range = time_range, name = product_names[7])
+query <- getLandsat_records(time_range = time_range, name = product_names[7])
 
 ## preview a record
 getLandsat_preview(query[5,])
@@ -64,7 +66,7 @@ files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
 
 }
 \seealso{
-\link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_data}
+\link{getLandsat_names} \link{getLandsat_records} \link{getLandsat_data}
 }
 \author{
 Jakob Schwalb-Willmann

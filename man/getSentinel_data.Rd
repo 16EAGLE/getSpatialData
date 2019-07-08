@@ -9,19 +9,31 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
   verbose = TRUE)
 }
 \arguments{
-\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.}
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_records}.}
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.}
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
+\item{hub}{character, Copernicus Hub selection. Either
+\itemize{
+   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+   \item "dhus" to look for operational Open Hub records only,
+   \item "s3" to look for Sentinel-3 pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
+   \item "GNSS" to look for GNSS RINEX records only,
+   \item or a valid API URL.
+}}
+
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the downloaded files.
 }
 \description{
-\code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_query}.
+\code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_records}.
 }
 \examples{
 ## Load packages
@@ -51,8 +63,8 @@ platform <- "Sentinel-2"
 login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
-## Use getSentinel_query to search for data (using the session AOI)
-records <- getSentinel_query(time_range = time_range, platform = platform)
+## Use getSentinel_records to search for data (using the session AOI)
+records <- getSentinel_records(time_range = time_range, platform = platform)
 
 ## Get an overview of the records
 View(records) #get an overview about the search records
@@ -77,7 +89,7 @@ r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultio
 
 }
 \seealso{
-\link{getSentinel_query}
+\link{getSentinel_records}
 }
 \author{
 Jakob Schwalb-Willmann

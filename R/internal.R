@@ -310,7 +310,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
   
-  out("Searching records for selected product name...")
+  out(paste0("Searching records for product name '", name, "'..."), msg = T)
   query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
   query.cont <- lapply(query, content)
   if(length(name) == 1) if(query.cont[[1]]$error != "") out("Invalid query. This dataset seems to be not available for the specified time range.", type = 3)
@@ -610,6 +610,90 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if(type == "sf") return(aoi.sf)
   if(type == "sp") return(aoi.sp)
 }
+
+
+#' translate records column names to gSD standard
+#' @param records df as returned by client
+#' @param name product name 
+#' @keywords internal
+#' @noRd
+.translate_records <- function(records, name){
+  
+  # set-up column name dictionary
+  dict <- rbind.data.frame(c("product", NA, NA, NA),
+                           c("record_id", "title", "displayId", "displayId"),
+                           c("entity_id", "uuid", "entityId", "entityId"),
+                           c("dataset_url", "url", NA, NA),
+                           c("md5_url", "url.alt", NA, NA),
+                           c("preview_url", "url.icon", "browseUrl", "browseUrl"),
+                           c("meta_url", NA, "metadataUrl", "metadataUrl"),
+                           c("meta_url_fgdc", NA, "fgdcMetadataUrl", "fgdcMetadataUrl"),
+                           c("summary", "summary", "summary", "summary"),
+                           c("date_aquistion", NA, "acquisitionDate", "acquisitionDate"),
+                           c("start_time", "beginposition", "StartTime", "AcquisitionStartDate"),
+                           c("stop_time", "endposition", "StopTime", "AcquisitionEndDate"),
+                           c("date_ingestion", "ingestiondate", NA, NA),
+                           c("date_modified", NA, "modifiedDate", "modifiedDate"),
+                           c("tile_number_horizontal", NA, "WRSPath", "HorizontalTileNumber"),
+                           c("tile_number_vertical", NA, "WRSRow", "VerticalTileNumber"),
+                           c("tile_id", "tileid", NA, NA),
+                           c("cloudcov", "cloudcoverpercentage", "SceneCloudCover", NA),
+                           c("sensor_id", "instrumentshortname", "SensorIdentifier", NA),
+                           c("sensor", "instrumentname", NA, NA),
+                           c("platform", "platformname", NA, NA),
+                           c("platform_serial", "platformserialidentifier", NA, NA),
+                           c("platform_id", "platformidentifier", NA, NA),
+                           c("level", "processinglevel", NA, NA),
+                           c("levels_available", NA, "levels_available", NA),
+                           c("footprint", "footprint", "footprint", "footprint"), stringsAsFactors = F)
+  colnames(dict) <- c("gSD", "Sentinel", "Landsat", "MODIS")
+  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(name), USE.NAMES = F)
+  which.valid <- !is.na(dict[,which.col])
+  
+  # translate column names
+  colnames(records) <- sapply(colnames(records), function(x){
+    i <- which(x == dict[,which.col])
+    if(length(i) > 0) dict$gSD[i] else x
+  }, USE.NAMES = F)
+  
+  # address product-specific cases
+  records$product <- name
+  if(which(which.col) == 2){ # special cases for Sentinel
+    records$date_aquistion <- sapply(strsplit(records$start_time, "T"), '[', 1)
+    records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
+      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
+    })
+  }
+  
+  if(which(which.col) > 2){
+    records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
+  }
+  # fill up undefined default columns
+  #records[dict$gSD[sapply(dict$gSD, function(x) !(x %in% colnames(records)), USE.NAMES = F)]] <- NA
+  
+  # sort columns
+  records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
+}
+
+#' rbind different dfs
+#' @param x list of dfs
+#' @keywords internal
+#' @noRd
+rbind.different <- function(x) {
+  
+  x.bind <- x[[1]]
+  for(i in 2:length(x)){
+    x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
+    y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
+    
+    x.bind[, c(as.character(y.diff))] <- NA
+    x[[i]][, c(as.character(x.diff))] <- NA
+    
+    x.bind <- rbind(x.bind, x[[i]])
+  }
+  return(x.bind)
+}
+
 
 #' On package startup
 #' @keywords internal

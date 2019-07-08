@@ -8,19 +8,21 @@ getMODIS_data(records, dir_out = NULL, force = FALSE, n.retry = 3,
   verbose = TRUE)
 }
 \arguments{
-\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getMODIS_query}.}
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getMODIS_records}.}
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getMODIS_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.}
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the downloaded files.
 }
 \description{
-\code{getMODIS_data} downloads MODIS data queried using \link{getMODIS_query} from different sources.
+\code{getMODIS_data} downloads MODIS data queried using \link{getMODIS_records} from different sources.
 }
 \details{
 \code{getMODIS_data} downloads MODIS data from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}).
@@ -46,7 +48,7 @@ product_names <- getMODIS_names()
 product <- grep("MOD13Q1", product_names, value = T)
 
 ## query for records for your AOI, time range and product
-query <- getMODIS_query(time_range = time_range, name = product)
+query <- getMODIS_records(time_range = time_range, name = product)
 
 ## preview a record
 getMODIS_preview(query[1,])
@@ -57,7 +59,7 @@ files <- getMODIS_data(query[1:2,])
 
 }
 \seealso{
-\link{getMODIS_names} \link{getMODIS_query} \link{getMODIS_preview}
+\link{getMODIS_names} \link{getMODIS_records} \link{getMODIS_preview}
 }
 \author{
 Jakob Schwalb-Willmann

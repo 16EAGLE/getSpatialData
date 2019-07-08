@@ -8,16 +8,28 @@ getSentinel_restore(record, username = NULL, password = NULL,
   hub = "auto", verbose = TRUE)
 }
 \arguments{
-\item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.}
+\item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_records}, representing the selected record and all its attributes.}
+
+\item{hub}{character, Copernicus Hub selection. Either
+\itemize{
+   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+   \item "dhus" to look for operational Open Hub records only,
+   \item "s3" to look for Sentinel-3 pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
+   \item "GNSS" to look for GNSS RINEX records only,
+   \item or a valid API URL.
+}}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 TRUE on success.
 }
 \description{
-\code{getSentinel_restore} requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument \code{check_avail} of \link{getSentinel_query}).
+\code{getSentinel_restore} requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument \code{check_avail} of \link{getSentinel_records}).
 }
 \seealso{
-\link{getSentinel_query}
+\link{getSentinel_records}
 }
 \author{
 Jakob Schwalb-Willmann

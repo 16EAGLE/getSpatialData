@@ -8,17 +8,29 @@ getSentinel_preview(record, on_map = TRUE, show_aoi = TRUE,
   username = NULL, password = NULL, hub = "auto", verbose = TRUE)
 }
 \arguments{
-\item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_query}, representing the selected record and all its attributes.}
+\item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_records}, representing the selected record and all its attributes.}
 
 \item{on_map}{logical, if \code{TRUE}, the preview is displaed corner-georeferenced on a map. If \code{FALSE}, a simple RGB plot is displayed. Default is \code{TRUE}.}
 
 \item{show_aoi}{logical, if \code{TRUE}, the session AOI defined with \link{set_aoi} is drawn to the map viewer. Ignored, if \code{on_map = FALSE} or if no AOI has been defined with \code{set_aoi}. Default is \code{TRUE}.}
+
+\item{hub}{character, Copernicus Hub selection. Either
+\itemize{
+   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+   \item "dhus" to look for operational Open Hub records only,
+   \item "s3" to look for Sentinel-3 pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
+   \item "GNSS" to look for GNSS RINEX records only,
+   \item or a valid API URL.
+}}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None. A plot/view display is generated.
 }
 \description{
-\code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_query}. The function is useful to apply visual checks to records before downloading them.
+\code{getSentinel_preview} retrieves and displays an RGB preview image for a record queried using \link{getSentinel_records}. The function is useful to apply visual checks to records before downloading them.
 }
 \examples{
 ## Load packages
@@ -48,8 +60,8 @@ platform <- "Sentinel-2"
 login_CopHub(username = "username") #asks for password or define 'password'
 set_archive("/path/to/archive/")
 
-## Use getSentinel_query to search for data (using the session AOI)
-records <- getSentinel_query(time_range = time_range, platform = platform)
+## Use getSentinel_records to search for data (using the session AOI)
+records <- getSentinel_records(time_range = time_range, platform = platform)
 
 ## Get an overview of the records
 View(records) #get an overview about the search records
@@ -74,7 +86,7 @@ r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultio
 
 }
 \seealso{
-\link{getSentinel_query}
+\link{getSentinel_records}
 }
 \author{
 Jakob Schwalb-Willmann

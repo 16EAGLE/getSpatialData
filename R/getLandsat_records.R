@@ -6,7 +6,7 @@
 #'
 #' @export
 
-getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., verbose = TRUE){
+getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, ..., verbose = TRUE){
 
   # downward compatibility
   if(missing(name)) name <- "all"
@@ -80,11 +80,6 @@ getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., 
     fields.numeric <- names(records)[sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
     records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
-    # convert to sf
-    colnames(records)[colnames(records) == "spatialFootprint"] <- "footprint"
-    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
-    if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
-    
     # only return levels defined in level_filter
     if(all(extras$level_filter != "all")){
       lfilter <- sapply(strsplit(extras$level_filter, ','), function(x) paste0("'", x, "'"))
@@ -96,6 +91,14 @@ getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., 
     # cloud cover filter
     if(extras$maxCloudLand < 100 ){records <- records[records$LandCloudCover <= extras$maxCloudLand,]}
     if(extras$maxCloudScene < 100 ){records <- records[records$SceneCloudCover <= extras$maxCloudScene,]}
+    
+    # translate record column names
+    records <- if(isTRUE(rename_cols)) .translate_records(records, name)
+    
+    # convert to sf
+    colnames(records)[colnames(records) == "spatialFootprint"] <- "footprint"
+    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+    if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
     
     return(records)
   } else { out("No results could be obtained for this request.", msg = T) }

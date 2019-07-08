@@ -6,7 +6,7 @@
 #'
 #' @export
 
-getMODIS_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., verbose = TRUE){
+getMODIS_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, ..., verbose = TRUE){
 
   # downward compatibility
   if(missing(name)) name <- "all"
@@ -57,6 +57,9 @@ getMODIS_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., ve
   # convert expected numeric fields
   fields.numeric <- names(records)[sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
   records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+  
+  # translate record column names
+  records <- if(isTRUE(rename_cols)) .translate_records(records, name)
   
   # convert to sf
   colnames(records)[colnames(records) == "spatialFootprint"] <- "footprint"

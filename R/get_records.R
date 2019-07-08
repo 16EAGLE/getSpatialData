@@ -3,9 +3,10 @@
 #' \code{get_records} queries a service for available records using basic input search parameters such as product name (see \code{\link{get_names}}), AOI and time range. The function returns a data frame of records that can be further filtered and that other \code{getSpatialData} functions use as input.
 #' 
 #' @param time_range character, a vector of two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. \code{c("2017-05-15", "2017-06-15")}
-#' @param name character, product name. Use \code{\link{get_names}} to get a full list of all available products.
+#' @param name character, product name(s). Use \code{\link{get_names}} to get a full list of all available products. If multiple products are supplied, the returned records are combined across products.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param as_sf logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.
+#' @param rename_cols logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products recieved from different sources.
 #' @param verbose logical, whether to display details on the function's progress or output on the console.
 #' @param check_avail logical, check if Sentinel datasets are available on-demand or have been archived to the Copernicus Long-Term Archive (LTA). Adds an additional column \code{available} to the returned data frame of records. Default is \code{FALSE}, since check increases query request time.
 #' @param gnss logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
@@ -39,13 +40,22 @@
 #' 
 #' @name get_records
 #' @export
-get_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, ..., verbose = TRUE){
+get_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, ..., verbose = TRUE){
   
   groups <- c("Sentinel", "Landsat", "MODIS")
-  which.fun <- sapply(tolower(groups), grepl, tolower(name), USE.NAMES = F)
-  if(!any(which.fun)){
-    out("Unknown product name. Please use a valid product name (call get_names() to get a list of all available product names).", type = 3)
+  which.fun <- sapply(tolower(groups), grepl, tolower(name), USE.NAMES = F, simplify = F)
+  if(!all(sapply(which.fun, any))){
+    out(paste0("Unknown product name(s): ", paste0("'", paste0(name[which(c(F, F, T) == F)], collapse = "', '"), "'"),
+               ". Please use valid product names (call get_names() to get a list of all available product names)."), type = 3)
   } else{
-    return(eval(parse(text = paste0("get", groups[which.fun], "_records(time_range = time_range, name = name, aoi = aoi, as_sf = as_sf, ..., verbose = verbose)"))))
+    records <- mapply(x.fun = which.fun, x.name = name, function(x.fun, x.name){
+      eval(parse(text = paste0("get", groups[x.fun], "_records(time_range = time_range, name = x.name, aoi = aoi, as_sf = as_sf, ..., verbose = verbose)")))
+    }, USE.NAMES = F, SIMPLIFY = F)
+    
+    if(length(records) > 1){
+      return(rbind.different(records))
+    } else{
+      return(records[[1]])
+    }
   }
 }

@@ -31,6 +31,8 @@ services_avail(value = F, verbose = T)
 \item{type}{character, AOI object type, either "matrix", "sf" or "sp".}
 
 \item{value}{logical, whether to return a data frame containing service status or not. Default is \code{FALSE}.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 None.
@@ -71,7 +73,7 @@ aoi <- get_aoi(type = "sf")
 
 }
 \seealso{
-getSentinel_query getLandsat_query getMODIS_query
+getSentinel_records getLandsat_records getMODIS_records
 }
 \author{
 Jakob Schwalb-Willmann

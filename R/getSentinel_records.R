@@ -7,7 +7,7 @@
 #' 
 #' @export
 
-getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, hub = "auto", check_avail = FALSE, gnss = FALSE, ..., verbose = TRUE){
+getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, hub = "auto", check_avail = FALSE, gnss = FALSE, ..., verbose = TRUE){
 
   ## check ... extras
   extras <- list(...)
@@ -68,11 +68,11 @@ getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, hub 
   ## query API
   row.start <- -100; re.query <- T; give.return <- T
   query.list <- list()
-
+  
+  out(paste0("Searching records for product name '", name, "'..."), msg = T)
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
 
-    out("Searching records for selected product name...")
     query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], name = name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
     query.xml <- suppressMessages(xml_contents(as_xml_document(content(query, as = "text"))))
     query.list <- c(query.list, lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
@@ -118,14 +118,17 @@ getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, hub 
     fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
                                                                               "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage")) x %in% y, USE.NAMES = F)]
     records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
-    records$is.gnss <- gnss
+    
+    # translate record column names
+    records <- if(isTRUE(rename_cols)) .translate_records(records, name)
+    records$is_gnss <- gnss
+    
+    # sf geometry
+    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+    if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
+    
+    return(records)
   }
-  
-  # sf geometry
-  records$footprint <- st_as_sfc(records$footprint, crs = 4326)
-  if(isTRUE(as_sf)) records <- st_sf(records, sfc_last = F)
-  
-  if(is.TRUE(give.return)) return(records)
 }
 
 #' @rdname getSpatialData-deprecated

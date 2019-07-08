@@ -182,9 +182,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     cMask <- mask(cMask,aoi)   
     aoi_cPercent <- .calc_cc_perc(cMask)
     if (!is.null(dir_out)) { # save cloud mask if desired
-      cMask[cMask==0] <- NA
+      #cMask[cMask==0] <- NA
       maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
+      cMask <- raster(file)
       record[[cloud_mask_path]] <- maskFilename
     }
     ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame

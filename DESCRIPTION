@@ -22,7 +22,7 @@ Imports:
   mapview,
   mapedit,
   cli,
-  devtools
+  processx
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

@@ -59,7 +59,7 @@ getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, renam
   if(!is.null(records)){
 
     ## Connect to ESPA to revieve available products for (no use of entityId, displayId instead)
-    out("Recieving available product levels from USGS-EROS ESPA...")
+    out("Recieving available product levels from USGS-EROS ESPA...", msg = T)
     avail.products <- as.character(sapply(records$displayId, function(x){
       tryCatch({
         t <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = username, password = password)

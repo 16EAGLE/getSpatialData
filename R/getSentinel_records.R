@@ -69,7 +69,7 @@ getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rena
   row.start <- -100; re.query <- T; give.return <- T
   query.list <- list()
   
-  out(paste0("Searching records for product name '", name, "'..."), msg = T)
+  out(paste0("Searching records for product name '", name, "'..."))
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
 

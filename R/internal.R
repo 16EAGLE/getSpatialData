@@ -310,7 +310,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
   
-  out(paste0("Searching records for product name '", name, "'..."), msg = T)
+  out(paste0("Searching records for product name '", name, "'..."))
   query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
   query.cont <- lapply(query, content)
   if(length(name) == 1) if(query.cont[[1]]$error != "") out("Invalid query. This dataset seems to be not available for the specified time range.", type = 3)
@@ -340,7 +340,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     }), SIMPLIFY = F), recursive = F)
     
     ## Read out meta data
-    out("Reading meta data of search results from USGS EarthExplorer...")
+    out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
     meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
     meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
     meta.val <- lapply(meta.list, function(x) sapply(x, function(y){

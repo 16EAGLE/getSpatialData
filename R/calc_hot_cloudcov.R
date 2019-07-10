@@ -39,10 +39,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
                               sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, 
                               interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
-  scene_hot_cc_percent <- "Scene_HOT_cloudcov_percent"
-  aoi_hot_cc_percent <- "Aoi_HOT_cloudcov_percent"
-  cloud_mask_path <- "Cloud_mask_path"
-  aoi_hot_cloud_mask <- "Aoi_HOT_cloud_mask"
+  scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
+  aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
+  cloud_mask_path <- "cloud_mask_file"
+  aoi_hot_cloud_mask <- "aoi_HOT_cloud_mask"
   na_case <- "NONE"
   error <- "try-error"
   currTitle <- record[[identifier]]

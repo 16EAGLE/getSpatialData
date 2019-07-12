@@ -705,7 +705,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @keywords internal
 #' @importFrom utils object.size
 #' @noRd
-
 .calcHOTProcTime <- function(numRecords,i,processingTime,previewSize) {
   meanProcessingTime <- mean(processingTime)
   meanPreviewSize <- mean(previewSize) / 1000000
@@ -713,6 +712,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   sumProcessingTime <- meanProcessingTime * stillToGoFor
   if (sumProcessingTime < 1) {
     sumProcessingTime <- "less than 1 minute"
+  } else if (sumProcessingTime == 1) {
+    sumProcessingTime <- "1 minute"
   } else {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
@@ -720,17 +721,628 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
 }
 
-#' calc cloud cover percentage value
-#' 
-#' @param cMask cMask raster
+#' creates a temp dir (tmp_dir) and/or deletes it
+#' @param dir_out character directory as parent dir.
+#' @param action numeric, 1 for create.
 #' @keywords internal
-#' @importFrom raster as.matrix
 #' @noRd
-
-.calc_cc_perc <- function(cMask) {
+.tmp_dir <- function(dir_out, action = 2) {
   
-  cMaskMat <- as.matrix(cMask)
-  cPercent <- (length(which(cMaskMat == 0)) / length(which(!is.na(cMaskMat)))) * 100
+  tmp_dir <- file.path(dir_out,"tmp")
+  if (dir.exists(tmp_dir)) {unlink(tmp_dir,recursive=T)}
+  if (action == 1) {dir.create(tmp_dir)}
+  return(tmp_dir)
+  
+}
+
+#' calculates percentage of a value in a raster or polygon with different modes.
+#' @param x raster.
+#' @param mode character specifies the mode of calculation.
+#' @param custom numeric vector with two values: [[1]] are cloud values [[2]] are non-cloud values. Only if mode == "custom".
+#' @param aoi aoi. Only if mode == "aoi".
+#' @return \code{percent} numeric percentage
+#' @keywords internal
+#' @importFrom raster as.matrix extract xmin xmax ymin ymax resolution crs rasterize
+#' @noRd
+.raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL) {
+  
+  if (mode != "aoi") {x_mat <- as.matrix(x)}
+  if (mode == "na") {
+    percent <- (length(which(x_mat == 0)) / length(which(!is.na(x_mat)))) * 100
+  } else if (mode == "custom") {
+    val1 <- length(which(x_mat == custom[[1]]))
+    val2 <- length(which(x_mat == custom[[2]]))
+    percent <- (val1 / sum(val1,val2)) * 100
+  } else if (mode == "aoi") {
+    r <- raster(xmn=xmin(aoi),xmx=xmax(aoi),ymn=ymin(aoi),ymx=ymax(aoi),crs=crs(mos),resolution=res(mos))
+    aoi_r <- rasterize(aoi,r) # rasterize aoi in order to calculate number of pixels with valid pixels in whole aoi
+    aoi_r_extr <- extract(aoi_r,aoi)[[1]]
+    valid <- extract(x,aoi)[[1]]
+    percent <- (length(valid[!is.na(valid)]) / length(aoi_r_extr[!is.na(aoi_r_extr)])) * 100
+  }
 
 }
 
+#' create mosaic
+#' @description The rasters from \code{x} will be mosaicked in a stupid way: everything is mosaicked that is in this list.
+#' @param x list of paths to raster files.
+#' @param save_path character, full path where to save the mosaic (has to end with '.tif').
+#' @param mode character, optional. If mode == "rgb" no masking of the raster to only 1 values is done. 
+#' If mode == "mask" the raster will be returned with 1 and NA. Default is mode == "mask".
+#' @return \code{mos} raster mosaic
+#' @keywords internal
+#' @importFrom gdalUtils gdalbuildvrt
+#' @noMd
+.make_mosaic <- function(x, save_path, mode = "mask") {
+  
+  write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c("-3.3999999521443642e+38"),vrtnodata="0",
+                            seperate=F,overwrite=T)
+  mos <- raster(save_path)
+  if (mode == "rgb") {
+    return(mos)
+  } else {
+    mos <- mos==1
+  }
+  
+}
+
+#' create mosaic consecutively in the order of ordered records (according to aoi cloud cover)
+#' Important: the cloud masks have to have NA where clouds or no data.
+#' @param records data.frame that contains all records within the sub-period but will be subsetted to \code{sub}.
+#' @param aoi aoi.
+#' @param sub list of numeric vectors. Each vector represents one tile id and indexes records in \code{records}.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param dir_out character directory where to save intermediate product.
+#' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
+#' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
+#' @importFrom plyr compact
+#' @importFrom raster minValue maxValue
+#' @keywords internal
+#' @noRd
+.select_calc_mosaic <- function(records, aoi, sub, dir_out, identifier) {
+  
+  dir_tmp <- .tmp_dir(dir_out,1)
+  sub <- unlist(compact(sub))
+  collection <- sapply(sub,function(x) { # get paths to cloud masks
+    cmask_path <- records$Cloud_mask_path[x]
+  })
+  # this vector are all orders in an order from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
+  names(collection) <- sapply(sub,function(x) {return(records[x,identifier])})
+  # start mosaicking
+  base_coverage <- -1000
+  base_order <- c()
+  # add next cloud mask consecutively and check if it decreases the cloud coverage
+  for (i in 1:length(collection)) {
+    x <- collection[i] # do it this way in order to keep id
+    save_path <- file.path(dir_tmp,paste0("mosaic_tmp_",names(x),".tif"))
+    added_order <- c(base_order,x)
+    mos <- .select_bridge_mosaic(added_order,aoi,save_path)
+    next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi)
+    # the coverage value has to become larger since base_coverage refers to percentage covered with valid pixels
+    add_it <- next_coverage > base_coverage
+    if (add_it) {
+      base_order <- added_order
+      base_coverage <- next_coverage
+    }  
+  }
+  
+  # return ids of selected records and percentage of valid pixels of final mosaic
+  selected <- list(ids=names(base_order),
+                   cMask_paths=base_order,
+                   valid_pixels=base_coverage)
+  
+  del <- .tmp_dir(dir_out)
+  return(selected)
+}
+
+#' sets NAs in cloud masks 0 and crops to the aoi then
+#' @param cMask.
+#' @param aoi.
+#' @return cMask with 0 where no coverage
+#' @importFrom raster mask
+#' @keywords internal
+#' @noRd
+.cMask_NA_to_0 <- function(cMask, aoi) {
+  
+  cMask[is.na(cMask)] <- 0
+  cMask <- mask(cMask,aoi)
+  
+}
+
+#' bridge to .make_mosaic
+#' @param paths character paths to rasters to be mosaicked.
+#' @param aoi aoi.
+#' @param save_path save_path (should end with '.tif').
+#' @importFrom raster mask crop
+#' @keywords internal
+#' @noRd
+.select_bridge_mosaic <- function(paths, aoi, save_path, mode = "mask") {
+  
+  mos_base <- .make_mosaic(paths,save_path,mode)
+  mos_base_mask <- mask(mos_base,aoi)
+  mos_base_crop <- crop(mos_base_mask,aoi)
+  
+}
+
+#' masks a raster with masks of 1 and NA (remain with pixels where mask == 1)
+#' @param x raster to be masked.
+#' @param mask raster mask with 1 for valid pixels and NA for pixels to be set NA.
+#' @return \code{x} masked raster
+#' @keywords internal
+#' @importFrom raster
+#' @noRd
+.mask_raster <- function(x, mask) {
+  x[is.na(mask)] <- NA
+}
+
+#' handles the aoi input and converts it to sf object if needed
+#' @param aoi aoi.
+#' @param crs crs.
+#' @return \code{aoi}
+#' @keywords internal
+#' @importFrom sf st_as_sf st_transform
+#' @noRd
+.handle_aoi <- function(aoi, crs) {
+  
+  error <- "try-error"
+  if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
+  if (inherits(aoi,error)) {out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)}
+  if (as.character(crs(aoi)) != as.character(crs)) {
+    aoi <- try(st_transform(aoi,crs))
+  }
+  if (inherits(aoi,error)) {out("Aoi reprojection failed",3)}
+  return(aoi)
+  
+}
+
+#' creates an error if requested coverage is higher than sensor revisit time
+#' @param sensor character name of sensor.
+#' @param period character vector of start and end date.
+#' @param num_timestamps numeric number of timestamps. 
+#' @return nothing. Console communication
+#' @keywords internal
+#' @noRd
+.select_handle_revisit <- function(sensor, period, num_timestamps) {
+  
+  revisit_times <- list("Landsat"=8,"Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
+  r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
+  sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
+  info <- paste0("The selected number of timestamps (",num_timestamps)
+  s <- ifelse(length(sensor)==1,paste0("\nSensor:"),paste0("\nSensors:"))
+  out(cat("Number of timestamps selected:",num_timestamps,s,sensor))
+  if (sub_period < r) {
+    out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Please decrease 'num_timestamps'"),3)
+  } else if (sub_period == r) {
+    out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this often"),1)
+  }
+  
+}
+
+#' handle Landsat case in select
+#' @param records data.frame.
+#' @return \code{records} data.frame
+#' @keywords internal
+#' @noRd
+.select_handle_landsat <- function(records, sensor) {
+  
+  if (sensor %in% c("Landsat","MODIS")) {
+    records <- .make_Landsat_tileid(records)
+    identifier <- 15
+    return(list(records,identifier))
+  }
+  
+}
+
+#' selects from a numeric data.frame column the i lowest value and checks if it is lower than a provided numeric
+#' @param records data.frame.
+#' @param max numeric maximum allowed value.
+#' @param i numeric.
+#' @param column character name of the column to be ordered.
+#' @return \code{chosen} numeric index to the matching data.frame row.
+#' @keywords internal
+#' @noRd
+.df_get_lowest <- function(records, max, i, column) {
+  
+  records_ord <- sort(records[[column]])
+  if (i > NROW(records_ord)) return(NA)
+  chosen <- which(records[[column]]==records_ord[[i]])[1]
+  val <- records[chosen,column]
+  if (val <= max) return(chosen) else return(NA)
+  
+}
+
+#' selects initial records for the first sub-period
+#' @param records data.frame subsetted to a sub-period.
+#' @param tiles character vector of the tile ids.
+#' @param period character vector of start and end date.
+#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
+#' @param aoi_cc_col character name of aoi cloud cover column.
+#' @param tileid_col character name of tile id column.
+#' @param date_col character name of the date column.
+#' @param max_cloudcov_tile numeric maximum cloud cover per tile.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @return \code{sub} list of numeric vectors, each number is an index to a record in \code{records}
+#' @keywords internal
+#' @noRd
+.select_sub <- function(records, tiles, max_sub_period, 
+                        aoi_cc_col, tileid_col, date_col, max_cloudcov_tile, 
+                        identifier) {
+  
+  sub <- lapply(tiles,function(x) {
+    rec_tile_sub <- records[which(records[[tileid_col]]==x),]
+    i <- 0
+    lwst_cc <- 0
+    selected <- c()
+    while(!is.na(lwst_cc)) {
+      i <- i+1
+      lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,aoi_cc_col)
+      if (!is.na(lwst_cc)) {
+        selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
+      }
+    }
+    return(selected)
+  })
+  return(sub)
+}
+
+#' calls the different steps of selection for a sub-period
+#' @param records data.frame subsetted to a sub-period.
+#' @param period character vector of start and end date.
+#' @param par list holding everything inserted into this parameter list in the calling select function (6 parameters).
+#' @param tileid_col character column name of the tile id.
+#' @param max_cloudcov_tile numeric maximum cloud cover per tile.
+#' @param dir_out character directory where to save intermediate product.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @return \code{selected} list of [[ids]] character vector of selected ids, [[cMask_paths]] character vector to cloud masks, 
+#' [[valid_pixels]] percentage of valid pixels in mosaic with the given selection. 
+#' @keywords internal
+#' @noRd
+.select_process_sub <- function(records, period, par, tileid_col, max_cloudcov_tile, dir_out, identifier) {
+  
+  tiles <- unique(records$tile_id)
+  # the sub is an ordering process of all available records per tile according to aoi cloud cover
+  sub <- .select_sub(records=records,tiles=tiles,
+                     aoi_cc_col=par$Aoi_HOT_col,tileid_col=par$tileid_col,
+                     date_col=par$date_col, max_cloudcov_tile=max_cloudcov_tile,
+                     identifier=identifier)
+  sub_within <- .select_force_period(records,sub,period,max_sub_period,par$date_col)
+  # make best mosaic of cloud masks for first timestamp
+  out("Calculating best mosaic for current timestamp",msg=T)
+  selected <- .select_calc_mosaic(records,aoi,sub_within,dir_out,identifier)
+  
+}
+
+#' returns the indices of records within a max_sub_period
+#' @param records data.frame.
+#' @param sub list of numeric vectors each pointing to a record.
+#' @param period character vector of start and end date.
+#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
+#' @param date_col character name of the date column.
+#' @return \code{sub_within} list of numeric vectors, each number is an index to a record in \code{records}
+#' @importFrom plyr compact
+#' @keywords internal
+#' @noRd
+.select_force_period <- function(records, sub, period, max_sub_period, date_col) {
+  
+  # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
+  max_num_sel <- max(sapply(sub,length))
+  orders <- sapply(1:max_num_sel,function(i) {unlist(sapply(sub,function(x) {return(x[i])}))}) # to matrix
+  orders <- data.frame(orders) 
+  period_new <- c()
+  sub_within <- list()
+  for (i in 1:NCOL(orders)) {
+    x <- orders[,i]
+    # first try to use all records of this order
+    order <- x[!is.na(x)]
+    period_tmp <- .select_period_bridge(records,order,period_new,date_col)
+    period_tmp_le <- .calc_days_period(period_tmp)
+    if (period_tmp_le <= max_sub_period) { # the case where all records from current order x are within period_new
+      period_new <- period_tmp
+      sub_within[[i]] <- order
+    } else {
+      # for the case where at least one of record of order x is not within period_new
+      # try with all values in all possible combinations (not orders). Might be that 
+      # from 0 to all records except one are within period
+      order <- .select_remove_dates(x, records, period_new, max_sub_period, date_col)
+      # remain with the try that is within the temporal max_sub_period with previous orders and
+      # offers the highest number of records and lowest aoi cloud cover
+      subset_true <- compact(order)
+      check_cc <- sapply(subset_true,function(x) {
+        cc <- mean(records[x,aoi_cc_col]) # mean aoi cloud cover
+      })
+      subset_le <- sapply(subset_true,length)
+      max_le <- which(subset_le == max(subset_le))
+      subset_max_rec <- subset_true[max_le]
+      subset_cc <- check_cc[max_le]
+      # maybe several subsets have the highest number of used records within the period
+      # in this case take the choice with lowest aoi cc cover
+      min_cc_max_le <- which(subset_cc == min(subset_cc))[1]
+      sub_within[[i]] <- subset_max_rec[[min_cc_max_le]]
+    }
+  }
+  return(sub_within)
+  
+}
+
+#' find optimal collection of dates to remove from a records collection in a sub-period.
+#' @param x numeric vector.
+#' @param records data.frame.
+#' @param period_new period_new.
+#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
+#' @param date_col date_col.
+#' @return \code{order} list of numeric vectors where all values are an index to a record in records
+#' @keywords internal
+#' @noRd
+.select_remove_dates <- function(x, records, period_new, max_sub_period, date_col) {
+  
+  vec <- .help_vec_comb(x)
+  order <- list()
+  n <- 0
+  for (order_curr in vec) {
+    period_tmp <- .select_period_bridge(records,order_curr,period_new,date_col)
+    period_tmp_le <- .calc_days_period(period_tmp)
+    if (period_tmp_le <= max_sub_period) {
+      n <- n+1
+      period_new <- period_tmp
+      order[[n]] <- order_curr
+    }
+  }
+  order <- unique(order)
+}
+
+#' helper for creating a list of numeric vectors with all possible combinations of numerics (not orders, just combinations)
+#' @param x numeric vector.
+#' @return \code{vecs} list of numeric vectors
+#' @importFrom combinat permn
+#' @keywords internal
+#' @noRd
+.help_vec_comb <- function(x) {
+  
+  vseq <- 1:length(x)
+  vals <- list()
+  n <- 0
+  all_comb <- combinat::permn(x)
+  for (c in all_comb) {
+    for (i in vseq) {
+      n <- n+1
+      vals[[n]] <- c[1:i]
+    }
+  }
+  vals_sort <- lapply(vals,sort)
+  vec <- unique(vals_sort)
+
+}
+
+#' bridge function to the period identifier \link{.identify_period}. Enables to calculate from
+#' a given period with added dates a new period.
+#' @param records data.frame.
+#' @param order numeric vector pointing to elements of records.
+#' @return period_new character holding a period of dates.
+#' @param date_col character name of the date column.
+#' @keywords internal
+#' @noRd
+.select_period_bridge <- function(records, order, period_new, date_col) {
+  
+  dates_tmp <- records[order,date_col]
+  period_curr <- .identify_period(dates_tmp)
+  period_new <- .identify_period(c(period_new,period_curr))
+  
+}
+
+#' calculates the number of days between two dates
+#' @param period character vector of start and end date.
+#' @return \code{days} numeric number of days between.
+#' @keywords internal
+#' @noRd
+.calc_days_period <- function(period) {
+  
+  days <- as.numeric(as.Date(period[2]) - as.Date(period[1]))
+  
+}
+
+#' shortens the subset of a vector !is.na(). For example df[vec[!is.na(vec)],] is not handy
+#' @param vec vector.
+#' @return \code{vec_checked} vector check: vec[!is.na(vec)]
+#' @keywords internal
+#' @noRd
+
+vNA <- function(vec) {
+  return(vec[!is.na(vec)])
+}
+
+#' creates a tile id for Landsat data from WRSRow and WRSPath
+#' @param records data.frame of Landsat data.
+#' @return \code{records} data.frame with an added column: 'row_path_id'
+#' @keywords internal
+#' @noRd
+.make_Landsat_tileid <- function(records) {
+  
+  records[["tile_id"]] <- paste0(records$WRSPath,records$WRSRow)
+  return(records)
+  
+}
+
+#' creates initial sub-periods
+#' @param records data.frame.
+#' @param period character vector of a start date [1] and an end date [2].
+#' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
+#' @param date_col character name of the date column.
+#' @return \code{records} with one added numeric column 'sub_period' indicating in which sub-period the record is situated.
+#' @keywords internal
+#' @noRd
+.select_sub_periods <- function(records, period, num_timestamps, date_col) {
+  
+  period <- sapply(period,as.Date)
+  days <- as.numeric(diff(period))
+  le_subperiods <- days / num_timestamps
+  dates <- sapply(0:num_timestamps,function(i) {next_date <- period[1] + (i * le_subperiods)})
+  dates[length(dates)] <- dates[length(dates)] + 1
+  date_col_mirr <- sapply(records[,date_col][1],as.Date) # mirror of the date column as days since 1970-01-01
+  for (i in 1:num_timestamps) {
+    within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
+    records[within,"Sub_period"] <- i
+  }
+  return(records)
+}
+
+#' identifies which are date columns in a records data.frame
+#' @param records.
+#' @return \code{is_date} logical vector indicating which of the columns have a date
+#' @keywords internal
+#' @noRd
+.identify_date_col <- function(records) {
+  
+  is_date <- sapply(1:NCOL(records),function(i) {
+    check <- try(as.Date(records[1,i]),silent=T)
+    if (inherits(check,"try-error")) FALSE else TRUE
+  })
+  
+}
+
+#' returns the smallest and largest date of a date column.
+#' @param dates character vector of dates ("2019-01-01").
+#' @return \code{period} character vector of two dates
+#' @keywords internal
+#' @noRd
+.identify_period <- function(dates) {
+  
+  dates_sorted <- sort(dates)
+  period <- c(dates_sorted[1],tail(dates_sorted,1))
+  
+}
+
+#' checks first possible date for selection after previous selection according to user-specified min_distance
+#' @param period character vector of dates. Last is the end date.
+#' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
+#' @return \code{min_date} character indicating the minimum possible date for the next sub_period.
+#' @keywords internal
+#' @noRd
+.select_force_distance <- function(period, min_distance) {
+  
+  next_date <- as.Date(period[2]) + min_distance 
+  
+}
+
+#' handles the determined earliest start date for next sub-period calculated from min_distance
+#' @param first_date character date the earliest possible date of next sub-period.
+#' @param period_initial character vector of two dates. Period derived from records of next sub-period.
+#' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
+#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. This determines how close together
+#' @return \code{period} character vector the actual period for next sub-period.
+#' @keywords internal
+#' @noRd
+.select_handle_next_sub <- function(first_date, period_initial, min_distance, max_sub_period) {
+  
+  dfirst_date <- as.Date(first_date)
+  dperiod_initial <- as.Date(period_initial)
+  
+  if (dfirst_date >= dperiod_initial[1] || dfirst_date < dperiod_initial[1]) {
+    period <- as.character(c(dfirst_date,dperiod_initial[2]))
+  } else if (dfirst_date >= dperiod_initial[2]) {
+    out(paste0("Argument 'min_distance' between acquisitions used for dinstinguished timestamps is: ",min_distance," days.
+               The 'max_period' of covered acquisitions for one timestamp is: ",max_sub_period,". With the given 'num_timestamps'
+               these values disable the creation of a consistent time-series. Modify the values (most likely decrease (some of) them."),3)  
+  }
+  
+}
+
+#' checks which records are within a period of time
+#' @param records data.frame.
+#' @param period character vector of dates. Last is the end date.
+#' @param date_col character name of the date column.
+#' @return \code{records} data.frame reduced to matching records.
+#' @keywords internal
+#' @noRd
+.within_period <- function(records, period, date_col) {
+  
+  dates <- as.Date(records[[date_col]])
+  cond <- intersect(which(dates >= period[1]),which(dates <= period[2]))
+  records <- records[cond,]
+  
+}
+
+#' prepares the selection process by identifying temporal and sensor parameters from records
+#' @param records data.frame.
+#' @param date_col date_col.
+#' @return \code{par} list of parameters sensor, date_col and period.
+#' @keywords internal
+#' @noRd
+.get_pars <- function(records, date_col) {
+  
+  par <- list()
+  par$date_col <- "acquisitionDate"
+  par$period <- .identify_period(records[[date_col]])
+  return(par)
+  
+}
+
+#' constructs a console message to be given at the end of a selection process
+#' @param selected_i list 'selected' holding for one timestamp: 'ids', 'cMask_paths', 'valid_pixels', 'timestamp'.
+#' @return \code{console_info} character vector holding the message
+#' @keywords internal
+#' @noRd
+.select_final_info <- function(selected_i) {
+
+  sep <- "\n----------------------------------------------------------------"
+  ts <- selected_i$timestamp
+  n_records <- length(selected_i$cMask_paths)
+  header <- paste0("\n- Timestamp: ",ts)
+  coverage_info <- paste0("\n- Coverage of valid pixels in mosaic of selected records: ",round(selected_i$valid_pixels)," %")
+  num_selected_info <- paste0("\n- Number of selected records: ",n_records)
+  console_info <- c(sep,header,coverage_info,num_selected_info,sep)
+  
+}
+
+#' constructs a summary of the console info of \code{.select_final_info}.
+#' In addition: if the minimum coverage amongst the timestamps is below 60 \% return a warning message. 
+#' In addition: if the mean coverage amongst the timestamps is below 80 \% return a warning message.
+#' These warning messages are returned as NULL if the respective condition is not TRUE.
+#' @param selected list of lists 'selected' each holding for a timestamp: 'ids', 'cMask_paths', 'valid_pixels', 'timestamp'
+#' @return \code{console_summary_warning} list of character vectors holding the messages:
+#' [[1]] Summary info
+#' [[2]] Warning if minimum coverage is below 60 \% ele NULL.
+#' [[3]] Warning if mean coverage is below 80 \% else NULL.
+#' The second [[2]] character vector holds the optional warning(s). 
+#' @keywords internal
+#' @noRd
+.select_final_summary <- function(selected) {
+  
+  sep <- "\n\n----------------------------------------------------------------"
+  coverages <- sapply(selected,function(x) {x$valid_pixels})
+  num_timestamps <- length(selected)
+  min_cov <- round(min(coverages))
+  mean_cov <- round(mean(coverages))
+  header <- paste0("\n-- Selection Process Summary --")
+  cov_pixels <- " coverage of valid pixels "
+  pixel <- paste0(cov_pixels," in mosaic of selected records: ")
+  info1 <- paste0("\n- Number of timestamps selected for: ",num_timestamps)
+  info2 <- paste0("\n- Mean",pixel,mean_cov)
+  info3 <- paste0("\n- Lowest",pixel,min_cov)
+  info4 <- paste0("\n- Maximum",pixel,max(coverages))
+  console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,info4)
+  
+  # optional warnings
+  min_thresh <- 60
+  mean_thresh <- 80
+  check_min <- min_cov < min_thresh # return warning below this
+  check_mean <- mean_cov < mean_thresh # return warning below this 
+  in_ts <- " in selection "
+  warn_help <- ". \nIf you aim at a selection with consistently low cloud cover you could e.g.:\n
+    - decrease 'num_timestamps',
+    - decrease 'min_distance',
+    - increase 'max_period'.\n"
+  warn_min <- ifelse(check_min,paste0("The minimum",cov_pixels,in_ts,"is ",min_cov,warn_help,
+                                      "\nThis warning is thrown when minimum coverage is below: ",min_thresh," %"),NULL)
+  warn_mean <- ifelse(check_mean,paste0("The mean",cov_pixels,in_ts,"is ",mean_cov,warn_help,
+                                        "\nThis warning is thrown when mean coverage is below: ",mean_thresh," %"),NULL)
+  console_summary_warning <- list(console_summary,warn_min,warn_mean)
+    
+}
+
+
+
+
+
+
+
+  

@@ -792,6 +792,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param aoi aoi.
 #' @param sub list of numeric vectors. Each vector represents one tile id and indexes records in \code{records}.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param cloud_mask_col character name of cloud masks column.
 #' @param dir_out character directory where to save intermediate product.
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
@@ -799,12 +800,12 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom raster minValue maxValue
 #' @keywords internal
 #' @noRd
-.select_calc_mosaic <- function(records, aoi, sub, dir_out, identifier) {
+.select_calc_mosaic <- function(records, aoi, sub, cloud_mask_col, dir_out, identifier) {
   
   dir_tmp <- .tmp_dir(dir_out,1)
   sub <- unlist(compact(sub))
   collection <- sapply(sub,function(x) { # get paths to cloud masks
-    cmask_path <- records$Cloud_mask_path[x]
+    cmask_path <- records$cloud_mask_path[x]
   })
   # this vector are all orders in an order from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) {return(records[x,identifier])})
@@ -991,13 +992,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param par list holding everything inserted into this parameter list in the calling select function (6 parameters).
 #' @param tileid_col character column name of the tile id.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
+#' @param cloud_mask_col character name of cloud mask paths column.
 #' @param dir_out character directory where to save intermediate product.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @return \code{selected} list of [[ids]] character vector of selected ids, [[cMask_paths]] character vector to cloud masks, 
 #' [[valid_pixels]] percentage of valid pixels in mosaic with the given selection. 
 #' @keywords internal
 #' @noRd
-.select_process_sub <- function(records, period, par, tileid_col, max_cloudcov_tile, dir_out, identifier) {
+.select_process_sub <- function(records, period, par, tileid_col, max_cloudcov_tile, cloud_mask_col, dir_out, identifier) {
   
   tiles <- unique(records$tile_id)
   # the sub is an ordering process of all available records per tile according to aoi cloud cover
@@ -1007,8 +1009,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                      identifier=identifier)
   sub_within <- .select_force_period(records,sub,period,max_sub_period,par$date_col)
   # make best mosaic of cloud masks for first timestamp
-  out("Calculating best mosaic for current timestamp",msg=T)
-  selected <- .select_calc_mosaic(records,aoi,sub_within,dir_out,identifier)
+  out("Calculating best mosaic for timestamp..",msg=T)
+  selected <- .select_calc_mosaic(records,aoi,sub_within,cloud_mask_col,dir_out,identifier)
   
 }
 
@@ -1333,9 +1335,9 @@ vNA <- function(vec) {
     - decrease 'min_distance',
     - increase 'max_period'.\n"
   warn_min <- ifelse(check_min,paste0("The minimum c",cov_pixels,in_ts,"is ",min_cov,warn_help,
-                                      "\nThis warning is thrown when minimum coverage is below: ",min_thresh," %"),NULL)
+                                      "\nThis warning is thrown when minimum coverage is below: ",min_thresh,p,"\n"),NULL)
   warn_mean <- ifelse(check_mean,paste0("The mean c",cov_pixels,in_ts,"is ",mean_cov,warn_help,
-                                        "\nThis warning is thrown when mean coverage is below: ",mean_thresh," %"),NULL)
+                                        "\nThis warning is thrown when mean coverage is below: ",mean_thresh,p,"\n"),NULL)
   console_summary_warning <- list(console_summary,warn_min,warn_mean)
     
 }

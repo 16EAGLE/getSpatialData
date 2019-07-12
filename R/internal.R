@@ -1305,21 +1305,22 @@ vNA <- function(vec) {
 #' The second [[2]] character vector holds the optional warning(s). 
 #' @keywords internal
 #' @noRd
-.select_final_summary <- function(selected) {
+.select_summary_ts <- function(selected) {
   
-  sep <- "\n\n----------------------------------------------------------------"
+  sep <- "\n----------------------------------------------------------------"
   coverages <- sapply(selected,function(x) {x$valid_pixels})
   num_timestamps <- length(selected)
   min_cov <- round(min(coverages))
   mean_cov <- round(mean(coverages))
+  p <- " %"
   header <- paste0("\n-- Selection Process Summary --")
-  cov_pixels <- " coverage of valid pixels "
-  pixel <- paste0(cov_pixels," in mosaic of selected records: ")
-  info1 <- paste0("\n- Number of timestamps selected for: ",num_timestamps)
-  info2 <- paste0("\n- Mean",pixel,mean_cov)
-  info3 <- paste0("\n- Lowest",pixel,min_cov)
-  info4 <- paste0("\n- Maximum",pixel,max(coverages))
-  console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,info4)
+  cov_pixels <- "overage of valid pixels "
+  info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
+  info2 <- paste0("\n- C",cov_pixels,"in mosaic of selected records: ")
+  info3 <- paste0("\n-    Mean:     ",mean_cov,p)
+  info4 <- paste0("\n-    Lowest:   ",min_cov,p)
+  info5 <- paste0("\n-    Highest:  ",round(max(coverages)),p)
+  console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,info4,info5,"\n")
   
   # optional warnings
   min_thresh <- 60
@@ -1331,13 +1332,29 @@ vNA <- function(vec) {
     - decrease 'num_timestamps',
     - decrease 'min_distance',
     - increase 'max_period'.\n"
-  warn_min <- ifelse(check_min,paste0("The minimum",cov_pixels,in_ts,"is ",min_cov,warn_help,
+  warn_min <- ifelse(check_min,paste0("The minimum c",cov_pixels,in_ts,"is ",min_cov,warn_help,
                                       "\nThis warning is thrown when minimum coverage is below: ",min_thresh," %"),NULL)
-  warn_mean <- ifelse(check_mean,paste0("The mean",cov_pixels,in_ts,"is ",mean_cov,warn_help,
+  warn_mean <- ifelse(check_mean,paste0("The mean c",cov_pixels,in_ts,"is ",mean_cov,warn_help,
                                         "\nThis warning is thrown when mean coverage is below: ",mean_thresh," %"),NULL)
   console_summary_warning <- list(console_summary,warn_min,warn_mean)
     
 }
+
+#' prints a character vector in console combined into one message in out()
+#' @param x character vector.
+#' @param type numeric as in out().
+#' @param msg logical as in out().
+#' @return nothing. Console print
+#' @keywords internal
+#' @noRd
+.out_vector <- function(x,type=1,msg=FALSE) {
+  
+  shout_out <- sapply(x,function(vec) {
+    print_out <- sapply(vec,function(v) {out(v,type=type,msg=msg)})
+  })
+  
+}
+
 
 
 

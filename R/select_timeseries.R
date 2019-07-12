@@ -107,10 +107,11 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
     # get print info
     console_info[i] <- .select_final_info(s)
   }
-  console_out <- sapply(console_info,function(x) {
+  console_info_out <- sapply(console_info,function(x) {
     sapply(x,function(y) {out(y)})
   })
-  console_summary <- .select_final_summary(selected)
+  csw <- .select_summary_ts(selected)
   
+  console_warning_out
   return(records)
 }

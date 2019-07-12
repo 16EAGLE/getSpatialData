@@ -621,6 +621,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   # set-up column name dictionary
   dict <- rbind.data.frame(c("product", NA, NA, NA),
+                           c("product_group", NA, NA, NA),
                            c("record_id", "title", "displayId", "displayId"),
                            c("entity_id", "uuid", "entityId", "entityId"),
                            c("dataset_url", "url", NA, NA),
@@ -655,6 +656,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     i <- which(x == dict[,which.col])
     if(length(i) > 0) dict$gSD[i] else x
   }, USE.NAMES = F)
+  
+  # fill group
+  records$product_group <- colnames(dict)[which.col]
   
   # address product-specific cases
   records$product <- name

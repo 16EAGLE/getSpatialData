@@ -60,14 +60,29 @@ getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, renam
 
     ## Connect to ESPA to revieve available products for (no use of entityId, displayId instead)
     out("Recieving available product levels from USGS-EROS ESPA...", msg = T)
-    avail.products <- as.character(sapply(records$displayId, function(x){
+    records <- do.call(rbind.data.frame, apply(records, MARGIN = 1, function(x, names = colnames(records)){
+      
+      x <- rbind.data.frame(x, stringsAsFactors = F)
+      colnames(x) <- names
+      
       tryCatch({
-        t <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = username, password = password)
-        if(all(names(content(t)) == "not_implemented")) return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
-        }, error = function(e) return("l1"))
-    }, USE.NAMES = F))
-    records <- cbind(records, avail.products, stringsAsFactors = FALSE)
-    colnames(records)[ncol(records)] <- "levels_available"
+        response <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = username, password = password)
+        response <- if(all(names(content(response)) == "not_implemented")) "'l1'" else unlist(content(response)[[1]]$products) #paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
+      }, error = function(e) response <- "l1")
+      
+      x <- do.call(rbind.data.frame, rep(list(x), length(response)))
+      x$level <- response
+      return(x)
+    }))
+    
+    # avail.products <- lapply(records$displayId, function(x){
+    #   tryCatch({
+    #     t <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = username, password = password)
+    #     if(all(names(content(t)) == "not_implemented")) return("'l1'") else paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
+    #     }, error = function(e) return("l1"))
+    # })
+    # records <- cbind(records, avail.products, stringsAsFactors = FALSE)
+    # colnames(records)[ncol(records)] <- "levels_available"
 
     ## Correct WRS fields
     wrs.sub <- grep("WRS", colnames(records))

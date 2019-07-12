@@ -108,7 +108,7 @@ getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rena
 
     records.names <- unique(unlist(query.names))
     records <- as.data.frame(stats::setNames(replicate(length(records.names),numeric(0), simplify = F), records.names))
-    records <-  do.call(rbind.data.frame, lapply(query.fields, function(x, rn = records.names,  rdf = records){
+    records <- do.call(rbind.data.frame, lapply(query.fields, function(x, rn = records.names,  rdf = records){
       rdf[1, match(names(x), rn)] <- sapply(x, as.character)
       return(rdf)
     }))

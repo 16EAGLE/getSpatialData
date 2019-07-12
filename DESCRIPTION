@@ -51,3 +51,4 @@ Collate:
     'internal.R'
     'pkgname.R'
     'prepSentinel.R'
+    'check_availability.R'

@@ -25,7 +25,7 @@
 #' \item (if Landsat or MODIS) tileid: a column holding a tileid created from WRSPath and WRSRow
 #' }
 #' 
-#' @importFrom 
+#' @importFrom plyr compact
 #' 
 #' @author Henrik Fisser
 #' 
@@ -36,9 +36,13 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
   
   if (is.null(dir_out) || class(dir_out) != "character") {out("Argument 'dir_out' has to be provided as directory of class 'character'")}
   if (class(max_cloudcov) != "numeric") {out("Argument 'max_cloudcov' has to be of class 'numeric'")}
+  if (num_timestamps < 2) {
+    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". The minimum number for select_timeseries is: 3"),2)
+  }
   selected_col_name <- "selected_for_timeseries" # logical column if a record is selected at all
-  mosaic_file_col_name <- "preview_mosaic_file" # path to the RGB mosaic tif where record is included
-  timestamp_col_name <- "selected_for_timestamp" # the timestamp number for which the record is selected
+  pmos_col <- "preview_mosaic_file" # path to the RGB mosaic tif where record is included
+  cmos_col <- "cmask_mosaic_file" # path to the cloud mask mosaic tif where record is included
+  timestamp_col <- "selected_for_timestamp" # the timestamp number for which the record is selected
   identifier <- 1
   sensor <- unique(records$sensor)
   par <- .get_pars(records)
@@ -47,9 +51,10 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
   records <- .select_handle_landsat(records,par$sensor)[[1]]
   records <- .select_sub_periods(records,par$period,num_timestamps) # calculates the Sub_period column
   par$tileids <- unique(records$tileid)
-  par$Aoi_HOT_col <- "Aoi_HOT_cloudcov_percent"
+  par$aoi_HOT_col <- "Aoi_HOT_cloudcov_percent"
   par$tileid_col <- "tile_id"
   par$preview_col <- "preview_file"
+  par$cloud_mask_col <- "Cloud_mask_path"
   selected <- list() # list to be filled by all selected 'entity_id' ids
   # select per sub-period best mosaic 
   # Select as the first record of the first sub-period the records with lowest aoi cloud cover that are still within max_period 
@@ -60,6 +65,7 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
   first$selected <- .select_process_sub(records=first$records,first$period,par=par,
                                         tileid_col=tileid_col,
                                         max_cloudcov_tile=max_cloudcov_tile,
+                                        cloud_mask_col=par$cloud_mask_col,
                                         dir_out=dir_out,identifier=identifier)
   first$records_sel <- records[match(first$selected$ids,records$entityId),]
   first$period_new <- .identify_period(first$records_sel[[date_col]])
@@ -80,6 +86,7 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
     # run the selection process
     other$selected <- .select_process_sub(other$records,other$period,par=par,
                                         max_cloudcov_tile=max_cloudcov_tile,
+                                        cloud_mask_col=par$cloud_mask_col,
                                         dir_out=dir_out,identifier=identifier)
     selected[[i]]$timestamp <- i
     selected[[i]] <- other$selected # insert 'selected' object into selected list
@@ -99,19 +106,29 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
     cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths,aoi,dir_out)
     #B RGB preview mosaic
     save_path_pmos <- file.path(dir_out,paste0("preview_mosaic_timestamp",s$timestamp,".tif"))
-    preview_mosaic <- .select_bridge_mosaic(records[id_sel,par$preview_col],aoi,dir_out,mode="rgb")
+    # mask preview tiles by cloud masks
+    preview_paths <- sapply(id_sel,function(i) {
+      preview <- raster(records[i,par$preview_col])
+      cMask <- raster(records[i,par$])
+      preview_masked <- .mask_raster(preview,cMask)
+    })
+    preview_mosaic <- .select_bridge_mosaic(preview_paths,aoi,dir_out,mode="rgb")
     #C add 3 columns to records
     records[id_sel,selected_col_name] <- s$ids
-    records[id_sel,mosaic_file_col_name] <- s$mosaic_path
-    records[id_sel,timestamp_col_name] <- s$timestamp
+    records[id_sel,timestamp_col] <- s$timestamp
+    records[id_sel,pmos_col] <- save_path_pmos
+    records[id_sel,cmos_col] <- save_path_cmos
     # get print info
     console_info[i] <- .select_final_info(s)
   }
-  console_info_out <- sapply(console_info,function(x) {
-    sapply(x,function(y) {out(y)})
-  })
+  each_timestamp <- .out_vector(console_info)
   csw <- .select_summary_ts(selected)
+  w <- csw[2:3] # warnings
+  w <- compact(w)
+  summary <- .out_vector(csw[[1]])
+  warn_out <- sapply(w,function(x) {
+    warning <- .out_vector(x,type=2)
+  })
   
-  console_warning_out
   return(records)
 }

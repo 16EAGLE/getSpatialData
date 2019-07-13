@@ -721,6 +721,33 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
 }
 
+#' mask the edges of Landsat preview raster
+#' @param preview.
+#' @return \code{preview_masked} masked preview
+#' @importFrom sf as
+#' @importFrom raster mask crs extent
+.preview_mask_edges <- function(preview) {
+  
+  ext <- extent(preview)
+  poly <- as(ext,"SpatialPolygons")
+  crs(poly) <- crs(preview)
+  # get the vertices of the extent and modify them
+  coords <- slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords")
+  coords[1,1] <- coords[1,1] + 0.083
+  coords[2,1] <- coords[2,1] + 0.45
+  coords[3,1] <- coords[3,1] - 0.054
+  coords[4,1] <- coords[4,1] - 0.38
+  coords[5,1] <- coords[5,1] + 0.083
+  coords[1,2] <- coords[1,2] + 0.29
+  coords[2,2] <- coords[2,2] - 0.036
+  coords[3,2] <- coords[3,2] - 0.29
+  coords[4,2] <- coords[4,2] + 0.04
+  coords[5,2] <- coords[5,2] + 0.29
+  slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
+  preview_masked <- mask(preview,poly) 
+  
+}
+
 #' creates a temp dir (tmp_dir) and/or deletes it
 #' @param dir_out character directory as parent dir.
 #' @param action numeric, 1 for create.
@@ -810,7 +837,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param dir_out character directory below which to save intermediate product in tmp.
 #' @param cloud_mask_col character name of cloud mask path column.
 #' @param preview_col character name of the preview path column.
-#' @return \code{save_pmos_final} character path where preview RGB mosaic is saved 
+#' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
+#' @importFrom raster writeRaster stack
 #' @keywords internal
 #' @noRd
 .select_preview_mos <- function(s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
@@ -822,7 +850,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   tmp_dir <- .tmp_dir(dir_out,action=1)
   preview_paths <- lapply(id_sel,function(i) {
     p_path <- records[i,preview_col]
-    preview <- brick(p_path)
+    preview <- stack(p_path)
     preview_aoi <- mask(preview,aoi)
     cMask <- raster(records[i,cloud_mask_col])
     preview_masked <- .mask_raster(preview_aoi,cMask)

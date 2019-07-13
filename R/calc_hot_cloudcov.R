@@ -38,7 +38,7 @@
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 5, 
                               sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, 
                               interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
-  print(record$entityId)
+  out(paste0("Processing: ",record$entityId),msg=T)
   scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
   aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   cloud_mask_path <- "cloud_mask_file"
@@ -59,7 +59,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # Mask NA values in preview (represented as 0 here)
   NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
   preview <- mask(preview,NA_mask,maskvalue=0)
-  
   # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
   preview <- .preview_mask_edges(preview)
 

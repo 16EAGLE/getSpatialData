@@ -127,30 +127,3 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
 
 
 
-test <- r[[3]] != 0
-test[test==0] <- NA
-ext <- extent(test)
-poly <- as(ext,"SpatialPolygons")
-crs(poly) <- crs(test)
-coords <- slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords")
-coords[1,1] <- coords[1,1] + 0.083
-coords[2,1] <- coords[2,1] + 0.45
-coords[3,1] <- coords[3,1] - 0.054
-coords[4,1] <- coords[4,1] - 0.38
-coords[5,1] <- coords[5,1] + 0.083
-coords[1,2] <- coords[1,2] + 0.29
-coords[2,2] <- coords[2,2] - 0.036
-coords[3,2] <- coords[3,2] - 0.29
-coords[4,2] <- coords[4,2] + 0.04
-coords[5,2] <- coords[5,2] + 0.29
-coords <- coords_archive
-slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
-p(test)
-plot(poly,add=T)
-
-
-
-
-
-
-

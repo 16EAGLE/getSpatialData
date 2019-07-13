@@ -38,7 +38,7 @@
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 5, 
                               sceneCloudCoverCol = NULL, cloudPrbThreshold = 40, slopeDefault = 1.4, 
                               interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
-  
+  print(record$entityId)
   scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
   aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   cloud_mask_path <- "cloud_mask_file"
@@ -85,7 +85,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   bThresh <- 20 # for dividing the 20 lowest blue DN values into equal interval bins
   rThresh <- 20 # from the 20 blue bins take the 20 lowest red values
   valDf <- data.frame(na.omit(values(prvStck)))
-  valDf <- valDf[intersect(which(valDf[,1] != 0),which(valDf[,2] != 0)),] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
+  non_zeros <- intersect(which(valDf[,1] != 0),which(valDf[,2] != 0))
+  if (length(non_zeros) > 0) {
+    valDf <- valDf[non_zeros,] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
+  }
   bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
   redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)

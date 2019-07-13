@@ -120,7 +120,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   prevMasked <- mask(preview,aoi)
   #prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
   maxValPrevMasked <- maxValue(prevMasked)
-  cond <- maxValPrevMasked[1] == 0 || is.na(maxValPrevMasked[1])
+  cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50 has to be corrupted
   if (isTRUE(cond)) {
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999

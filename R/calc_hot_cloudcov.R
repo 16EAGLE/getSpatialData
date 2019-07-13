@@ -59,6 +59,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # Mask NA values in preview (represented as 0 here)
   NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
   preview <- mask(preview,NA_mask,maskvalue=0)
+  
+  # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
+  preview <- .preview_mask_edges(preview)
 
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)

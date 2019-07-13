@@ -993,11 +993,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   error <- "try-error"
   if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
-  if (inherits(aoi,error)) {out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)}
-  if (as.character(crs(aoi)) != as.character(crs)) {
-    aoi <- try(st_transform(aoi,crs))
-  }
-  if (inherits(aoi,error)) {out("Aoi reprojection failed",3)}
+  if (inherits(aoi,error)) out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)
+  if (as.character(crs(aoi)) != as.character(crs)) aoi <- try(st_transform(aoi,crs))
+  if (inherits(aoi,error)) out("Aoi reprojection failed",3)
   return(aoi)
   
 }
@@ -1140,7 +1138,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
   max_num_sel <- max(sapply(sub,length))
-  orders <- sapply(1:max_num_sel,function(i) {unlist(sapply(sub,function(x) {return(x[i])}))}) # to matrix
+  orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i])))) # to matrix
   orders <- data.frame(orders) 
   period_new <- c()
   sub_within <- list()
@@ -1291,7 +1289,7 @@ vNA <- function(vec) {
   period <- sapply(period,as.Date)
   days <- as.numeric(diff(period))
   le_subperiods <- days / num_timestamps
-  dates <- sapply(0:num_timestamps,function(i) {next_date <- period[1] + (i * le_subperiods)})
+  dates <- sapply(0:num_timestamps,function(i) period[1] + (i * le_subperiods))
   dates[length(dates)] <- dates[length(dates)] + 1
   date_col_mirr <- sapply(records[,date_col][1],as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
@@ -1452,7 +1450,7 @@ vNA <- function(vec) {
 .out_vector <- function(x,type=1,msg=FALSE) {
   
   shout_out <- sapply(x,function(vec) {
-    print_out <- sapply(vec,function(v) {out(v,type=type,msg=msg)})
+    print_out <- sapply(vec,function(v) out(v,type=type,msg=msg))
   })
   
 }

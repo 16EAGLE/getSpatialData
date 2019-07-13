@@ -738,11 +738,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   coords[3,1] <- coords[3,1] - 0.054
   coords[4,1] <- coords[4,1] - 0.38
   coords[5,1] <- coords[5,1] + 0.083
-  coords[1,2] <- coords[1,2] + 0.29
+  coords[1,2] <- coords[1,2] + 0.35
   coords[2,2] <- coords[2,2] - 0.036
   coords[3,2] <- coords[3,2] - 0.29
-  coords[4,2] <- coords[4,2] + 0.04
-  coords[5,2] <- coords[5,2] + 0.29
+  coords[4,2] <- coords[4,2] + 0.1
+  coords[5,2] <- coords[5,2] + 0.35
   slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
   preview_masked <- mask(preview,poly) 
   

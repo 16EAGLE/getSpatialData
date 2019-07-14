@@ -26,7 +26,7 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster
+#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster cellStats
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
 #' @importFrom hashmap hashmap
@@ -43,6 +43,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   cloud_mask_path <- "cloud_mask_file"
   aoi_hot_cloud_mask <- "aoi_HOT_cloud_mask"
+  aoi_HOT_mean_probability <- "aoi_HOT_mean_probability"
   na_case <- "NONE"
   error <- "try-error"
   currTitle <- record[[identifier]]
@@ -68,6 +69,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (isTRUE(cond)) {
     record[[aoi_hot_cc_percent]] <- 100
     record[[scene_hot_cc_percent]] <- 9999
+    record[[aoi_HOT_mean_probability]] <- 100
     if (!is.null(dir_out)) {record[[cloud_mask_path]] <- na_case}
     out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
     return(record)
@@ -78,7 +80,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   preview <- mask(preview,NA_mask,maskvalue=0)
   # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
   preview <- .preview_mask_edges(preview)
-
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
   if (nlyrs == 3) {
@@ -101,10 +102,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   bThresh <- 20 # for dividing the 20 lowest blue DN values into equal interval bins
   rThresh <- 20 # from the 20 blue bins take the 20 lowest red values
   valDf <- data.frame(na.omit(values(prvStck)))
-  non_zeros <- intersect(which(valDf[,1] != 0),which(valDf[,2] != 0))
-  if (length(non_zeros) > 0) {
-    valDf <- valDf[non_zeros,] # exclude 0 values besides NA values because large amounts besides the scene pixels can spoil the regression
-  }
   bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
   redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)
@@ -172,7 +169,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     if (inherits(cMask,error)) {
       hotFailed <- TRUE
     }
-    cPercent <- .calc_cc_perc(cMask)
+    cPercent <- .raster_percent(cMask)
     try(ccDeviationFromProvider <- as.numeric(record[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
     if (inherits(ccDeviationFromProvider,error) || is.na(ccDeviationFromProvider) || is.null(ccDeviationFromProvider)) {
       ccDeviationFromProvider <- maxDeviation - 1 # escape the loop by setting the value artificially because calculation failed
@@ -188,26 +185,31 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   }
   
   # calc scene cc percentage 
-  scene_cPercent <- .calc_cc_perc(cMask)
+  scene_cPercent <- .raster_percent(cMask)
   # mask preview to aoi
   prevMasked <- mask(preview,aoi)
   ## Calculate aoi cloud cover percentage
   if (isFALSE(hotFailed)) {
-    cMask <- mask(cMask,aoi)   
-    aoi_cPercent <- .calc_cc_perc(cMask)
+    cMask <- mask(cMask,aoi) 
+    HOT_masked <- mask(HOT,aoi)
+    aoi_cPercent <- .raster_percent(cMask) # calculate the absolute HOT cloud cover in aoi
+    aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
     cMask[cMask==0] <- NAvalue(cMask)
     if (!is.null(dir_out)) { # save cloud mask if desired
       maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
       writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
       record[[cloud_mask_path]] <- maskFilename
     }
-    ##### Add scene and aoi cloud cover percentage as well as aoi cloud mask to record data.frame
+    ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
     record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
+    record[[aoi_HOT_mean_probability]] <- as.numeric(aoi_cProb)
+    record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
   } else {
-    record[[aoi_hot_cc_percent]] <- 9999
+    record[[aoi_hot_cc_percent]] <- 100
+    record[[aoi_HOT_mean_probability]] <- 100
+    record[[scene_hot_cc_percent]] <- 9999
     out(hotFailWarning,type=2)
   }
-  record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
   return(record)
   
 }

@@ -733,16 +733,16 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
   coords <- slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords")
-  coords[1,1] <- coords[1,1] + 0.083
-  coords[2,1] <- coords[2,1] + 0.45
-  coords[3,1] <- coords[3,1] - 0.054
-  coords[4,1] <- coords[4,1] - 0.38
-  coords[5,1] <- coords[5,1] + 0.083
-  coords[1,2] <- coords[1,2] + 0.35
-  coords[2,2] <- coords[2,2] - 0.036
-  coords[3,2] <- coords[3,2] - 0.29
-  coords[4,2] <- coords[4,2] + 0.1
-  coords[5,2] <- coords[5,2] + 0.35
+  coords[1,1] <- coords[1,1] + 0.08
+  coords[2,1] <- coords[2,1] + 0.42
+  coords[3,1] <- coords[3,1] - 0.08
+  coords[4,1] <- coords[4,1] - 0.42
+  coords[5,1] <- coords[5,1] + 0.08
+  coords[1,2] <- coords[1,2] + 0.38
+  coords[2,2] <- coords[2,2] - 0.06
+  coords[3,2] <- coords[3,2] - 0.38
+  coords[4,2] <- coords[4,2] + 0.05
+  coords[5,2] <- coords[5,2] + 0.38
   slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
   preview_masked <- mask(preview,poly) 
   
@@ -1012,7 +1012,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   revisit_times <- list("Landsat"=8,"Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
-  info <- paste0("- The selected number of timestamps (",num_timestamps)
+  info <- paste0("Selected number of timestamps (",num_timestamps)
   s <- ifelse(length(sensor)==1,paste0("\nSensor:"),paste0("\nSensors:"))
   out(cat("- Number of timestamps selected:",num_timestamps,s,sensor))
   if (sub_period < r) {

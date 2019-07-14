@@ -55,6 +55,23 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     out("Preview seems not to be geo-referenced. No projection found.",type=3)
   }
   aoi <- .handle_aoi(aoi,crs)
+  
+  # Handle broken preview (indicated by non-existence of DNs > 40)
+  broken_check <- preview > 40
+  if (any(maxValue(broken_check)) == 0) cond <- TRUE
+  
+  # Check for valid observations in aoi
+  prevMasked <- mask(preview,aoi)
+  maxValPrevMasked <- maxValue(prevMasked)
+  cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50, no valid observations
+  # If preview is broken or nor valid observations in aoi return
+  if (isTRUE(cond)) {
+    record[[aoi_hot_cc_percent]] <- 100
+    record[[scene_hot_cc_percent]] <- 9999
+    if (!is.null(dir_out)) {record[[cloud_mask_path]] <- na_case}
+    out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
+    return(record)
+  }
     
   # Mask NA values in preview (represented as 0 here)
   NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
@@ -115,19 +132,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
   }
 
-  ## Check if valid pixels are found within aoi
-  # non-valid pixels appear as 0 DNs in preview images, not as NAs
-  prevMasked <- mask(preview,aoi)
-  #prevMasked[is.na(prevMasked)] <- 0 # to be sure set possible NAs also to 0
-  maxValPrevMasked <- maxValue(prevMasked)
-  cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50 has to be corrupted
-  if (isTRUE(cond)) {
-    record[[aoi_hot_cc_percent]] <- 100
-    record[[scene_hot_cc_percent]] <- 9999
-    if (!is.null(dir_out)) {record[[cloud_mask_path]] <- na_case}
-    out(paste0("\nThe following record has no observations within aoi, cloud cover percentage is set to 100 thus: \n",record[[identifier]]),msg=TRUE)
-    return(record)
-  }
   ## Calculate cloud probability layer for the whole scene
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
@@ -182,8 +186,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     numTry <- numTry + 1
   }
+  
+  # calc scene cc percentage 
   scene_cPercent <- .calc_cc_perc(cMask)
-  ## Calculate cloud cover percentage
+  # mask preview to aoi
+  prevMasked <- mask(preview,aoi)
+  ## Calculate aoi cloud cover percentage
   if (isFALSE(hotFailed)) {
     cMask <- mask(cMask,aoi)   
     aoi_cPercent <- .calc_cc_perc(cMask)

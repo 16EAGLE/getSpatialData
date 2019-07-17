@@ -782,7 +782,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     percent <- (val1 / sum(val1,val2)) * 100
   } else if (mode == "aoi") {
     e <- extent(aoi)
-    r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(mos),resolution=res(mos))
+    r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=res(x))
     aoi_r <- rasterize(aoi,r) # rasterize aoi in order to calculate number of pixels with valid pixels in whole aoi
     aoi_r_extr <- raster::extract(aoi_r,aoi)[[1]]
     valid <- raster::extract(x,aoi)[[1]]
@@ -833,6 +833,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 
 
 #' creates a cloud-masked preview RGB mosaic and writes it as .tif
+#' @param records data.frame.
 #' @param s list 'selected' of a timestamp holding everything inserted in select_*().
 #' @param aoi aoi.
 #' @param i numeric index in the loop.
@@ -842,9 +843,10 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param preview_col character name of the preview path column.
 #' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
 #' @importFrom raster writeRaster stack
+#' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
-.select_preview_mos <- function(s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
+.select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
   
   id_sel <- sapply(s$ids,function(x) which(records[,identifier]==x))
   save_pmos <- file.path(dir_out,paste0("preview_mosaic_timestamp",s$timestamp))
@@ -852,26 +854,27 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   layers <- c("red","green","blue")
   tmp_dir <- .tmp_dir(dir_out,action=1)
   preview_paths <- lapply(id_sel,function(i) {
-    p_path <- records[i,preview_col]
+    p_path <- records[i,preview_col] # preview
+    if (is.na(p_path) || !file.exists(p_path)) return(NA)
+    cMask <- raster(records[i,cloud_mask_col]) # cloud mask
     preview <- stack(p_path)
     preview_aoi <- mask(preview,aoi)
-    cMask <- raster(records[i,cloud_mask_col])
     preview_masked <- .mask_raster(preview_aoi,cMask)
     preview_save <- file.path(tmp_dir,paste0(records[i,identifier],"_cloud_masked"))
     paths_sep <- sapply(1:nlayers(preview_masked),function(j) {
-      layer_save <- paste0(preview_save,"_",i,"_",layer[j],".tif")
+      layer_save <- paste0(preview_save,"_",i,"_",layers[j],".tif")
       writeRaster(preview_masked[[j]],layer_save,overwrite=T)
       return(layer_save)
     })
   })
-  preview_mos <- lapply(1:length(layers),function(j) lapply(preview_paths,function(x) path <- x[j]))
-    })
+  preview_paths <- compact(preview_paths)
+  preview_mos <- lapply(1:length(layers),function(j) {
+    curr_layers <- lapply(preview_paths,function(x) path <- x[j])
     save_path_pmos <- paste0(save_pmos,"_",layers[j],".tif")
-    mos <- .select_bridge_mosaic(curr_layer,aoi,save_path_pmos,mode="rgb")
+    pmos <- .select_bridge_mosaic(curr_layers,aoi,save_path_pmos,mode="rgb")
   })
-  
-  save_pmos_final <- paste0(save_pmos,"_",i,"_rgb.tif")
   preview_mos_stack <- stack(preview_mos)
+  save_pmos_final <- paste0(save_pmos,"_",i,"_rgb.tif")
   writeRaster(preview_mos_stack,save_pmos_final,overwrite=T)
   .tmp_dir(dir_out,action=2)
   return(save_pmos_final)
@@ -903,6 +906,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   collection <- sapply(sub,function(x) cmask_path <- records[[cloud_mask_col]][x]) # get paths to cloud masks
   # this vector are all orders in an order from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
+  collection <- collection[which(collection != "NONE")]
   # start mosaicking
   base_coverage <- -1000
   base_order <- c()
@@ -921,7 +925,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       base_coverage <- next_coverage
       if (isTRUE(getOption("gSD.verbose"))) {
         cov <- as.character(round(base_coverage,2))
-        cov <- ifelse(length(cov)==5,cov,paste0(cov,"0"))
+        cov <- ifelse(length(cov)==4,cov,paste0(cov,"0"))
         flush.console()
         cat("\r","-      ",cov,"  %")
       }
@@ -991,9 +995,10 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .handle_aoi <- function(aoi, crs) {
   
+  aoi_class <- class(aoi)
   error <- "try-error"
   if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
-  if (inherits(aoi,error)) out(paste0("Aoi of class '",class(aoi),"' could not be converted to 'sf' object"),3)
+  if (inherits(aoi,error)) out(paste0("Aoi of class '",aoi_class,"' could not be converted to 'sf' object"),3)
   if (as.character(crs(aoi)) != as.character(crs)) aoi <- try(st_transform(aoi,crs))
   if (inherits(aoi,error)) out("Aoi reprojection failed",3)
   return(aoi)
@@ -1013,7 +1018,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
-  s <- ifelse(length(sensor)==1,paste0("\nSensor:"),paste0("\nSensors:"))
+  s <- ifelse(length(sensor)==1,paste0("\n- Sensor:"),paste0("\nSensors:"))
   out(cat("- Number of timestamps selected:",num_timestamps,s,sensor))
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
@@ -1043,15 +1048,18 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param max numeric maximum allowed value.
 #' @param i numeric.
 #' @param column character name of the column to be ordered.
+#' @param max_column character name of the column for which max shall be checked. Can be equal to column.
 #' @return \code{chosen} numeric index to the matching data.frame row.
 #' @keywords internal
 #' @noRd
-.df_get_lowest <- function(records, max, i, column) {
+.df_get_lowest <- function(records, max, i, column, max_column) {
   
-  records_ord <- sort(records[[column]])
+  records_ord <- records[order(records[[column]]),]
   if (i > NROW(records_ord)) return(NA)
-  chosen <- which(records[[column]]==records_ord[[i]])[1]
-  val <- records[chosen,column]
+  j <- 1
+  j <- ifelse(length(unique(records[[column]])) < i,i,1)
+  chosen <- which(records[[column]]==records_ord[i,column])[j]
+  val <- records[chosen,max_column]
   if (val <= max) return(chosen) else return(NA)
   
 }
@@ -1061,6 +1069,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param tiles character vector of the tile ids.
 #' @param period character vector of start and end date.
 #' @param aoi_cc_col character name of aoi cloud cover column.
+#' @param cc_index_col character name of the column holding the cloud cover index (combination of cloud cover and mean cloud probability in aoi).
 #' @param tileid_col character name of tile id column.
 #' @param date_col character name of the date column.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
@@ -1069,7 +1078,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @keywords internal
 #' @noRd
 .select_sub <- function(records, tiles, max_cloudcov_tile,
-                        aoi_cc_col, tileid_col, date_col, 
+                        aoi_cc_col, cc_index_col, tileid_col, date_col, 
                         identifier) {
   
   sub <- lapply(tiles,function(x) {
@@ -1079,14 +1088,51 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     selected <- c()
     while(!is.na(lwst_cc)) {
       i <- i+1
-      lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,aoi_cc_col)
+      lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,column=cc_index_col, max_column=aoi_cc_col)
       if (!is.na(lwst_cc)) {
         selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
       }
     }
-    return(selected)
+    return(unique(selected))
   })
+  names(sub) <- tiles
   return(sub)
+}
+
+#' main process of a selection process
+#' @param records data.frame.
+#' @param period_new character vector holding the period (two dates) of the previously selected timestamp.
+#' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
+#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
+#' @param max_cloudcov_tile numeric maximum cloud cover per tile.
+#' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
+#' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
+#' @param dir_out character directory where to save intermediate product.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param timestamp numeric of the current timestamp.
+#' @return selected list of selected 
+#' @keywords internal
+#' @noRd
+.select_main <- function(records, period_new, min_distance, max_sub_period, max_cloudcov_tile, min_improvement, par, dir_out, identifier, timestamp) {
+  
+  ts <- new.env()
+  ts$records <- records[records$sub_period==timestamp,]
+  ts$records <- ts$records[which(!is.na(records[[par$preview_col]])),]
+  .catch_empty_records(ts$records,ts=timestamp)
+  ts$period <- .identify_period(ts$records[[par$date_col]])
+  if (timestamp > 1) {
+    # create an adjusted period (not the pre-defined sub-period) according to min_distance from previously
+    ts$first_date <- .select_force_distance(period_new,min_distance)
+    ts$period <- .select_handle_next_sub(first_date=ts$first_date,
+                                         period_initial=ts$period,
+                                         min_distance,max_sub_period)
+    ts$records <- .within_period(records,ts$period,par$date_col) # subset to records within period
+  }
+  # run the selection process
+  selected <- .select_process_sub(ts$records,ts$period,max_sub_period,
+                                     max_cloudcov_tile=max_cloudcov_tile,min_improvement=min_improvement,
+                                     par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
+
 }
 
 #' calls the different steps of selection for a sub-period
@@ -1107,34 +1153,79 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_process_sub <- function(records, period, max_sub_period, max_cloudcov_tile, min_improvement, par, dir_out, identifier, ts) {
   
   tiles <- unique(records[[par$tileid_col]])
-  # the sub is an ordering process of all available records per tile according to aoi cloud cover
+  tiles <- tiles[!is.na(tiles)]
+  # the sub is an ordering of all available records per tile according to aoi cloud cover
   sub <- .select_sub(records=records,tiles=tiles,max_cloudcov_tile=max_cloudcov_tile,
-                     aoi_cc_col=par$aoi_cc_col,tileid_col=par$tileid_col,
+                     aoi_cc_col=par$aoi_cc_col,cc_index_col=par$cc_index_col,tileid_col=par$tileid_col,
                      date_col=par$date_col,
                      identifier=identifier)
-  sub_within <- .select_force_period(records,sub,period,max_sub_period,date_col=par$date_col,aoi_cc_col=par$aoi_cc_col)
+  sub_within <- .select_force_period(records,sub,period,max_sub_period,
+                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,aoi_cc_prb_col=par$aoi_cc_prb_col)
   # make best mosaic of cloud masks for first timestamp
   sep <- "----------------------------------------------------------------"
   out(sep)
   out(paste0("Calculating best mosaic for timestamp: ",ts))
   selected <- .select_calc_mosaic(records,aoi,sub_within,par$cloud_mask_col,min_improvement=min_improvement,ts,dir_out,identifier)
-  out(paste0("\nCompleted selection process for timestamp: ",ts,"\n",sep))
+  out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
   
 }
 
-#' returns the indices of records within a max_sub_period
+#' calculates the final cloud mask and preview RGB mosaic per timestamp
+#' @param records data.frame.
+#' @param selected list of lists, each of the list is one timestamp and holds the ids, timestamp numbers and cloud mask paths.
+#' @param aoi aoi.
+#' @param selected_col_name character name of the logical column name in records data.frame (selected TRUE/FALSE).
+#' @param pmos_col character name of the column where to enter the paths to the preview mosaics.
+#' @param cmos_col character name of the column where to enter the paths to the cloud mask mosaics.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param dir_out character directory.
+#' @return records with three additional columns. Cloud mask and preview mosaics are saved in dir_out.
+#' @keywords internal
+#' @noRd
+.select_save_mosaics <- function(records, selected, aoi, selected_col_name, pmos_col, cmos_col, identifier, dir_out) {
+  
+  console_info <- list()
+  cols <- c(selected_col_name,timestamp_col,pmos_col,cmos_col)
+  for (j in 1:length(cols)) {
+    col <- cols[j]
+    val <- ifelse(col == selected_col_name,FALSE,NA)
+    records[[col]] <- val
+  }
+  for (i in 1:length(selected)) {
+    s <- selected[[i]]
+    id_sel <- s$ids
+    #A cloud mask mosaic
+    save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
+    #B preview mosaic
+    save_path_pmos <- .select_preview_mos(records,s,aoi,i,identifier,dir_out,
+                                          cloud_mask_col=par$cloud_mask_col,preview_col=par$preview_col)
+    #C add columns to records
+    insert <- c(TRUE,s$timestamp,save_path_pmos,save_path_cmos)
+    for (j in 1:length(cols)) {
+      records[id_sel,cols[j]] <- insert[j]      
+    }
+    # get print info
+    console_info[[i]] <- .select_final_info(s)
+  }
+  each_timestamp <- .out_vector(console_info)
+  return(records)
+  
+}
+
+#' returns a sub list of indices pointing to records within max_sub_period, returned in orders according to aoi cloud cover 
 #' @param records data.frame.
 #' @param sub list of numeric vectors each pointing to a record.
 #' @param period character vector of start and end date.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param date_col character name of the date column.
 #' @param aoi_cc_col character name of aoi cloud cover column.
+#' @param aoi_cc_prb_col character name of the mean aoi cloud cover probability column.
 #' @return \code{sub_within} list of numeric vectors, each number is an index to a record in \code{records}
 #' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
-.select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col) {
+.select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col, aoi_cc_prb_col) {
   
   # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
   max_num_sel <- max(sapply(sub,length))
@@ -1160,8 +1251,12 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       # offers the highest number of records and lowest aoi cloud cover
       if (length(order) > 0 && isFALSE(all(is.na(order)))) {
         subset_true <- compact(order)
+      #  check_cc <- sapply(subset_true,function(x) {
+      #    cc <- mean(records[x,aoi_cc_col]) # mean aoi cloud cover
+      #  })
+        # TEST
         check_cc <- sapply(subset_true,function(x) {
-          cc <- mean(records[x,aoi_cc_col]) # mean aoi cloud cover
+          cc <- mean(records[x,aoi_cc_prb_col]) # mean aoi cloud probability
         })
         subset_le <- sapply(subset_true,length)
         max_le <- which(subset_le == max(subset_le))
@@ -1176,6 +1271,26 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   }
   return(sub_within)
   
+}
+
+#' creates a cloud cover index value per record, a synthesis of aoi cloud cover % and aoi mean cloud cover probability
+#' @param records data.frame.
+#' @param aoi_cc_col character name of aoi cloud cover column.
+#' @param aoi_cc_prb_col character name of the mean aoi cloud cover probability column.
+#' @param cc_index_col character name of the added column holding the cloud cover index.
+#' @param ratio numeric between 0 and 1. How to weight cloud cover and cloud probability. The value steers
+#' the weight of cloud cover, all remaining is cloud probability. Default is 0.7.
+#' @return \code{records} data.frame with one additional column: 'cc_index'.
+#' @keywords internal
+#' @noRd
+.select_cc_index <- function(records, aoi_cc_col, aoi_cc_prb_col, cc_index_col, ratio = 0.7) {
+  
+  aoi_cc <- records[[aoi_cc_col]] # aoi cc cover
+  aoi_cc_prb <- records[[aoi_cc_prb_col]] # mean aoi cc probability
+  cc_index <- ((aoi_cc * ratio) + (aoi_cc_prb * (1 - ratio))) / 2
+  records[[cc_index_col]] <- cc_index
+  return(records)
+    
 }
 
 #' find optimal collection of dates to remove from a records collection in a sub-period.
@@ -1438,6 +1553,24 @@ vNA <- function(vec) {
                                         "\n",warn_str,"the mean coverage is below: ",mean_thresh,p,"\n"),"NULL")
   console_summary_warning <- list(console_summary,warn_min,warn_mean)
     
+}
+
+#' catches the case where the records data.frame of a sub-period is empty.
+#' @param records data.frame.
+#' @param ts numeric which timestamp.
+#' @return nothing. Console communication.
+#' @keywords internal
+#' @noRd
+.catch_empty_records <- function(records, ts) {
+  
+  if (NROW(records) == 0) {
+    out(paste0("No records at timestamp: ",ts,". You could e.g.:\n
+               - decrease 'num_timestamps',
+               - decrease 'min_distance',
+               - increase 'max_period',
+               - add another sensor.\n"),2)
+  }
+  
 }
 
 #' prints character vectors in console combined into one message in out()

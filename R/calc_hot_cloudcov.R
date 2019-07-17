@@ -79,8 +79,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # Mask NA values in preview (represented as 0 here)
   NA_mask <- (preview[[1]] > 0) * (preview[[2]] > 0) * (preview[[3]] > 0)
   preview <- mask(preview,NA_mask,maskvalue=0)
+
   # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
   preview <- .preview_mask_edges(preview)
+  #w_thresh <- 80
+  #water_mask <- (preview[[1]] < w_thresh) * (preview[[2]] < w_thresh) * (preview[[3]] < w_thresh)
+  #preview_w <- mask(preview,water_mask,maskvalue=1)
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
   if (nlyrs == 3) {
@@ -100,12 +104,13 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
   # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
   # a confusion of bright or reddish land surfaces with clouds
-  bThresh <- 20 # for dividing the 20 lowest blue DN values into equal interval bins
-  rThresh <- 20 # from the 20 blue bins take the 20 lowest red values
+  bThresh_low <- 50 # for dividing the blue DNs with values between 20 and 50 into equal interval bins
+  bThresh_high <- 80
+  rThresh <- 20 # from the blue bins take the 20 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
-  bBins <- lapply(1:bThresh,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(bThresh_low:bThresh_high,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
-  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]]),]}) # order the data.frame by red values (ascending!)
+  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]],decreasing=T),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
     redNrow <- NROW(x)
     if (redNrow >= rThresh) {
@@ -154,13 +159,13 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   if (s == 1) {slope <- slopeDefault}
   
   ## Calculate HOT cloud probablity layer
-  try(nominator <- abs(slope^a * bBand - rBand + intercept))
+  try(nominator <- abs(slope * bBand - rBand + intercept))
   try(denominator <- sqrt(1 + slope^2))
-  try(HOT <- nominator / denominator)
+  HOT <- try(nominator / denominator)
   if (inherits(HOT,error) || inherits(nominator,error) || inherits(denominator,error)) {
     hotFailed <- TRUE
   }
-  HOT <- (HOT - maxValue(HOT)) / (minValue(HOT) - maxValue(HOT)) * 100 # rescale to 0-100
+  HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101 # start with 101 to enter loop

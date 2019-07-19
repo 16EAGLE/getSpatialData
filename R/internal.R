@@ -184,20 +184,22 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #'
 #' @keywords internal
 #' @noRd
-.download_summary <- function(records, records.names){
+.column_summary <- function(records, records.names, download_success = F){
   
   # remove internal columns
-  records <- records[,-grep("gSD", colnames(records))]
-  
-  if(!is.null(records$download_success)){
-    if(any(!records$download_success)){
-      out(paste0("Some downloads have not been succesfull after ", max(records$download_attempts), " attempt(s) (see column 'download_success'). Please retry later."), type = 2)
-    } else{
-      out(paste0("All downloads have been succesfull after ", max(records$download_attempts), " attempt(s)."), msg = T)
-    }
-  }
+  gSD.cols <- grep("gSD", colnames(records))
+  if(length(gSD.cols > 0)) records <- records[,-gSD.cols]
   out(paste0("Columns added to records: '", paste0(setdiff(colnames(records), records.names), collapse = "', '"), "'"))
   
+  if(isTRUE(download_success)){
+    if(!is.null(records$download_success)){
+      if(any(!records$download_success)){
+        out(paste0("Some downloads have not been succesfull after ", max(records$download_attempts), " attempt(s) (see column 'download_success'). Please retry later."), type = 2)
+      } else{
+        out(paste0("All downloads have been succesfull after ", max(records$download_attempts), " attempt(s)."), msg = T)
+      }
+    }
+  }
   return(records)
 }
 

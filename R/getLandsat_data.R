@@ -245,5 +245,5 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
     }))
   }
 
-  return(.download_summary(records, records.names))
+  return(.column_summary(records, records.names, download_success = T))
 }

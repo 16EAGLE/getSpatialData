@@ -134,5 +134,5 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   ## download per record
   records <- gSD.retry(records, gSD.download, names = colnames(records), prog = getOption("gSD.verbose"), force = force, n.retry = n.retry)
   
-  return(.download_summary(records, records.names))
+  return(.column_summary(records, records.names, download_success = T))
 }

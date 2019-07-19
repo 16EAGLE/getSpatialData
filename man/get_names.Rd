@@ -26,6 +26,9 @@ A character vector
 \description{
 \code{get_names} obtains names of available products from included services. The returned names can be used with the \link{get_records} functions for querying a specific product.
 }
+\note{
+To use this function, you must be logged in at the services required for your request. See the examples and \link{gSD_login} for details.
+}
 \examples{
 \dontrun{
 library(getSpatialData)

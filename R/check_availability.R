@@ -6,7 +6,7 @@
 #' 
 #' @export
 
-check_availability <- function(records, ){
+check_availability <- function(records){
   
   # create new colunm
   records.names <- colnames(records)

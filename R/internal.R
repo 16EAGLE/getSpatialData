@@ -44,18 +44,6 @@ is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x)
 #' @noRd
 is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
 
-#' Checks, if specific command is available
-#'
-#' @param cmd command
-#' @importFrom devtools system_check
-#' @keywords internal
-#' @noRd
-check.cmd <- function(cmd){
-  sc <- try(system_check(cmd, quiet = TRUE),silent = TRUE)
-  if(class(sc) == "try-error"){return(FALSE)}else{return(TRUE)}
-}
-
-
 #' gSD.get
 #' @param url url
 #' @param username user

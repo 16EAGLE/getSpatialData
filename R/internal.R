@@ -1293,6 +1293,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col, cc_index_col) {
   
   # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
+  
   max_num_sel <- max(sapply(sub,length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i])))) # to matrix
   orders <- data.frame(orders) 

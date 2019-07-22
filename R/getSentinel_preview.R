@@ -106,7 +106,12 @@ getSentinel_preview <- function(record, on_map = TRUE, show_aoi = TRUE, return_p
     
     r.prev <- stack(file_dir)
     #r.prev <- trim(r.prev, values = 0)
-    
+    # Check if preview has values
+    r.prev_vals <- getValues(r.prev)
+    no_vals <- any(apply(r.prev_vals,MARGIN=2,FUN=function(x) max(x)))==0
+    if (no_vals) {
+      return(r.prev)
+    }
     v.prev <- values(r.prev)
     rm.prev <- apply((v.prev == 0), MARGIN = 1, function(x) all(x))
     cc.keep <- xyFromCell(r.prev, which(rm.prev == F))

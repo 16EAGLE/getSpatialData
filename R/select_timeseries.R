@@ -11,7 +11,7 @@
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 #' For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} then the next timestamp will not include scenes 
-#' in <= 10 days after 20th May 2019. The first scene the next timestamp could include would be the 31st May 2019 thus.
+#' in <= 10 days after 20th May 2019. The first scene the next timestamp could include would be the 31st May 2019 thus. Default is 20.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
 #' The value is the percentage of not yet covered area that shall be covered additionally when adding the record. This protects. Default is 8.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. This determines how close together
@@ -19,6 +19,7 @@
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
 #' The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 #' or shadows. Default is 80. 
+#' @param harmoinze_optical_SAR logical if you are looking for a selection of optical and SAR data, shall optical records be searched close to the SAR acquisitions? Default is TRUE.
 #' 
 #' @return \code{records} data.frame holding four additional columns:
 #' \enumerate{
@@ -34,11 +35,12 @@
 #' @export
 
 select_timeseries <- function(records, aoi, dir_out = NULL, 
-                              num_timestamps, min_distance, min_improvement = 8, max_sub_period, max_cloudcov_tile = 80) {
+                              num_timestamps, min_distance = 20, min_improvement = 5, max_sub_period, max_cloudcov_tile = 80, harmoinze_optical_SAR = TRUE) {
   
   if (is.null(dir_out) || class(dir_out) != "character") {out("Argument 'dir_out' has to be provided as directory of class 'character'")}
   if (num_timestamps < 2) {
-    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". The minimum number for select_timeseries is: 3"),2)
+    out(paste0("This time it's ok, Henrik. Your number of timestamps is only: ",num_timestamps,"\n;-)"))
+    #out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". The minimum number for select_timeseries is: 3"),3)
   }
   #### Parameters
   sep <- "\n----------------------------------------------------------------"
@@ -47,24 +49,29 @@ select_timeseries <- function(records, aoi, dir_out = NULL,
   cmos_col <- "cmask_mosaic_file" # path to the cloud mask mosaic tif where record is included
   timestamp_col <- "selected_for_timestamp" # the timestamp number for which the record is selected
   identifier <- 1
-  sensor <- unique(records$sensor)
   par <- list()
-  par$date_col <- "acquisitionDate"
+  par$sensor_group <- unique(records$sensor_group)[1]
+  par$sensor <- unique(records$sensor)[1]
+  par$date_col_orig <- ifelse(par$sensor_group == "Landsat","acquisitionDate","beginposition")
   par$aoi_cc_col <- "aoi_HOT_cloudcov_percent"
   par$tileid_col <- "tile_id"
   par$preview_col <- "preview_file"
   par$cloud_mask_col <- "cloud_mask_file"
-  par$id_col <- "entityId"
+  par$id_col <- ifelse(par$sensor_group == "Landsat","entityId","title")
   par$aoi_cc_prb_col <- "aoi_HOT_mean_probability"
   par$cc_index_col <- "cc_index"
+  par$date_col <- "date_clear"
+  records[[par$date_col]] <- records[[par$date_col_orig]]
+  sent_recs <- which(records$sensor_group=="Sentinel")
+  records[sent_recs,par$date_col] <- sapply(records[sent_recs,par$date_col],function(x) clear <- substr(x,1,10))
   par$period <- .identify_period(records[[par$date_col]])
-  par$sensor <- records$sensor[1]
   identifier <- .select_handle_landsat(records,par$sensor)[[2]]
   records <- .select_handle_landsat(records,par$sensor)[[1]]
-  records <- .select_sub_periods(records,par$period,num_timestamps) # calculates the sub_period column
+  records <- .select_sub_periods(records,par$period,num_timestamps,par$date_col) # calculates the sub_period column
   # calculate the synthesis of absolute aoi cloud cover and mean aoi cloud cover probability
   records <- .select_cc_index(records,aoi_cc_col=par$aoi_cc_col,aoi_cc_prb_col=par$aoi_cc_prb_col,
-                              cc_index_col=par$cc_index_col,ratio=0.8) 
+                              cc_index_col=par$cc_index_col,ratio=0.8)
+  records <- .make_Sentinel_tileid(records,identifier)
   par$tileids <- unique(records[[par$tileid_col]])
   
   #### Start Process

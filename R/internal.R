@@ -1293,13 +1293,15 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col, cc_index_col) {
   
   # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
-  
+  sub <- compact(sub)
   max_num_sel <- max(sapply(sub,length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i])))) # to matrix
   orders <- data.frame(orders) 
   period_new <- c()
   sub_within <- list()
   for (i in 1:NCOL(orders)) {
+    print(i)
+    if (i==9) break
     x <- orders[,i]
     # first try to use all records of this order
     order <- x[!is.na(x)]
@@ -1312,9 +1314,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       # for the case where at least one of record of order x is not within period_new
       # try with all values in all possible combinations (not orders). Might be that 
       # from 0 to all records except one are within period
-      order <- .select_remove_dates(x, records, period_new, max_sub_period, date_col, aoi_cc_col)
-      period_new <- .select_bridge_period(records,order,period_new,date_col)
-      sub_within[[i]] <- order
+      order_within <- .select_remove_dates(order, records, period_new, max_sub_period, date_col, aoi_cc_col)
+      period_new <- .select_bridge_period(records,order_within,period_new,date_col)
+      sub_within[[i]] <- order_within
     }
   }
   return(sub_within)
@@ -1335,7 +1337,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   aoi_cc <- as.numeric(records[[aoi_cc_col]]) # aoi cc cover
   aoi_cc_prb <- as.numeric(records[[aoi_cc_prb_col]]) # mean aoi cc probability
-  cc_index <- ((aoi_cc * ratio) + (aoi_cc_prb * (1 - ratio))) / 2
+  cc_index <- ((aoi_cc * ratio) + (aoi_cc_prb * (1 - ratio)))
   records[[cc_index_col]] <- cc_index
   return(records)
     
@@ -1401,8 +1403,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       period <- as.numeric(c(min(dates_comb),base::max(dates_comb)))
       le <- period[2] - period[1]
       outside_period <- le > max_sub_period
-      first_period_new <- min(period_new_date)
-      decrease <- date_ref < first_period_new
+      decrease <- best > max(period_new_date)
       n <- n+1
       maxTry <- n>=500
     }

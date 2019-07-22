@@ -667,8 +667,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     currRecord <- records[i,]
     
     if (sensor == "Sentinel-2" || sensor == "Sentinel-3") {
-      preview <- getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
-                                     username=username,password=password,verbose=verbose)
+      preview <- try(getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                     username=username,password=password,verbose=verbose))
       identifier <- 1
     } else if (sensor == "Landsat") {
       preview <- getLandsat_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
@@ -681,8 +681,18 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     }
     previewSize <- c(previewSize,object.size(preview))
     # pass preview to HOT function
-    currRecCloudCover <- calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,identifier=identifier,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
-                                           slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose)
+    cond <- !is.null(preview) || !inherits(preview,"try-error")
+    if (cond) {
+      currRecCloudCover <- try(calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,identifier=identifier,cloudPrbThreshold=cloudPrbThreshold,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
+                                                 slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose))
+    } 
+    if (isFALSE(cond) || class(currRecCloudCover != "data.frame")) {
+      currRecord[[aoi_hot_cc_percent]] <- 100
+      currRecord[[scene_hot_cc_percent]] <- 9999
+      currRecord[[aoi_HOT_mean_probability]] <- 100
+      if (!is.null(dir_out)) record[[cloud_mask_path]] <- na_case
+      currRecCloudCover <- currRecord
+    } 
     endTime <- Sys.time()
     if (i <= 5) {
       elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
@@ -728,7 +738,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom raster mask crs extent
 .preview_mask_edges <- function(preview) {
   
-  ext <- extent(preview)
+  ext <- try(extent(preview))
+  if (inherits(ext,"try-error")) return (preview)
   poly <- as(ext,"SpatialPolygons")
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
@@ -816,6 +827,30 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
 }
 
+#' disaggregates a Landsat or MODIS preview or preview cloud mask to the resolution of Landsat or Sentinel-2
+#' @param x raster layer to be disaggregated
+#' @param x_sensor character name of sensor to be disaggregated. Can be "Landsat" or "MODIS".
+#' @param y_sensor character name of sensor to which x shall be disaggregated.
+#' @return \code{x_dis} raster layer disaggregated.
+#' @importFrom raster disaggregate
+#' @keywords internal
+#' @noRd
+.disaggr_raster <- function(x, x_sensor, y_sensor) {
+  
+  options <- list(s2="Sentinel-2",s3="Sentinel-3",l="Landsat",m="MODIS")
+  if (x_sensor == options$l && y_sensor == options$s2) {
+    adj <- 3.028734
+  } else if (x_sensor == options$m && y_sensor == options$s2) {
+    adj <- 3.028734 # adjust it still
+  } else if  (x_sensor == options$s3 && y_sensor == options$s2) {
+    adj <- 3.028734 # adjust it still
+  } else if (x_sensor == options$s3 && y_sensor == options$l) {
+    adj <- 3.028734 # adjust it still 
+  }
+  x_dis <- raster::disaggregate(x,adj)
+  
+}  
+
 #' creates a mosaic of all used cloud masks and writes it as .tif
 #' @param s list 'selected' of a timestamp holding everything inserted in select_*().
 #' @param aoi aoi.
@@ -842,7 +877,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param cloud_mask_col character name of cloud mask path column.
 #' @param preview_col character name of the preview path column.
 #' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
-#' @importFrom raster writeRaster stack
+#' @importFrom raster writeRaster stack mask
 #' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
@@ -852,13 +887,24 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   save_pmos <- file.path(dir_out,paste0("preview_mosaic_timestamp",s$timestamp))
   # mask preview tiles by cloud masks
   layers <- c("red","green","blue")
+  sensors_given <- unique(records$sensor_group)
+  sensors_ref <- c("Sentinel-2","Landsat","Sentinel-3","MODIS")
   tmp_dir <- .tmp_dir(dir_out,action=1)
   preview_paths <- lapply(id_sel,function(i) {
     p_path <- records[i,preview_col] # preview
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
     cMask <- raster(records[i,cloud_mask_col]) # cloud mask
     preview <- stack(p_path)
-    preview_aoi <- mask(preview,aoi)
+    # disaggregate preview to the resolution of other sensor in records that has higher resolution
+    sensors_adj <- c("landsat","modis","sentinel-3")
+    cond <- grepl(tolower(records[i,"sensor_group"]),sensors_adj)
+    if (isTRUE(any(cond)) && length(sensors_given) > 1) {
+      y_sensor <- sensors_ref[which(sensors_given %in% sensors_ref)]
+      x_sensor <- firstup(sensors_adj[which(cond==T)])
+      preview_adj <- try(.disaggr_raster(preview,x_sensor=x_sensor,y_sensor=y_sensor))
+      #if (inherits(preview_adj,"try-error")) preview_adj <- preview
+    }
+    preview_aoi <- mask(preview_adj,aoi)
     preview_masked <- .mask_raster(preview_aoi,cMask)
     preview_save <- file.path(tmp_dir,paste0(records[i,identifier],"_cloud_masked"))
     paths_sep <- sapply(1:nlayers(preview_masked),function(j) {
@@ -909,35 +955,52 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   collection <- collection[which(collection != "NONE")]
   # start mosaicking
   base_coverage <- -1000
-  base_order <- c()
+  base_records <- c() # this will be filled with the selected records
+  base_mos <- "" # this will be the path to current mosaic
+  covers_nas <- TRUE # starting with TRUE because at the beginning it is always TRUE
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in 1:length(collection)) {
     if (i == 1) {out("Current coverage of valid pixels")}
     x <- collection[i] # do it this way in order to keep id
-    save_path <- file.path(dir_tmp,paste0("mosaic_tmp_",names(x),".tif"))
-    added_order <- c(base_order,x)
-    mos <- .select_bridge_mosaic(added_order,aoi,save_path)
-    next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi)
-    # the coverage value has to become larger since base_coverage refers to percentage covered with valid pixels
-    add_it <- next_coverage > (base_coverage + (((100 - base_coverage) / 100) * min_improvement))
-    if (add_it) {
-      base_order <- added_order # add save path of current mosaic
-      base_coverage <- next_coverage
-      if (isTRUE(getOption("gSD.verbose"))) {
-        cov <- as.character(round(base_coverage,2))
-        cov <- ifelse(length(cov)==4,cov,paste0(cov,"0"))
-        flush.console()
-        cat("\r","-      ",cov,"  %")
-      }
+    # before calculating the next mosaic, check if record tile is within the area of non-covered pixels at all
+    if (nchar(base_mos) != 0) {
+      curr_base_mos <- raster(base_mos) # current mosaic
+      next_record <- raster(x) # record to be added if it supports the mosaic
+      next_record_valid <- next_record[!is.na(next_record)]
+      next_record_valid[next_record_valid == 0] <- NA
+      curr_base_mos <- mask(curr_base_mos,next_record_valid,maskvalue=NA) # mask the mosaic to tile area where of next record
+      curr_base_na <- curr_base_mos[is.na(curr_base_mos)]
+      sum <- curr_base_na + next_record_valid
+      covers_nas <- maxValue(sum) == 2 # if next record has observations where current mosaics has NAs, start mosaicking check
     }
-    if (base_coverage == 100) {
-      break
+    # the mosaicking can take long. When record does not cover any NAs (covers_nas == FALSE) in mosaic do not do the mosaicking check
+    if (covers_nas) {
+      save_path <- file.path(dir_tmp,paste0("mosaic_tmp.tif"))
+      added_records <- c(added_records,x)
+      mos <- .select_bridge_mosaic(c(base_mos,x),aoi,save_path)
+      next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi)
+      # the coverage value has to become larger since base_coverage refers to percentage covered with valid pixels
+      add_it <- next_coverage > (base_coverage + (((100 - base_coverage) / 100) * min_improvement))
+      if (add_it) {
+        base_records <- added_records # add save path of current mosaic
+        base_coverage <- next_coverage
+        base_mos <- save_path
+        if (isTRUE(getOption("gSD.verbose"))) {
+          cov <- as.character(round(base_coverage,2))
+          cov <- ifelse(nchar(cov)==4,cov,paste0(cov,"0"))
+          flush.console()
+          cat("\r","-      ",cov,"  %")
+        }
+      }
+      if (round(base_coverage) == 100) {
+        break
+      }
     }
   }
   
   # return ids of selected records and percentage of valid pixels of final mosaic
-  selected <- list(ids=names(base_order),
-                   cMask_paths=base_order,
+  selected <- list(ids=names(base_records),
+                   cMask_paths=base_records,
                    valid_pixels=base_coverage)
   
   del <- .tmp_dir(dir_out)
@@ -1038,9 +1101,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (sensor %in% c("Landsat","MODIS")) {
     records <- .make_Landsat_tileid(records)
     identifier <- 15
-    return(list(records,identifier))
+  } else {
+    records <- .make_Sentinel_tileid(records)
+    identifier <- 1
   }
-  
+  return(list(records,identifier))
 }
 
 #' selects from a numeric data.frame column the i lowest value and checks if it is lower than a provided numeric
@@ -1060,7 +1125,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   j <- ifelse(length(unique(records[[column]])) < i,i,1)
   chosen <- which(records[[column]]==records_ord[i,column])[j]
   val <- records[chosen,max_column]
-  if (val <= max) return(chosen) else return(NA)
+  if (as.numeric(val) <= max) return(chosen) else return(NA)
   
 }
 
@@ -1069,7 +1134,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param tiles character vector of the tile ids.
 #' @param period character vector of start and end date.
 #' @param aoi_cc_col character name of aoi cloud cover column.
-#' @param cc_index_col character name of the column holding the cloud cover index (combination of cloud cover and mean cloud probability in aoi).
+#' @param cc_index_col character name of the cloud cover index column.
 #' @param tileid_col character name of tile id column.
 #' @param date_col character name of the date column.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
@@ -1160,7 +1225,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                      date_col=par$date_col,
                      identifier=identifier)
   sub_within <- .select_force_period(records,sub,period,max_sub_period,
-                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,aoi_cc_prb_col=par$aoi_cc_prb_col)
+                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,cc_index_col=par$cc_index_col)
   # make best mosaic of cloud masks for first timestamp
   sep <- "----------------------------------------------------------------"
   out(sep)
@@ -1220,12 +1285,12 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param date_col character name of the date column.
 #' @param aoi_cc_col character name of aoi cloud cover column.
-#' @param aoi_cc_prb_col character name of the mean aoi cloud cover probability column.
+#' @param cc_index_col character name of the cloud cover index column.
 #' @return \code{sub_within} list of numeric vectors, each number is an index to a record in \code{records}
 #' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
-.select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col, aoi_cc_prb_col) {
+.select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col, cc_index_col) {
   
   # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
   max_num_sel <- max(sapply(sub,length))
@@ -1237,7 +1302,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     x <- orders[,i]
     # first try to use all records of this order
     order <- x[!is.na(x)]
-    period_tmp <- .select_period_bridge(records,order,period_new,date_col)
+    period_tmp <- .select_bridge_period(records,order,period_new,date_col)
     period_tmp_le <- .calc_days_period(period_tmp)
     if (period_tmp_le <= max_sub_period) { # the case where all records from current order x are within period_new
       period_new <- period_tmp
@@ -1246,27 +1311,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       # for the case where at least one of record of order x is not within period_new
       # try with all values in all possible combinations (not orders). Might be that 
       # from 0 to all records except one are within period
-      order <- .select_remove_dates(x, records, period_new, max_sub_period, date_col)
-      # remain with the try that is within the temporal max_sub_period with previous orders and
-      # offers the highest number of records and lowest aoi cloud cover
-      if (length(order) > 0 && isFALSE(all(is.na(order)))) {
-        subset_true <- compact(order)
-      #  check_cc <- sapply(subset_true,function(x) {
-      #    cc <- mean(records[x,aoi_cc_col]) # mean aoi cloud cover
-      #  })
-        # TEST
-        check_cc <- sapply(subset_true,function(x) {
-          cc <- mean(records[x,aoi_cc_prb_col]) # mean aoi cloud probability
-        })
-        subset_le <- sapply(subset_true,length)
-        max_le <- which(subset_le == max(subset_le))
-        subset_max_rec <- subset_true[max_le]
-        subset_cc <- check_cc[max_le]
-        # maybe several subsets have the highest number of used records within the period
-        # in this case take the choice with lowest aoi cc cover
-        min_cc_max_le <- which(subset_cc == min(subset_cc))[1]
-        sub_within[[i]] <- subset_max_rec[[min_cc_max_le]]
-      }
+      order <- .select_remove_dates(x, records, period_new, max_sub_period, date_col, aoi_cc_col)
+      period_new <- .select_bridge_period(records,order,period_new,date_col)
+      sub_within[[i]] <- order
     }
   }
   return(sub_within)
@@ -1285,38 +1332,97 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .select_cc_index <- function(records, aoi_cc_col, aoi_cc_prb_col, cc_index_col, ratio = 0.7) {
   
-  aoi_cc <- records[[aoi_cc_col]] # aoi cc cover
-  aoi_cc_prb <- records[[aoi_cc_prb_col]] # mean aoi cc probability
+  aoi_cc <- as.numeric(records[[aoi_cc_col]]) # aoi cc cover
+  aoi_cc_prb <- as.numeric(records[[aoi_cc_prb_col]]) # mean aoi cc probability
   cc_index <- ((aoi_cc * ratio) + (aoi_cc_prb * (1 - ratio))) / 2
   records[[cc_index_col]] <- cc_index
   return(records)
     
 }
 
-#' find optimal collection of dates to remove from a records collection in a sub-period.
+#' finds optimal collection of dates from a records collection within a period of a timestamp and max_sub-period.
 #' @param x numeric vector.
 #' @param records data.frame.
 #' @param period_new period_new.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param date_col date_col.
-#' @return \code{order} list of numeric vectors where all values are an index to a record in records
+#' @param aoi_cc_col aoi_cc_col.
+#' @return \code{order} numeric vector a subset of x with all records within max_sub_period length
+#' @importFrom stats median
 #' @keywords internal
 #' @noRd
-.select_remove_dates <- function(x, records, period_new, max_sub_period, date_col) {
+.select_remove_dates <- function(x, records, period_new, max_sub_period, date_col, aoi_cc_col) {
   
-  vec <- .help_vec_comb(x)
-  order <- list()
-  n <- 0
-  for (order_curr in vec) {
-    period_tmp <- .select_period_bridge(records,order_curr,period_new,date_col)
-    period_tmp_le <- .calc_days_period(period_tmp)
-    if (period_tmp_le <= max_sub_period) {
-      n <- n+1
-      period_new <- period_tmp
-      order[[n]] <- order_curr
-    }
+  dates <- sapply(records[x,date_col],function(d) {as.Date(d)})
+  period_new_date <- sapply(period_new,as.Date)
+  # for each of the dates count how many records are given, this creates a distribution of the records in time as a basis for reference date selection
+  # grade each date according to number of given records and the mean aoi cloud cover of this records
+  dates_seq <- min(dates):max(dates)
+  date_grade <- list()
+  for (d in dates_seq) {
+    sel <- which(dates == d)
+    cc <- sapply(records[sel,aoi_cc_col],function(c) {100-as.numeric(c)}) # turn low cc values into high ones because high counts of sel are good
+    count <- length(sel)
+    value <- ifelse(length(cc)==0,0,mean(count * cc))
+    date_grade[[as.character(d)]] <- value
   }
-  order <- unique(order)
+  
+  # include the grades of the three neighboring records in order to estimate the highest density of good records
+  date_grade_copy <- date_grade
+  for (i in 1:length(date_grade)) {
+    if (i <= 3) {
+      kernel <- c(1,2,3,-1,-2)[1:(i+2)]
+    } else if (i > 3 && i < (length(date_grade)-2)) {
+      kernel <- -3:3
+      kernel <- kernel[which(kernel!=0)]
+    } else {
+      j <- length(date_grade) - i
+      kernel <- c(-3,-2,-1,1,2)[1:(j+3)]
+    }
+    g <- unlist(date_grade_copy[i])
+    neighbors <- unlist(sapply(kernel,function(k) n <- date_grade_copy[i+k]))
+    grade_new <- sum(c(g,neighbors))
+    date_grade[[names(date_grade)[i]]] <- grade_new
+  }
+  # as reference date take where highest value is found in kernel grades
+  # increase or decrease this date until it is within max_period in combination with period_new
+  # create a new period from this best date and the old new_period and chose the median date as reference date
+  date_grade <- unlist(date_grade)
+  date_reference <- as.numeric(names(date_grade[order(date_grade,decreasing=T)[1]])) # in case no period_new yet given this is the reference date
+  if (!is.null(period_new)) {
+    n <- 0
+    outside_period <- TRUE
+    decrease <- TRUE
+    maxTry <- FALSE
+    while (outside_period || maxTry) {
+      best <- ifelse(decrease,date_reference-n,date_reference+n)
+      dates_comb <- c(period_new_date,best)
+      period <- as.numeric(c(min(dates_comb),base::max(dates_comb)))
+      le <- period[2] - period[1]
+      outside_period <- le > max_sub_period
+      first_period_new <- min(period_new_date)
+      decrease <- date_ref < first_period_new
+      n <- n+1
+      maxTry <- n>=500
+    }
+    # calculate median date
+    new_dates_tmp <- c(best,period_new_date)
+    date_reference <- round(median(min(new_dates_tmp):max(new_dates_tmp)))
+  }
+  # calculate the distance for each date in the order from the median date
+  dist_to_median <- sapply(dates,function(d) {d-date_reference}) # calc distance to the median date in days
+  dist_ord <- order(abs(dist_to_median),decreasing=T) # get it ordered in a way that vector starts with dates of largest distance to median date
+  excl <- c()
+  for (dist in dist_ord) {
+    excl <- c(excl,dist)
+    order_tmp <- x[-excl]
+    period_tmp <- .select_bridge_period(records,order_tmp,period_new,date_col)
+    period_tmp_le <- .calc_days_period(period_tmp)
+    if (period_tmp_le <= max_sub_period) break
+  }
+  order <- x[-excl]
+  return(order)
+  
 }
 
 #' helper for creating a list of numeric vectors with all possible combinations of numerics (not orders, just combinations)
@@ -1330,7 +1436,17 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   vseq <- 1:length(x)
   vals <- list()
   n <- 0
-  all_comb <- combinat::permn(x)
+  all_comb <- tryCatch({
+    combinat::permn(x)},
+    error=function(err) {
+      return(err)
+    }
+  )
+  if (inherits(all_comb,"error")) {
+    cc <- records[x,aoi_cc_col]
+    
+  }
+  
   for (c in all_comb) {
     for (i in vseq) {
       n <- n+1
@@ -1350,7 +1466,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param date_col character name of the date column.
 #' @keywords internal
 #' @noRd
-.select_period_bridge <- function(records, order, period_new, date_col) {
+.select_bridge_period <- function(records, order, period_new, date_col) {
   
   dates_tmp <- records[order,date_col]
   period_curr <- .identify_period(dates_tmp)
@@ -1381,7 +1497,7 @@ vNA <- function(vec) {
 
 #' creates a tile id for Landsat data from WRSRow and WRSPath
 #' @param records data.frame of Landsat data.
-#' @return \code{records} data.frame with an added column: 'row_path_id'
+#' @return \code{records} data.frame with an added column: 'tile_id'
 #' @keywords internal
 #' @noRd
 .make_Landsat_tileid <- function(records) {
@@ -1391,7 +1507,21 @@ vNA <- function(vec) {
   
 }
 
-#' creates initial sub-periods
+#' creates a tile id for Sentinel data
+#' @param records data.frame.
+#' @return \code{records} data.frame with an added column: 'tile_id'
+#' @keywords internal
+#' @noRd
+.make_Sentinel_tileid <- function(records, identifier) {
+  
+  titles <- records[[identifier]]
+  tileids <- sapply(titles,function(x) {return(substr(x,39,44))})
+  records[["tile_id"]] <- tileids
+  return(records)
+  
+}
+
+#' creates initial sub-periods 
 #' @param records data.frame.
 #' @param period character vector of a start date [1] and an end date [2].
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
@@ -1404,9 +1534,10 @@ vNA <- function(vec) {
   period <- sapply(period,as.Date)
   days <- as.numeric(diff(period))
   le_subperiods <- days / num_timestamps
-  dates <- sapply(0:num_timestamps,function(i) period[1] + (i * le_subperiods))
-  dates[length(dates)] <- dates[length(dates)] + 1
-  date_col_mirr <- sapply(records[,date_col][1],as.Date) # mirror of the date column as days since 1970-01-01
+  dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
+  l <- length(dates)
+  dates[l] <- dates[l] + 1
+  date_col_mirr <- sapply(records[,date_col],as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
     within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
     records[within,"sub_period"] <- i

@@ -780,7 +780,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param aoi aoi. Only if mode == "aoi".
 #' @return \code{percent} numeric percentage
 #' @keywords internal
-#' @importFrom raster as.matrix extract extent resolution crs rasterize
+#' @importFrom raster as.matrix extent resolution crs
 #' @noRd
 .raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL) {
   
@@ -792,16 +792,44 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     val2 <- length(which(x_mat == custom[[2]]))
     percent <- (val1 / sum(val1,val2)) * 100
   } else if (mode == "aoi") {
-    e <- extent(aoi)
-    r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=res(x))
-    aoi_r <- rasterize(aoi,r) # rasterize aoi in order to calculate number of pixels with valid pixels in whole aoi
-    aoi_r_extr <- raster::extract(aoi_r,aoi)[[1]]
-    valid <- raster::extract(x,aoi)[[1]]
-    percent <- (length(valid[!is.na(valid)]) / length(aoi_r_extr[!is.na(aoi_r_extr)])) * 100
+    percent <- .calc_aoi_coverage(aoi,x)
   }
   # due to the calculation based on pixel values it might happen that 'percent' exceeds 100 slightly. In these cases use 100
   percent <- ifelse(percent > 100,100,percent)
 
+}
+
+#' calculates the number of cells of value 1 covering the aoi
+#' @param aoi aoi.
+#' @param x raster with the resolution.
+#' @return \code{percent} numeric percentage of value 1 covering the aoi
+#' @importFrom raster extent raster res mask ncell values area aggregate
+#' @keywords internal
+#' @noRd
+.calc_aoi_coverage <- function(aoi,x) {
+  
+  # calculate aoi number of cells (calculation is suitable for large areas)
+  e <- extent(aoi)
+  # calculate area of aoi in order to get a suitable resolution for percentage cells computations
+  if (class(aoi) != "SpatialPolygons") {
+    aoi_sp <- as(aoi,"Spatial")
+  } else {aoi_sp <- aoi}
+  aoi_area <- raster::area(aoi_sp) / 1000000
+  correction <- aoi_area / 100000 # correction for resolution
+  r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=(res(x)*correction))
+  values(r) <- 1
+  aoi_npixels <- length(extract(r,aoi)[[1]])
+  aoi_ncell <- aoi_npixels * (correction^2)
+  
+  # calculate number of cells with value 1 in aoi
+  x_aggr <- aggregate(x,correction)
+  x_aggr_npixels <- extract(x_aggr,aoi)[[1]]
+  x_aggr_valid <- length(x_aggr_npixels[!is.na(x_aggr_npixels)])
+  x_ncell <- x_aggr_valid * (correction^2)
+  
+  # calculate percentage of pixels with value 1 in aoi
+  percent <- (x_ncell / aoi_ncell) * 100
+  
 }
 
 #' create mosaic
@@ -948,18 +976,26 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_calc_mosaic <- function(records, aoi, sub, cloud_mask_col, min_improvement, ts, dir_out, identifier) {
   
   dir_tmp <- .tmp_dir(dir_out,1)
-  sub <- unlist(compact(sub))
+  sub_by_tile <- compact(sub)
+  sub <- unlist(sub_by_tile)
+  num_tiles <- length(sub_by_tile)
   collection <- sapply(sub,function(x) cmask_path <- records[[cloud_mask_col]][x]) # get paths to cloud masks
   # this vector are all orders in an order from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
   collection <- collection[which(collection != "NONE")]
   # start mosaicking
+  # create the first base mosaic from the first order of collection (best records per tile)
+  base_records <- sapply(1:num_tiles,function(i) return(collection[i])) # paths of first record of each tile
+  base_mos_path <- file.path(dir_tmp,"mosaic_tmp.tif")
+  # calculate the base mosaic with each tile covered by first record
+  # this base mosaic will be updated with each added record after check valid cover is increased
+  base_mos_r <- .select_bridge_mosaic(base_records,aoi,base_mos_path) 
+  rm(base_mos_r)
   base_coverage <- -1000
-  base_records <- c() # this will be filled with the selected records
-  base_mos <- "" # this will be the path to current mosaic
   covers_nas <- TRUE # starting with TRUE because at the beginning it is always TRUE
   # add next cloud mask consecutively and check if it decreases the cloud coverage
-  for (i in 1:length(collection)) {
+  for (i in (num_tiles+1):length(collection)) {
+    print(i)
     if (i == 1) {out("Current coverage of valid pixels")}
     x <- collection[i] # do it this way in order to keep id
     # before calculating the next mosaic, check if record tile is within the area of non-covered pixels at all
@@ -973,16 +1009,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       sum <- curr_base_na + next_record_valid
       covers_nas <- maxValue(sum) == 2 # if next record has observations where current mosaics has NAs, start mosaicking check
     }
-    # the mosaicking can take long. When record does not cover any NAs (covers_nas == FALSE) in mosaic do not do the mosaicking check
+    # if record does not cover any NAs (covers_nas == FALSE) in mosaic do not do the mosaicking check
     if (covers_nas) {
-      save_path <- file.path(dir_tmp,paste0("mosaic_tmp.tif"))
-      added_records <- c(added_records,x)
-      mos <- .select_bridge_mosaic(c(base_mos,x),aoi,save_path)
-      next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi)
+      mos <- .select_bridge_mosaic(c(base_mos,x),aoi,base_mos_path) # mosaic addtional record with previous mosaic (base mosaic)
+      next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi,mos)
       # the coverage value has to become larger since base_coverage refers to percentage covered with valid pixels
       add_it <- next_coverage > (base_coverage + (((100 - base_coverage) / 100) * min_improvement))
       if (add_it) {
-        base_records <- added_records # add save path of current mosaic
+        base_records <- c(base_records,x) # add save path of current mosaic
         base_coverage <- next_coverage
         base_mos <- save_path
         if (isTRUE(getOption("gSD.verbose"))) {
@@ -1180,21 +1214,21 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .select_main <- function(records, period_new, min_distance, max_sub_period, max_cloudcov_tile, min_improvement, par, dir_out, identifier, timestamp) {
   
-  ts <- new.env()
-  ts$records <- records[records$sub_period==timestamp,]
-  ts$records <- ts$records[which(!is.na(records[[par$preview_col]])),]
-  .catch_empty_records(ts$records,ts=timestamp)
-  ts$period <- .identify_period(ts$records[[par$date_col]])
+  tstamp <- new.env()
+  tstamp$records <- records[records$sub_period==timestamp,]
+  tstamp$records <- tstamp$records[which(!is.na(records[[par$preview_col]])),]
+  .catch_empty_records(tstamp$records,ts=timestamp)
+  tstamp$period <- .identify_period(ts$records[[par$date_col]])
   if (timestamp > 1) {
     # create an adjusted period (not the pre-defined sub-period) according to min_distance from previously
-    ts$first_date <- .select_force_distance(period_new,min_distance)
-    ts$period <- .select_handle_next_sub(first_date=ts$first_date,
-                                         period_initial=ts$period,
+    tstamp$first_date <- .select_force_distance(period_new,min_distance)
+    tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
+                                         period_initial=tstamp$period,
                                          min_distance,max_sub_period)
-    ts$records <- .within_period(records,ts$period,par$date_col) # subset to records within period
+    tstamp$records <- .within_period(records,tstamp$period,par$date_col) # subset to records within period
   }
   # run the selection process
-  selected <- .select_process_sub(ts$records,ts$period,max_sub_period,
+  selected <- .select_process_sub(tstamp$records,tstamp$period,max_sub_period,
                                      max_cloudcov_tile=max_cloudcov_tile,min_improvement=min_improvement,
                                      par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
 
@@ -1219,7 +1253,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   tiles <- unique(records[[par$tileid_col]])
   tiles <- tiles[!is.na(tiles)]
-  # the sub is an ordering of all available records per tile according to aoi cloud cover
+  # the sub is an ordering of all available records per tile according to aoi cloud cover and aoi cloud cover probability
   sub <- .select_sub(records=records,tiles=tiles,max_cloudcov_tile=max_cloudcov_tile,
                      aoi_cc_col=par$aoi_cc_col,cc_index_col=par$cc_index_col,tileid_col=par$tileid_col,
                      date_col=par$date_col,
@@ -1300,8 +1334,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   period_new <- c()
   sub_within <- list()
   for (i in 1:NCOL(orders)) {
-    print(i)
-    if (i==9) break
     x <- orders[,i]
     # first try to use all records of this order
     order <- x[!is.na(x)]

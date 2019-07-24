@@ -1375,7 +1375,17 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     
 }
 
-#' finds optimal collection of dates from a records collection within a period of a timestamp and max_sub-period.
+#' finds optimal dates from a records order within a period of a timestamp and max_sub-period.
+#' It is possible that the period length of already added records from a different order is not equal to 
+#' max_sub_period. For excluding the smallest number of dates in order to match max_sub_period, a reference date
+#' is needed. If the given period_new length matches max_sub_period the reference date is the median
+#' date in period_new. In the other case, the reference date is computed from a grading process of all dates provided 
+#' through x and records. First, all dates in the period of x are graded according to their cloud cover and the number
+#' of records of this date. Second, a kernel to each date is applied in order to account for the density of valuable records.
+#' The date receiving the highest grade is the reference date temporally. In case the combined period length of this reference date 
+#' and period_new does not match max_sub_period, the reference date is adjusted step-wise until it matches max_sub_period. 
+#' For all records the distance from this date is calculated. The records that are temporally most far away 
+#' from the reference date are being excluded consecutively until the new period length matches max_sub_period.
 #' @param x numeric vector.
 #' @param records data.frame.
 #' @param period_new period_new.

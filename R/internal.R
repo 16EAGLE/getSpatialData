@@ -101,22 +101,46 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.download <- function(x, names, prog = T, force = F){
+# gSD.download <- function(x, names, prog = T, force = F){
+#   
+#   x <- as.list(x)
+#   names(x) <- names
+#   
+#   if(file.exists(x$dataset_file) & !isTRUE(force)){
+#     out(paste0(x$gSD.head, "Skipping download of '", x$dataset_name, "', since '", x$dataset_file, "' already exists..."), msg = T)
+#     return(TRUE)
+#   } else{
+#   
+#     out(paste0(x$gSD.head, "Downloading '", x$dataset_name, "' to '", x$dataset_file, "'..."), msg = T)
+#     file.tmp <- tempfile(tmpdir = paste0(head(strsplit(x$dataset_file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+#     gSD.get(x$dataset_url, dir.file = file.tmp, prog = prog)
+#     
+#     if(!is.null(x$md5_checksum)){
+#       if(as.character(md5sum(file.tmp)) == tolower(x$md5_checksum)){ out("Successfull download, MD5 check sums match.", msg = T)
+#       } else{
+#         out(paste0("Download failed, MD5 check sums do not match."), type = 2)
+#         file.remove(file.tmp)
+#         return(FALSE)
+#       }
+#     }
+#   }
+#   
+#   file.rename(file.tmp, x$dataset_file)
+#   return(TRUE)
+# }
+gSD.download <- function(url, file, name, head, type = "dataset", md5 = NULL, prog = T, force = F, ...){
   
-  x <- as.list(x)
-  names(x) <- names
-  
-  if(file.exists(x$dataset_file) & !isTRUE(force)){
-    out(paste0(x$gSD.head, "Skipping download of '", x$dataset_name, "', since '", x$dataset_file, "' already exists..."), msg = T)
+  if(file.exists(file) & !isTRUE(force)){
+    out(paste0(head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."), msg = T)
     return(TRUE)
   } else{
-  
-    out(paste0(x$gSD.head, "Downloading '", x$dataset_name, "' to '", x$dataset_file, "'..."), msg = T)
-    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(x$dataset_file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-    gSD.get(x$dataset_url, dir.file = file.tmp, prog = prog)
     
-    if(!is.null(x$md5_checksum)){
-      if(as.character(md5sum(file.tmp)) == tolower(x$md5_checksum)){ out("Successfull download, MD5 check sums match.", msg = T)
+    out(paste0(head, "Downloading ", type, " '", name, "' to '", file, "'..."), msg = T)
+    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+    gSD.get(url, dir.file = file.tmp, prog = prog, ...)
+    
+    if(!is.null(md5)){
+      if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
       } else{
         out(paste0("Download failed, MD5 check sums do not match."), type = 2)
         file.remove(file.tmp)
@@ -125,7 +149,7 @@ gSD.download <- function(x, names, prog = T, force = F){
     }
   }
   
-  file.rename(file.tmp, x$dataset_file)
+  file.rename(file.tmp, file)
   return(TRUE)
 }
 
@@ -165,7 +189,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   return(files)
 }
 
-#' download summary 
+#' column summary 
 #'
 #' @param records df
 #' @param records.names character

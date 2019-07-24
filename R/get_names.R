@@ -32,7 +32,7 @@
 #' @name get_names
 #' @export
 get_names <- function(grouped = FALSE){
-  .check_login(c("USGS", "Copernicus"))
+  .check_login(services = c("USGS", "Copernicus"))
   products <- list("Sentinel" = getSentinel_names(),
                    "Landsat" = getLandsat_names(),
                    "MODIS" = getMODIS_names())

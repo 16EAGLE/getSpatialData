@@ -3,6 +3,7 @@
 \name{gSD_settings}
 \alias{gSD_settings}
 \alias{set_archive}
+\alias{get_archive}
 \alias{set_aoi}
 \alias{view_aoi}
 \alias{get_aoi}
@@ -10,6 +11,8 @@
 \title{Session-wide settings and checks}
 \usage{
 set_archive(dir_archive, create = T)
+
+get_archive()
 
 set_aoi(aoi)
 
@@ -42,6 +45,8 @@ Functions that define session-wide archive and AOI settings that are used by all
 }
 \details{
 \code{set_archive} defines the session directory on your machine (or an external device) where getSpatialData should build up its donwload data archive. Since getSpatialData handles big amounts of data, it is recommended to once define a location where enough free storage is available and then afterwards to not change the archive location. You need to define the archives location for each session after loading getSpatialData. It will then be remembered for the duration of the session. Apart from the archive location, you can manually define a download path when calling the *_data functions. If you do not define a path there, getSpatialData will direct the download to the defined archive. The archive is structred by sensors.
+
+\code{get_archive} returns the currently defined archive directory.
 
 \code{set_aoi} defines a session AOI that is used for querying data within the running session (if no other AOI is provided with a query function call). If called without argument, an interactive \code{mapedit} viewer is opened letting you draw an AOI polygon. Otherwise, the function supports \code{sf}, \code{sp} or matrix objects as \code{aoi} input  (see argument \code{aoi}).
 

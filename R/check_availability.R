@@ -13,10 +13,8 @@
 
 check_availability <- function(records){
   
-  services <- NULL
-  if("Landsat" %in% records$product_group | "MODIS" %in% records$product_group) services <- c(services, "USGS")
-  if("Sentinel" %in% records$product_group) services <- c(services, "Copernicus")
-  .check_login(services)
+  # check login
+  .check_login(records)
   
   # create new colunm
   records.names <- colnames(records)

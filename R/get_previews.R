@@ -1,8 +1,9 @@
 #' Get previews of records
 #' 
-#' \code{get_recordsy} downloads and georeferences preview images per records and saves them to disk. File paths are added to the records data frame.
+#' \code{get_previews} downloads and georeferences preview images per records and saves them to disk. File paths are added to the records data frame.
 #'
-#' @inheritParams check_availability
+#' @inheritParams get_records
+#' @param records records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}
 #' @param dir_out character, a directory, to which previews should be saved. By default, previews are saved to the archive directory defined with \code{set_archive}.
 #' 
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{gSD_login} for details.
@@ -14,10 +15,11 @@
 #' @importFrom sf st_transform st_coordinates st_sfc
 #' @export
 
-get_previews <- function(records, dir_out = NULL){
+get_previews <- function(records, dir_out = NULL, verbose = TRUE){
   
-  # check dir out
+  # checks
   dir_out <- .check_dir_out(dir_out, "previews")
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
   # check login
   records$gSD.cred <- NA
@@ -56,10 +58,13 @@ get_previews <- function(records, dir_out = NULL){
   
   # georeferncing
   out("Georeferncing previews...")
-  records$preview_file <- mapply(file.jpg = records$preview_file_jpg, file.tif = gsub(".jpg", ".tif", records$preview_file_jpg),
+  records$preview_file <- unlist(mapply(file.jpg = records$preview_file_jpg, file.tif = gsub(".jpg", ".tif", records$preview_file_jpg),
                                  group = records$product_group, footprint = records$footprint, head = records$gSD.head, function(file.jpg, file.tif, group, footprint, head, records.crs = st_crs(records)){
     
-    if(file.exists(file.tif)) return(file.tif)
+    if(file.exists(file.tif)){
+      out(paste0(head, "Skipping converting of '", file.jpg, "', since '", file.tif, "' already exists..."), msg = T)
+      return(file.tif)
+    }
     
     # process
     tryCatch({
@@ -78,6 +83,7 @@ get_previews <- function(records, dir_out = NULL){
       crs(prev) <- crs(as(footprint, "Spatial"))
       footprint <- st_coordinates(footprint)
       extent(prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
+      if(group == "MODIS") prev <- projectRaster(prev, crs = crs("+proj=longlat +datum=WGS84 +no_defs"))
       
       # write
       writeRaster(prev, file.tif)
@@ -86,7 +92,7 @@ get_previews <- function(records, dir_out = NULL){
       out("Could not process preview.", type = 2)
       return(NA)
     })
-  }, USE.NAMES = F, SIMPLIFY = F)
+  }, USE.NAMES = F, SIMPLIFY = F))
   
   return(.column_summary(records, records.names))
 }

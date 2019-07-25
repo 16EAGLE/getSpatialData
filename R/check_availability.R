@@ -2,7 +2,7 @@
 #' 
 #' \code{check_availability} checks for each record whether it is available on-demand (and thus can be downloaded instantly) or not (and thus must be ordered before download).
 #'
-#' @param records records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}
+#' @inheritParams get_previews
 #' 
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{gSD_login} for details.
 #' @return A data frame of records (as defined with argument \code{records}), extended by a column \code{available_instantly} (logical).

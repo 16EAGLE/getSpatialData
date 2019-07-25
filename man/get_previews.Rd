@@ -4,18 +4,20 @@
 \alias{get_previews}
 \title{Get previews of records}
 \usage{
-get_previews(records, dir_out = NULL)
+get_previews(records, dir_out = NULL, verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
 
 \item{dir_out}{character, a directory, to which previews should be saved. By default, previews are saved to the archive directory defined with \code{set_archive}.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 A data frame of records (as defined with argument \code{records}), extended by two columns: \code{preview_file} (character, path to georeferenced preview) and \code{preview_file_jpg} (character, path to preview JPG).
 }
 \description{
-\code{get_recordsy} downloads and georeferences preview images per records and saves them to disk. File paths are added to the records data frame.
+\code{get_previews} downloads and georeferences preview images per records and saves them to disk. File paths are added to the records data frame.
 }
 \note{
 To use this function, you must be logged in at the services required for your request. See the examples and \link{gSD_login} for details.

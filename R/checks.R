@@ -19,6 +19,19 @@
   if(all("USGS" %in% services, !getOption("gSD.usgs_set"))) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to USGS ERS.", msg = T)
 }
 
+#' check recprds
+#'
+#' @param records
+#'
+#' @keywords internal
+#' @noRd
+.check_records <- function(records, col.names = NULL){
+  if(!isTRUE(inherits(records, "data.frame"))) out("Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'.", type = 3)
+  if(!is.null(col.names)){
+    catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
+  }
+}
+
 #' check dir_out
 #'
 #' @param dir_out

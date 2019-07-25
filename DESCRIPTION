@@ -22,7 +22,9 @@ Imports:
   mapview,
   mapedit,
   cli,
-  devtools
+  RStoolbox,
+  ggplot2,
+  cowplot
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

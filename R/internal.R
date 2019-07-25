@@ -879,6 +879,41 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
 }  
 
+#' returns internal params used in select_*
+#' @return \code{par} list of characters.
+#' @keywords internal
+#' @noRd
+.select_params <- function() {
+  
+  par <- list(selected_col="selected_for_timeseries", # logical column if a record is selected at all
+              pmos_col="rgb_mosaic_file", # path to the RGB mosaic tif where record is included
+              cmos_col="cmask_mosaic_file", # path to the cloud mask mosaic tif where record is included
+              timestamp_col="selected_for_timestamp", # the timestamp number for which the record is selected
+              aoi_cc_col="aoi_HOT_cloudcov_percent",
+              tileid_col="tile_id",
+              preview_col="preview_file",
+              cloud_mask_col="cloud_mask_file",
+              aoi_cc_prb_col="aoi_HOT_mean_probability",
+              cc_index_col="cc_index",
+              date_col="date_clear")
+}
+
+#' creates a character date column in the format "YYYY-MM-DD" for Sentinel records
+#' @param records data.frame.
+#' @param date_col_orig character name of the original date colum.
+#' @param date_col_name character name of the added date column.
+#' @return \code{records} data.frame with added column "date_clear".
+#' @keywords internal
+#' @noRd
+.extract_clear_date <- function(records, date_col_orig, date_col_name) {
+  
+  records[[par$date_col]] <- records[[par$date_col_orig]]
+  sent_recs <- which(records$sensor_group=="Sentinel")
+  records[sent_recs,par$date_col] <- sapply(records[sent_recs,par$date_col],function(x) clear <- substr(x,1,10))
+  return(records)
+  
+}
+
 #' creates a mosaic of all used cloud masks and writes it as .tif
 #' @param s list 'selected' of a timestamp holding everything inserted in select_*().
 #' @param aoi aoi.
@@ -976,16 +1011,15 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_calc_mosaic <- function(records, aoi, sub, cloud_mask_col, min_improvement, ts, dir_out, identifier) {
   
   dir_tmp <- .tmp_dir(dir_out,1)
-  sub_by_tile <- compact(sub)
-  sub <- unlist(sub_by_tile)
-  num_tiles <- length(sub_by_tile)
-  collection <- sapply(sub,function(x) cmask_path <- records[[cloud_mask_col]][x]) # get paths to cloud masks
+  le_first_order <- length(sub[[1]])
+  sub <- unlist(compact(sub))
+  collection <- sapply(sub,function(x) cmask_path <- records[[cloud_mask_col]][x]) # get paths to cloud masks. This is the queue for processing
   # this vector are all orders in an order from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
   collection <- collection[which(collection != "NONE")]
   # start mosaicking
   # create the first base mosaic from the first order of collection (best records per tile)
-  base_records <- sapply(1:num_tiles,function(i) return(collection[i])) # paths of first record of each tile
+  base_records <- sapply(1:le_first_order,function(i) return(collection[i])) # paths of first record of each tile
   base_mos_path <- file.path(dir_tmp,"mosaic_tmp.tif")
   # calculate the base mosaic with each tile covered by first record
   # this base mosaic will be updated with each added record after check valid cover is increased
@@ -994,13 +1028,12 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   base_coverage <- -1000
   covers_nas <- TRUE # starting with TRUE because at the beginning it is always TRUE
   # add next cloud mask consecutively and check if it decreases the cloud coverage
-  for (i in (num_tiles+1):length(collection)) {
-    print(i)
+  for (i in (le_first_order+1):length(collection)) {
     if (i == 1) {out("Current coverage of valid pixels")}
     x <- collection[i] # do it this way in order to keep id
     # before calculating the next mosaic, check if record tile is within the area of non-covered pixels at all
-    if (nchar(base_mos) != 0) {
-      curr_base_mos <- raster(base_mos) # current mosaic
+    if (nchar(base_mos_path) != 0) {
+      curr_base_mos <- raster(base_mos_path) # current mosaic
       next_record <- raster(x) # record to be added if it supports the mosaic
       next_record_valid <- next_record[!is.na(next_record)]
       next_record_valid[next_record_valid == 0] <- NA
@@ -1011,7 +1044,10 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     }
     # if record does not cover any NAs (covers_nas == FALSE) in mosaic do not do the mosaicking check
     if (covers_nas) {
-      mos <- .select_bridge_mosaic(c(base_mos,x),aoi,base_mos_path) # mosaic addtional record with previous mosaic (base mosaic)
+      base_mos_load_tmp <- raster(base_mos_path)
+      base_mos_path_new <- file.path(dir_tmp,"mos_tmp_new.tif")
+      writeRaster(base_mos_load_tmp,base_mos_path_new,overwrite=T) # create copy of base mos in order to create next mosaic
+      mos <- .select_bridge_mosaic(c(base_mos_path,x),aoi,base_mos_path_new) # mosaic addtional record with previous mosaic (base mosaic)
       next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi,mos)
       # the coverage value has to become larger since base_coverage refers to percentage covered with valid pixels
       add_it <- next_coverage > (base_coverage + (((100 - base_coverage) / 100) * min_improvement))
@@ -1041,20 +1077,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   return(selected)
 }
 
-#' sets NAs in cloud masks 0 and crops to the aoi then
-#' @param cMask.
-#' @param aoi.
-#' @return cMask with 0 where no coverage
-#' @importFrom raster mask
-#' @keywords internal
-#' @noRd
-.cMask_NA_to_0 <- function(cMask, aoi) {
-  
-  cMask[is.na(cMask)] <- 0
-  cMask <- mask(cMask,aoi)
-  
-}
-
 #' bridge to .make_mosaic
 #' @param paths character paths to rasters to be mosaicked.
 #' @param aoi aoi.
@@ -1063,7 +1085,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom raster mask crop
 #' @keywords internal
 #' @noRd
-.select_bridge_mosaic <- function(paths, aoi, save_path, mode = "mask") {
+.select_bridge_mosaic <- function(paths, aoi, save_path) {
   
   mos_base <- .make_mosaic(paths,save_path,mode)
   mos_base_mask <- mask(mos_base,aoi)
@@ -1120,7 +1142,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
   } else if (sub_period == r) {
-    out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this often"),1)
+    out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this frequent"),1)
   }
   
 }
@@ -1223,8 +1245,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     # create an adjusted period (not the pre-defined sub-period) according to min_distance from previously
     tstamp$first_date <- .select_force_distance(period_new,min_distance)
     tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
-                                         period_initial=tstamp$period,
-                                         min_distance,max_sub_period)
+                                             period_initial=tstamp$period,
+                                             min_distance,max_sub_period)
     tstamp$records <- .within_period(records,tstamp$period,par$date_col) # subset to records within period
   }
   # run the selection process
@@ -1282,13 +1304,13 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @return records with three additional columns. Cloud mask and preview mosaics are saved in dir_out.
 #' @keywords internal
 #' @noRd
-.select_save_mosaics <- function(records, selected, aoi, selected_col_name, pmos_col, cmos_col, identifier, dir_out) {
+.select_save_mosaics <- function(records, selected, aoi, selected_col, pmos_col, cmos_col, identifier, dir_out) {
   
   console_info <- list()
-  cols <- c(selected_col_name,timestamp_col,pmos_col,cmos_col)
+  cols <- c(selected_col,timestamp_col,pmos_col,cmos_col)
   for (j in 1:length(cols)) {
     col <- cols[j]
-    val <- ifelse(col == selected_col_name,FALSE,NA)
+    val <- ifelse(col == selected_col,FALSE,NA)
     records[[col]] <- val
   }
   for (i in 1:length(selected)) {
@@ -1645,7 +1667,7 @@ vNA <- function(vec) {
   } else if (dfirst_date >= dperiod_initial[2]) {
     out(paste0("Argument 'min_distance' between acquisitions used for dinstinguished timestamps is: ",min_distance," days.
                The 'max_period' of covered acquisitions for one timestamp is: ",max_sub_period,". With the given 'num_timestamps'
-               these values disable the creation of a consistent time-series. Modify the values (most likely decrease (some of) them."),3)  
+               these values disable the creation of a temporally consistent selection. Modify the values (most likely decrease (some of) them."),3)  
   }
   
 }

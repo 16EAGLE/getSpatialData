@@ -45,7 +45,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
   aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   cloud_mask_path <- "cloud_mask_file"
-  aoi_hot_cloud_mask <- "aoi_HOT_cloud_mask"
   aoi_HOT_mean_probability <- "aoi_HOT_mean_probability"
   na_case <- "NONE"
   error <- "try-error"

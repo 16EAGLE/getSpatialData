@@ -11,7 +11,7 @@
 #' 
 #' @author Jakob Schwalb-Willmann
 #' 
-#' @importFrom raster stack values xyFromCell crop crs extent
+#' @importFrom raster stack values xyFromCell crop crs extent projectRaster
 #' @importFrom sf st_transform st_coordinates st_sfc
 #' @export
 

@@ -5,22 +5,26 @@
 \alias{plot_previews}
 \title{View or plot previews of records}
 \usage{
-view_previews(records, show_aoi = TRUE, value = FALSE,
-  verbose = TRUE)
-
-plot_previews(records, show_aoi = TRUE, overplot = FALSE,
+view_previews(records, show_aoi = TRUE, aoi_colour = "red",
   value = FALSE, verbose = TRUE)
+
+plot_previews(records, show_aoi = TRUE, aoi_colour = "red",
+  separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
 
 \item{show_aoi}{logical, whether the session AOI defined with \link{set_aoi} should be drawn on the map or plot(s) (\code{TRUE}) or not.}
 
+\item{aoi_colour}{character, colour of the AOI. Ignored, if \code{show_aoi = FALSE}.}
+
 \item{value}{logical, whether to return the displayed map/plot object (\code{TRUE}) or not.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 
-\item{overplot}{logical, whether previews should be displayed as a mosaic in a single plot (\code{TRUE}) or individually on a \code{cowplot} grid.}
+\item{separate}{logical, whether previews should be displayed separately on a \code{cowplot} grid (\code{TRUE}) or as a mosaic in a single plot (\code{FALSE}, default).}
+
+\item{maxcol}{numeric, maximum number of columns that the plot grid should have.}
 }
 \value{
 None or a \code{mapview}/\code{plot} object

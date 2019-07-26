@@ -4,7 +4,9 @@
 #'
 #' @inheritParams get_previews
 #' @param show_aoi logical, whether the session AOI defined with \link{set_aoi} should be drawn on the map or plot(s) (\code{TRUE}) or not.
-#' @param overplot logical, whether previews should be displayed as a mosaic in a single plot (\code{TRUE}) or individually on a \code{cowplot} grid.
+#' @param aoi_colour character, colour of the AOI. Ignored, if \code{show_aoi = FALSE}.
+#' @param separate logical, whether previews should be displayed separately on a \code{cowplot} grid (\code{TRUE}) or as a mosaic in a single plot (\code{FALSE}, default).
+#' @param maxcol numeric, maximum number of columns that the plot grid should have.
 #' @param value logical, whether to return the displayed map/plot object (\code{TRUE}) or not.
 #' 
 #' @details 
@@ -21,7 +23,7 @@
 #' 
 #' @name view_previews
 #' @export
-view_previews <- function(records, show_aoi = TRUE, value = FALSE, verbose = TRUE){
+view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", value = FALSE, verbose = TRUE){
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -33,6 +35,7 @@ view_previews <- function(records, show_aoi = TRUE, value = FALSE, verbose = TRU
   records <- records[!na.previews,]
   
   # load raster
+  out("Composing preview map...")
   prev <- lapply(records$preview_file, stack)
   
   map.list <- mapply(x = prev, y = records$record_id, function(x, y) viewRGB(x, r=1, g=2, b=3, layer.name = y), SIMPLIFY = F)
@@ -45,54 +48,56 @@ view_previews <- function(records, show_aoi = TRUE, value = FALSE, verbose = TRU
       out("Records are previewed without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
     } else{
       aoi.sf <- getOption("gSD.aoi")
-      map <- map + mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = "red", fill = F, legend = F)
+      map <- map + mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F)
     }
   }
   
   # display
-  print(map)
+  print(quiet(map))
   if(isTRUE(value)) return(map)
 }
 
 #' @rdname view_previews
 #' @importFrom RStoolbox ggRGB
-#' @importFrom ggplot2 coord_sf xlab ylab theme
-#' @importFrom cowplot plot_grid
+#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes scale_colour_identity guides guide_legend scale_x_continuous scale_y_continuous
+#' @importFrom cowplot plot_grid get_legend
 #' @export
-plot_previews <- function(records, show_aoi = TRUE, overplot = FALSE, value = FALSE, verbose = TRUE){
+plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE){
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   .check_records(records, col.names = "preview_file")
   
   # load raster
+  out("Composing preview plot...")
   prev <- lapply(records$preview_file, stack)
   
   # make ggplot2
-  layered <- if(overplot == T) T else F
+  layered <- if(separate == T) F else T
   gg.list <- lapply(1:length(prev), function(i){
     y <- quiet(ggRGB(prev[[i]], r = 1, g = 2, b = 3, geom_raster = T, ggLayer = if(i == 1) F else if(isTRUE(layered)) T else F))
   })
   
   # fun to add coord system
   cf <- function(x, x.crs = crs(prev[[1]])){
-    quiet(x + coord_sf(crs = st_crs(x.crs), datum = st_crs(x.crs), expand = T) + xlab("Longitude") + ylab("Latitude") + theme_bw())
+    quiet(x + coord_sf(crs = st_crs(x.crs), datum = st_crs(x.crs)) + xlab("Longitude") + ylab("Latitude") + theme_bw()) +
+      scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
   }
   
   # fun to add aoi
   aoi <- function(x){
     aoi.sf <- getOption("gSD.aoi")
-    quiet(x + geom_sf(data = st_sf(geometry = aoi.sf, colour = "red"), aes(colour = colour), fill = NA, show.legend = T) +
+    quiet(x + geom_sf(data = st_sf(geometry = aoi.sf, colour = aoi_colour), aes(colour = colour), fill = NA, show.legend = T) +
             scale_colour_identity(guide = "legend", labels = "AOI", name = ""))
   }
   
   # combine plots
-  if(isTRUE(overplot)){
+  if(isFALSE(separate)){
     gg.list[[1]] <- cf(gg.list[[1]])
     gg <- gg.list[[1]]
     
-    if(isTRUE(show_aoi)) gg <- aoi(gg)
     for(i in 2:length(gg.list)) gg <- "+"(gg, gg.list[[i]])
+    if(isTRUE(show_aoi)) gg <- aoi(gg)
     
   } else{
     gg.list <- lapply(gg.list, cf)
@@ -101,8 +106,8 @@ plot_previews <- function(records, show_aoi = TRUE, overplot = FALSE, value = FA
       legend <- get_legend(gg.list[[1]])
       gg.nl <- lapply(gg.list, function(x) x + theme(legend.position = "none"))
     }
-    gg <- quiet(plot_grid(plotlist = gg.nl, ncol = length(prev)), nrow = ceiling(length(prev)/3))
-    plot_grid(gg, legend, ncol = 2, rel_widths = c(9,1))
+    gg <- quiet(plot_grid(plotlist = gg.nl, ncol = min(length(prev), maxcol), nrow = ceiling(length(prev)/maxcol)))
+    gg <- plot_grid(gg, legend, ncol = 2, rel_widths = c(9,1))
   }
   
   for(i in 1:length(gg$layers)) gg$layers[[i]]$geom_params$na.rm <- T

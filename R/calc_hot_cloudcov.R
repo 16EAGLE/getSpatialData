@@ -67,7 +67,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50, no valid observations
   # If preview is broken or nor valid observations in aoi return
   if (isTRUE(cond)) {
-    record <- .handle_cc_skip(record)
+    record <- .handle_cc_skip(record,dir_out=dir_out)
     return(record)
   }
   
@@ -227,7 +227,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     record[[aoi_HOT_mean_probability]] <- as.numeric(aoi_cProb)
     record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
   } else {
-    record <- .handle_cc_skip(record)
+    record <- .handle_cc_skip(record,dir_out=dir_out)
     out(hotFailWarning,type=2)
   }
   return(record)

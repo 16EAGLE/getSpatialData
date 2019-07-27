@@ -663,36 +663,40 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   ## Do HOT cloud cover assessment consecutively
   records <- do.call(rbind,lapply(1:numRecords,function(i) {
     startTime <- Sys.time()
+    is_SAR <- sensor == "Sentinel-1"
     # get preview of current record
     currRecord <- records[i,]
-    
     if (sensor == "Sentinel-2" || sensor == "Sentinel-3") {
       preview <- try(getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                      username=username,password=password,verbose=verbose))
       identifier <- 1
     } else if (sensor == "Landsat") {
-      preview <- getLandsat_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
-                                    verbose=verbose)
+      preview <- try(getLandsat_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                    verbose=verbose))
       identifier <- 15
     } else if (sensor == "MODIS") {
-      preview <- getMODIS_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
-                                  verbose=verbose)
+      preview <- try(getMODIS_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
+                                  verbose=verbose))
       identifier <- 15
+    } else if (is_SAR) {
+      preview <- NULL
     }
-    previewSize <- c(previewSize,object.size(preview))
+    csv_path <- file.path(dir_out,paste0(currRecord[,identifier],".csv"))
+    if (file.exists(csv_path)) {
+      currRecCloudCover <- read.csv(csv_path)
+      return(currRecCloudCover)
+    }
     # pass preview to HOT function
     cond <- !is.null(preview) || !inherits(preview,"try-error")
     if (cond) {
       currRecCloudCover <- try(calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,identifier=identifier,cloudPrbThreshold=cloudPrbThreshold,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
                                                  slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose))
-    } 
-    if (isFALSE(cond) || class(currRecCloudCover != "data.frame")) {
-      currRecord[[aoi_hot_cc_percent]] <- 100
-      currRecord[[scene_hot_cc_percent]] <- 9999
-      currRecord[[aoi_HOT_mean_probability]] <- 100
-      if (!is.null(dir_out)) record[[cloud_mask_path]] <- na_case
-      currRecCloudCover <- currRecord
-    } 
+    }
+    if (isFALSE(cond) || class(currRecCloudCover) != "data.frame") {
+      currRecCloudCover <- .handle_cc_skip(currRecord,is_SAR,dir_out)
+    } else {
+      previewSize <- c(previewSize,object.size(preview))
+    }
     endTime <- Sys.time()
     if (i <= 5) {
       elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
@@ -700,6 +704,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     }
     if (numRecords >= 10 && i == 5) {
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+    }
+    if (!is.null(dir_out)) {
+      write.csv(currRecCloudCover,csv_path)
     }
     return(currRecCloudCover)
   }))
@@ -729,6 +736,22 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   }
   sumDataDownload <- meanPreviewSize * stillToGoFor
   out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
+}
+
+#' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given
+#' @param record data.frame with one row.
+#' @param is_SAR logical if the record is a SAR acquisition. Default is FALSE.
+#' @return record data.frame with one row but added columns.
+#' @keywords internal
+#' @noRd
+.handle_cc_skip <- function(record, is_SAR = FALSE, dir_out = NULL) {
+  
+  currRecord[["aoi_hot_cc_percent"]] <- ifelse(is_SAR,NA,100)
+  currRecord[["scene_hot_cc_percent"]] <- ifelse(is_SAR,NA,9999)
+  currRecord[["aoi_HOT_mean_probability"]] <- ifelse(is_SAR,NA,100)
+  if (!is.null(dir_out)) record[["cloud_mask_file"]] <- "NONE"
+  return(currRecord)
+  
 }
 
 #' mask the edges of Landsat preview raster
@@ -880,12 +903,15 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 }  
 
 #' returns internal params used in select_*
+#' @param mode character which mode is used: "TS", "BT" or "UT".
+#' @param records data.frame.
 #' @return \code{par} list of characters.
 #' @keywords internal
 #' @noRd
-.select_params <- function() {
+.select_params <- function(mode,records) {
   
-  par <- list(selected_col="selected_for_timeseries", # logical column if a record is selected at all
+  modes <- list("TS"="timeseries","BT"="bitemporal","UT"="unitemporal")
+  par <- list(selected_col=paste0("selected_for_",modes[[mode]]), # logical column if a record is selected at all
               pmos_col="rgb_mosaic_file", # path to the RGB mosaic tif where record is included
               cmos_col="cmask_mosaic_file", # path to the cloud mask mosaic tif where record is included
               timestamp_col="selected_for_timestamp", # the timestamp number for which the record is selected
@@ -896,6 +922,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
               aoi_cc_prb_col="aoi_HOT_mean_probability",
               cc_index_col="cc_index",
               date_col="date_clear")
+  par$sensor_group <- unique(records$sensor_group)[1]
+  par$sensor <- unique(records$sensor)[1]
+  par$date_col_orig <- ifelse(par$sensor_group == "Landsat","acquisitionDate","beginposition")
+  par$id_col <- ifelse(par$sensor_group == "Landsat","entityId","title")
+  par$tileids <- unique(records[[par$tileid_col]])
+  par$sep <- "\n----------------------------------------------------------------"
+  return(par)
+  
 }
 
 #' creates a character date column in the format "YYYY-MM-DD" for Sentinel records
@@ -980,7 +1014,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   preview_mos <- lapply(1:length(layers),function(j) {
     curr_layers <- lapply(preview_paths,function(x) path <- x[j])
     save_path_pmos <- paste0(save_pmos,"_",layers[j],".tif")
-    pmos <- .select_bridge_mosaic(curr_layers,aoi,save_path_pmos,mode="rgb")
+    pmos <- .select_bridge_mosaic(curr_layers,aoi,save_path_pmos)
   })
   preview_mos_stack <- stack(preview_mos)
   save_pmos_final <- paste0(save_pmos,"_",i,"_rgb.tif")
@@ -1147,21 +1181,19 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
 }
 
-#' handle Landsat case in select
-#' @param records data.frame.
-#' @return \code{records} data.frame
+#' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
+#' @param sensor character vector of all sensors in records.
+#' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
 #' @keywords internal
 #' @noRd
-.select_handle_landsat <- function(records, sensor) {
+.has_SAR <- function(sensor) {
   
-  if (sensor %in% c("Landsat","MODIS")) {
-    records <- .make_Landsat_tileid(records)
-    identifier <- 15
+  if ("Sentinel-1" %in% sensor) {
+    has_SAR <- ifelse(all(sensor == "Sentinel-1"),100,1)
   } else {
-    records <- .make_Sentinel_tileid(records)
-    identifier <- 1
+    has_SAR <- 0
   }
-  return(list(records,identifier))
+  
 }
 
 #' selects from a numeric data.frame column the i lowest value and checks if it is lower than a provided numeric
@@ -1220,6 +1252,22 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   return(sub)
 }
 
+#' prep process of a selection process
+#' @param records data.frame.
+#' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
+#' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
+#' @param identifier numeric identifier column.
+#' @return records data.frame with 
+#' @keywords internal
+#' @noRd
+.select_prep <- function(records, num_timestamps, par, identifier) {
+  
+  records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
+  records <- .make_tileid(records,identifier)
+  records <- .select_sub_periods(records,par$period,num_timestamps,par$date_col) # calculates the sub_period column
+
+}
+
 #' main process of a selection process
 #' @param records data.frame.
 #' @param period_new character vector holding the period (two dates) of the previously selected timestamp.
@@ -1227,6 +1275,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
+#' @param has_SAR logical if records data.frame has SAR records.
 #' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
 #' @param dir_out character directory where to save intermediate product.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
@@ -1234,15 +1283,18 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @return selected list of selected 
 #' @keywords internal
 #' @noRd
-.select_main <- function(records, period_new, min_distance, max_sub_period, max_cloudcov_tile, min_improvement, par, dir_out, identifier, timestamp) {
+.select_main <- function(records, period_new, 
+                         min_distance, max_sub_period, max_cloudcov_tile, min_improvement, has_SAR, 
+                         par, dir_out, identifier, timestamp) {
   
   tstamp <- new.env()
+
   tstamp$records <- records[records$sub_period==timestamp,]
   tstamp$records <- tstamp$records[which(!is.na(records[[par$preview_col]])),]
   .catch_empty_records(tstamp$records,ts=timestamp)
   tstamp$period <- .identify_period(ts$records[[par$date_col]])
   if (timestamp > 1) {
-    # create an adjusted period (not the pre-defined sub-period) according to min_distance from previously
+    # enforce to min_distance from previous timestamp
     tstamp$first_date <- .select_force_distance(period_new,min_distance)
     tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
                                              period_initial=tstamp$period,
@@ -1251,10 +1303,83 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   }
   # run the selection process
   selected <- .select_process_sub(tstamp$records,tstamp$period,max_sub_period,
-                                     max_cloudcov_tile=max_cloudcov_tile,min_improvement=min_improvement,
-                                     par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
+                                  max_cloudcov_tile=max_cloudcov_tile,
+                                  min_improvement=min_improvement,
+                                  par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
 
 }
+
+#' select timestamps for SAR data according to num_timestamps and min_distance. This
+#' can be the fundament for an optical selection or if has_SAR == 100 (only SAR in records) it is the only selection
+#' @param records data.frame.
+#' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
+#' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
+#' @param max_sub_period
+#' @param par list holding everything inserted into this parameter list in the calling select function.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @return \code{SAR_selected} list of [[ids]] character vector of selected ids per timestamp, [[period]] character vector
+#' of two dates and [[sub-period]] numeric the sub-period number
+#' character vector of two dates (start and end date of SAR sub-period)
+#' @keywords internal
+#' @noRd
+.select_SAR <- function(records, max_sub_period, min_distance, num_timestamps, par, identifier) {
+  
+  subperiods <- unique(records$sub_period)
+  # if the length of the current sub-period is longer than max_sub_period grade all dates in sub_period
+  # according to the number of the given records for each date and calculate the distance of each record
+  # from this date. Exclude records consecutively until max_sub_period is reached
+  selected_SAR <- list() # to be filled with the selected lists of selected ids and sub-periods
+  for (s in subperiods) {
+    records_in_s <- records[which(records$sub_period==s),]
+    if (s > 1) {
+      # enforce min_distance
+      previous_period <- selected[[i-1]][["period"]] # get the previous selected sub-period
+      period_initial <- .identify_period(records_in_s[[par$date_col]])
+      # earliest date of next sub-period adjusted
+      first_date <- .select_force_distance(previous_period,min_distance)
+      period_s <- .select_handle_next_sub(first_date,period_initial,
+                              min_distance,max_sub_period)
+      records_in_s <- .within_period(records_in_s,period_s) # subset to records within period_s
+    }
+    tiles_s <- records_in_s[[par$tileid_col]]
+    dates_s <- records_in_s[[par$date_col]]
+    sub_period_le <- length(max(dates_s)-min(dates_s))
+    # grade dates and exclude consecutively
+    if (sub_period_le > max_sub_period) {
+      date_seq <- min(dates_s):max(dates_s)
+      date_grade <- sapply(date_seq,function(date) {
+        records_match <- which(dates_s==date)
+        # include one record per tile for the grading as for SAR several records on one date = no benefit
+        grade <- length(unique(records[records_match,par$tileid_col]))
+      })
+      # this is the date with the highest number of records covering different tiles
+      date_reference <- .help_ref_date(date_grade) 
+      # calculate the distance for each date in the order from the median date
+      dist_ord <- .help_dist_to_date(dates_s,date_reference)
+      # revert dist_ord in order to start with best dates and include dates until all tiles are covered
+      incl <- c()
+      for (dist in rev(dist_ord)) {
+        incl <- c(incl,dist)
+        dates_tmp <- records_in_s[incl,par$date_col]
+        tiles_tmp <- records_in_s[incl,par$tileid_col]
+        if (anyDuplicated(tiles_tmp)) { # only if the added record is a tile that was not yet covered
+          period_tmp <- .identify_period(dates_tmp)
+          period_tmp_le <- .calc_days_period(period_tmp)
+          if (period_tmp_le <= max_sub_period) break
+        }
+      }
+      sel <- records_in_s[incl,identifier] # ids of selected records
+    } else {
+      sel <- records_in_s[[identifier]] # all ids of records in sub-period
+    }
+    dates_sel <- records_in_s[which(sel %in% records[[identifier]]),par$date_col]
+    selected_SAR[[s]] <- list(ids=sel,period=.identify_period(dates_sel),sub-period=s)
+  }
+  
+  return(selected)
+
+}
+
 
 #' calls the different steps of selection for a sub-period
 #' @param records data.frame subsetted to a sub-period.
@@ -1292,27 +1417,51 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
 }
 
+#' finishs a SAR selection where only SAR records were given. Fills the records data.frame
+#' return columns and creates final console summary + optional warning.
+#' @param records data.frame.
+#' @param selected_SAR list of [[ids]] character vector of selected ids per timestamp, [[period]] character vector
+#' of two dates and [[sub-period]] numeric the sub-period number
+#' @param par list holding everything inserted into this parameter list in the calling select function.
+#' @return records data.frame with two added columns, ready for return to user.
+#' @keywords internal
+#' @noRd
+.select_finish_SAR <- function(records, selected_SAR, par) {
+  
+  csw_SAR <- .select_SAR_summary(selected_SAR,records,par)
+  summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
+  w <- cws_SAR[[2]]
+  if (!is.null(w)) out(w,type=2) # warning
+  ids <- sapply(selected_SAR,function(x) {return(x[["ids"]])})
+  # add columns to records
+  cols <- c(par$selected_col,par$timestamp_col)
+  records <- .select_prep_cols(records,cols)
+  for (ts in 1:length(ids)) {
+    ids_match <- match(ids[i],records[[identifier]])
+    records[ids_match,par$selected_col] <- TRUE # is record selected at all
+    records[ids_match,par$timestamp_col] <- ts # timestamp for which record is selected
+  }
+  return(records)
+  
+}
+
 #' calculates the final cloud mask and preview RGB mosaic per timestamp
 #' @param records data.frame.
 #' @param selected list of lists, each of the list is one timestamp and holds the ids, timestamp numbers and cloud mask paths.
 #' @param aoi aoi.
-#' @param selected_col_name character name of the logical column name in records data.frame (selected TRUE/FALSE).
+#' @param selected_col character name of the logical column name in records data.frame (selected TRUE/FALSE).
 #' @param pmos_col character name of the column where to enter the paths to the preview mosaics.
 #' @param cmos_col character name of the column where to enter the paths to the cloud mask mosaics.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @param dir_out character directory.
-#' @return records with three additional columns. Cloud mask and preview mosaics are saved in dir_out.
+#' @return records with four additional columns: selected_col, timestamp_col, pmos_col, cmos_col. Cloud mask and preview mosaics are saved in dir_out.
 #' @keywords internal
 #' @noRd
 .select_save_mosaics <- function(records, selected, aoi, selected_col, pmos_col, cmos_col, identifier, dir_out) {
   
   console_info <- list()
   cols <- c(selected_col,timestamp_col,pmos_col,cmos_col)
-  for (j in 1:length(cols)) {
-    col <- cols[j]
-    val <- ifelse(col == selected_col,FALSE,NA)
-    records[[col]] <- val
-  }
+  records <- .select_prep_cols(records, cols)
   for (i in 1:length(selected)) {
     s <- selected[[i]]
     id_sel <- s$ids
@@ -1331,6 +1480,22 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   }
   each_timestamp <- .out_vector(console_info)
   return(records)
+  
+}
+
+#' creates new columns for selection completion and fills with NAs or FALSE
+#' @param records data.frame.
+#' @param cols character vector of the column names.
+#' @return records data.frame with new columns.
+#' @keywords internal
+#' @noRd
+.select_prep_cols <- function(records, cols) {
+  
+  for (j in 1:length(cols)) {
+    col <- cols[j]
+    val <- ifelse(col == selected_col,FALSE,NA)
+    records[[col]] <- val
+  }
   
 }
 
@@ -1435,28 +1600,15 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   }
   
   # include the grades of the three neighboring records in order to estimate the highest density of good records
-  date_grade_copy <- date_grade
-  for (i in 1:length(date_grade)) {
-    if (i <= 3) {
-      kernel <- c(1,2,3,-1,-2)[1:(i+2)]
-    } else if (i > 3 && i < (length(date_grade)-2)) {
-      kernel <- -3:3
-      kernel <- kernel[which(kernel!=0)]
-    } else {
-      j <- length(date_grade) - i
-      kernel <- c(-3,-2,-1,1,2)[1:(j+3)]
-    }
-    g <- unlist(date_grade_copy[i])
-    neighbors <- unlist(sapply(kernel,function(k) n <- date_grade_copy[i+k]))
-    grade_new <- sum(c(g,neighbors))
-    date_grade[[names(date_grade)[i]]] <- grade_new
-  }
+  date_grade <- .help_grade_kernel(date_grade)
+  
   # as reference date take where highest value is found in kernel grades
   # increase or decrease this date until it is within max_period in combination with period_new
   # create a new period from this best date and the old new_period and chose the median date as reference date
   date_grade <- unlist(date_grade)
-  date_reference <- as.numeric(names(date_grade[order(date_grade,decreasing=T)[1]])) # in case no period_new yet given this is the reference date
-  if (!is.null(period_new)) {
+  if (is.null(period_new)) {
+    date_reference <- .help_ref_date(date_grade) # in case no period_new yet given this is the reference date
+  } else {
     n <- 0
     outside_period <- TRUE
     decrease <- TRUE
@@ -1476,8 +1628,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     date_reference <- round(median(min(new_dates_tmp):max(new_dates_tmp)))
   }
   # calculate the distance for each date in the order from the median date
-  dist_to_median <- sapply(dates,function(d) {d-date_reference}) # calc distance to the median date in days
-  dist_ord <- order(abs(dist_to_median),decreasing=T) # get it ordered in a way that vector starts with dates of largest distance to median date
+  dist_ord <- .help_dist_to_date(dates,date_reference)
   excl <- c()
   for (dist in dist_ord) {
     excl <- c(excl,dist)
@@ -1490,6 +1641,60 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   return(order)
   
 }
+
+#' helper for selecting the reference date in a dates grading process when no previous period_new is given
+#' @param date_grade numeric vector of grades, each corresponding to a date in a sub-period.
+#' @return \code{date_reference} numeric as number of days since 1970-01-01
+#' @keywords internal
+#' @noRd
+.help_ref_date <- function(date_grade) {
+  
+  date_reference <- as.numeric(names(date_grade[order(date_grade,decreasing=T)[1]]))
+  
+}
+
+#' helper for calculating the distance of dates to a reference date and ordering them
+#' @param dates numeric vector of dates in days since 1970-01-01.
+#' @param date_reference numeric a date in same format as dates.
+#' @return \code{dist_ord} numeric vector ordererd starting with the date of highest distance to date_reference
+#' @keywords internal
+#' @noRd
+.help_dist_to_date <- function(dates, date_reference) {
+  
+  dist_to_ref <- sapply(dates,function(d) {d-date_reference}) # calc distance to the median date in days
+  dist_ord <- order(abs(dist_to_ref),decreasing=T) # get it ordered in a way that vector starts with dates of largest distance to median date
+  
+}
+
+
+#' helper for grading values including a kernel (-3 to +3) around a value (e.g. a date).
+#' @param date_grade numeric vector of grade values.
+#' @return \code{date_grade} numeric vector updated by the values within kernel.
+#' @keywords internal
+#' @noRd
+.help_grade_kernel <- function(date_grade) {
+  
+  date_grade_copy <- date_grade
+  for (i in 1:length(date_grade)) {
+    if (i <= 3) {
+      kernel <- c(1,2,3,-1,-2)[1:(i+2)]
+    } else if (i > 3 && i < (length(date_grade)-2)) {
+      kernel <- -3:3
+      kernel <- kernel[which(kernel!=0)]
+    } else {
+      j <- length(date_grade) - i
+      kernel <- c(-3,-2,-1,1,2)[1:(j+3)]
+    }
+    g <- unlist(date_grade_copy[i])
+    # get kernel values and divide through kernel value in order to advantage values that are close to the date of interest (i)
+    neighbors <- unlist(sapply(kernel,function(k) n <- (date_grade_copy[i+k]) / k))
+    grade_new <- sum(c(g,neighbors))
+    date_grade[[names(date_grade)[i]]] <- grade_new
+  }
+  return(date_grade)
+  
+}
+
 
 #' helper for creating a list of numeric vectors with all possible combinations of numerics (not orders, just combinations)
 #' @param x numeric vector.
@@ -1551,38 +1756,23 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
 }
 
-#' shortens the subset of a vector !is.na(). For example df[vec[!is.na(vec)],] is not handy
-#' @param vec vector.
-#' @return \code{vec_checked} vector check: vec[!is.na(vec)]
-#' @keywords internal
-#' @noRd
-
-vNA <- function(vec) {
-  return(vec[!is.na(vec)])
-}
-
-#' creates a tile id for Landsat data from WRSRow and WRSPath
-#' @param records data.frame of Landsat data.
-#' @return \code{records} data.frame with an added column: 'tile_id'
-#' @keywords internal
-#' @noRd
-.make_Landsat_tileid <- function(records) {
-  
-  records[["tile_id"]] <- paste0(records$WRSPath,records$WRSRow)
-  return(records)
-  
-}
-
-#' creates a tile id for Sentinel data
+#' creates clean tile ids
 #' @param records data.frame.
+#' @param identifier numeric identifier column.
 #' @return \code{records} data.frame with an added column: 'tile_id'
 #' @keywords internal
 #' @noRd
-.make_Sentinel_tileid <- function(records, identifier) {
+.make_tileid <- function(records, identifier) {
   
-  titles <- records[[identifier]]
-  tileids <- sapply(titles,function(x) {return(substr(x,39,44))})
-  records[["tile_id"]] <- tileids
+  sensor_groups <- c("Sentinel","Landsat","MODIS")
+  for (s in sensor_groups) {
+    if (s == sensor_groups[1]) {
+      titles <- records[which(records$sensor_group==s),identifier]
+      records[["tile_id"]] <- sapply(titles,function(x) {return(substr(x,39,44))})
+    } else if (s %in% sensor_groups[2:3]) {
+      records[["tile_id"]] <- paste0(records$WRSPath,records$WRSRow)
+    }
+  }
   return(records)
   
 }
@@ -1609,6 +1799,7 @@ vNA <- function(vec) {
     records[within,"sub_period"] <- i
   }
   return(records)
+  
 }
 
 #' identifies which are date columns in a records data.frame
@@ -1768,6 +1959,46 @@ vNA <- function(vec) {
                - add another sensor.\n"),2)
   }
   
+}
+
+#' creates a selection summary for a SAR selection
+#' @param SAR_selected list of [[ids]] character vector of selected ids per timestamp, [[period]] character vector
+#' of two dates and [[sub-period]] numeric the sub-period number.
+#' @param records data.frame.
+#' @param par list holding everything inserted into this parameter list in the calling select function.
+#' @return \code{console_summary_warning} list of two character vectors holding the messages:
+#' [[1]] Summary info
+#' [[2]] Warning if minimum coverage of tiles does not reach number of tiles.
+#' @keywords internal
+#' @noRd
+.select_SAR_summary <- function(selected_SAR, records, par) {
+  
+  sep <- "\n----------------------------------------------------------------"
+  covered_tiles_ts_wise <- sapply(selected_SAR,function(s) {
+    num_tiles <- length(unique(records[match(s[["ids"]],records[[identifier]]),par$tileid_col]))
+  })
+  header <- paste0("\n-- Selection Process Summary Overall --")
+  info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
+  info2 <- paste0("\n- Number of covered tiles in timestamp-wise SAR mosaics of selected records: ")
+  info3 <- c()
+  for (i in 1:length(covered_tiles_ts_wise)) {
+    num_tiles <- covered_tiles_ts_wise[i]
+    info3[i] <- paste0("\n    Timestamp ",i," covers:",num_tiles)
+  }
+  console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,sep,"\n")
+  # check if for all timestamps all tiles are covered
+  check_tile_cov <- which(covered_tiles_ts_wise != length(par$tileids))
+  # return warning if check_tile_cov has length > 0
+  le <- length(check_tile_cov)
+  char <- c()
+  for (x in check_tile_cov) char <- ifelse(le == 1,x,paste0(char,x,", "))
+  warning <- ifelse(le == 0,NULL,paste0("\nFor timestamps: \n   ",char,
+                                        "\nnot all tiles could be covered with the given parameters. You could e.g.:\n
+                                        - decrease 'num_timestamps',
+                                        - decrease 'min_distance',
+                                        - increase 'max_period'.")) 
+  
+  console_summary_warning <- list(console_summary,warning)
 }
 
 #' prints character vectors in console combined into one message in out()

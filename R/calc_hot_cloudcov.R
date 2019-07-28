@@ -42,20 +42,22 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   
   out(paste0("Processing: ",record$entityId),msg=T)
   dir_given <- !is.null(dir_out)
-  scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
-  aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   cloud_mask_path <- "cloud_mask_file"
+  aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   aoi_HOT_mean_probability <- "aoi_HOT_mean_probability"
+  scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
   na_case <- "NONE"
   error <- "try-error"
   currTitle <- record[[identifier]]
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   
-  crs <- proj4string(preview)
-  if (is.na(crs)) {
-    out("Preview seems not to be geo-referenced. No projection found.",type=3)
+  crs <- try(proj4string(preview))
+  if (is.na(crs) || inherits(crs,error)) {
+    record <- .handle_cc_skip(record,dir_out=dir_out)
+    return(record)
   }
+  
   aoi <- .handle_aoi(aoi,crs)
   
   # Handle broken preview (indicated by non-existence of DNs > 40)

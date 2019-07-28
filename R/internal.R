@@ -684,10 +684,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     csv_path <- file.path(dir_out,paste0(currRecord[,identifier],".csv"))
     if (file.exists(csv_path)) {
       currRecCloudCover <- read.csv(csv_path)
+      currRecCloudCover <- currRecCloudCover[,2:NCOL(currRecCloudCover)]
       return(currRecCloudCover)
     }
     # pass preview to HOT function
-    cond <- !is.null(preview) || !inherits(preview,"try-error")
+    cond <- !is.null(preview) && !inherits(preview,"try-error")
     if (cond) {
       currRecCloudCover <- try(calc_hot_cloudcov(record=currRecord,preview=preview,aoi=aoi,identifier=identifier,cloudPrbThreshold=cloudPrbThreshold,maxDeviation=maxDeviation,sceneCloudCoverCol=sceneCloudCoverCol,
                                                  slopeDefault=slopeDefault,interceptDefault=interceptDefault,dir_out=dir_out,verbose=verbose))
@@ -705,8 +706,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if (numRecords >= 10 && i == 5) {
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
-    if (!is.null(dir_out)) {
-      write.csv(currRecCloudCover,csv_path)
+    if (!is.null(dir_out)) write.csv(currRecCloudCover,csv_path)
+    
+    if (NCOL(currRecCloudCover) != 48) {
+      View(currRecCloudCover)
+      cat("problematic: ",currRecord[,1])
     }
     return(currRecCloudCover)
   }))
@@ -746,11 +750,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .handle_cc_skip <- function(record, is_SAR = FALSE, dir_out = NULL) {
   
-  currRecord[["aoi_hot_cc_percent"]] <- ifelse(is_SAR,NA,100)
-  currRecord[["scene_hot_cc_percent"]] <- ifelse(is_SAR,NA,9999)
-  currRecord[["aoi_HOT_mean_probability"]] <- ifelse(is_SAR,NA,100)
   if (!is.null(dir_out)) record[["cloud_mask_file"]] <- "NONE"
-  return(currRecord)
+  record[["aoi_HOT_cloudcov_percent"]] <- ifelse(is_SAR,NA,100)
+  record[["aoi_HOT_mean_probability"]] <- ifelse(is_SAR,NA,100)
+  record[["scene_HOT_cloudcov_percent"]] <- ifelse(is_SAR,NA,9999)
+  return(record)
   
 }
 
@@ -1027,6 +1031,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' create mosaic consecutively in the order of ordered records (according to aoi cloud cover)
 #' Important: the cloud masks have to have NA where clouds or no data.
 #' @param records data.frame that contains all records within the sub-period but will be subsetted to \code{sub}.
+#' @param base_records character vector of paths to cloud masks that create a base mosaic.
 #' @param aoi aoi.
 #' @param sub list of numeric vectors. Each vector represents one tile id and indexes records in \code{records}.
 #' @param cloud_mask_col character name of cloud mask path column.
@@ -1042,27 +1047,35 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom raster minValue maxValue
 #' @keywords internal
 #' @noRd
-.select_calc_mosaic <- function(records, aoi, sub, cloud_mask_col, min_improvement, ts, dir_out, identifier) {
+.select_calc_mosaic <- function(records, base_records, aoi, sub, cloud_mask_col, 
+                                min_improvement,
+                                ts, dir_out, identifier) {
   
   dir_tmp <- .tmp_dir(dir_out,1)
-  le_first_order <- length(sub[[1]])
   sub <- unlist(compact(sub))
   collection <- sapply(sub,function(x) cmask_path <- records[[cloud_mask_col]][x]) # get paths to cloud masks. This is the queue for processing
-  # this vector are all orders in an order from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
+  # this vector are all orders ordered from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
   collection <- collection[which(collection != "NONE")]
   # start mosaicking
   # create the first base mosaic from the first order of collection (best records per tile)
-  base_records <- sapply(1:le_first_order,function(i) return(collection[i])) # paths of first record of each tile
+  # if base_records are given through arguments these are records selected for a prio_sensor
+  # that create the base mosaic
+  if (is.null(base_records)) {
+    # paths of first record of each tile
+    base_records <- sapply(1:le_first_order,function(i) return(collection[i]))
+    start <- length(sub[[1]]) + 1 # if base mosaic is the first order skip it during further mosaic
+  } else {
+    start <- 1 # if base mosaic is the mosaic of a prio sensor process all of this sensor
+  }
+  # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(dir_tmp,"mosaic_tmp.tif")
-  # calculate the base mosaic with each tile covered by first record
-  # this base mosaic will be updated with each added record after check valid cover is increased
-  base_mos_r <- .select_bridge_mosaic(base_records,aoi,base_mos_path) 
+    base_mos_r <- .select_bridge_mosaic(base_records,aoi,base_mos_path) 
   rm(base_mos_r)
   base_coverage <- -1000
   covers_nas <- TRUE # starting with TRUE because at the beginning it is always TRUE
   # add next cloud mask consecutively and check if it decreases the cloud coverage
-  for (i in (le_first_order+1):length(collection)) {
+  for (i in start:length(collection)) {
     if (i == 1) {out("Current coverage of valid pixels")}
     x <- collection[i] # do it this way in order to keep id
     # before calculating the next mosaic, check if record tile is within the area of non-covered pixels at all
@@ -1270,12 +1283,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 
 #' main process of a selection process
 #' @param records data.frame.
-#' @param period_new character vector holding the period (two dates) of the previously selected timestamp.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
-#' @param has_SAR logical if records data.frame has SAR records.
+#' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
 #' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
 #' @param dir_out character directory where to save intermediate product.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
@@ -1283,35 +1295,70 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @return selected list of selected 
 #' @keywords internal
 #' @noRd
-.select_main <- function(records, period_new, 
-                         min_distance, max_sub_period, max_cloudcov_tile, min_improvement, has_SAR, 
+.select_main <- function(records, 
+                         min_distance, max_sub_period, max_cloudcov_tile, 
+                         min_improvement, prio_sensors = NULL,
                          par, dir_out, identifier, timestamp) {
   
-  tstamp <- new.env()
-
-  tstamp$records <- records[records$sub_period==timestamp,]
-  tstamp$records <- tstamp$records[which(!is.na(records[[par$preview_col]])),]
-  .catch_empty_records(tstamp$records,ts=timestamp)
-  tstamp$period <- .identify_period(ts$records[[par$date_col]])
-  if (timestamp > 1) {
-    # enforce to min_distance from previous timestamp
-    tstamp$first_date <- .select_force_distance(period_new,min_distance)
-    tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
-                                             period_initial=tstamp$period,
-                                             min_distance,max_sub_period)
-    tstamp$records <- .within_period(records,tstamp$period,par$date_col) # subset to records within period
+  period_new <- c()
+  base_records <- c()
+  if (is.null(prio_sensors)) prio_sensors <- 1
+  le_prio_is_one <- length(prio_sensors) == 1
+  for (s in prio_sensors){
+    s_match <- ifelse(le_prio_is_one,
+                      # in case prio_sensors is not given process all sensors together
+                      which(!is.na(records$sensor)),
+                      # in case prio_sensors is given process sensors in this order
+                      which(records$sensor==s)) 
+    sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
+    if (length(sensor_match) == 0) break # no records for sensors s at timestamp
+    tstamp <- new.env()
+    tstamp$records <- records[sensor_match,]
+    tstamp$records <- tstamp$records[which(!is.na(records[[par$preview_col]])),]
+    .catch_empty_records(tstamp$records,ts=timestamp)
+    tstamp$period <- .identify_period(ts$records[[par$date_col]])
+    if (timestamp > 1) {
+      # enforce to min_distance from previous timestamp
+      tstamp$first_date <- .select_force_distance(period_new,min_distance)
+      tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
+                                               period_initial=tstamp$period,
+                                               min_distance,max_sub_period)
+      tstamp$records <- .within_period(records,tstamp$period,par$date_col) # subset to records within period
+    }
+    # run the selection process
+    selected <- .select_process_sub(tstamp$records,tstamp$period,
+                                    period_new=period_new,base_records=base_records,
+                                    max_sub_period,max_cloudcov_tile=max_cloudcov_tile,
+                                    min_improvement=min_improvement,
+                                    par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
+    if (!le_prio_is_one) {
+      period_new <- selected$period # for selection of records from next sensor in prio_sensors
+      base_records <- selected$cmask_paths # the base mosaic for selection of records of next sensor
+    }
   }
-  # run the selection process
-  selected <- .select_process_sub(tstamp$records,tstamp$period,max_sub_period,
-                                  max_cloudcov_tile=max_cloudcov_tile,
-                                  min_improvement=min_improvement,
-                                  par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
 
+}
+
+#' checks the prio_sensors argument
+#' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
+#' @return nothing. In case of problematic input in prio_sensors: error.
+#' @keywords internal
+#' @noRd
+.select_check_prio_sensors <- function(prio_sensors) {
+  
+  if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character (vector)",3)
+  optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
+  some_wrong <- anyFALSE(sapply(prio_sensors,function(x) check <- x %in% optical_sensors))
+  if (some_wrong) {
+    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by function get_names()",3)
+  }
+  
 }
 
 #' select timestamps for SAR data according to num_timestamps and min_distance. This
 #' can be the fundament for an optical selection or if has_SAR == 100 (only SAR in records) it is the only selection
 #' @param records data.frame.
+#' @param period_new list of character vectors of two dates, one vector for each timestamp.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param max_sub_period
@@ -1322,7 +1369,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' character vector of two dates (start and end date of SAR sub-period)
 #' @keywords internal
 #' @noRd
-.select_SAR <- function(records, max_sub_period, min_distance, num_timestamps, par, identifier) {
+.select_SAR <- function(records, period_new = NULL, max_sub_period, min_distance, num_timestamps, par, identifier) {
   
   subperiods <- unique(records$sub_period)
   # if the length of the current sub-period is longer than max_sub_period grade all dates in sub_period
@@ -1342,41 +1389,33 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       records_in_s <- .within_period(records_in_s,period_s) # subset to records within period_s
     }
     tiles_s <- records_in_s[[par$tileid_col]]
-    dates_s <- records_in_s[[par$date_col]]
+    dates_s <- sapply(records_in_s[[par$date_col]],as.Date)
     sub_period_le <- length(max(dates_s)-min(dates_s))
     # grade dates and exclude consecutively
     if (sub_period_le > max_sub_period) {
-      date_seq <- min(dates_s):max(dates_s)
-      date_grade <- sapply(date_seq,function(date) {
+      dates_seq <- min(dates_s):max(dates_s)
+      date_grade <- sapply(dates_seq,function(date) {
         records_match <- which(dates_s==date)
         # include one record per tile for the grading as for SAR several records on one date = no benefit
         grade <- length(unique(records[records_match,par$tileid_col]))
       })
-      # this is the date with the highest number of records covering different tiles
-      date_reference <- .help_ref_date(date_grade) 
-      # calculate the distance for each date in the order from the median date
-      dist_ord <- .help_dist_to_date(dates_s,date_reference)
-      # revert dist_ord in order to start with best dates and include dates until all tiles are covered
-      incl <- c()
-      for (dist in rev(dist_ord)) {
-        incl <- c(incl,dist)
-        dates_tmp <- records_in_s[incl,par$date_col]
-        tiles_tmp <- records_in_s[incl,par$tileid_col]
-        if (anyDuplicated(tiles_tmp)) { # only if the added record is a tile that was not yet covered
-          period_tmp <- .identify_period(dates_tmp)
-          period_tmp_le <- .calc_days_period(period_tmp)
-          if (period_tmp_le <= max_sub_period) break
-        }
-      }
-      sel <- records_in_s[incl,identifier] # ids of selected records
+      # calculate best_period based on date_grade, in combination with period_new
+      # and while ensuring max_sub_period
+      best_period <- .select_best_period(date_grade = date_grade, dates_seq = dates_seq, 
+                                         min_date = min(dates_seq), max_date = max(dates_seq),
+                                         period_new = period_new,
+                                         max_sub_period = max_sub_period)
+      incl <- .select_subset_to_best_period(dates_s, best_period)
+      ids <- records_in_s[incl,identifier] # ids of selected records in upated sub-period
     } else {
-      sel <- records_in_s[[identifier]] # all ids of records in sub-period
+      ids <- records_in_s[[identifier]] # all ids of records in sub-period
     }
-    dates_sel <- records_in_s[which(sel %in% records[[identifier]]),par$date_col]
-    selected_SAR[[s]] <- list(ids=sel,period=.identify_period(dates_sel),sub-period=s)
+    dates_sel <- records_in_s[which(ids %in% records[[identifier]]),par$date_col]
+    period <- .identify_period(dates_sel)
+    selected_SAR[[s]] <- list("ids"=ids,"period"=period,"sub-period"=s)
   }
   
-  return(selected)
+  return(selected_SAR)
 
 }
 
@@ -1384,6 +1423,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' calls the different steps of selection for a sub-period
 #' @param records data.frame subsetted to a sub-period.
 #' @param period character vector of start and end date.
+#' @param period_new character vector an existing period for the timestamp. Default is c().
+#' @param base_records character vector of paths to cloud masks that create a base mosaic. Default is NULL.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
@@ -1393,10 +1434,12 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @param ts numeric of the current timestamp.
 #' @return \code{selected} list of [[ids]] character vector of selected ids, [[cMask_paths]] character vector to cloud masks, 
-#' [[valid_pixels]] percentage of valid pixels in mosaic with the given selection. 
+#' [[valid_pixels]] percentage of valid pixels in mosaic with the given selection, [[period]] charater vector of two dates.
 #' @keywords internal
 #' @noRd
-.select_process_sub <- function(records, period, max_sub_period, max_cloudcov_tile, min_improvement, par, dir_out, identifier, ts) {
+.select_process_sub <- function(records, period, period_new = c(), base_records = NULL,
+                                max_sub_period, max_cloudcov_tile, min_improvement, 
+                                par, dir_out, identifier, ts) {
   
   tiles <- unique(records[[par$tileid_col]])
   tiles <- tiles[!is.na(tiles)]
@@ -1405,13 +1448,18 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                      aoi_cc_col=par$aoi_cc_col,cc_index_col=par$cc_index_col,tileid_col=par$tileid_col,
                      date_col=par$date_col,
                      identifier=identifier)
-  sub_within <- .select_force_period(records,sub,period,max_sub_period,
-                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,cc_index_col=par$cc_index_col)
+  sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
+                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,
+                                     cc_index_col=par$cc_index_col)
   # make best mosaic of cloud masks for first timestamp
   sep <- "----------------------------------------------------------------"
   out(sep)
   out(paste0("Calculating best mosaic for timestamp: ",ts))
-  selected <- .select_calc_mosaic(records,aoi,sub_within,par$cloud_mask_col,min_improvement=min_improvement,ts,dir_out,identifier)
+  selected <- .select_calc_mosaic(records,base_records=base_records,
+                                  aoi,sub_within,par$cloud_mask_col,
+                                  min_improvement=min_improvement,
+                                  ts=ts,dir_out,identifier)
+  selected$period <- .identify_period(records[records[[identifier]]==selected$ids],par$date_col)
   out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
   
@@ -1504,6 +1552,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param sub list of numeric vectors each pointing to a record.
 #' @param period character vector of start and end date.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
+#' @param period_new character vector of an existing period for this timestamp.
 #' @param date_col character name of the date column.
 #' @param aoi_cc_col character name of aoi cloud cover column.
 #' @param cc_index_col character name of the cloud cover index column.
@@ -1511,14 +1560,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
-.select_force_period <- function(records, sub, period, max_sub_period, date_col, aoi_cc_col, cc_index_col) {
+.select_force_period <- function(records, sub, period, max_sub_period, period_new, 
+                                 date_col, aoi_cc_col, cc_index_col) {
   
   # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
   sub <- compact(sub)
   max_num_sel <- max(sapply(sub,length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i])))) # to matrix
   orders <- data.frame(orders) 
-  period_new <- c()
   sub_within <- list()
   for (i in 1:NCOL(orders)) {
     x <- orders[,i]
@@ -1563,19 +1612,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 }
 
 #' finds optimal dates from a records order within a period of a timestamp and max_sub-period.
-#' It is possible that the period length of already added records from a different order is not equal to 
-#' max_sub_period. For excluding the smallest number of dates in order to match max_sub_period, a reference date
-#' is needed. If the given period_new length matches max_sub_period the reference date is the median
-#' date in period_new. In the other case, the reference date is computed from a grading process of all dates provided 
-#' through x and records. First, all dates in the period of x are graded according to their cloud cover and the number
-#' of records of this date. Second, a kernel to each date is applied in order to account for the density of valuable records.
-#' The date receiving the highest grade is the reference date temporally. In case the combined period length of this reference date 
-#' and period_new does not match max_sub_period, the reference date is adjusted step-wise until it matches max_sub_period. 
-#' For all records the distance from this date is calculated. The records that are temporally most far away 
-#' from the reference date are being excluded consecutively until the new period length matches max_sub_period.
-#' @param x numeric vector.
+#' @param x numeric vector. All values index a record in records.
 #' @param records data.frame.
-#' @param period_new period_new.
+#' @param period_new character vector of two dates.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param date_col date_col.
 #' @param aoi_cc_col aoi_cc_col.
@@ -1586,10 +1625,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_remove_dates <- function(x, records, period_new, max_sub_period, date_col, aoi_cc_col) {
   
   dates <- sapply(records[x,date_col],function(d) {as.Date(d)})
-  period_new_date <- sapply(period_new,as.Date)
   # for each of the dates count how many records are given, this creates a distribution of the records in time as a basis for reference date selection
   # grade each date according to number of given records and the mean aoi cloud cover of this records
-  dates_seq <- min(dates):max(dates)
+  min_date <- min(dates)
+  max_date <- max(dates)
+  dates_seq <- min_date:max_date
   date_grade <- list()
   for (d in dates_seq) {
     sel <- which(dates == d)
@@ -1599,134 +1639,83 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     date_grade[[as.character(d)]] <- value
   }
   
-  # include the grades of the three neighboring records in order to estimate the highest density of good records
-  date_grade <- .help_grade_kernel(date_grade)
-  
-  # as reference date take where highest value is found in kernel grades
-  # increase or decrease this date until it is within max_period in combination with period_new
-  # create a new period from this best date and the old new_period and chose the median date as reference date
-  date_grade <- unlist(date_grade)
-  if (is.null(period_new)) {
-    date_reference <- .help_ref_date(date_grade) # in case no period_new yet given this is the reference date
-  } else {
-    n <- 0
-    outside_period <- TRUE
-    decrease <- TRUE
-    maxTry <- FALSE
-    while (outside_period || maxTry) {
-      best <- ifelse(decrease,date_reference-n,date_reference+n)
-      dates_comb <- c(period_new_date,best)
-      period <- as.numeric(c(min(dates_comb),base::max(dates_comb)))
-      le <- period[2] - period[1]
-      outside_period <- le > max_sub_period
-      decrease <- best > max(period_new_date)
-      n <- n+1
-      maxTry <- n>=500
-    }
-    # calculate median date
-    new_dates_tmp <- c(best,period_new_date)
-    date_reference <- round(median(min(new_dates_tmp):max(new_dates_tmp)))
-  }
-  # calculate the distance for each date in the order from the median date
-  dist_ord <- .help_dist_to_date(dates,date_reference)
-  excl <- c()
-  for (dist in dist_ord) {
-    excl <- c(excl,dist)
-    order_tmp <- x[-excl]
-    period_tmp <- .select_bridge_period(records,order_tmp,period_new,date_col)
-    period_tmp_le <- .calc_days_period(period_tmp)
-    if (period_tmp_le <= max_sub_period) break
-  }
-  order <- x[-excl]
+  # select best period with maximum values in sum of grades while ensuring max_sub_period
+  # if a period_new is given test all possible periods combined with period_new
+  best_period <- .select_best_period(date_grade = date_grade, dates_seq = dates_seq, 
+                                     min_date = min_date, max_date = max_date,
+                                     period_new = period_new,
+                                     max_sub_period = max_sub_period)
+  incl <- .select_subset_to_best_period(dates, best_period)
+  order <- x[incl]
   return(order)
   
 }
 
-#' helper for selecting the reference date in a dates grading process when no previous period_new is given
-#' @param date_grade numeric vector of grades, each corresponding to a date in a sub-period.
-#' @return \code{date_reference} numeric as number of days since 1970-01-01
+#' helper for subsetting records to the best_period
+#' @param dates numeric vector of dates as days since 1970-01-01.
+#' @param best_period numeric vector of two dates in the same format as dates.
+#' @return \code{order} 
 #' @keywords internal
 #' @noRd
-.help_ref_date <- function(date_grade) {
-  
-  date_reference <- as.numeric(names(date_grade[order(date_grade,decreasing=T)[1]]))
-  
+.select_subset_to_best_period <- function(dates, best_period) {
+  incl <- intersect(which(dates > best_period[1]),which(dates < best_period[2]))
 }
 
-#' helper for calculating the distance of dates to a reference date and ordering them
-#' @param dates numeric vector of dates in days since 1970-01-01.
-#' @param date_reference numeric a date in same format as dates.
-#' @return \code{dist_ord} numeric vector ordererd starting with the date of highest distance to date_reference
-#' @keywords internal
-#' @noRd
-.help_dist_to_date <- function(dates, date_reference) {
-  
-  dist_to_ref <- sapply(dates,function(d) {d-date_reference}) # calc distance to the median date in days
-  dist_ord <- order(abs(dist_to_ref),decreasing=T) # get it ordered in a way that vector starts with dates of largest distance to median date
-  
-}
-
-
-#' helper for grading values including a kernel (-3 to +3) around a value (e.g. a date).
+#' selects best period from graded dates of a timestamp, optionally combined
+#' with a period_new while ensuring max_sub_period.
 #' @param date_grade numeric vector of grade values.
-#' @return \code{date_grade} numeric vector updated by the values within kernel.
+#' @param dates_seq sequence of characters all dates in given records of adjusted sub-period.
+#' @param min_date numeric date as days since 1970-01-01. Minimum date of dates_seq.
+#' @param max_date numeric date as days since 1970-01-01. Maximum date of dates_seq.
+#' @param period_new character vector of two dates. A period to which given records shall
+#' be adjusted. Can be NULL if not existing.
+#' @param max_sub_period numeric number of days.
+#' @return \code{best_period} numeric vector of two date values as days since 1970-01-01.
 #' @keywords internal
 #' @noRd
-.help_grade_kernel <- function(date_grade) {
+.select_best_period <- function(date_grade, dates_seq, min_date, max_date, 
+                               period_new, max_sub_period) {
   
-  date_grade_copy <- date_grade
-  for (i in 1:length(date_grade)) {
-    if (i <= 3) {
-      kernel <- c(1,2,3,-1,-2)[1:(i+2)]
-    } else if (i > 3 && i < (length(date_grade)-2)) {
-      kernel <- -3:3
-      kernel <- kernel[which(kernel!=0)]
-    } else {
-      j <- length(date_grade) - i
-      kernel <- c(-3,-2,-1,1,2)[1:(j+3)]
-    }
-    g <- unlist(date_grade_copy[i])
-    # get kernel values and divide through kernel value in order to advantage values that are close to the date of interest (i)
-    neighbors <- unlist(sapply(kernel,function(k) n <- (date_grade_copy[i+k]) / k))
-    grade_new <- sum(c(g,neighbors))
-    date_grade[[names(date_grade)[i]]] <- grade_new
+  dates_seq <- sapply(dates_seq,as.Date)
+  max_sub_half <- round((max_sub_period - 1) / 2)
+    if (is.null(period_new)) {
+    # for each date in dates_seq create the sub_period around it according to max_sub_period
+    # calculate the sum grade of all dates within that sub_period
+    # check optionally if this sub_period matches max_sub_period together within period_new
+    # return the mean grade value or NA
+    max_sub_half <- (max_sub_period - 1) / 2
+    sum_grade <- sapply(dates_seq,function(d) {
+      period_tmp <- c(d - max_sub_half, d + max_sub_half)
+      if (period_tmp[1] < min_date) period_tmp[1] <- min_date
+      if (period_tmp[2] > max_date) period_tmp[2] <- max_date
+      first <- which(dates_seq==period_tmp[1])
+      last <- which(dates_seq==period_tmp[2])
+      sum_grade <- sum(date_grade[first:last])
+      return(sum_grade)
+    })
+    best_middle_date <- dates_seq[which(sum_grade == max(sum_grade))]
+  } else {
+    # find optimal new sub-period from period_new and given grades of dates
+    # chose each date in period_new as middle date of a combined period once and return
+    # the grade for the dates included from the included records from date_grade
+    # but only if this shifted period 
+    period_new_date <- sapply(period_new,as.Date)
+    period_new_seq <- period_new_date[1]:period_new_date[2]
+    shifted_grades <- sapply(period_new_seq,function(d) {
+      period_tmp <- c(d - max_sub_half,d + max_sub_half)
+      period_new_tmp <- .identify_period(c(period_new_date,period_tmp))
+      period_new_tmp_seq <- period_new_tmp[1]:period_new_tmp[2]
+      if (length(period_new_tmp_seq) > max_sub_period) return(NA)
+      sum_grade <- sum(date_grade[which(period_new_tmp_seq %in% dates_seq)])
+      return(sum_grade)
+    })
+    best_middle_date <- period_new_seq[which(shifted_grades == max(shifted_grades))]
   }
-  return(date_grade)
+  best_period <- c((best_middle_date - max_sub_half),best_middle_date + max_sub_half)
+  any_difference <- max_sub_period - length(best_period[1]:best_period[2])
+  if (any_difference > 0) best_period[2] <- best_period[2] + 1 # due to rounding possible
+  return(best_period)
   
-}
-
-
-#' helper for creating a list of numeric vectors with all possible combinations of numerics (not orders, just combinations)
-#' @param x numeric vector.
-#' @return \code{vecs} list of numeric vectors
-#' @importFrom combinat permn
-#' @keywords internal
-#' @noRd
-.help_vec_comb <- function(x) {
-  
-  vseq <- 1:length(x)
-  vals <- list()
-  n <- 0
-  all_comb <- tryCatch({
-    combinat::permn(x)},
-    error=function(err) {
-      return(err)
-    }
-  )
-  if (inherits(all_comb,"error")) {
-    cc <- records[x,aoi_cc_col]
-    
-  }
-  
-  for (c in all_comb) {
-    for (i in vseq) {
-      n <- n+1
-      vals[[n]] <- c[1:i]
-    }
-  }
-  vals_sort <- lapply(vals,sort)
-  vec <- unique(vals_sort)
-
 }
 
 #' bridge function to the period identifier \link{.identify_period}. Enables to calculate from

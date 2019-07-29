@@ -945,9 +945,11 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .extract_clear_date <- function(records, date_col_orig, date_col_name) {
   
-  records[[par$date_col]] <- records[[par$date_col_orig]]
+  records[[par$date_col]] <- as.character(records[[par$date_col_orig]])
   sent_recs <- which(records$sensor_group=="Sentinel")
-  records[sent_recs,par$date_col] <- sapply(records[sent_recs,par$date_col],function(x) clear <- substr(x,1,10))
+  for (i in sent_recs) {
+    records[i,par$date_col] <- as.character(substr(records[i,par$date_col],1,10))
+  }
   return(records)
   
 }
@@ -1277,7 +1279,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,identifier)
-  records <- .select_sub_periods(records,par$period,num_timestamps,par$date_col) # calculates the sub_period column
+  period <- .identify_period(records[[par$date_col]])
+  records <- .select_sub_periods(records,period,num_timestamps,par$date_col) # calculates the sub_period column
 
 }
 
@@ -1753,15 +1756,16 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .make_tileid <- function(records, identifier) {
   
-  sensor_groups <- c("Sentinel","Landsat","MODIS")
+  sensor_groups <- unique(records$sensor_group)
   for (s in sensor_groups) {
     if (s == sensor_groups[1]) {
       titles <- records[which(records$sensor_group==s),identifier]
-      records[["tile_id"]] <- sapply(titles,function(x) {return(substr(x,39,44))})
+      tile_id <- sapply(titles,function(x) {return(substr(x,39,44))})
     } else if (s %in% sensor_groups[2:3]) {
-      records[["tile_id"]] <- paste0(records$WRSPath,records$WRSRow)
+      tile_id <- paste0(records$WRSPath,records$WRSRow)
     }
   }
+  records[["tile_id"]] <- tile_id
   return(records)
   
 }

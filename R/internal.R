@@ -1186,8 +1186,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
-  s <- ifelse(length(sensor)==1,paste0("\n- Sensor:"),paste0("\nSensors:"))
-  out(cat("- Number of timestamps selected:",num_timestamps,s,sensor))
+  s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
+  out(cat("- Number of timestamps selected:",num_timestamps,s))
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
   } else if (sub_period == r) {
@@ -1277,6 +1277,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @noRd
 .select_prep <- function(records, num_timestamps, par, identifier) {
   
+  has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
+                                                     par$preview_col,par$cloud_mask_col))
+  if (has_error) out("Argument 'records' cannot be processed as it lacks relevant columns/values",3)
   records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,identifier)
   period <- .identify_period(records[[par$date_col]])
@@ -1295,7 +1298,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param dir_out character directory where to save intermediate product.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @param timestamp numeric of the current timestamp.
-#' @return selected list of selected 
+#' @return \code{selected} list of selected records with all items returned by .select_process_sub
 #' @keywords internal
 #' @noRd
 .select_main <- function(records, 
@@ -1308,18 +1311,20 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (is.null(prio_sensors)) prio_sensors <- 1
   le_prio_is_one <- length(prio_sensors) == 1
   for (s in prio_sensors){
-    s_match <- ifelse(le_prio_is_one,
-                      # in case prio_sensors is not given process all sensors together
-                      which(!is.na(records$sensor)),
-                      # in case prio_sensors is given process sensors in this order
-                      which(records$sensor==s)) 
+    if (le_prio_is_one) {
+      # in case prio_sensors is not given process all sensors together
+      s_match <- which(!is.na(records$sensor))  
+    } else {
+      # in case prio_sensors is given process sensors in this order
+      s_match <- which(records$sensor==s)
+    }
     sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
     if (length(sensor_match) == 0) break # no records for sensors s at timestamp
     tstamp <- new.env()
     tstamp$records <- records[sensor_match,]
     tstamp$records <- tstamp$records[which(!is.na(records[[par$preview_col]])),]
     .catch_empty_records(tstamp$records,ts=timestamp)
-    tstamp$period <- .identify_period(ts$records[[par$date_col]])
+    tstamp$period <- .identify_period(tstamp$records[[par$date_col]])
     if (timestamp > 1) {
       # enforce to min_distance from previous timestamp
       tstamp$first_date <- .select_force_distance(period_new,min_distance)
@@ -1334,7 +1339,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                                     max_sub_period,max_cloudcov_tile=max_cloudcov_tile,
                                     min_improvement=min_improvement,
                                     par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
-    if (!le_prio_is_one) {
+    if (isFALSE(le_prio_is_one)) {
       period_new <- selected$period # for selection of records from next sensor in prio_sensors
       base_records <- selected$cmask_paths # the base mosaic for selection of records of next sensor
     }
@@ -1351,9 +1356,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character (vector)",3)
   optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
-  some_wrong <- anyFALSE(sapply(prio_sensors,function(x) check <- x %in% optical_sensors))
+  some_wrong <- isFALSE(any(sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
   if (some_wrong) {
-    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by function get_names()",3)
+    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names()",3)
   }
   
 }
@@ -1637,8 +1642,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   for (d in dates_seq) {
     sel <- which(dates == d)
     cc <- sapply(records[sel,aoi_cc_col],function(c) {100-as.numeric(c)}) # turn low cc values into high ones because high counts of sel are good
-    count <- length(sel)
-    value <- ifelse(length(cc)==0,0,mean(count * cc))
+    value <- ifelse(length(cc)==0,0,mean(length(sel) * cc))
     date_grade[[as.character(d)]] <- value
   }
   
@@ -1679,24 +1683,23 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 .select_best_period <- function(date_grade, dates_seq, min_date, max_date, 
                                period_new, max_sub_period) {
   
-  dates_seq <- sapply(dates_seq,as.Date)
-  max_sub_half <- round((max_sub_period - 1) / 2)
-    if (is.null(period_new)) {
+  max_sub_half <- (max_sub_period - 1) / 2
+  if ((max_sub_half %% 2) != 0) max_sub_half <- max_sub_half - 0.5
+  if (is.null(period_new)) {
     # for each date in dates_seq create the sub_period around it according to max_sub_period
     # calculate the sum grade of all dates within that sub_period
     # check optionally if this sub_period matches max_sub_period together within period_new
     # return the mean grade value or NA
-    max_sub_half <- (max_sub_period - 1) / 2
     sum_grade <- sapply(dates_seq,function(d) {
       period_tmp <- c(d - max_sub_half, d + max_sub_half)
       if (period_tmp[1] < min_date) period_tmp[1] <- min_date
       if (period_tmp[2] > max_date) period_tmp[2] <- max_date
       first <- which(dates_seq==period_tmp[1])
       last <- which(dates_seq==period_tmp[2])
-      sum_grade <- sum(date_grade[first:last])
+      sum_grade <- sum(unlist(date_grade[first:last]))
       return(sum_grade)
     })
-    best_middle_date <- dates_seq[which(sum_grade == max(sum_grade))]
+    best_middle_date <- dates_seq[which(sum_grade == max(sum_grade))][1]
   } else {
     # find optimal new sub-period from period_new and given grades of dates
     # chose each date in period_new as middle date of a combined period once and return
@@ -1709,14 +1712,24 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       period_new_tmp <- .identify_period(c(period_new_date,period_tmp))
       period_new_tmp_seq <- period_new_tmp[1]:period_new_tmp[2]
       if (length(period_new_tmp_seq) > max_sub_period) return(NA)
-      sum_grade <- sum(date_grade[which(period_new_tmp_seq %in% dates_seq)])
+      sum_grade <- sum(unlist(date_grade[which(period_new_tmp_seq %in% dates_seq)]))
       return(sum_grade)
     })
-    best_middle_date <- period_new_seq[which(shifted_grades == max(shifted_grades))]
+    best_middle_date <- period_new_seq[which(shifted_grades == max(shifted_grades))][1]
   }
   best_period <- c((best_middle_date - max_sub_half),best_middle_date + max_sub_half)
   any_difference <- max_sub_period - length(best_period[1]:best_period[2])
-  if (any_difference > 0) best_period[2] <- best_period[2] + 1 # due to rounding possible
+  # due to rounding
+  if (any_difference > 0) {
+    add_dates <- c(as.character(best_period[1]-1),as.character(best_period[2]+1))
+    add_grades <- c(date_grade[[add_dates[1]]],date_grade[[add_dates[2]]])
+    add_this <- which(add_grades == max(add_grades))
+    if (add_this == 1) {
+      best_period[1] <- best_period[1] - 1
+    } else {
+      best_period[2] <- best_period[2] + 1 
+    }
+  }
   return(best_period)
   
 }
@@ -1951,6 +1964,36 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                - increase 'max_period',
                - add another sensor.\n"),2)
   }
+  
+}
+
+#' checks if columns are given in records and if they have values
+#' @param records data.frame.
+#' @param cols character vector of column names to be checked on.
+#' @return nothing. Console error if column is not given.
+#' @keywords internal
+#' @noRd
+.catch_missing_columns <- function(records, cols) {
+  
+  missing <- c()
+  empty <- c()
+  for (col in cols) {
+    is_missing <- isFALSE(col %in% names(records))
+    is_empty <- all(is.na(records[[col]]))
+    if (isTRUE(is_missing)) {
+      missing <- c(missing,col)
+    }
+    if (isTRUE(is_empty)) {
+      empty <- c(empty,col)
+    }
+  }
+  for (fail in unique(c(missing,empty))) {
+    if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n",fail,"\n"),2)
+    if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n",fail,"\n"),2)
+  }
+  
+  error <- sapply(c(missing,empty),function(x) !is.null(x))
+  if (TRUE %in% error) return(TRUE) else return(FALSE)
   
 }
 

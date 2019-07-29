@@ -1723,7 +1723,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if (any_difference > 0) {
     add_dates <- c(as.character(best_period[1]-1),as.character(best_period[2]+1))
     add_grades <- c(date_grade[[add_dates[1]]],date_grade[[add_dates[2]]])
-    add_this <- which(add_grades == max(add_grades))
+    # if add_grades is null then there are no records given and it does not matter
+    add_this <- ifelse(is.null(add_grades),1,which(add_grades == max(add_grades)))
     if (add_this == 1) {
       best_period[1] <- best_period[1] - 1
     } else {

@@ -641,6 +641,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @keywords internal
 #' 
 #' @importFrom utils object.size
+#' @importFrom readr read_csv write_csv
 #' @noRd
 .cloudcov_bridge <- function(sensor = NULL, sceneCloudCoverCol = NULL, records, aoi = NULL,  maxDeviation = 20,
                        cloudPrbThreshold = 40, slopeDefault = 1.4, interceptDefault = -10, 
@@ -666,6 +667,14 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     is_SAR <- sensor == "Sentinel-1"
     # get preview of current record
     currRecord <- records[i,]
+    identifier <- ifelse(grepl("Sentinel",sensor),1,15)
+    csv_path <- file.path(dir_out,paste0(currRecord[,identifier],".csv"))
+    if (file.exists(csv_path)) {
+      out(paste0("Loading because already processed: ",recorrds[i,identifier]),msg=T)
+      currRecCloudCover <- as.data.frame(readr::read_csv(csv_path))
+      currRecCloudCover <- currRecCloudCover[,2:NCOL(currRecCloudCover)]
+      return(currRecCloudCover)
+    }
     if (sensor == "Sentinel-2" || sensor == "Sentinel-3") {
       preview <- try(getSentinel_preview(record=currRecord,on_map=FALSE,show_aoi=FALSE,return_preview=TRUE,
                                      username=username,password=password,verbose=verbose))
@@ -680,12 +689,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       identifier <- 15
     } else if (is_SAR) {
       preview <- NULL
-    }
-    csv_path <- file.path(dir_out,paste0(currRecord[,identifier],".csv"))
-    if (file.exists(csv_path)) {
-      currRecCloudCover <- read.csv(csv_path)
-      currRecCloudCover <- currRecCloudCover[,2:NCOL(currRecCloudCover)]
-      return(currRecCloudCover)
     }
     # pass preview to HOT function
     cond <- !is.null(preview) && !inherits(preview,"try-error")
@@ -706,7 +709,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     if (numRecords >= 10 && i == 5) {
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
-    if (!is.null(dir_out)) write.csv(currRecCloudCover,csv_path)
+    if (!is.null(dir_out)) readr::write_csv(currRecCloudCover,csv_path)
     
     if (NCOL(currRecCloudCover) != 48) {
       View(currRecCloudCover)
@@ -826,6 +829,22 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 
 }
 
+#' calculates area in aoi in km2
+#' @param aoi aoi.
+#' @return aoi_area numeric
+#' @importFrom raster area
+#' @importFrom sf as
+#' @keywords internal
+#' @noRd
+.calc_aoi_area <- function(aoi) {
+  
+  if (class(aoi) != "SpatialPolygons") {
+    aoi_sp <- as(aoi,"Spatial")
+  } else {aoi_sp <- aoi}
+  aoi_area <- raster::area(aoi_sp) / 1000000
+  
+}
+
 #' calculates the number of cells of value 1 covering the aoi
 #' @param aoi aoi.
 #' @param x raster with the resolution.
@@ -838,21 +857,23 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   # calculate aoi number of cells (calculation is suitable for large areas)
   e <- extent(aoi)
   # calculate area of aoi in order to get a suitable resolution for percentage cells computations
-  if (class(aoi) != "SpatialPolygons") {
-    aoi_sp <- as(aoi,"Spatial")
-  } else {aoi_sp <- aoi}
-  aoi_area <- raster::area(aoi_sp) / 1000000
+  aoi_area <- .calc_aoi_area(aoi)
   correction <- aoi_area / 100000 # correction for resolution
+  correction_small <- correction < 1
+  correction <- ifelse(correction_small,1,correction)
   r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=(res(x)*correction))
   values(r) <- 1
   aoi_npixels <- length(extract(r,aoi)[[1]])
   aoi_ncell <- aoi_npixels * (correction^2)
-  
+  if (correction_small) {
+    x_aggr <- x
+  } else {
+    x_aggr <- aggregate(x,correction)
+  }
   # calculate number of cells with value 1 in aoi
-  x_aggr <- aggregate(x,correction)
   x_aggr_npixels <- extract(x_aggr,aoi)[[1]]
   x_aggr_valid <- length(x_aggr_npixels[!is.na(x_aggr_npixels)])
-  x_ncell <- x_aggr_valid * (correction^2)
+  x_ncell <- ifelse(correction_small,x_aggr_valid,x_aggr_valid * (correction^2))
   
   # calculate percentage of pixels with value 1 in aoi
   percent <- (x_ncell / aoi_ncell) * 100
@@ -1046,7 +1067,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
 #' @importFrom plyr compact
 #' @importFrom utils flush.console
-#' @importFrom raster minValue maxValue
+#' @importFrom raster minValue maxValue writeRaster raster crs
 #' @keywords internal
 #' @noRd
 .select_calc_mosaic <- function(records, base_records, aoi, sub, cloud_mask_col, 
@@ -1054,8 +1075,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                                 ts, dir_out, identifier) {
   
   dir_tmp <- .tmp_dir(dir_out,1)
+  le_first_order <- length(sub[[1]])
   sub <- unlist(compact(sub))
-  collection <- sapply(sub,function(x) cmask_path <- records[[cloud_mask_col]][x]) # get paths to cloud masks. This is the queue for processing
+  collection <- sapply(sub,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) # get paths to cloud masks. This is the queue for processing
   # this vector are all orders ordered from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
   collection <- collection[which(collection != "NONE")]
@@ -1065,55 +1087,65 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   # that create the base mosaic
   if (is.null(base_records)) {
     # paths of first record of each tile
-    base_records <- sapply(1:le_first_order,function(i) return(collection[i]))
-    start <- length(sub[[1]]) + 1 # if base mosaic is the first order skip it during further mosaic
+    base_records <- collection[1:le_first_order]
+    start <- le_first_order + 1 # if base mosaic is the first order skip it during further mosaic
   } else {
     start <- 1 # if base mosaic is the mosaic of a prio sensor process all of this sensor
   }
+  # aggregate raster adjusted to aoi area size in order to speed up process
+  names <- names(base_records)
+  base_records <- .aggr_raster(base_records,names,aoi=aoi,dir_out=dir_tmp)
+  names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
-  base_mos_path <- file.path(dir_tmp,"mosaic_tmp.tif")
-    base_mos_r <- .select_bridge_mosaic(base_records,aoi,base_mos_path) 
-  rm(base_mos_r)
+  base_mos_path <- file.path(dir_tmp,"base_mosaic_tmp.tif")
+  base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
+  writeRaster(base_mos,base_mos_path,overwrite=T)
+  rm(base_mos)
   base_coverage <- -1000
-  covers_nas <- TRUE # starting with TRUE because at the beginning it is always TRUE
+  needs_addition <- TRUE # starting with TRUE because at the beginning it is always TRUE
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
-    if (i == 1) {out("Current coverage of valid pixels")}
+    if (i == start) {out("Current coverage of valid pixels")}
     x <- collection[i] # do it this way in order to keep id
-    # before calculating the next mosaic, check if record tile is within the area of non-covered pixels at all
-    if (nchar(base_mos_path) != 0) {
-      curr_base_mos <- raster(base_mos_path) # current mosaic
-      next_record <- raster(x) # record to be added if it supports the mosaic
-      next_record_valid <- next_record[!is.na(next_record)]
-      next_record_valid[next_record_valid == 0] <- NA
-      curr_base_mos <- mask(curr_base_mos,next_record_valid,maskvalue=NA) # mask the mosaic to tile area where of next record
-      curr_base_na <- curr_base_mos[is.na(curr_base_mos)]
-      sum <- curr_base_na + next_record_valid
-      covers_nas <- maxValue(sum) == 2 # if next record has observations where current mosaics has NAs, start mosaicking check
-    }
-    # if record does not cover any NAs (covers_nas == FALSE) in mosaic do not do the mosaicking check
-    if (covers_nas) {
-      base_mos_load_tmp <- raster(base_mos_path)
-      base_mos_path_new <- file.path(dir_tmp,"mos_tmp_new.tif")
-      writeRaster(base_mos_load_tmp,base_mos_path_new,overwrite=T) # create copy of base mos in order to create next mosaic
-      mos <- .select_bridge_mosaic(c(base_mos_path,x),aoi,base_mos_path_new) # mosaic addtional record with previous mosaic (base mosaic)
-      next_coverage <- .raster_percent(mos,mode="aoi",aoi=aoi,mos)
-      # the coverage value has to become larger since base_coverage refers to percentage covered with valid pixels
-      add_it <- next_coverage > (base_coverage + (((100 - base_coverage) / 100) * min_improvement))
+    # before calculating the next mosaic, 
+    # check if record tile is within the area of non-covered pixels at all
+    base_mos <- raster(base_mos_path) # current mosaic
+    name_x <- names(x)
+    x <- .aggr_raster(x,name_x,aoi=aoi,dir_out=dir_tmp)
+    names(x) <- name_x
+    next_record <- raster(x) # record to be added if it supports the mosaic
+    curr_base_mos_crop <- crop(base_mos,next_record) # crop base mosaic to tile area of next
+    aoi_subset <- as(extent(next_record),"SpatialPolygons")
+    crs(aoi_subset) <- crs(next_record)
+    cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset)
+    crop_p <- file.path(dir_tmp,"crop_tmp.tif")
+    curr_mos_tmp_p <- file.path(dir_tmp,"curr_mos_tmp.tif")
+    writeRaster(curr_base_mos_crop,p,overwrite=T)
+    base_tmp <- c(crop_p,x)
+    curr_mos_tmp <- .select_bridge_mosaic(base_tmp,aoi,curr_mos_tmp_p) # in this tile add next_record
+    cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
+    rm(next_record,base_mos,curr_base_mos_crop,curr_mos_tmp)
+    # calculate by how much valid coverage is improved when adding the record to the tile area
+    has_potential <- cov_aft > cov_init # only check for tile
+    if (has_potential) {
+      base_mos <- .select_bridge_mosaic(base_tmp,aoi,base_mos_path_new) # mosaic with added record
+      base_cov_tmp <- .raster_percent(base_mos,mode="aoi",aoi=aoi)
+      add_it <- .exceeds_min_improvement(min_improvement,base_coverage,base_cov_tmp)
       if (add_it) {
         base_records <- c(base_records,x) # add save path of current mosaic
-        base_coverage <- next_coverage
-        base_mos <- save_path
-        if (isTRUE(getOption("gSD.verbose"))) {
-          cov <- as.character(round(base_coverage,2))
-          cov <- ifelse(nchar(cov)==4,cov,paste0(cov,"0"))
-          flush.console()
-          cat("\r","-      ",cov,"  %")
-        }
+        base_mos_path_new <- file.path(dir_tmp,paste0("base_mosaic_",i,"_tmp.tif")) # do not overwrite base_mos directly
+        writeRaster(base_mos,base_mos_path,overwrite=T) # overwrite base mosaic
+        unlink(base_mos_path_new)
+        base_coverage <- base_cov_tmp
+        rm(base_mos)
+        cov <- as.character(round(base_coverage,2))
+        cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
+        flush.console()
+        cat("\r","-      ",cov,"  %")
       }
-      if (round(base_coverage) == 100) {
-        break
-      }
+    }
+    if (round(base_coverage) == 100) {
+      break
     }
   }
   
@@ -1126,19 +1158,63 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   return(selected)
 }
 
+#' checks if an new coverage percentage exceeds the min_improvement argument
+#' @param min_improvement numeric.
+#' @param cov_init numeric.
+#' @param cov_aft numeric.
+#' @return exceeds logical.
+#' @keywords internal
+#' @noRd
+.exceeds_min_improvement <- function(min_improvement, cov_init, cov_aft) {
+  exceeds <- covered_aft >= (covered_init + (((100 - covered_init) / 100) * min_improvement))
+}
+
+#' aggregates a raster according to the aoi area size.
+#' @param x character vector of paths to rasters to check on.
+#' @param x_names character vector of names refering to x.
+#' @param aoi aoi.
+#' @param factor numeric adjustment for aoi_area resulting in an adjustment 
+#' @param dir_out character directory where to save adjusted rasters if necessary
+#' @return x_adj or x (if nothing modified in data) characer vector of paths to (aggregated) rasters.
+#' @importFrom raster raster aggregate
+#' @keywords internal
+#' @noRd
+.aggr_raster <- function(x, x_names, aoi, factor = 500000, dir_out) {
+  
+  aoi_area <- .calc_aoi_area(aoi)
+  adj <- aoi_area / factor
+  if (adj > 1) {
+    x_adj <- sapply(1:length(x),function(i) {
+      curr <- x[[i]]
+      r_load <- raster(curr)
+      r_aggr <- aggregate(r_load,adj)
+      r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
+      writeRaster(r_aggr,r_save_path,overwrite=T)
+      return(r_save_path)
+    })
+  } else {
+    return(x)
+  }
+  return(x_adj)
+  
+}
+
+
 #' bridge to .make_mosaic
 #' @param paths character paths to rasters to be mosaicked.
 #' @param aoi aoi.
 #' @param save_path save_path (should end with '.tif').
-#' @return list of [[1]] the raster mosaic and its [[2]] character save path.
+#' @return mos_base_crop.
 #' @importFrom raster mask crop
 #' @keywords internal
 #' @noRd
 .select_bridge_mosaic <- function(paths, aoi, save_path) {
   
-  mos_base <- .make_mosaic(paths,save_path,mode)
+  mos_base <- .make_mosaic(paths,save_path)
   mos_base_mask <- mask(mos_base,aoi)
   mos_base_crop <- crop(mos_base_mask,aoi)
+  writeRaster(mos_base_crop,save_path,overwrite=T)
+  return(mos_base_crop)
   
 }
 
@@ -1256,7 +1332,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     selected <- c()
     while(!is.na(lwst_cc)) {
       i <- i+1
-      lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,column=cc_index_col, max_column=aoi_cc_col)
+      lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,
+                                column=cc_index_col, max_column=aoi_cc_col)
       if (!is.na(lwst_cc)) {
         selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
       }
@@ -1283,7 +1360,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,identifier)
   period <- .identify_period(records[[par$date_col]])
-  records <- .select_sub_periods(records,period,num_timestamps,par$date_col) # calculates the sub_period column
+  # calculates the sub_period column
+  records <- .select_sub_periods(records,period,num_timestamps,par$date_col) 
 
 }
 
@@ -1308,6 +1386,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   
   period_new <- c()
   base_records <- c()
+  ids <- c()
+  valid_pixels <- 0
   if (is.null(prio_sensors)) prio_sensors <- 1
   le_prio_is_one <- length(prio_sensors) == 1
   for (s in prio_sensors){
@@ -1319,7 +1399,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       s_match <- which(records$sensor==s)
     }
     sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
-    if (length(sensor_match) == 0) break # no records for sensors s at timestamp
+    if (length(sensor_match) == 0) { # no records for sensors s at timestamp
+      if (le_prio_is_one) .catch_empty_records(data.frame()) else break
+    } 
     tstamp <- new.env()
     tstamp$records <- records[sensor_match,]
     tstamp$records <- tstamp$records[which(!is.na(records[[par$preview_col]])),]
@@ -1331,7 +1413,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
                                                period_initial=tstamp$period,
                                                min_distance,max_sub_period)
-      tstamp$records <- .within_period(records,tstamp$period,par$date_col) # subset to records within period
+      tstamp$records <- .within_period(records,tstamp$period,par$date_col) # subset to records in period
     }
     # run the selection process
     selected <- .select_process_sub(tstamp$records,tstamp$period,
@@ -1341,10 +1423,42 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                                     par=par,dir_out=dir_out,identifier=identifier,ts=timestamp)
     if (isFALSE(le_prio_is_one)) {
       period_new <- selected$period # for selection of records from next sensor in prio_sensors
-      base_records <- selected$cmask_paths # the base mosaic for selection of records of next sensor
+      base_records <- c(base_records,selected$cmask_paths) # for base mosaic for selection from next sensor
+      ids <- c(ids,selected$ids) # ids of selected records
+      valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi
+    } else {
+      return(selected)
     }
   }
+  
+  if (length(ids) == 0) .catch_empty_records(data.frame())
+  
+  selected_ts <- list(ids=ids,
+                      cmask_paths=base_records,
+                      valid_pixels=valid_pixels)
 
+}
+
+#' checks if all files in a vector of paths are on disk
+#' @param paths character vector of paths to files to check on.
+#' @param item_name character name of the type of files checking on. E.g. "preview_file".
+#' @return In case all are given: NA. Else: it throws a warning
+#' @keywords internal
+#' @noRd
+.select_catch_files <- function(paths, item_name) {
+  
+  paths <- paths[intersect(which(!is.na(paths)),which(paths != "NONE"))]
+  exist <- sapply(paths,function(p) file.exists(p))
+  all_on_disk <- isTRUE(all(exist))
+  if (all_on_disk) {
+    return(NA)
+  } else {
+    number_not_found <- which(exist == FALSE)
+    out(
+      paste0("All files in '",item_name,"' have to be saved at the location as indicated
+in the paths. Out of ",length(paths)," files ",number_not_found," cannot be located"),2)
+  }
+   
 }
 
 #' checks the prio_sensors argument
@@ -1377,7 +1491,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' character vector of two dates (start and end date of SAR sub-period)
 #' @keywords internal
 #' @noRd
-.select_SAR <- function(records, period_new = NULL, max_sub_period, min_distance, num_timestamps, par, identifier) {
+.select_SAR <- function(records, period_new = NULL, 
+                        max_sub_period, min_distance, num_timestamps, par, identifier) {
   
   subperiods <- unique(records$sub_period)
   # if the length of the current sub-period is longer than max_sub_period grade all dates in sub_period
@@ -1460,14 +1575,13 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                                      date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,
                                      cc_index_col=par$cc_index_col)
   # make best mosaic of cloud masks for first timestamp
-  sep <- "----------------------------------------------------------------"
-  out(sep)
+  out(par$sep)
   out(paste0("Calculating best mosaic for timestamp: ",ts))
   selected <- .select_calc_mosaic(records,base_records=base_records,
                                   aoi,sub_within,par$cloud_mask_col,
                                   min_improvement=min_improvement,
                                   ts=ts,dir_out,identifier)
-  selected$period <- .identify_period(records[records[[identifier]]==selected$ids],par$date_col)
+  selected$period <- .identify_period(records[records[[identifier]]==selected$ids])
   out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
   
@@ -1575,7 +1689,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   sub <- compact(sub)
   max_num_sel <- max(sapply(sub,length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i])))) # to matrix
-  orders <- data.frame(orders) 
+  orders <- data.frame(orders)
   sub_within <- list()
   for (i in 1:NCOL(orders)) {
     x <- orders[,i]
@@ -1591,7 +1705,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       # try with all values in all possible combinations (not orders). Might be that 
       # from 0 to all records except one are within period
       order_within <- .select_remove_dates(order, records, period_new, max_sub_period, date_col, aoi_cc_col)
-      period_new <- .select_bridge_period(records,order_within,period_new,date_col)
+      period_new <- c(period_new,.select_bridge_period(records,order_within,period_new,date_col))
       sub_within[[i]] <- order_within
     }
   }

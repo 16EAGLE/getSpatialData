@@ -2,7 +2,9 @@
 #' 
 #' \code{calc_cloudcov} requests previews using \code{get_preview} and calculates the aoi cloud cover
 #' upon these images. Cloud cover is computed currently using one of the following options:
-#' \itemize Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)). 
+#' \itemize Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
+#' 
+#' @note if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.

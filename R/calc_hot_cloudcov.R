@@ -16,7 +16,7 @@
 #' @param identifier numeric, column number where a unique identifier of the scenes is located, sensor-specific.
 #' @param maxDeviation numeric between 0 and 100. The maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
 #' @param sceneCloudCoverCol character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.
-#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 40}. 
+#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 35}. 
 #' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
@@ -172,8 +172,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101 # start with 101 to enter loop
-  while (numTry <= maxTry && abs(ccDeviationFromProvider) > maxDeviation && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
-    #if (numTry > 1) {cloudPrbThreshold <- cloudPrbThreshold + 1}
+  while (numTry <= maxTry && abs(ccDeviationFromProvider) > maxDeviation && 
+         (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
     if (inherits(cMask,error)) {
       hotFailed <- TRUE

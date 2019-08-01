@@ -24,7 +24,8 @@ Imports:
   cli,
   RStoolbox,
   ggplot2,
-  cowplot
+  cowplot,
+  L1pack
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

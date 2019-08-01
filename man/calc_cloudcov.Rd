@@ -35,7 +35,9 @@ calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
 \description{
 \code{calc_cloudcov} requests previews using \code{get_preview} and calculates the aoi cloud cover
 upon these images. Cloud cover is computed currently using one of the following options:
-\itemize Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
+\itemize{
+\item Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
+}
 }
 \note{
 if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.

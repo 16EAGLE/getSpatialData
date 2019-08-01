@@ -2,8 +2,9 @@
 #' 
 #' \code{calc_cloudcov} requests previews using \code{get_preview} and calculates the aoi cloud cover
 #' upon these images. Cloud cover is computed currently using one of the following options:
-#' \itemize Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
-#' 
+#' \itemize{
+#' \item Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
+#' } 
 #' @note if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.

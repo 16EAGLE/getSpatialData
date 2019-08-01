@@ -709,11 +709,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     if (!is.null(dir_out)) write_csv(currRecCloudCover,csv_path)
-    
-    if (NCOL(currRecCloudCover) != 48) {
-      View(currRecCloudCover)
-      cat("problematic: ",currRecord[,1])
-    }
     return(currRecCloudCover)
   }))
   return(records)
@@ -763,7 +758,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' mask the edges of Landsat preview raster
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
-#' @importFrom methods as
+#' @importFrom methods as slot slot<-
 #' @importFrom raster mask crs extent
 .preview_mask_edges <- function(preview) {
   
@@ -867,7 +862,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @param aoi aoi.
 #' @param x raster with the resolution.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster extent raster res mask ncell values area aggregate
+#' @importFrom raster extent raster res mask ncell values<- area aggregate extract
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(aoi,x) {
@@ -1544,10 +1539,10 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @keywords internal
 #' @noRd
 .select_save_mosaics <- function(records, selected, aoi, 
-                                 selected_col, timestamp_col, pmos_col, cmos_col, identifier, dir_out) {
+                                 par, dir_out) {
   
   console_info <- list()
-  cols <- c(selected_col,timestamp_col,pmos_col,cmos_col)
+  cols <- c(par$selected_col,par$timestamp_col,par$pmos_col,par$cmos_col)
   records <- .select_prep_cols(records, cols, par$selected_col)
   for (i in 1:length(selected)) {
     s <- selected[[i]]
@@ -1555,7 +1550,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
     #A cloud mask mosaic
     save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
     #B preview mosaic
-    save_path_pmos <- .select_preview_mos(records,s,aoi,i,identifier,dir_out,
+    save_path_pmos <- .select_preview_mos(records,s,aoi,i,par$identifier,dir_out,
                                           cloud_mask_col=par$cloud_mask_col,preview_col=par$preview_col)
     #C add columns to records
     insert <- c(TRUE,s$timestamp,save_path_pmos,save_path_cmos)
@@ -1645,9 +1640,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
   out(paste0(par$sep,"\nSelection Process Summary per timestamp",par$sep))
   # create final mosaics for each timestamp and summary message per timestamp
   records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
-                                  selected_col=par$selected_col,timestamp_col=par$timestamp_col,
-                                  pmos_col=par$pmos_col,cmos_col=par$cmos_col,
-                                  identifier=par$identifier,dir_out=dir_out)
+                                  par=par,dir_out=dir_out)
   # create optional warning(s) and overall summary message
   csw <- .select_summary_ts(selected)
   w <- csw[2:3] # warnings
@@ -1815,12 +1808,12 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
     records_in_s <- records[which(records$sub_period==s),]
     if (s > 1) {
       # enforce min_distance
-      previous_period <- selected_SAR[[i-1]][["period"]] # get the previous selected sub-period
+      previous_period <- selected_SAR[[s-1]][["period"]] # get the previous selected sub-period
       period_initial <- .identify_period(records_in_s[[par$date_col]])
       # earliest date of next sub-period adjusted
       first_date <- .select_force_distance(previous_period,min_distance)
       period_s <- .select_handle_next_sub(first_date,period_initial,
-                              min_distance,max_sub_period)
+                                          min_distance,max_sub_period)
       records_in_s <- .select_within_period(records_in_s,period_s) # subset to records within period_s
     }
     tiles_s <- records_in_s[[par$tileid_col]]
@@ -1959,7 +1952,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
       lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,
                                 column=cc_index_col, max_column=aoi_cc_col)
       if (!is.na(lwst_cc)) {
-        selected[i] <- which(records[,par$identifier] == rec_tile_sub[lwst_cc,par$identifier])
+        selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
       }
     }
     return(unique(selected))
@@ -2215,7 +2208,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @keywords internal
 #' @noRd
 .select_start_info <- function(mode,sep) {
-  out(paste0(sep,"\n           Starting ",mode," Selection Process           ",par$sep))
+  out(paste0(sep,"\n           Starting ",mode," Selection Process           ",sep))
 }
 
 #' constructs a console message to be given at the end of a selection process
@@ -2297,7 +2290,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
   
   sep <- "\n----------------------------------------------------------------"
   covered_tiles_ts_wise <- sapply(selected_SAR,function(s) {
-    num_tiles <- length(unique(records[match(s[["ids"]],records[[identifier]]),par$tileid_col]))
+    num_tiles <- length(unique(records[match(s[["ids"]],records[[par$identifier]]),par$tileid_col]))
   })
   header <- paste0("\n-- Selection Process Summary Overall --")
   info1 <- paste0("\n- Number of timestamps: ",num_timestamps)

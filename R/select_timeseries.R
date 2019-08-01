@@ -35,7 +35,7 @@
 #' deleted before returning \code{records}.
 #' @param verbose	logical, whether to display details on the function's progress or output on the console.
 #'
-#' @return \code{records} data.frame holding maximum four additional columns:
+#' @return \code{records} data.frame holding four additional columns:
 #' \enumerate{
 #' \item selected_for_timeseries logical column indicating for each record if it was selected (==TRUE).
 #' \item selected_for_timestamp: numeric indicating for which timestamp the record was selected. If NA the record was selected for no timestamp.

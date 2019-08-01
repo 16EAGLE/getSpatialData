@@ -15,7 +15,11 @@
 #' @importFrom sf st_transform st_coordinates st_sfc
 #' @export
 
-get_previews <- function(records, dir_out = NULL, verbose = TRUE){
+get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
+  
+  # check hidden arguments
+  extras <- list(...)
+  if(is.null(extras$hub)) extras$hub <- "auto"
   
   # checks
   dir_out <- .check_dir_out(dir_out, "previews")
@@ -26,7 +30,7 @@ get_previews <- function(records, dir_out = NULL, verbose = TRUE){
   if("Sentinel" %in% records$product_group){
     .check_login(services = "Copernicus")
     records[records$product_group == "Sentinel",]$gSD.cred <- lapply(records[records$product_group == "Sentinel",]$product, function(x){
-      .CopHub_select(x = "auto", p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
+      .CopHub_select(x = extras$hub, p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
     })
   }
   

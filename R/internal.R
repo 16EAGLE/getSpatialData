@@ -20,7 +20,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' 
 #' @param x character
 #' 
-#' #' @keywords internal
+#' @keywords internal
 #' @noRd
 
 firstup <- function(x){
@@ -44,13 +44,22 @@ is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x)
 #' @noRd
 is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
 
+#' check if url
+#'
+#' @param url a url
+#' @keywords internal
+#' @noRd
+is.url <- function(url) grepl("www.|http:|https:", url)
+
 #' gSD.get
 #' @param url url
 #' @param username user
 #' @param password pass
 #' @param dir.file output file path
 #' @param prog show or not show progress console
-#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress
+#' 
+#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress authenticate write_disk
+#' 
 #' @keywords internal
 #' @noRd
 gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
@@ -75,7 +84,9 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
 #' @param username user
 #' @param password pass
 #' @param body body
+#' 
 #' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
+#' 
 #' @keywords internal
 #' @noRd
 gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
@@ -215,13 +226,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   }
   return(records)
 }
-
-#' check if url
-#'
-#' @param url a url
-#' @keywords internal
-#' @noRd
-is.url <- function(url) grepl("www.|http:|https:", url)
 
 #' get Copernicus Hub API url and credentials from user input
 #'
@@ -391,74 +395,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     return(return.df)
   } else{
     return(NULL)
-  }
-}
-
-
-#' preview EE record
-#'
-#' @param record record
-#' @param preview_crs preview_crs
-#' @param on_map on_map
-#' @param show_aoi show_aoi
-#' @param verbose verbose
-#'
-#' @importFrom getPass getPass
-#' @importFrom httr GET write_disk authenticate
-#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
-#' @importFrom sf st_as_sfc st_crs as_Spatial st_transform st_coordinates
-#' @importFrom mapview viewRGB
-#' @importFrom leafem addFeatures
-#'
-#' @keywords internal
-#' @noRd
-.EE_preview <- function(record, preview_crs = NULL, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  
-  ## Intercept false inputs and get inputs
-  url.icon <- record$browseUrl
-  if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
-  if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
-  char_args <- list(url.icon = url.icon)
-  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
-  
-  if(length(grep("https", url.icon)) == 0){
-    out("No preview available for this record or product.", msg = T)
-  } else{
-    ## Recieve preview
-    file_dir <- paste0(tempfile(),".jpg")
-    gSD.get(url.icon, dir.file = file_dir)
-    r.prev <- stack(file_dir)
-    
-    if(isTRUE(on_map)){
-      
-      ## create footprint
-      footprint <- record$footprint
-      if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
-      
-      crs(r.prev) <- crs(as_Spatial(footprint))
-      footprint <- st_coordinates(footprint)
-      
-      extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
-      
-      ## create map
-      map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
-      
-      if(isTRUE(show_aoi)){
-        if(isFALSE(getOption("gSD.aoi_set"))){
-          out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-        } else{
-          aoi.sf <- getOption("gSD.aoi")
-          #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
-          map <- addFeatures(map, aoi.sf)
-        }
-      }
-      print(map) # display mapview or leaflet output
-    } else{
-      
-      ## create simple RGB plot
-      plotRGB(r.prev)
-    }
   }
 }
 

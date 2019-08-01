@@ -4,12 +4,14 @@
 \alias{get_previews}
 \title{Get previews of records}
 \usage{
-get_previews(records, dir_out = NULL, verbose = TRUE)
+get_previews(records, dir_out = NULL, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
 
 \item{dir_out}{character, a directory, to which previews should be saved. By default, previews are saved to the archive directory defined with \code{set_archive}.}
+
+\item{...}{additional arguments}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }

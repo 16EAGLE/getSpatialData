@@ -114,3 +114,31 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   print(gg)
   if(isTRUE(value)) return(gg)
 }
+
+#' @rdname getSpatialData-deprecated
+#' @export
+getSentinel_preview <- function(...){
+  
+  .Deprecated("view_previews", "getSpatialData", "This function is deprecated. Use get_previews, view_previews and plot_previews to download, view or plot previews for different sensors at once.")
+  extras <- list(...)
+  if(!is.null(extras$record)){
+    records <- extras$record
+    extras$record <- NULL
+  }
+  if(!is.null(extras$records)){
+    records <- extras$records
+    extras$records <- NULL
+  }
+  
+  view_previews(records, ...)
+}
+
+
+#' @rdname getSpatialData-deprecated
+#' @export
+getLandsat_preview <- getSentinel_preview
+
+
+#' @rdname getSpatialData-deprecated
+#' @export
+getMODIS_preview <- getSentinel_preview

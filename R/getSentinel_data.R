@@ -1,11 +1,12 @@
 #' Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data
 #'
-#' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_query}.
+#' \code{getSentinel_data} downloads Sentinel data from the Copernicus Open Access Hubs. The datasets are identified per records as returned by \link{getSentinel_records}.
 #'
-#' @inheritParams getSentinel_query
-#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_query}.
+#' @inheritParams getSentinel_records
+#' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{getSentinel_records}.
 #' @param dir_out character, full path to download target directory. Optional. If not set, \code{getSentinel_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
+#' @param n.retry numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
 #'
 #' @return Character vector of paths to the downloaded files.
 #'
@@ -42,8 +43,8 @@
 #' login_CopHub(username = "username") #asks for password or define 'password'
 #' set_archive("/path/to/archive/")
 #'
-#' ## Use getSentinel_query to search for data (using the session AOI)
-#' records <- getSentinel_query(time_range = time_range, platform = platform)
+#' ## Use getSentinel_records to search for data (using the session AOI)
+#' records <- getSentinel_records(time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the records
 #' View(records) #get an overview about the search records
@@ -66,12 +67,12 @@
 #' r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
 #' }
 #'
-#' @seealso \link{getSentinel_query}
+#' @seealso \link{getSentinel_records}
 #' @export
 
 getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = NULL, password = NULL,
-                             hub = "auto", verbose = TRUE){
-
+                             hub = "auto", n.retry = 3, verbose = TRUE){
+  
   ## Global Copernicus Hub login
   if(is.TRUE(getOption("gSD.dhus_set"))){
     if(is.null(username)) username <- getOption("gSD.dhus_user")
@@ -80,86 +81,58 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)) password = password else password = getPass()
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-
-  if(length(unique(records$platformname)) > 1) out("Platform name differs. Platform name needs to be unique per call, e.g. 'Sentinel-1' only, as returned by getSentinel_query().", type=3)
+  
+  if(length(unique(records$platformname)) > 1) out("Platform name differs. Platform name needs to be unique per call, e.g. 'Sentinel-1' only, as returned by getSentinel_records().", type=3)
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive_get"), "/", unique(records$platformname), "/") else dir_out <- path.expand(dir_out)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
-
+  
   ## Intercept false inputs and get inputs
   char_args <- list("records$uuid" = records$uuid, "records$url" = records$url, "records$identifier" = records$identifier, dir_out = dir_out)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("'", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined output directory does not exist.", type=3)
-
+  
+  ## collect record column names
+  records.names <- colnames(records)
+  
   ## Manage API access
   platform <- unique(records$platformname)
   gnss <- unique(records$gnss)
   if(length(platform) > 1){out(paste0("Argument 'records' contains multiple platforms: ", paste0(platform,collapse = ", "), ". Please use only a single platform per call."), type = 3)}
   if(length(gnss) > 1) out("Some records are GNSS records, while others are not. Please do not join non-GNNS and GNNS records and call getSentinel_data separately for both.", type = 3)
   cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else platform, user = username, pw = password)
-
+  
   ## check availability
-  if(is.null(records$available)) records$available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
-  if(any(!records$available)){
-    out(paste0("Datasets '", paste0(records$identifier[!records$available], collapse = "', '"), "' are not available on-demand, since they have been archived."), type = if(all(!records$available)) 3 else 2 )
-    records <- records[records$available,]
+  if(is.null(records$download_available)) records$download_available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+  if(any(!records$download_available)){
+    out(paste0("Datasets '", paste0(records$identifier[!records$download_available], collapse = "', '"), "' are not available on-demand, since they have been archived."), type = if(all(!records$download_available)) 3 else 2 )
+    records <- records[records$download_available,]
   }
   
-  ## assemble md5 checksum url
-  url.md5 <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
-  md5 <- sapply(url.md5, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
+  ## create urls and md5 checksums
+  records$md5_url <- sapply(records$url.alt, function(x) paste0(x, "Checksum/Value/$value"), USE.NAMES = F)
+  records$md5_checksum <- sapply(records$md5_url, function(x) content(gSD.get(x, cred[1], cred[2])), USE.NAMES = F)
+  records$dataset_url <- records$url
   
-  ## assemble file name
+  ## create file names
   file_ext <-  ".zip"
   if(isTRUE(gnss)){
     file_ext <- ".TGZ"
   } else{
     if(isTRUE(grepl("Sentinel-5 Precursor", platform))) file_ext <-  ".nc" 
   }
-  file.ds <- sapply(records$identifier, function(x){
+  records$dataset_file <- sapply(records$identifier, function(x){
     paste0(dir_out, "/", x, file_ext)
   }, USE.NAMES = F) #download to file
   
-  ## download not parallelized (2 downstreams max)
-  down.status <- rep(FALSE, length(records$url))
-  max.retry <- 3  #maximum retries berfore giving up
-  down.retry <- max.retry
-  while(all(down.status) == F & down.retry > 0){
-
-    if(down.retry != max.retry) out("Reattempting failed downloads...", msg =T)
-
-    for(i in which(down.status == F)){
-      
-      # create console index of current item
-      head.out <- paste0("[", toString(i), "/", toString(length(down.status)), "] ")
-      
-      if(!file.exists(file.ds[i]) | force == T){
-        if(file.exists(file.ds[i])) file.remove(file.ds[i]) #remove in case of force being TRUE
-
-        file.tmp <- tempfile(tmpdir = dir_out, fileext = ".zip")
-        out(paste0(head.out, "Downloading '", records$identifier[i], "' to '", file.ds[i], "'..."), msg = T)
-        gSD.get(records$url[i], cred[1], cred[2], dir.file = file.tmp, prog = getOption("gSD.verbose")) #file.ds[i]
-
-        if(as.character(md5sum(file.tmp)) == tolower(md5[i])){ #file.ds[i]
-          out("Successfull download, MD5 check sums match.", msg = T)
-          file.rename(file.tmp, file.ds[i])
-          down.status[i] <- T
-        } else{
-          out(paste0("Downloading of '", records$identifier[i],"' failed, MD5 check sums do not match."), type = 2)
-          file.remove(file.ds[i])
-        }
-      } else{
-        out(paste0(head.out, "Skipping download of '", records$identifier[i], "', since '", file.ds[i], "' already exists..."), msg = T)
-        down.status[i] <- T
-      }
-    }
-    down.retry <- down.retry-1 #limit retries
-  }
+  ## create console items
+  records$dataset_name <- records$identifier
+  records$gSD.item <- 1:nrow(records)
+  records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
   
-  if(any(down.status) == F){out(paste0("All downloads failed due to unknown reason (", toString(max.retry), " attempts)."), type=3)}
-  if(all(down.status) == F){out(paste0("Downloads failed for datasets '", paste0(records$identifier[down.status == F], collapse = "', '"),  "' (", toString(max.retry), " attempts)."), type = 2)}
-
-  out(paste0("All downloads have been succesfull (", toString(max.retry-down.retry), " attempts)."), msg = T)
-  return(file.ds[down.status])
+  ## download per record
+  records <- gSD.retry(records, gSD.download, names = colnames(records), prog = getOption("gSD.verbose"), force = force, n.retry = n.retry)
+  
+  return(.column_summary(records, records.names, download_success = T))
 }

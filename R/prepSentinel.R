@@ -43,8 +43,8 @@
 #' login_CopHub(username = "username") #asks for password or define 'password'
 #' set_archive("/path/to/archive/")
 #'
-#' ## Use getSentinel_query to search for data (using the session AOI)
-#' records <- getSentinel_query(time_range = time_range, platform = platform)
+#' ## Use getSentinel_records to search for data (using the session AOI)
+#' records <- getSentinel_records(time_range = time_range, platform = platform)
 #'
 #' ## Get an overview of the records
 #' View(records) #get an overview about the search records

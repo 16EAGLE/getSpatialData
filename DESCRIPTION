@@ -1,11 +1,11 @@
 Package: getSpatialData
 Type: Package
 Title: Get different kinds of freely available spatial datasets
-Version: 0.0.5
-Date: 2019-05-07
+Version: 0.0.4
+Date: 2018-06-23
 Depends: R (>= 2.10)
-Authors@R: c(person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de", role = c("aut", "cre")),
-  person("Henrik", "Fisser", role = c("ctb")))
+Authors@R: person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de",
+  role = c("aut", "cre"))
 Description: Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.
 License: GPL-3 | file LICENSE
 Encoding: UTF-8
@@ -22,11 +22,12 @@ Imports:
   mapview,
   mapedit,
   cli,
-  devtools,
-  L1pack,
-  stats
+  RStoolbox,
+  ggplot2,
+  cowplot
 RoxygenNote: 6.1.1
 Suggests: 
   testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/
+

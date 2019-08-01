@@ -43,11 +43,19 @@
 get_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, ..., verbose = TRUE){
   
   groups <- c("Sentinel", "Landsat", "MODIS")
-  which.fun <- sapply(tolower(groups), grepl, tolower(name), USE.NAMES = F, simplify = F)
-  if(!all(sapply(which.fun, any))){
-    out(paste0("Unknown product name(s): ", paste0("'", paste0(name[which(c(F, F, T) == F)], collapse = "', '"), "'"),
+  names.valid <- unlist(sapply(tolower(name), function(x) any(sapply(tolower(groups), grepl, x, USE.NAMES = F)), simplify = F, USE.NAMES = F))
+  
+  if(any(!names.valid)){
+    out(paste0("Unknown product name(s): ", paste0("'", paste0(name[!names.valid], collapse = "', '"), "'"),
                ". Please use valid product names (call get_names() to get a list of all available product names)."), type = 3)
   } else{
+    
+    # select fun per name
+    which.fun <- sapply(tolower(groups), grepl, tolower(name), simplify = F)
+    groups <- groups[sapply(which.fun, any)]
+    which.fun <- which.fun[sapply(which.fun, any)]
+    
+    # get records
     records <- mapply(x.fun = which.fun, x.name = name, function(x.fun, x.name){
       eval(parse(text = paste0("get", groups[x.fun], "_records(time_range = time_range, name = x.name, aoi = aoi, as_sf = as_sf, ..., verbose = verbose)")))
     }, USE.NAMES = F, SIMPLIFY = F)

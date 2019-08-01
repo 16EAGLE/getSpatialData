@@ -5,10 +5,10 @@
 \alias{plot_previews}
 \title{View or plot previews of records}
 \usage{
-view_previews(records, show_aoi = TRUE, aoi_colour = "red",
+view_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
   value = FALSE, verbose = TRUE)
 
-plot_previews(records, show_aoi = TRUE, aoi_colour = "red",
+plot_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
   separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE)
 }
 \arguments{

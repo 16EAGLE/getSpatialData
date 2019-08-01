@@ -27,6 +27,11 @@ Imports:
   cowplot,
   L1pack
   processx
+  stats,
+  hashmap,
+  plyr,
+  methods,
+  readr
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

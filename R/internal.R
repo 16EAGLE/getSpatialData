@@ -17,9 +17,8 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 }
 
 #' first character to upper
-#' 
+#'
 #' @param x character
-#' 
 #' @keywords internal
 #' @noRd
 
@@ -45,11 +44,21 @@ is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x)
 is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
 
 #' check if url
-#'
 #' @param url a url
 #' @keywords internal
 #' @noRd
 is.url <- function(url) grepl("www.|http:|https:", url)
+
+
+#' check if command
+#' @param cmd command
+#' @importFrom processx process
+#' @keywords internal
+#' @noRd
+check.cmd <- function(cmd){
+  sc <- try(processx::process$new(cmd),silent = TRUE)
+  if(inherits(sc, "try-error")){return(FALSE)}else{return(TRUE)}
+}
 
 #' gSD.get
 #' @param url url
@@ -63,7 +72,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @keywords internal
 #' @noRd
 gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
-  
+
   x <- NULL # needed due to checks
   get.str <-"x <- try(GET(url"
   if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
@@ -71,7 +80,7 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
   if(isTRUE(prog)) get.str <- paste0(get.str, ", progress()")
   get.str <- paste0(get.str, "), silent = T)")
   eval(parse(text = get.str))
-  
+
   if(inherits(x, "try-error")) out(paste0("Could not process request: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
   stop_for_status(x, "process request")
   warn_for_status(x)
@@ -90,13 +99,13 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
 #' @keywords internal
 #' @noRd
 gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
-  
+
   x <- NULL # needed due to checks
   post.str <-"x <- POST(url"
   if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
   post.str <- paste0(post.str, ", body = body)")
   #eval(parse(text = post.str))
-  
+
   if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
   stop_for_status(x, "connect to server.")
   warn_for_status(x)

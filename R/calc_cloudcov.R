@@ -83,12 +83,7 @@ calc_cloudcov <- function(records, aoi = NULL,
                           slopeDefault = 1.4, interceptDefault = -10, 
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
-  sensor <- .identify_sensor(records)
-  if (sensor %in% c("Sentinel-2","Sentinel-3")) { # Sentinel-2 or "Sentinel-3
-      sceneCloudCoverCol <- "cloudcoverpercentage" # for later use the column name holding the scene cloud cover
-  } else {
-      sceneCloudCoverCol <- "SceneCloudCover" # for later use the column name holding the scene cloud cover
-  }
+  sensor <- unique(records$sensor)
   records <- .cloudcov_bridge(sensor=sensor,sceneCloudCoverCol=sceneCloudCoverCol,records=records,aoi=aoi,maxDeviation=maxDeviation,
                         cloudPrbThreshold=cloudPrbThreshold,slopeDefault=slopeDefault,
                         interceptDefault=interceptDefault,dir_out=dir_out,username=username,password=password,verbose=verbose)

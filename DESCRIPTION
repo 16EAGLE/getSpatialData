@@ -25,7 +25,8 @@ Imports:
   devtools,
   L1pack,
   stats,
-  hashmap
+  hashmap,
+  plyr
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

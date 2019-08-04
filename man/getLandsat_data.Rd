@@ -5,13 +5,13 @@
 \title{Download Landsat data}
 \usage{
 getLandsat_data(records, level = "sr", source = "auto",
-  dir_out = NULL, espa_order = NULL, force = FALSE,
-  username = NULL, password = NULL, verbose = TRUE)
+  dir_out = NULL, wait_for_espa = NULL, force = FALSE,
+  username = NULL, password = NULL, n.retry = 3, verbose = TRUE)
 }
 \arguments{
-\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_query}.}
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_records}.}
 
-\item{level}{character, one or multiple product levels to be requested. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_query}.}
+\item{level}{character, one or multiple product levels to be requested. Defaul is "sr" for surface reflectance. Available levels can be obtained from the "levels_available" field returned for each product by \link{getLandsat_records}.}
 
 \item{source}{character, either:
 \itemize{
@@ -22,21 +22,19 @@ getLandsat_data(records, level = "sr", source = "auto",
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 
-\item{espa_order}{character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.}
-
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
-\item{username}{character, a valid user name to the USGS EROS Registration System (ERS). If \code{NULL} (default), the session-wide login credentials are used (see \link{login_USGS} for details on registration).}
-
-\item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_USGS} for details on registration).}
+\item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
+
+\item{espa_order}{character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.}
 }
 \value{
 Character vector of paths to the downloaded files.
 }
 \description{
-\code{getLandsat_data} downloads Landsat data queried using \link{getLandsat_query} from different sources.
+\code{getLandsat_data} downloads Landsat data queried using \link{getLandsat_records} from different sources.
 }
 \note{
 ESPA is used as source if higher-level products are requested by the user (see \code{level}). Since ESPA is an on-demand service, \code{getLandsat_data} places an order and then waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The ESPA processing time depends on the size of the order and can take up to 48 hours in highly demanding cases! The function status is indicated by the console messages that it is prompting during execution.
@@ -62,7 +60,7 @@ set_archive("/path/to/archive/")
 product_names <- getLandsat_names()
 
 ## query for records for your AOI, time range and product
-query <- getLandsat_query(time_range = time_range, name = product_names[7])
+query <- getLandsat_records(time_range = time_range, name = product_names[7])
 
 ## preview a record
 getLandsat_preview(query[5,])
@@ -86,7 +84,7 @@ files <- getLandsat_data(espa_order = "espa-XYZA@host.com-YOUR-ORDER-ID")
 
 }
 \seealso{
-\link{getLandsat_names} \link{getLandsat_query} \link{getLandsat_preview}
+\link{getLandsat_names} \link{getLandsat_records} \link{getLandsat_preview}
 }
 \author{
 Jakob Schwalb-Willmann

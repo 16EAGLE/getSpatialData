@@ -2,8 +2,9 @@
 #'
 #' Login to services supported by \code{getSpatialData} once for the running session.
 #'
-#' @param username character, username to the corresponding service. For details on registration, see details.
-#' @param password character, password to the corresponding service.
+#' @inheritParams getSentinel_records
+#' @param username character, user name to login at the respective service.
+#' @param password character, password to login at the respective service.
 #'
 #' @details
 #' \code{login_CopHub} defines login credentials for the Copernicus Open Access Hub (register on \url{https://scihub.copernicus.eu/})
@@ -31,10 +32,11 @@
 #' login_USGS(username = "my_user_name", password = "my_password")
 #' }
 
-#' @seealso getSentinel_query getLandsat_query
+#' @seealso \link{getSentinel_records} \link{getLandsat_records} \link{getMODISt_records}
 #'
-login_CopHub <- function(username, password = NULL){
+login_CopHub <- function(username, password = NULL, verbose = TRUE){
   
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(is.null(password)){password <- getPass()}
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){
@@ -56,8 +58,9 @@ login_CopHub <- function(username, password = NULL){
 
 #' @rdname gSD_login
 #' @export
-login_USGS <- function(username, password = NULL){
+login_USGS <- function(username, password = NULL, verbose = TRUE){
   
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(is.null(password)){password <- getPass()}
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){

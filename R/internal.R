@@ -5,22 +5,23 @@
 #' @param msg logical. If \code{TRUE}, \code{message} is used instead of \code{cat}. Default is \code{FALSE}.
 #' @param sign character. Defines the prefix string.
 #'
+#' @importFrom utils flush.console
 #' @keywords internal
 #' @noRd
 
-out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = getOption("gSD.verbose")){
+out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALSE, verbose = getOption("gSD.verbose")){
+  if(isTRUE(flush)) flush.console()
   if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
   if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
   else{if(type == 3){stop(input, call. = FALSE)}else{if(ll == 1){
-    if(msg == FALSE){ cat(paste0(sign,input),sep="\n")
+    if(msg == FALSE){ cat(paste0(sign,input), sep = ifelse(isTRUE(flush), " ", "\n"))
     } else{message(paste0(sign,input))}}}}
 }
 
 #' first character to upper
-#' 
+#'
 #' @param x character
-#' 
-#' #' @keywords internal
+#' @keywords internal
 #' @noRd
 
 firstup <- function(x){
@@ -44,17 +45,22 @@ is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x)
 #' @noRd
 is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
 
-#' Checks, if specific command is available
-#'
+#' check if url
+#' @param url a url
+#' @keywords internal
+#' @noRd
+is.url <- function(url) grepl("www.|http:|https:", url)
+
+
+#' check if command
 #' @param cmd command
-#' @importFrom devtools system_check
+#' @importFrom processx process
 #' @keywords internal
 #' @noRd
 check.cmd <- function(cmd){
-  sc <- try(system_check(cmd, quiet = TRUE),silent = TRUE)
-  if(class(sc) == "try-error"){return(FALSE)}else{return(TRUE)}
+  sc <- try(processx::process$new(cmd),silent = TRUE)
+  if(inherits(sc, "try-error")){return(FALSE)}else{return(TRUE)}
 }
-
 
 #' gSD.get
 #' @param url url
@@ -62,11 +68,13 @@ check.cmd <- function(cmd){
 #' @param password pass
 #' @param dir.file output file path
 #' @param prog show or not show progress console
-#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress
+#' 
+#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress authenticate write_disk
+#' 
 #' @keywords internal
 #' @noRd
 gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
-  
+
   x <- NULL # needed due to checks
   get.str <-"x <- try(GET(url"
   if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
@@ -74,7 +82,7 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
   if(isTRUE(prog)) get.str <- paste0(get.str, ", progress()")
   get.str <- paste0(get.str, "), silent = T)")
   eval(parse(text = get.str))
-  
+
   if(inherits(x, "try-error")) out(paste0("Could not process request: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
   stop_for_status(x, "process request")
   warn_for_status(x)
@@ -87,17 +95,19 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
 #' @param username user
 #' @param password pass
 #' @param body body
+#' 
 #' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
+#' 
 #' @keywords internal
 #' @noRd
 gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
-  
+
   x <- NULL # needed due to checks
   post.str <-"x <- POST(url"
   if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
   post.str <- paste0(post.str, ", body = body)")
   #eval(parse(text = post.str))
-  
+
   if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
@@ -106,38 +116,127 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 }
 
 #' gSD.download
-#' @param name name
-#' @param url url
-#' @param file file
+#' @param x file record
+#' @param names column names of record
+#' @param prog logical
+#' @param force logical
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = NULL, prog = T){
+# gSD.download <- function(x, names, prog = T, force = F){
+#   
+#   x <- as.list(x)
+#   names(x) <- names
+#   
+#   if(file.exists(x$dataset_file) & !isTRUE(force)){
+#     out(paste0(x$gSD.head, "Skipping download of '", x$dataset_name, "', since '", x$dataset_file, "' already exists..."), msg = T)
+#     return(TRUE)
+#   } else{
+#   
+#     out(paste0(x$gSD.head, "Downloading '", x$dataset_name, "' to '", x$dataset_file, "'..."), msg = T)
+#     file.tmp <- tempfile(tmpdir = paste0(head(strsplit(x$dataset_file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+#     gSD.get(x$dataset_url, dir.file = file.tmp, prog = prog)
+#     
+#     if(!is.null(x$md5_checksum)){
+#       if(as.character(md5sum(file.tmp)) == tolower(x$md5_checksum)){ out("Successfull download, MD5 check sums match.", msg = T)
+#       } else{
+#         out(paste0("Download failed, MD5 check sums do not match."), type = 2)
+#         file.remove(file.tmp)
+#         return(FALSE)
+#       }
+#     }
+#   }
+#   
+#   file.rename(file.tmp, x$dataset_file)
+#   return(TRUE)
+# }
+gSD.download <- function(url, file, name, head, type = "dataset", md5 = NULL, prog = T, force = F, ...){
   
-  out(paste0(if(!is.null(head.out)) head.out else "", "Downloading '", name, "' to '", file, "'..."), msg = T)
-  file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-  gSD.get(url.file, dir.file = file.tmp, prog = prog)
-  
-  if(!is.null(url.checksum)){
-    md5 <- strsplit(content(gSD.get(url.checksum), as = "text", encoding = "UTF-8"), " ")[[1]][1]
-    if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
-    } else{
-      out(paste0("Download failed, MD5 check sums do not match. Will retry."), type = 2)
-      file.remove(file.tmp)
-      return(FALSE)
+  if(file.exists(file) & !isTRUE(force)){
+    out(paste0(head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."), msg = T)
+    return(TRUE)
+  } else{
+    
+    out(paste0(head, "Downloading ", type, " '", name, "' to '", file, "'..."), msg = T)
+    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
+    gSD.get(url, dir.file = file.tmp, prog = prog, ...)
+    
+    if(!is.null(md5)){
+      if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
+      } else{
+        out(paste0("Download failed, MD5 check sums do not match."), type = 2)
+        file.remove(file.tmp)
+        return(FALSE)
+      }
     }
-  } #else out("Download finished. MD5 check sums not available (file integrity could not be checked).", msg = T)
+  }
   
   file.rename(file.tmp, file)
   return(TRUE)
 }
 
-#' check if url
-#'
-#' @param url a url
+#' gSD.retry
+#' @param files files data.frame
+#' @param ... additional arguments
+#' @param FUN function to retry
+#' @param n.retry How many retries?
+#' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-is.url <- function(url) grepl("www.|http:|https:", url)
+gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
+  
+  files$download_attempts <- NA
+  i.retry <- n.retry
+  retry <- T
+  
+  out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Attempting downloads..."))
+  while(isTRUE(retry) & i.retry > 0){
+    
+    # download per record
+    files$download_success <- apply(files, MARGIN = 1, FUN, ...)
+    files[which(files$download_success == TRUE & is.na(files$download_attempts)), "download_attempts"] <- (n.retry-i.retry)+1
+    
+    if(all(files$download_success == TRUE)){
+      retry <- F
+    } else{
+      
+      files <- files[files$download_success == F,]
+      i.retry <- i.retry-1
+      
+      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Reattempting downloads..."))
+    }
+  }
+  
+  files$download_attempts[files$download_success == F] <- n.retry
+  return(files)
+}
+
+#' column summary 
+#'
+#' @param records df
+#' @param records.names character
+#'
+#' @keywords internal
+#' @noRd
+.column_summary <- function(records, records.names, download_success = F){
+  
+  # remove internal columns
+  gSD.cols <- grep("gSD", colnames(records))
+  if(length(gSD.cols > 0)) records <- records[,-gSD.cols]
+  diff.cols <- setdiff(colnames(records), records.names)
+  if(length(diff.cols) > 0) out(paste0("Columns added to records: '", paste0(diff.cols, collapse = "', '"), "'"))
+  
+  if(isTRUE(download_success)){
+    if(!is.null(records$download_success)){
+      if(any(!records$download_success)){
+        out(paste0("Some downloads have not been succesfull after ", max(records$download_attempts), " attempt(s) (see column 'download_success'). Please retry later."), type = 2)
+      } else{
+        out(paste0("All downloads have been succesfull after ", max(records$download_attempts), " attempt(s)."), msg = T)
+      }
+    }
+  }
+  return(records)
+}
 
 #' get Copernicus Hub API url and credentials from user input
 #'
@@ -152,17 +251,9 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     url <- x
   } else{
     if(x == "auto"){
-      if(p == "Sentinel-1" | p == "Sentinel-2" | p == "Sentinel-3") x <- "dhus"
-      #if(p == "Sentinel-3") x <- "s3" # decommisioned
-      if(p == "Sentinel-5P" | p == "Sentinel-5 Precursor") x <- "s5p"
-      if(p == "GNSS") x <- "gnss"
+      x <- getOption("gSD.copnames")[getOption("gSD.copnames")$name == p, 2]
     }
     if(x == "dhus"){url <- getOption("gSD.api")$dhus}
-    # if(x == "s3"){
-    #   url <- getOption("gSD.api")$s3
-    #   user <- "s3guest"
-    #   pw <- "s3guest"
-    # }
     if(x == "s5p"){
       url <- getOption("gSD.api")$s5p
       user <- "s5pguest"
@@ -249,7 +340,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
   
-  out("Searching USGS EarthExplorer for available products...")
+  out(paste0("Searching records for product name '", name, "'..."))
   query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
   query.cont <- lapply(query, content)
   if(length(name) == 1) if(query.cont[[1]]$error != "") out("Invalid query. This dataset seems to be not available for the specified time range.", type = 3)
@@ -264,22 +355,22 @@ is.url <- function(url) grepl("www.|http:|https:", url)
       x.names <- names(x)
       x.char <- as.character(x)
       
+      df <- rbind.data.frame(x.char, stringsAsFactors = F)
+      colnames(df) <- x.names
+      
       # Make sf polygon filed from spatialFootprint
       spf.sub <- grep("spatialFoot", x.names)
       spf <- unlist(x[spf.sub])
       spf <- as.numeric(spf[grep("coordinates", names(spf))])
-      spf.sf <- .make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T)
+      df[,spf.sub] <- st_as_text(.make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
       
-      df <- rbind.data.frame(x.char, stringsAsFactors = F)
-      colnames(df) <- x.names
-      df[,spf.sub] <- st_as_text(spf.sf)
       df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
       colnames(df)[ncol(df)] <- "product"
       return(df)
     }), SIMPLIFY = F), recursive = F)
     
     ## Read out meta data
-    out("Reading meta data of search results from USGS EarthExplorer...")
+    out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
     meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
     meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
     meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
@@ -315,82 +406,6 @@ is.url <- function(url) grepl("www.|http:|https:", url)
     return(return.df)
   } else{
     return(NULL)
-  }
-}
-
-
-#' preview EE record
-#'
-#' @param record record
-#' @param preview_crs preview_crs
-#' @param on_map on_map
-#' @param show_aoi show_aoi
-#' @param return_preview return_preview
-#' @param verbose verbose
-#'
-#' @importFrom getPass getPass
-#' @importFrom httr GET write_disk authenticate
-#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
-#' @importFrom sf st_as_sfc st_crs as_Spatial st_transform st_coordinates
-#' @importFrom mapview viewRGB addFeatures
-#'
-#' @keywords internal
-#' @noRd
-.EE_preview <- function(record, preview_crs = NULL, on_map = TRUE, show_aoi = TRUE, return_preview = FALSE, verbose = TRUE){
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  
-  ## Intercept false inputs and get inputs
-  url.icon <- record$browseUrl
-  if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
-  if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
-  char_args <- list(url.icon = url.icon)
-  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
-  
-  if(length(grep("https", url.icon)) == 0){
-    out("No preview available for this record or product.", msg = T)
-  } else{
-    ## Recieve preview
-    file_dir <- paste0(tempfile(),".jpg")
-    gSD.get(url.icon, dir.file = file_dir)
-    r.prev <- stack(file_dir)
-    
-    if(isTRUE(on_map) | isTRUE(return_preview)){
-
-      ## create footprint
-      footprint <- st_as_sfc(record$spatialFootprint, crs = 4326)
-      if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
-      
-      crs(r.prev) <- crs(as_Spatial(footprint))
-      footprint <- st_coordinates(footprint)
-      
-      extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
-      #crs(r.prev) <- preview_crs
-
-      if(isTRUE(on_map)) {
-        ## create map
-        map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
-        
-        if(isTRUE(show_aoi)){
-          if(isFALSE(getOption("gSD.aoi_set"))){
-            out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-          } else{
-            aoi.sf <- getOption("gSD.aoi")
-            #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
-            map <- addFeatures(map, aoi.sf)
-          }
-        }
-        map # display mapview or leaflet output
-      }
-      
-      if (isTRUE(return_preview)) {
-        return(r.prev)
-      }
-      
-    } else{
-      
-      ## create simple RGB plot
-      plotRGB(r.prev)
-    }
   }
 }
 
@@ -467,72 +482,56 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #'
 #' @keywords internal
 #' @noRd
-## check order(s)
-.ESPA_download <- function(order.list, username, password, file.down, delay = 10, dir_out, items.order = NULL, n.item = NULL){
+.ESPA_download <- function(records, username, password, dir_out, delay = 10, wait_for_espa = NULL, n.retry = 3){
   
-  remain.active = TRUE; ini = TRUE; show.status = TRUE
-  while(remain.active){
+  records$download_success <- F
+  records$download_attempts <- NA
+  continue <- T
+  while(!all(records$download_success) & isTRUE(continue)){
     
     ## get tiems
-    items <- lapply(order.list, function(x, user = username, pass = password){
-      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))
-    })
+    items <- unlist(unlist(lapply(unique(records$ESPA_orderID), function(x){
+      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), username, password))
+    }), recursive = F), recursive = F)
+    records$md5_url <- records$dataset_url <- NA
     
-    ## get items content
-    items <- lapply(items, function(x) lapply(x[[1]], function(y){
-      r <- unlist(y)
-      names(r) <- names(y)
-      return(r)
+    ## get tiems
+    records <- do.call(rbind, lapply(1:nrow(records), function(i){
+      x <- records[i,]
+      x.item <- items[[grep(x$displayId, items)]]
+      x$ESPA_status <- x.item$status
+      
+      if(x$ESPA_status == "complete"){
+        x$md5_url <- x.item$cksum_download_url
+        x$md5_checksum <- sapply(x$md5_url, function(url) strsplit(content(gSD.get(x$md5_url), as = "text", encoding = "UTF-8"), " ")[[1]][1], USE.NAMES = F)
+        x$dataset_url <- x.item$product_dload_url
+      }
+      return(x)
     }))
     
-    ## make items data.frame containing recieve status
-    items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
-    names.required <- sapply(file.down, function(x) head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_LEVEL_")[[1]], n=1), USE.NAMES = F) #paste0(head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_")[[1]], n=-1), collapse = "_"), USE.NAMES = F)
-    items <- items[sapply(names.required, function(x, y = items$name) which(y == x), USE.NAMES = F),]
-    items <- cbind(items, items$status == "complete")
-    items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
-    colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
-    
-    if(ini){
-      items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
-      colnames(items.df)[ncol(items.df)] <- "recieved"
-      ini <- FALSE
-    } else{
-      items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
+    ## download available records
+    if(nrow(records[records$ESPA_status == "complete" & records$download_success == F,]) > 0){
+      records[records$ESPA_status == "complete" & records$download_success == F,] <- gSD.retry(
+        records[records$ESPA_status == "complete" & records$download_success == F,], gSD.download,
+        names = colnames(records), prog = getOption("gSD.verbose"), force = T, n.retry = n.retry)
     }
-    if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
-    items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
     
-    ## Items to download
-    if(all(items.df$available) & all(items.df$recieved)){
-      remain.active <- FALSE
-    } else{
-      
-      ## Download or wait for status
-      sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
-      if(length(sub.download) > 0){
-        
-        items.get <- items.df[sub.download,]
-        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "'."), msg = T)
-        #items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
-        items.df$recieved[sub.download] <- mapply(name = items.get$name, uf = items.get$product_dload_url, uc = items.get$cksum_download_url,
-                                                  file = items.get$file, i.item = items.order, function(name, uf, uc, file, i.item){
-                                                    
-                                                    # create console index of current item                                                    
-                                                    head.out <- paste0("[", i.item, "/", n.item, "] ")
-                                                    gSD.download(name = name, url.file = uf, url.checksum = uc, file = file, head.out = head.out)
-                                                  })
-        show.status <- TRUE
+    if(!all(records$download_success)){
+      if(is.null(wait_for_espa)){
+        out("Some datasets are not ready to download from ESPA yet.", msg = T)
+        out("If getLandsat_data should not continue checking ESPA, it will return the records of all requested datasets (including their ESPA order IDs). Use the returned records to call getLandsat_data again later to continue checking/downloading from ESPA.")
+        wait_for_espa <- readline("Should getLandsat_data wait for all datasets to be ready for download? [y/n]: ")
+        if(wait_for_espa == "n") wait_for_espa <- F else wait_for_espa <- T
+      }
+      if(isTRUE(wait_for_espa)){
+        out(paste0("Waiting for dataset(s) '", paste0(records[records$ESPA_status == "complete" & records$download_success == F,]$dataset_name, collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
+        Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
       } else{
-        if(isTRUE(show.status)){
-          out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
-          out("Note: It is also possible to terminate the function and call it again later by providing the displayed order ID(s) as input to 'espa_order'.", msg = T)
-        }
-        show.status <- FALSE
+        continue <- FALSE
       }
     }
-    Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
   }
+  return(records)
 }
 
 
@@ -574,6 +573,94 @@ is.url <- function(url) grepl("www.|http:|https:", url)
   if(type == "sp") return(aoi.sp)
 }
 
+
+#' translate records column names to gSD standard
+#' @param records df as returned by client
+#' @param name product name 
+#' @keywords internal
+#' @noRd
+.translate_records <- function(records, name){
+  
+  # set-up column name dictionary
+  dict <- rbind.data.frame(c("product", NA, NA, NA),
+                           c("product_group", NA, NA, NA),
+                           c("record_id", "title", "displayId", "displayId"),
+                           c("entity_id", "uuid", "entityId", "entityId"),
+                           c("dataset_url", "url", NA, NA),
+                           c("md5_url", "url.alt", NA, NA),
+                           c("preview_url", "url.icon", "browseUrl", "browseUrl"),
+                           c("meta_url", NA, "metadataUrl", "metadataUrl"),
+                           c("meta_url_fgdc", NA, "fgdcMetadataUrl", "fgdcMetadataUrl"),
+                           c("summary", "summary", "summary", "summary"),
+                           c("date_aquistion", NA, "acquisitionDate", "acquisitionDate"),
+                           c("start_time", "beginposition", "StartTime", "AcquisitionStartDate"),
+                           c("stop_time", "endposition", "StopTime", "AcquisitionEndDate"),
+                           c("date_ingestion", "ingestiondate", NA, NA),
+                           c("date_modified", NA, "modifiedDate", "modifiedDate"),
+                           c("tile_number_horizontal", NA, "WRSPath", "HorizontalTileNumber"),
+                           c("tile_number_vertical", NA, "WRSRow", "VerticalTileNumber"),
+                           c("tile_id", "tileid", NA, NA),
+                           c("cloudcov", "cloudcoverpercentage", "SceneCloudCover", NA),
+                           c("sensor_id", "instrumentshortname", "SensorIdentifier", NA),
+                           c("sensor", "instrumentname", NA, NA),
+                           c("platform", "platformname", NA, NA),
+                           c("platform_serial", "platformserialidentifier", NA, NA),
+                           c("platform_id", "platformidentifier", NA, NA),
+                           c("level", "processinglevel", NA, NA),
+                           c("levels_available", NA, "levels_available", NA),
+                           c("footprint", "footprint", "footprint", "footprint"), stringsAsFactors = F)
+  colnames(dict) <- c("gSD", "Sentinel", "Landsat", "MODIS")
+  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(name), USE.NAMES = F)
+  which.valid <- !is.na(dict[,which.col])
+  
+  # translate column names
+  colnames(records) <- sapply(colnames(records), function(x){
+    i <- which(x == dict[,which.col])
+    if(length(i) > 0) dict$gSD[i] else x
+  }, USE.NAMES = F)
+  
+  # fill group
+  records$product_group <- colnames(dict)[which.col]
+  
+  # address product-specific cases
+  records$product <- name
+  if(which(which.col) == 2){ # special cases for Sentinel
+    records$date_aquistion <- sapply(strsplit(records$start_time, "T"), '[', 1)
+    records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
+      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
+    })
+  }
+  
+  if(which(which.col) > 2){
+    records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
+  }
+  # fill up undefined default columns
+  #records[dict$gSD[sapply(dict$gSD, function(x) !(x %in% colnames(records)), USE.NAMES = F)]] <- NA
+  
+  # sort columns
+  records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
+}
+
+#' rbind different dfs
+#' @param x list of dfs
+#' @keywords internal
+#' @noRd
+rbind.different <- function(x) {
+  
+  x.bind <- x[[1]]
+  for(i in 2:length(x)){
+    x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
+    y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
+    
+    x.bind[, c(as.character(y.diff))] <- NA
+    x[[i]][, c(as.character(x.diff))] <- NA
+    
+    x.bind <- rbind(x.bind, x[[i]])
+  }
+  return(x.bind)
+}
+
+
 #' On package startup
 #' @keywords internal
 #' @noRd
@@ -598,6 +685,8 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                          ee = "USGS EarthExplorer",
                          aws.l8 = "AWS Landsat 8",
                          laads = "NASA DAAC LAADS"),
+    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
+                              api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
     gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
                        mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),
@@ -1434,7 +1523,6 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
 #' @importFrom plyr compact
-#' @importFrom utils flush.console
 #' @importFrom raster minValue maxValue writeRaster raster crs
 #' @keywords internal
 #' @noRd
@@ -1508,8 +1596,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
         rm(base_mos)
         cov <- as.character(round(base_coverage,2))
         cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
-        flush.console()
-        cat("\r","-      ",cov,"  %")
+        out(paste0("\r", "-      ",cov,"  %"), flush = T)
       }
     }
     if (round(base_coverage) == 100) {
@@ -2330,12 +2417,3 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
   })
   
 }
-
-
-
-
-
-
-
-
-  

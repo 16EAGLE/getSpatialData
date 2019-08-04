@@ -13,9 +13,7 @@
 #' @param record data.frame, single line representing one record from a records data.frame.
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
-#' @param identifier numeric, column number where a unique identifier of the scenes is located, sensor-specific.
 #' @param maxDeviation numeric between 0 and 100. The maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
-#' @param sceneCloudCoverCol character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.
 #' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 35}. 
 #' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
@@ -36,12 +34,14 @@
 #' 
 #' @export
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 5, 
-                              sceneCloudCoverCol = NULL, cloudPrbThreshold = 35, slopeDefault = 1.4, 
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
+                              cloudPrbThreshold = 35, slopeDefault = 1.4, 
                               interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
-  out(paste0("Processing: ",record$entityId),msg=T)
+  identifier <- "record_id"
+  out(paste0("Processing: ",record[[identifier]]),msg=T)
   dir_given <- !is.null(dir_out)
+  sceneCloudCoverCol <- "cloudcov"
   cloud_mask_path <- "cloud_mask_file"
   aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
   aoi_HOT_mean_probability <- "aoi_HOT_mean_probability"
@@ -78,7 +78,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   preview <- mask(preview,NA_mask,maskvalue=0)
 
   # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
-  if (record$sensor_group %in% c("Landsat")) preview <- .preview_mask_edges(preview)
+  if (record$product_group %in% c("Landsat")) preview <- .preview_mask_edges(preview)
   
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
@@ -161,6 +161,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   a <- a_hashmap$find(s)
   if (s == 1) {slope <- slopeDefault}
   
+  print("1 GOT HERE")
+  
   ## Calculate HOT cloud probablity layer
   try(nominator <- abs(slope * bBand - rBand + intercept))
   try(denominator <- sqrt(1 + slope^2))
@@ -181,7 +183,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     }
     # calculate current cloud coverage
     cPercent <- .raster_percent(cMask)
-    try(ccDeviationFromProvider <- as.numeric(record[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
+    try(ccDeviationFromProvider <- as.numeric(record[[sceneCloudCoverCol]][1]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
     if (abs(ccDeviationFromProvider <= maxDeviation) || numTry == maxTry) { # if this is the last iteration
       # check if seperation makes sense (if "clear-sky" pixels have higher mean value than "cloudy" pixels it does not make sense)
       below_above <- list(above=mask(preview[[1]],cMask,maskvalue=1),below=mask(preview[[1]],cMask,maskvalue=0))
@@ -208,6 +210,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     numTry <- numTry + 1
   }
   
+  print("2 GOT HERE")
+  
+  
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask)
   # mask preview to aoi
@@ -220,8 +225,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
     cMask[cMask==0] <- NAvalue(cMask)
     if (dir_given) { # save cloud mask if desired
-      maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
-      writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
+      print("3 GOT HERE")
+      maskFilename <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
+      writeRaster(cMask,maskFilename,overwrite=T)
       record[[cloud_mask_path]] <- maskFilename
     }
     ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame

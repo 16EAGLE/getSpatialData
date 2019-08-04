@@ -22,6 +22,10 @@
 #' 
 #' @author Henrik Fisser
 #' 
+#' @importFrom utils object.size
+#' @importFrom readr read_csv write_csv cols
+#' @importFrom raster stack
+#' 
 #' @examples
 #' ## Load packages
 #' library(getSpatialData)
@@ -79,16 +83,83 @@
 #' 
 #' @export
 
-calc_cloudcov <- function(records, aoi = NULL,  
-                          maxDeviation = 20, cloudPrbThreshold = 40, 
-                          slopeDefault = 1.4, interceptDefault = -10, 
+calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
+                          cloudPrbThreshold = 35, slopeDefault = 1.4, interceptDefault = -10, 
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
-  sensor <- unique(records$sensor)
-  records <- .cloudcov_bridge(sensor=sensor,sceneCloudCoverCol=sceneCloudCoverCol,records=records,aoi=aoi,maxDeviation=maxDeviation,
-                        cloudPrbThreshold=cloudPrbThreshold,slopeDefault=slopeDefault,
-                        interceptDefault=interceptDefault,dir_out=dir_out,username=username,password=password,verbose=verbose)
+  ## Check input
+  aoiClass <- class(aoi)
+  classNumErr <-  "has to be of class 'numeric'. But is: "
+  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  if (!class(records) == "data.frame") {out(paste0("Argument 'records' has to be of class 'data.frame' in the format as returned within the getSpatialData package. But is of class: ",class(records)),type=3)}
+  params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
+  check_num <- sapply(1:length(params),function(i) {
+    if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
+  })
   
+  cols_initial <- colnames(records)
+  numRecords <- nrow(records)
+  out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
+  processingTime <- c()
+  previewSize <- c()
+  ## Do HOT cloud cover assessment consecutively
+  records <- do.call(rbind,lapply(1:numRecords,function(i) {
+    startTime <- Sys.time()
+    record <- records[i,]
+    identifier <- "record_id"
+    sensor <- record$product
+    is_SAR <- sensor == "Sentinel-1"
+    # get preview of current record
+    csv_path <- file.path(dir_out,paste0(record[,identifier],".csv"))[1]
+    if (file.exists(csv_path)) {
+      out(paste0("Loading because already processed: ",record[[identifier]]),msg=T)
+      record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
+      return(record_cc)
+    }
+    out(paste0("Processing: ",record[[identifier]]),msg=T)
+    if (sensor == "Sentinel-1") {
+      record_preview <- NULL
+    } else {
+      prev_col_given <- ("preview_file" %in% names(record))
+      if (prev_col_given) {
+        if (file.exists(record$preview_file)) {
+          record_preview <- record
+        } else {
+          record_preview <- get_previews(record,dir_out=dir_out,verbose=F) 
+        }
+      } else {
+        record_preview <- get_previews(record,dir_out=dir_out,verbose=F)
+      }
+      preview <- stack(record_preview$preview_file)
+    }
+    # pass preview to HOT function
+    cond <- !is.null(record_preview) && !inherits(record_preview,"try-error")
+    if (cond) {
+      record_cc <- try(calc_hot_cloudcov(record=record_preview,
+                                         preview=preview,
+                                         aoi=aoi,
+                                         cloudPrbThreshold=cloudPrbThreshold,
+                                         maxDeviation=maxDeviation,
+                                         slopeDefault=slopeDefault,
+                                         interceptDefault=interceptDefault,
+                                         dir_out=dir_out,verbose=verbose))
+    }
+    if (isFALSE(cond) || class(record_cc) != "data.frame") {
+      record_cc <- .handle_cc_skip(record,is_SAR,dir_out)
+    }
+    previewSize <- c(previewSize,object.size(preview))
+    endTime <- Sys.time()
+    if (i <= 5) {
+      elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
+      processingTime <- c(processingTime,elapsed)
+    }
+    if (numRecords >= 10 && i == 5) {
+      .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+    }
+    if (!is.null(dir_out)) write_csv(record_cc,csv_path)
+    return(record_cc)
+  }))
+  
+  records <- .column_summary(record,cols_initial)
   return(records)
-  
 }

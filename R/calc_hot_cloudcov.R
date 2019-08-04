@@ -39,7 +39,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
                               interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
   identifier <- "record_id"
-  out(paste0("Processing: ",record[[identifier]]),msg=T)
   dir_given <- !is.null(dir_out)
   sceneCloudCoverCol <- "cloudcov"
   cloud_mask_path <- "cloud_mask_file"
@@ -99,8 +98,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
   # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
   # a confusion of bright or reddish land surfaces with clouds
-  bThresh_low <- 40 # for dividing the blue DNs with values between 40 and 100 into equal interval bins
-  bThresh_high <- 100
+  bThresh_low <- 20 # for dividing the blue DNs with values between 30 and 140 into equal interval bins
+  bThresh_high <- 140
   rThresh <- 20 # from the blue bins take the 20 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   bBins <- lapply(bThresh_low:bThresh_high,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
@@ -141,8 +140,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   ## Calculate cloud probability layer for the whole scene
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
-  
-  ## Handle slope values close to 1
+  # handle slope values close to 1
   # Sometimes the slope value is very close to 1. This may result from the bad quality of the preview
   # It is handled by adding an adjustment power a to the slope in the linear function (nominator). This adjustment
   # power is determined linear to the distance from 1. For slope values of <= 0.5 >= -0.5 and >= 1.5 a is 1 because this
@@ -160,8 +158,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   a_hashmap <- hashmap(s_vec,a_vec)
   a <- a_hashmap$find(s)
   if (s == 1) {slope <- slopeDefault}
-  
-  print("1 GOT HERE")
   
   ## Calculate HOT cloud probablity layer
   try(nominator <- abs(slope * bBand - rBand + intercept))
@@ -210,9 +206,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     numTry <- numTry + 1
   }
   
-  print("2 GOT HERE")
-  
-  
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask)
   # mask preview to aoi
@@ -225,7 +218,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
     cMask[cMask==0] <- NAvalue(cMask)
     if (dir_given) { # save cloud mask if desired
-      print("3 GOT HERE")
       maskFilename <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
       writeRaster(cMask,maskFilename,overwrite=T)
       record[[cloud_mask_path]] <- maskFilename

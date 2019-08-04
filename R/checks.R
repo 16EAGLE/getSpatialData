@@ -19,7 +19,7 @@
   if(all("USGS" %in% services, !getOption("gSD.usgs_set"))) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to USGS ERS.", msg = T)
 }
 
-#' check recprds
+#' check records
 #'
 #' @param records
 #'

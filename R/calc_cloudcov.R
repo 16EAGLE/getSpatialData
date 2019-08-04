@@ -96,6 +96,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   check_num <- sapply(1:length(params),function(i) {
     if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
+  .check_login()
   
   cols_initial <- colnames(records)
   numRecords <- nrow(records)

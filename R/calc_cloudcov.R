@@ -18,7 +18,13 @@
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #' 
-#' @return \code{records} data.frame with two added columns holding the estimated cloud cover for the whole preview and for the aoi.
+#' @return \code{records} data.frame holding three added columns:
+#' \enumerate{
+#' \item cloud_mask_file: character path to the cloud mask file of the record
+#' \item aoi_HOT_cloudcov_percent: numeric percentage of the calculated aoi cloud cover.
+#' \item aoi_HOT_mean_probability: numeric mean aoi cloud cover probability (0-100).
+#' \item scene_HOT_cloudcov_percent: numeric percentage of the calculated scene cloud cover.
+#' }
 #' 
 #' @author Henrik Fisser
 #' 
@@ -88,54 +94,69 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
   ## Check input
+  options("gSD.verbose"=verbose)
   aoiClass <- class(aoi)
   classNumErr <-  "has to be of class 'numeric'. But is: "
   if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
-  if (!class(records) == "data.frame") {out(paste0("Argument 'records' has to be of class 'data.frame' in the format as returned within the getSpatialData package. But is of class: ",class(records)),type=3)}
+  .check_records(records)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
     if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
   .check_login()
-  
   cols_initial <- colnames(records)
   numRecords <- nrow(records)
-  out(paste0("\n",numRecords," records will be processed...\nStarting HOT..."))
+  out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()
   ## Do HOT cloud cover assessment consecutively
   records <- do.call(rbind,lapply(1:numRecords,function(i) {
+    out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()
     record <- records[i,]
     identifier <- "record_id"
+    id <- record[[identifier]]
     sensor <- record$product
     is_SAR <- sensor == "Sentinel-1"
-    # get preview of current record
-    csv_path <- file.path(dir_out,paste0(record[,identifier],".csv"))[1]
+    v <- verbose
+    # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
+    # otherwise run HOT afterwards
+    csv_path <- file.path(dir_previews,paste0(id,".csv"))[1]   
     if (file.exists(csv_path)) {
-      out(paste0("Loading because already processed: ",record[[identifier]]),msg=T)
+      out(paste0("Loading because already processed: ",id),msg=T)
       record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
-      return(record_cc)
+      if ("cloud_mask_file" %in% names(record)) {
+        if (file.exists(record_cc$cloud_mask_file)) return(record_cc)
+      }
+    } else {
+      out(paste0("Processing: ",id),msg=T)
     }
-    out(paste0("Processing: ",record[[identifier]]),msg=T)
+    # if preview exists not yet get it, then run HOT
     if (sensor == "Sentinel-1") {
       record_preview <- NULL
     } else {
-      prev_col_given <- ("preview_file" %in% names(record))
+      prev_col_given <- "preview_file" %in% names(record)
       if (prev_col_given) {
-        if (file.exists(record$preview_file)) {
+        pfile <- record$preview_file
+        preview_exists <- ifelse(is.na(pfile),FALSE,file.exists(pfile))
+        if (preview_exists) {
           record_preview <- record
         } else {
-          record_preview <- get_previews(record,dir_out=dir_out,verbose=F) 
+          record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
         }
       } else {
-        record_preview <- get_previews(record,dir_out=dir_out,verbose=F)
+        record_preview <- try(get_previews(record,dir_out=dir_previews,verbose=F))
       }
-      preview <- stack(record_preview$preview_file)
     }
+    options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
+    verbose <- v
     # pass preview to HOT function
-    cond <- !is.null(record_preview) && !inherits(record_preview,"try-error")
+    cond <- !is.null(record_preview) && 
+      !inherits(record_preview,"try-error") && 
+      !is.na(record_preview$preview_file) &&
+      file.exists(record_preview$preview_file)
     if (cond) {
+      preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
                                          preview=preview,
                                          aoi=aoi,
@@ -143,9 +164,10 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          maxDeviation=maxDeviation,
                                          slopeDefault=slopeDefault,
                                          interceptDefault=interceptDefault,
-                                         dir_out=dir_out,verbose=verbose))
+                                         dir_out=dir_out,
+                                         verbose=verbose))
     }
-    if (isFALSE(cond) || class(record_cc) != "data.frame") {
+    if (isFALSE(cond) || class(record_cc)[1] != "sf") {
       record_cc <- .handle_cc_skip(record,is_SAR,dir_out)
     }
     previewSize <- c(previewSize,object.size(preview))
@@ -160,7 +182,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (!is.null(dir_out)) write_csv(record_cc,csv_path)
     return(record_cc)
   }))
-  
-  records <- .column_summary(record,cols_initial)
+  out(paste0("\n",sep(),"\nFinished preview cloud cover calculation\n",sep(),"\n"))
+  records <- .column_summary(records,cols_initial)
   return(records)
 }

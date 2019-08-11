@@ -126,7 +126,9 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       out(paste0("Loading because already processed: ",id),msg=T)
       record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
       if ("cloud_mask_file" %in% names(record_cc)) {
-        if (file.exists(record_cc$cloud_mask_file)) return(record_cc)
+        if (file.exists(record_cc$cloud_mask_file)) {
+          return(record_cc)
+        }
       }
     } else {
       out(paste0("Processing: ",id),msg=T)

@@ -61,7 +61,18 @@ get_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols 
     }, USE.NAMES = F, SIMPLIFY = F)
     
     if(length(records) > 1){
-      return(rbind.different(records))
+      records <- rbind.different(records)
+      ids <- c()
+      remain <- c()
+      for (i in 1:NROW(records)) {
+        id <- records$record_id[[i]]
+        if (!id %in% ids) {
+          ids <- c(ids,id)
+          remain <- c(remain,i)
+        }
+      }
+      records <- records[remain,]
+      return(records)
     } else{
       return(records[[1]])
     }

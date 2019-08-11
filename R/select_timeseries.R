@@ -54,21 +54,14 @@ select_timeseries <- function(records, aoi,
                               dir_out = NULL, verbose = TRUE) {
   
   #### Checks
-  if (is.null(dir_out) || class(dir_out) != "character") {out("Argument 'dir_out' has to be provided as directory of class 'character'")}
-  if (num_timestamps < 2) {
-    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". The minimum number for select_timeseries is: 3"),3)
-  }
-  if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
-  check <- sapply(list(preview_file=records$preview_file,cloud_mask_file=records$cloud_mask_file),function(x) {
-    .select_catch_files(x,names(x))
-  })
-  if (any(!is.na(check))) out("Cannot find files on disk",3)
+
   
+  cols_initial <- colnames(records)
   #### Prep
   prep <- .select_prep_wrap(records,num_timestamps,"TS")
   records <- prep$records
   par <- prep$par
-  has_SAR <- prep$par
+  has_SAR <- prep$has_SAR
   
   #### Main Process
   .select_start_info(mode="time series",par$sep)
@@ -82,7 +75,8 @@ select_timeseries <- function(records, aoi,
                            max_cloudcov_tile,
                            prio_sensors,
                            dir_out,
-                           par)
+                           par,
+                           cols_initial)
   
   return(records)
   

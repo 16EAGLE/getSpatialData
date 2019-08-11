@@ -48,12 +48,13 @@ select_unitemporal <- function(records, aoi,
   #### Checks
   # use internal function for this
   
+  cols_initial <- colnames(records)
   #### Prep
   num_timestamps <- 1
   prep <- .select_prep_wrap(records,num_timestamps,"UT")
   records <- prep$records
   par <- prep$par
-  has_SAR <- prep$par
+  has_SAR <- prep$has_SAR
   timestamp <- 1
   records[["sub_period"]] <- timestamp
   
@@ -69,7 +70,8 @@ select_unitemporal <- function(records, aoi,
                           max_cloudcov_tile,
                           prio_sensors,
                           dir_out,
-                          par)
+                          par,
+                          cols_initial)
   
   return(records)
   

@@ -721,6 +721,20 @@ rbind.different <- function(x) {
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }
 
+#' get column names added in calc_hot_cloudcov
+#' @return list of character column names.
+#' @keywords internal
+#' @noRd
+.cloudcov_colnames <- function() {
+  
+  cols <- list(cloud_mask_path="cloud_mask_file",
+               aoi_hot_cc_percent="aoi_HOT_cloudcov_percent",
+               aoi_HOT_mean_probability="aoi_HOT_mean_probability",
+               scene_hot_cc_percent="scene_HOT_cloudcov_percent")
+
+}
+
+
 #' calc processing time
 #' 
 #' @param numRecords numRecords
@@ -758,6 +772,38 @@ rbind.different <- function(x) {
   record[["aoi_HOT_cloudcov_percent"]] <- ifelse(is_SAR,NA,100)
   record[["aoi_HOT_mean_probability"]] <- ifelse(is_SAR,NA,100)
   record[["scene_HOT_cloudcov_percent"]] <- ifelse(is_SAR,NA,9999)
+  return(record)
+  
+}
+
+#' creates new columns and fills a one line records data.frame with calc_hot_cloudcov results
+#' finalizes the cloud mask and saves it
+#' @param record data.frame.
+#' @param cMask raster cloud mask.
+#' @param HOT raster HOT cloud probabilitiy layer.
+#' @param scene_cPercent numeric calculated HOT scene cloud cover.
+#' @param maskFilename character file path where to save the cloud mask.
+#' @param cols list of character column names.
+#' @param dir_given logical if a dir_out is given as argument.
+#' @return record data.frame with additional columns.
+#' @keywords internal
+#' @noRd
+.record_cloudcov_finish <- function(record, cMask, HOT, scene_cPercent,
+                                    maskFilename, cols, dir_given) {
+  
+  cMask <- mask(cMask,aoi)
+  HOT_masked <- mask(HOT,aoi)
+  aoi_cPercent <- .raster_percent(cMask) # calculate the absolute HOT cloud cover in aoi
+  aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
+  cMask[cMask==0] <- NA
+  if (dir_given) { # save cloud mask if desired
+    writeRaster(cMask,maskFilename,overwrite=T)
+    record[[cols$cloud_mask_path]] <- maskFilename
+  }
+  ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
+  record[[cols$aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
+  record[[cols$aoi_HOT_mean_probability]] <- as.numeric(aoi_cProb)
+  record[[cols$scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
   return(record)
   
 }
@@ -924,68 +970,7 @@ rbind.different <- function(x) {
   
 }
 
-#### CHECKS
-
-#' checks if all files in a vector of paths are on disk
-#' @param paths character vector of paths to files to check on.
-#' @param item_name character name of the type of files checking on. E.g. "preview_file".
-#' @return In case all are given: NA. Else: it throws a warning
-#' @keywords internal
-#' @noRd
-.select_catch_files <- function(paths, item_name) {
-  
-  paths <- paths[intersect(which(!is.na(paths)),which(paths != "NONE"))]
-  exist <- sapply(paths,function(p) file.exists(p))
-  all_on_disk <- isTRUE(all(exist))
-  if (all_on_disk) {
-    return(NA)
-  } else {
-    number_not_found <- which(exist == FALSE)
-    out(
-      paste0("All files in '",item_name,"' have to be saved at the location as indicated
-in the paths. Out of ",length(paths)," files ",number_not_found," cannot be located"),2)
-  }
-  
-}
-
-#' checks the prio_sensors argument
-#' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
-#' @return nothing. In case of problematic input in prio_sensors: error.
-#' @keywords internal
-#' @noRd
-.select_check_prio_sensors <- function(prio_sensors) {
-  
-  if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character (vector)",3)
-  optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
-  some_wrong <- isFALSE(any(sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
-  if (some_wrong) {
-    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names()",3)
-  }
-  
-}
-
-#' creates an error if requested coverage is higher than sensor revisit time
-#' @param sensor character name of sensor.
-#' @param period character vector of start and end date.
-#' @param num_timestamps numeric number of timestamps. 
-#' @return nothing. Console communication
-#' @keywords internal
-#' @noRd
-.select_handle_revisit <- function(sensor, period, num_timestamps) {
-  
-  revisit_times <- list("Landsat"=8,"Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
-  r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
-  sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
-  info <- paste0("Selected number of timestamps (",num_timestamps)
-  s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
-  out(cat("- Number of timestamps selected:",num_timestamps,s))
-  if (sub_period < r) {
-    out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
-  } else if (sub_period == r) {
-    out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this frequent"),1)
-  }
-  
-}
+#### CHECKS that are not input checks
 
 #' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
 #' @param sensor character vector of all sensors in records.
@@ -1017,36 +1002,6 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
                - increase 'max_period',
                - add another sensor.\n"),2)
   }
-  
-}
-
-#' checks if columns are given in records and if they have values
-#' @param records data.frame.
-#' @param cols character vector of column names to be checked on.
-#' @return nothing. Console error if column is not given.
-#' @keywords internal
-#' @noRd
-.catch_missing_columns <- function(records, cols) {
-  
-  missing <- c()
-  empty <- c()
-  for (col in cols) {
-    is_missing <- isFALSE(col %in% names(records))
-    is_empty <- all(is.na(records[[col]]))
-    if (isTRUE(is_missing)) {
-      missing <- c(missing,col)
-    }
-    if (isTRUE(is_empty)) {
-      empty <- c(empty,col)
-    }
-  }
-  for (fail in unique(c(missing,empty))) {
-    if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n",fail,"\n"),2)
-    if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n",fail,"\n"),2)
-  }
-  
-  error <- sapply(c(missing,empty),function(x) !is.null(x))
-  if (TRUE %in% error) return(TRUE) else return(FALSE)
   
 }
 
@@ -1190,7 +1145,8 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 }
 
 #' aggregates a raster according to the aoi area size.
-#' @param x character vector of paths to rasters to check on.
+#' @param x character vector of paths to rasters to check on. All have to have
+#' the same resolution.
 #' @param x_names character vector of names refering to x.
 #' @param aoi aoi.
 #' @param factor numeric adjustment for aoi_area resulting in an adjustment 
@@ -1203,6 +1159,9 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
   
   aoi_area <- .calc_aoi_area(aoi)
   adj <- aoi_area / factor
+  res_ref <- raster(x[[1]]) # check the resolution and modify adjustment according to it
+  target_res <- 0.00023 * adj # the Sentinel-2 preview resolution * adj is the target res 
+  adj <- target_res / res_ref
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
       curr <- x[[i]]
@@ -1241,14 +1200,22 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
               aoi_cc_prb_col="aoi_HOT_mean_probability",
               cc_index_col="cc_index",
               date_col="date_clear",
-              identifier="entityId")
+              identifier="record_id")
   par$sensor_group <- unique(records$sensor_group)
   par$sensor <- unique(records$sensor)
   par$date_col_orig <- ifelse(par$sensor_group == "Landsat","acquisitionDate","beginposition")
   par$tileids <- unique(records[[par$tileid_col]])
-  par$sep <- "\n----------------------------------------------------------------"
+  par$sep <- sep()
   return(par)
   
+}
+
+#' seperator
+#' @return character
+#' @keywords internal
+#' @noRd
+sep <- function() {
+  sep <- "\n----------------------------------------------------------------"
 }
 
 #' prep process of a selection process
@@ -1260,9 +1227,6 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @noRd
 .select_prep <- function(records, num_timestamps, par) {
   
-  has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
-                                                     par$preview_col,par$cloud_mask_col))
-  if (has_error) out("Argument 'records' cannot be processed as it lacks relevant columns/values",3)
   records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,par$identifier)
   period <- .identify_period(records[[par$date_col]])
@@ -1380,6 +1344,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
+#' @author Henrik Fisser
 .select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
   
   id_sel <- sapply(s$ids,function(x) which(records[,identifier]==x))
@@ -1444,6 +1409,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @importFrom raster minValue maxValue writeRaster raster crs
 #' @keywords internal
 #' @noRd
+#' @author Henrik Fisser
 .select_calc_mosaic <- function(records, base_records, aoi, sub, cloud_mask_col, 
                                 min_improvement,
                                 ts, dir_out, identifier) {
@@ -1543,6 +1509,7 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @return records with four additional columns: selected_col, timestamp_col, pmos_col, cmos_col. Cloud mask and preview mosaics are saved in dir_out.
 #' @keywords internal
 #' @noRd
+#' @author Henrik Fisser
 .select_save_mosaics <- function(records, selected, aoi, 
                                  par, dir_out) {
   
@@ -1584,9 +1551,11 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
 #' @param par list holding everything inserted into this parameter list in .select_params().
 #' @param dir_out character directory where to save intermediate product.
+#' @param cols_initial character vector of records column names as input from user.
 #' @return records data.frame ready for return to user.
 #' @keywords internal
 #' @noRd
+#' @author Henrik Fisser
 .select_main <- function(records,
                          aoi,
                          has_SAR,
@@ -1596,8 +1565,9 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
                          max_sub_period,
                          max_cloudcov_tile,
                          prio_sensors,
+                         par,
                          dir_out,
-                         par) {
+                         cols_initial) {
   
   if (has_SAR %in% c(0,1)) { # if has some or none SAR records, so optical is given as well
     # calculate the synthesis of absolute aoi cloud cover and mean aoi cloud cover probability
@@ -1609,12 +1579,13 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
   if (has_SAR == 100) {
     records <- .select_all_SAR(records, period_new, max_sub_period,
                                min_distance, num_timestamps, par)
+    records <- .column_summary(records,cols_initial)
     return(records)
   }
   
   #### Start Process for optical data selection
   .select_handle_revisit(par$sensor,par$period,num_timestamps) # communicate to the user in case max_period is in conflict with sensor revisit time
-  selected <- list() # list to be filled by all selected 'entity_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
+  selected <- list() # list to be filled by all selected 'record_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
   period_new <- c()
   sub_periods <- unique(records$sub_period)
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
@@ -1654,6 +1625,9 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
   
   records <- subset(records,select=-sub_period) # remove sub-period column
+  records <- subset(records,select=-cc_index)
+  
+  records <- .column_summary(records,cols_initial)
   
   return(records)
   
@@ -2319,19 +2293,4 @@ in the paths. Out of ",length(paths)," files ",number_not_found," cannot be loca
                                         - increase 'max_period'.")) 
   
   console_summary_warning <- list(console_summary,warning)
-}
-
-#' prints character vectors in console combined into one message in out()
-#' @param x list of character vectors.
-#' @param type numeric as in out().
-#' @param msg logical as in out().
-#' @return nothing. Console print
-#' @keywords internal
-#' @noRd
-.out_vector <- function(x,type=1,msg=FALSE) {
-  
-  shout_out <- sapply(x,function(vec) {
-    print_out <- sapply(vec,function(v) out(v,type=type,msg=msg))
-  })
-  
 }

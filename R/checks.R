@@ -47,3 +47,129 @@
   }
   return(path.expand(dir_out))
 }
+
+#' checks the prio_sensors argument
+#' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
+#' @return nothing. In case of problematic input in prio_sensors: error.
+#' @keywords internal
+#' @noRd
+.select_check_prio_sensors <- function(prio_sensors) {
+  
+  if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character (vector)",3)
+  optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
+  some_wrong <- isFALSE(any(sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
+  if (some_wrong) {
+    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names()",3)
+  }
+  
+}
+
+#' checks if all files in a vector of paths are on disk
+#' @param paths character vector of paths to files to check on.
+#' @param item_name character name of the type of files checking on. E.g. "preview_file".
+#' @return In case all are given: NA. Else: it throws a warning
+#' @keywords internal
+#' @noRd
+.select_check_files <- function(paths, item_name) {
+  
+  paths <- paths[intersect(which(!is.na(paths)),which(paths != "NONE"))]
+  exist <- sapply(paths,function(p) file.exists(p))
+  all_on_disk <- isTRUE(all(exist))
+  if (all_on_disk) {
+    return(NA)
+  } else {
+    number_not_found <- which(exist == FALSE)
+    out(
+      paste0("All files in '",item_name,"' have to be saved at the location as indicated
+             in the paths. Out of ",length(paths)," files ",number_not_found," cannot be located"),2)
+  }
+  
+}
+
+#' creates an error if requested coverage is higher than sensor revisit time
+#' @param sensor character name of sensor.
+#' @param period character vector of start and end date.
+#' @param num_timestamps numeric number of timestamps. 
+#' @return nothing. Console communication
+#' @keywords internal
+#' @noRd
+.select_handle_revisit <- function(sensor, period, num_timestamps) {
+  
+  revisit_times <- list("Landsat"=8,"Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
+  r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
+  sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
+  info <- paste0("Selected number of timestamps (",num_timestamps)
+  s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
+  out(cat("- Number of timestamps selected:",num_timestamps,s))
+  if (sub_period < r) {
+    out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
+  } else if (sub_period == r) {
+    out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this frequent"),1)
+  }
+  
+}
+
+#' checks if columns are given in records and if they have values
+#' @param records data.frame.
+#' @param cols character vector of column names to be checked on.
+#' @return nothing. Console error if column is not given.
+#' @keywords internal
+#' @noRd
+.catch_missing_columns <- function(records, cols) {
+  
+  missing <- c()
+  empty <- c()
+  for (col in cols) {
+    is_missing <- isFALSE(col %in% names(records))
+    is_empty <- all(is.na(records[[col]]))
+    if (isTRUE(is_missing)) {
+      missing <- c(missing,col)
+    }
+    if (isTRUE(is_empty)) {
+      empty <- c(empty,col)
+    }
+  }
+  for (fail in unique(c(missing,empty))) {
+    if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n",fail,"\n"),2)
+    if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n",fail,"\n"),2)
+  }
+  
+  error <- sapply(c(missing,empty),function(x) !is.null(x))
+  if (TRUE %in% error) return(TRUE) else return(FALSE)
+  
+}
+
+#' wrapper of all checks in select
+#' @param args list of all input arguments.
+#' @param mode character selection mode ("TS" or "BT" or "UT").
+#' @return Throwing an error if a check is positive. Otherwise a list of dir_out
+#' and aoi is returned (both optionally modified). If dir_out does not exist it
+#' is created through check_dir_out.
+#' @keywords internal
+#' @noRd
+.select_checks <- function(args) {
+  
+  options("gSD.verbose"=verbose)
+  .check_records(records,.cloudcov_colnames())  
+  dir_out <- .check_dir_out(dir_out)
+  if (mode == "TS") {
+    if (num_timestamps < 3) {
+      out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". 
+                 The minimum number for select_timeseries is: 3"),3)
+    }
+  }
+  # check if all columns are provided
+  has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
+                                                     par$preview_col,par$cloud_mask_col))
+  if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
+  if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
+  # check if needed files exist
+  check <- sapply(list(preview_file=records$preview_file,cloud_mask_file=records$cloud_mask_file),function(x) {
+    .select_check_files(x,names(x))
+  })
+  if (any(!is.na(check))) out("Cannot find files on disk",3)
+  
+
+}
+
+

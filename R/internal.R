@@ -215,7 +215,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #'
 #' @param records df
 #' @param records.names character
-#' @importFrom sf st_as_sf
+#' 
 #' @keywords internal
 #' @noRd
 .column_summary <- function(records, records.names, download_success = F){
@@ -234,9 +234,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
         out(paste0("All downloads have been succesfull after ", max(records$download_attempts), " attempt(s)."), msg = T)
       }
     }
-  }
-  if (class(records)[1] != "sf") {
-    records <- st_as_sf(records)
   }
   return(records)
 }

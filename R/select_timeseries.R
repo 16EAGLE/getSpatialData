@@ -53,36 +53,37 @@ select_timeseries <- function(records, aoi,
                               prio_sensors = NULL, 
                               dir_out = NULL, verbose = TRUE) {
   
-  #### Checks
-  if (is.null(dir_out) || class(dir_out) != "character") {out("Argument 'dir_out' has to be provided as directory of class 'character'")}
-  if (num_timestamps < 2) {
-    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". The minimum number for select_timeseries is: 3"),3)
+  .check_records(records,.cloudcov_colnames())
+  cols_initial <- colnames(records)
+  if (!is.numeric(num_timestamps)) out("Argument 'num_timestamps' has to be of class numeric")
+  if (num_timestamps < 3) {
+    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". 
+               The minimum number for select_timeseries is: 3"),3)
   }
-  if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
-  check <- sapply(list(preview_file=records$preview_file,cloud_mask_file=records$cloud_mask_file),function(x) {
-    .select_catch_files(x,names(x))
-  })
-  if (any(!is.na(check))) out("Cannot find files on disk",3)
   
   #### Prep
   prep <- .select_prep_wrap(records,num_timestamps,"TS")
   records <- prep$records
   par <- prep$par
-  has_SAR <- prep$par
+  has_SAR <- prep$has_SAR
+  
+  #### Checks
+  .select_checks(records,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="time series",par$sep)
-  selected <- .select_main(records,
-                           aoi,
-                           has_SAR,
-                           num_timestamps,
-                           min_distance,
-                           min_improvement,
-                           max_sub_period,
-                           max_cloudcov_tile,
-                           prio_sensors,
-                           dir_out,
-                           par)
+  records <- .select_main(records,
+                          aoi,
+                          has_SAR,
+                          num_timestamps,
+                          min_distance,
+                          min_improvement,
+                          max_sub_period,
+                          max_cloudcov_tile,
+                          prio_sensors,
+                          dir_out,
+                          par,
+                          cols_initial)
   
   return(records)
   

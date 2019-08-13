@@ -3,20 +3,11 @@
 #' \code{calc_hot_cloudcov} estimates the cloud cover of a satellite image raster using the haze-optimal transformation (HOT) within an aoi
 #' The algorithm was implemented in this function for cloud cover estimation of DN values from preview images.
 #' 
-#' @details The estimation of the cloud cover is done on the red and blue information of the input RGB. Haze-optimal transformation (HOT) procedure is applied based on 
-#' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
-#' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
-#' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
-#' 
-#' @note Mainly thought for internal use in getSpatialData and only tested for preview images of Sentinel, Landsat, MODIS.
-#' 
 #' @param record data.frame, single line representing one record from a records data.frame.
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
-#' @param identifier numeric, column number where a unique identifier of the scenes is located, sensor-specific.
 #' @param maxDeviation numeric between 0 and 100. The maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
-#' @param sceneCloudCoverCol character, the clear name of the column in the record data.frame where the cloud cover estimation of the data dissiminator is found.
-#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 35}. 
+#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 40}. 
 #' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
@@ -27,30 +18,39 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster cellStats
+#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster cellStats raster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
-#' @importFrom hashmap hashmap
 #' @importFrom sf st_as_sf st_transform
 #' @importFrom sp proj4string
 #' 
-#' @export
+#' @keywords internal
+#' @noRd
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, maxDeviation = 5, 
-                              sceneCloudCoverCol = NULL, cloudPrbThreshold = 35, slopeDefault = 1.4, 
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
+                              cloudPrbThreshold = 40, slopeDefault = 1.4, 
                               interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
   
-  out(paste0("Processing: ",record$entityId),msg=T)
+  identifier <- "record_id"
   dir_given <- !is.null(dir_out)
-  cloud_mask_path <- "cloud_mask_file"
-  aoi_hot_cc_percent <- "aoi_HOT_cloudcov_percent"
-  aoi_HOT_mean_probability <- "aoi_HOT_mean_probability"
-  scene_hot_cc_percent <- "scene_HOT_cloudcov_percent"
-  na_case <- "NONE"
+  cols <- .cloudcov_colnames()
+  sceneCloudCoverCol <- "cloudcov"
   error <- "try-error"
   currTitle <- record[[identifier]]
+  # for dividing the blue DNs with values between this value and the value below into equal interval bins
+  bThresh_low <- 20 
+  bThresh_high <- 160 # below this value a pixel cannot be classified as cloud
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
+  maskFilename <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
+  if (file.exists(maskFilename)) {
+    cMask <- raster(maskFilename)
+    # when re-loading the existing cMask the HOT scene_cPercent cannot be calculated because already aoi masked
+    out("Loading existing HOT aoi cloud mask but no HOT scene cloud cover can be calculated from it, only for aoi",msg=T)
+    record <- .record_cloudcov_finish(record,aoi,cMask,HOT=NULL,
+                                      scene_cPercent=9999,maskFilename,cols,dir_given,reload=T)
+    return(record)
+  }
   
   crs <- try(proj4string(preview))
   if (is.na(crs) || inherits(crs,error)) {
@@ -70,7 +70,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # If preview is broken or nor valid observations in aoi return
   if (isTRUE(cond)) {
     record <- .handle_cc_skip(record,dir_out=dir_out)
-    return(record)
+    return(NA)
   }
   
   # Mask NA values in preview (represented as 0 here)
@@ -78,7 +78,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   preview <- mask(preview,NA_mask,maskvalue=0)
 
   # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
-  if (record$sensor_group %in% c("Landsat")) preview <- .preview_mask_edges(preview)
+  if (record$product_group %in% c("Landsat")) preview <- .preview_mask_edges(preview)
   
   ## Prepare RGB or RB stack
   nlyrs <- nlayers(preview)
@@ -92,6 +92,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
     out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
+  # create a mask where blue band has values below 160
+  # at the end these values will be switched to clear-sky where since it is assumed they cannot be cloud
+  safe_clear <- prvStck[[1]] <= 160
   ## Calculate least-alternate deviation (LAD) regression
   # this step computes first safe clear-sky pixels adpated from the bins method from Zhu & Helmer 2018
   # the procedure was adapted slightly because here it is being computed with discontinuous DN values. Suitable values for
@@ -99,8 +102,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
   # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
   # a confusion of bright or reddish land surfaces with clouds
-  bThresh_low <- 40 # for dividing the blue DNs with values between 40 and 100 into equal interval bins
-  bThresh_high <- 100
   rThresh <- 20 # from the blue bins take the 20 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
   bBins <- lapply(bThresh_low:bThresh_high,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
@@ -141,26 +142,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   ## Calculate cloud probability layer for the whole scene
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
-  
-  ## Handle slope values close to 1
-  # Sometimes the slope value is very close to 1. This may result from the bad quality of the preview
-  # It is handled by adding an adjustment power a to the slope in the linear function (nominator). This adjustment
-  # power is determined linear to the distance from 1. For slope values of <= 0.5 >= -0.5 and >= 1.5 a is 1 because this
-  # are safe values. If slope is 1, the slope default value is taken
-  t <- -0.8 # threshold between this value and -1 respectively both
-  t_high <- 1+(1-abs(t))
-  step <- 0.01
-  s <- round(slope,2) # round the slope value to two digits in order to look-up the closest adjustment power
-  a_vals <- (qexp((10:63)/63) * 5)[3:(length(seq(abs(t),1,step)))] # use an exponential increase of a towards 1
-  a_vals_decr <- sort(a_vals,decreasing=TRUE)
-  u <- rep(1,length(seq(-100,-t_high,step)))
-  v <- rep(1,length(seq(t,-t,step)))
-  a_vec <- c(u,a_vals,1,a_vals_decr,v,a_vals,1,a_vals_decr,u)
-  s_vec <- round(seq(-100,100,step),2)
-  a_hashmap <- hashmap(s_vec,a_vec)
-  a <- a_hashmap$find(s)
-  if (s == 1) {slope <- slopeDefault}
-  
   ## Calculate HOT cloud probablity layer
   try(nominator <- abs(slope * bBand - rBand + intercept))
   try(denominator <- sqrt(1 + slope^2))
@@ -172,32 +153,24 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101 # start with 101 to enter loop
-  while (numTry <= maxTry && abs(ccDeviationFromProvider) > maxDeviation && 
-         (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
+  while (isFALSE(hotFailed)
+         && numTry <= maxTry 
+         && abs(ccDeviationFromProvider) > maxDeviation 
+         && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
-    if (inherits(cMask,error)) {
-      hotFailed <- TRUE
-      break
-    }
+    # values that are considered as safe clear according to bThresh_high
+    # are all set to 1. This reduces an error e.g. where dark surfaces have high
+    # values in the HOT layer because they deviate too strongly from relatively bright
+    # reference pixels (e.g. in desert areas)
+    cMask[safe_clear] <- 1
+    if (inherits(cMask,error)) hotFailed <- TRUE
     # calculate current cloud coverage
     cPercent <- .raster_percent(cMask)
-    try(ccDeviationFromProvider <- as.numeric(record[1,sceneCloudCoverCol]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
-    if (abs(ccDeviationFromProvider <= maxDeviation) || numTry == maxTry) { # if this is the last iteration
-      # check if seperation makes sense (if "clear-sky" pixels have higher mean value than "cloudy" pixels it does not make sense)
-      below_above <- list(above=mask(preview[[1]],cMask,maskvalue=1),below=mask(preview[[1]],cMask,maskvalue=0))
-      mean_vals <- sapply(below_above,function(x) {
-        val <- raster::getValues(x)
-        mean <- mean(val[!is.na(val)])
-      })
-      # this case occurs mainly when it is a fully cloudy image where not reference pixels could be found
-      if (max(mean_vals) != mean_vals[[1]]) {
-        hotFailed <- TRUE
-        break
-      }
-    }
-    if (inherits(ccDeviationFromProvider,error) || is.na(ccDeviationFromProvider) || is.null(ccDeviationFromProvider)) {
+    try(ccDeviationFromProvider <- as.numeric(record[[sceneCloudCoverCol]][1]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
+    if (inherits(ccDeviationFromProvider,error) 
+        || is.na(ccDeviationFromProvider) 
+        || is.null(ccDeviationFromProvider)) {
       hotFailed <- TRUE
-      break
     } else {
       if (ccDeviationFromProvider >= maxDeviation) { # if deviation is larger positive maxDeviation
         cloudPrbThreshold <- cloudPrbThreshold - 1 # decrease threshold value because HOT cc \% is lower than provided cc \%
@@ -210,27 +183,13 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, identifier = NULL, ma
   
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask)
-  # mask preview to aoi
-  prevMasked <- mask(preview,aoi)
   ## Calculate aoi cloud cover percentage
   if (isFALSE(hotFailed)) {
-    cMask <- mask(cMask,aoi)
-    HOT_masked <- mask(HOT,aoi)
-    aoi_cPercent <- .raster_percent(cMask) # calculate the absolute HOT cloud cover in aoi
-    aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
-    cMask[cMask==0] <- NAvalue(cMask)
-    if (dir_given) { # save cloud mask if desired
-      maskFilename <- file.path(dir_out,paste0(record[1,identifier],"_cloud_mask.tif"))
-      writeRaster(cMask,maskFilename,"GTiff",overwrite=T)
-      record[[cloud_mask_path]] <- maskFilename
-    }
-    ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
-    record[[aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
-    record[[aoi_HOT_mean_probability]] <- as.numeric(aoi_cProb)
-    record[[scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
+    record <- .record_cloudcov_finish(record,cMask,HOT,scene_cPercent,maskFilename,cols,dir_given)
   } else {
     record <- .handle_cc_skip(record,dir_out=dir_out)
     out(hotFailWarning,type=2)
+    return(NA)
   }
   return(record)
   

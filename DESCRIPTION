@@ -28,7 +28,6 @@ Imports:
   L1pack,
   processx,
   stats,
-  hashmap,
   plyr,
   methods,
   readr

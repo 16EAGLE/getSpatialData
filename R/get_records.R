@@ -61,7 +61,8 @@ get_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rename_cols 
     }, USE.NAMES = F, SIMPLIFY = F)
     
     if(length(records) > 1){
-      return(rbind.different(records))
+      records <- rbind.different(records)
+      return(records)
     } else{
       return(records[[1]])
     }

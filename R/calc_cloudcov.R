@@ -29,6 +29,7 @@
 #' @author Henrik Fisser
 #' 
 #' @importFrom utils object.size
+#' @importFrom sf st_as_sf
 #' @importFrom readr read_csv write_csv cols
 #' @importFrom raster stack
 #' 
@@ -106,11 +107,12 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   .check_login()
   cols_initial <- colnames(records)
   numRecords <- nrow(records)
+  footprint <- records$footprint
   out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()
   ## Do HOT cloud cover assessment consecutively
-  records <- do.call(rbind,lapply(1:numRecords,function(i) {
+  records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()
     record <- records[i,]
@@ -125,7 +127,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (file.exists(csv_path)) {
       out(paste0("Loading because already processed: ",id),msg=T)
       record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
-      if ("cloud_mask_file" %in% names(record_cc)) {
+      nms <- names(record_cc)
+      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms) {
         if (file.exists(record_cc$cloud_mask_file)) {
           return(record_cc)
         }
@@ -169,8 +172,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          dir_out=dir_out,
                                          verbose=verbose))
     }
-    if (isFALSE(cond) || class(record_cc)[1] != "sf") {
-      record_cc <- .handle_cc_skip(record,is_SAR,dir_out)
+    if (isFALSE(cond) || class(record_cc)[1] != "sf" || is.na(record_cc)) {
+      record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     previewSize <- c(previewSize,object.size(preview))
     endTime <- Sys.time()
@@ -183,8 +186,10 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     }
     if (!is.null(dir_out)) write_csv(record_cc,csv_path)
     return(record_cc)
-  }))
+  })))
   out(paste0("\n",sep(),"\nFinished preview cloud cover calculation\n",sep(),"\n"))
   records <- .column_summary(records,cols_initial)
+  records$footprint <- footprint
+  records <- st_as_sf(records)
   return(records)
 }

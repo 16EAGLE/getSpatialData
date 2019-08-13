@@ -129,7 +129,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     v <- verbose
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
-    csv_path <- file.path(dir_previews,paste0(id,".csv"))[1]   
+    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]   
     if (file.exists(csv_path)) {
       out(paste0("Loading because already processed: ",id),msg=T)
       record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))

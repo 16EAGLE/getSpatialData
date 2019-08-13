@@ -35,7 +35,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   dir_given <- !is.null(dir_out)
   cols <- .cloudcov_colnames()
   sceneCloudCoverCol <- "cloudcov"
-  na_case <- "NONE"
   error <- "try-error"
   currTitle <- record[[identifier]]
   # for dividing the blue DNs with values between this value and the value below into equal interval bins

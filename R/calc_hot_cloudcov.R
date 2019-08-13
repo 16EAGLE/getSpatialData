@@ -48,7 +48,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     cMask <- raster(maskFilename)
     # when re-loading the existing cMask the HOT scene_cPercent cannot be calculated because already aoi masked
     out("Loading existing HOT aoi cloud mask but no HOT scene cloud cover can be calculated from it, only for aoi",msg=T)
-    record <- .record_cloudcov_finish(record,cMask,HOT,scene_cPercent=9999,maskFilename,cols,dir_given)
+    record <- .record_cloudcov_finish(record,aoi,cMask,HOT=NULL,
+                                      scene_cPercent=9999,maskFilename,cols,dir_given,reload=T)
     return(record)
   }
   

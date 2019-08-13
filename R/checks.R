@@ -140,24 +140,21 @@
 }
 
 #' wrapper of all checks in select
-#' @param args list of all input arguments.
-#' @param mode character selection mode ("TS" or "BT" or "UT").
+#' @param records data.frame.
+#' @param prio_sensors character vector.
+#' @param par list.
+#' @param dir_out character.
+#' @param verbose logical.
 #' @return Throwing an error if a check is positive. Otherwise a list of dir_out
 #' and aoi is returned (both optionally modified). If dir_out does not exist it
 #' is created through check_dir_out.
 #' @keywords internal
 #' @noRd
-.select_checks <- function(args) {
+.select_checks <- function(records, prio_sensors = NULL,
+                           par, dir_out, verbose) {
   
   options("gSD.verbose"=verbose)
-  .check_records(records,.cloudcov_colnames())  
   dir_out <- .check_dir_out(dir_out)
-  if (mode == "TS") {
-    if (num_timestamps < 3) {
-      out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". 
-                 The minimum number for select_timeseries is: 3"),3)
-    }
-  }
   # check if all columns are provided
   has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
                                                      par$preview_col,par$cloud_mask_col))
@@ -168,7 +165,6 @@
     .select_check_files(x,names(x))
   })
   if (any(!is.na(check))) out("Cannot find files on disk",3)
-  
 
 }
 

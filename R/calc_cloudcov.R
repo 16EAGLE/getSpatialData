@@ -4,7 +4,13 @@
 #' upon these images. Cloud cover is computed currently using one of the following options:
 #' \itemize{
 #' \item Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
-#' } 
+#' }
+#' 
+#' #' @details When using HOT the estimation of the cloud cover is done on the red and blue information of the input RGB. Haze-optimal transformation (HOT) procedure is applied based on 
+#' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
+#' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
+#' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
+#' 
 #' @note if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.

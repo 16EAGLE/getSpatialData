@@ -4,7 +4,9 @@
 #'
 #' @inheritParams getSentinel_records
 #' @param record data.frame, single row data.frame collected from the return of \link{getSentinel_records}, representing the selected record and all its attributes.
-#'
+#' @param username to be removed.
+#' @param password to be removed.
+#' 
 #' @return TRUE on success.
 #'
 #' @author Jakob Schwalb-Willmann

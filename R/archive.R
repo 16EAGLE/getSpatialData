@@ -24,7 +24,7 @@
 #' ## return current archive directory
 #' get_archive()
 #'
-#' @seealso \link{get_data} \link{get_previews}
+#' @seealso get_data \link{get_previews}
 #'
 set_archive <- function(dir_archive, create = T){
   

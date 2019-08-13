@@ -12,10 +12,12 @@
 #'    \item "ESPA" to download on-demand products from USGS-EROS ESPA
 #'    \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
 #' }
-#' @param espa_order character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.
 #' @param force logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.
 #' @param n.retry numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.
-#'
+#' @param wait_for_espa logical, whether to wait for ESPA orders to be available for download \code{TRUE} or not.
+#' @param username to be removed.
+#' @param password to be removed.
+#' 
 #' @return Character vector of paths to the downloaded files.
 #'
 #' @note ESPA is used as source if higher-level products are requested by the user (see \code{level}). Since ESPA is an on-demand service, \code{getLandsat_data} places an order and then waits for the requested items to be available, before they are downloaded. Therefore, the runtime of the function is depending on how fast an order is being processed by the ESPA server. The ESPA processing time depends on the size of the order and can take up to 48 hours in highly demanding cases! The function status is indicated by the console messages that it is prompting during execution.

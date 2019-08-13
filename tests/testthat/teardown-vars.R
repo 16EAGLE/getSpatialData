@@ -1,2 +1,2 @@
 unlink(vars.global$dir.arc)
-file.remove("Rplots.pdf")
+if(file.exists("Rplots.pdf")) file.remove("Rplots.pdf")

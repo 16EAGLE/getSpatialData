@@ -10,6 +10,10 @@ getSentinel_restore(record, username = NULL, password = NULL,
 \arguments{
 \item{record}{data.frame, single row data.frame collected from the return of \link{getSentinel_records}, representing the selected record and all its attributes.}
 
+\item{username}{to be removed.}
+
+\item{password}{to be removed.}
+
 \item{hub}{character, Copernicus Hub selection. Either
 \itemize{
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},

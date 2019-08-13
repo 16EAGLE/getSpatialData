@@ -2,8 +2,9 @@
 #'
 #' \code{get_names} obtains names of available products from included services. The returned names can be used with the \link{get_records} functions for querying a specific product.
 #' @inheritParams login
+#' @param grouped logical, whether to return a list of names grouped by platform/sensor (\code{TRUE}) or not.
 #' 
-#' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{gSD_login} for details.
+#' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
 #' 
 #' @return A character vector
 #'

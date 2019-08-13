@@ -15,6 +15,10 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
 
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
+\item{username}{to be removed.}
+
+\item{password}{to be removed.}
+
 \item{hub}{character, Copernicus Hub selection. Either
 \itemize{
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},

@@ -33,7 +33,7 @@ get_archive()
 
 }
 \seealso{
-\link{get_data} \link{get_previews}
+get_data \link{get_previews}
 }
 \author{
 Jakob Schwalb-Willmann

@@ -59,7 +59,7 @@ view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
 
 #' @rdname view_previews
 #' @importFrom RStoolbox ggRGB
-#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes scale_colour_identity guides guide_legend scale_x_continuous scale_y_continuous
+#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes_ scale_colour_identity guides guide_legend scale_x_continuous scale_y_continuous
 #' @importFrom cowplot plot_grid get_legend
 #' @export
 plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE){
@@ -87,7 +87,7 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   # fun to add aoi
   aoi <- function(x){
     aoi.sf <- getOption("gSD.aoi")
-    quiet(x + geom_sf(data = st_sf(geometry = aoi.sf, colour = aoi_colour), aes(colour = colour), fill = NA, show.legend = T) +
+    quiet(x + geom_sf(data = st_sf(geometry = aoi.sf, colour = aoi_colour), aes_(colour = "colour"), fill = NA, show.legend = T) +
             scale_colour_identity(guide = "legend", labels = "AOI", name = ""))
   }
   

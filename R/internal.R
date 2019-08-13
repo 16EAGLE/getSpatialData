@@ -2265,3 +2265,12 @@ sep <- function() {
   })
   
 }
+
+#' run silent
+#' @param expr an expression
+#' @return nothing. runs expression
+#' @keywords internal
+#' @noRd
+quiet <- function(expr){
+  return(suppressWarnings(suppressMessages(expr)))
+}

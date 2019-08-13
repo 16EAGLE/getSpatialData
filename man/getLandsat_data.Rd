@@ -22,13 +22,17 @@ getLandsat_data(records, level = "sr", source = "auto",
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
 
+\item{wait_for_espa}{logical, whether to wait for ESPA orders to be available for download \code{TRUE} or not.}
+
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
+
+\item{username}{to be removed.}
+
+\item{password}{to be removed.}
 
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
-
-\item{espa_order}{character, optional. A vector of a single or multiple ESPA order IDs. Use this argument, if you want to download items being part of an order that already had been placed by this function or yourself earlier, e.g. in case you arboted the function while it was waiting for the order to be completed. The ESPA order ID is displayed when the order is placed and you recieve it via E-Mail from USGS-EROS. If defined, \code{records} is allowed to be undefined.}
 }
 \value{
 Character vector of paths to the downloaded files.

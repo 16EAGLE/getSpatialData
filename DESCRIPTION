@@ -1,11 +1,13 @@
 Package: getSpatialData
 Type: Package
 Title: Get different kinds of freely available spatial datasets
-Version: 0.0.4
-Date: 2018-06-23
-Depends: R (>= 2.10)
-Authors@R: person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de",
-  role = c("aut", "cre"))
+Version: 0.1.0
+Date: 2019-08-13
+Depends: R (>= 3.5)
+Authors@R: c(
+  person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de", role = c("aut", "cre")),
+  person("Henrik", "Fisser", role = c("aut"))
+  )
 Description: Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.
 License: GPL-3 | file LICENSE
 Encoding: UTF-8

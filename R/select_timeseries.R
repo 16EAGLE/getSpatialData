@@ -53,30 +53,37 @@ select_timeseries <- function(records, aoi,
                               prio_sensors = NULL, 
                               dir_out = NULL, verbose = TRUE) {
   
-  #### Checks
-
-  
+  .check_records(records,.cloudcov_colnames())
   cols_initial <- colnames(records)
+  if (!is.numeric(num_timestamps)) out("Argument 'num_timestamps' has to be of class numeric")
+  if (num_timestamps < 3) {
+    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". 
+               The minimum number for select_timeseries is: 3"),3)
+  }
+  
   #### Prep
   prep <- .select_prep_wrap(records,num_timestamps,"TS")
   records <- prep$records
   par <- prep$par
   has_SAR <- prep$has_SAR
   
+  #### Checks
+  .select_checks(records,prio_sensors,par,dir_out,verbose)
+  
   #### Main Process
   .select_start_info(mode="time series",par$sep)
-  selected <- .select_main(records,
-                           aoi,
-                           has_SAR,
-                           num_timestamps,
-                           min_distance,
-                           min_improvement,
-                           max_sub_period,
-                           max_cloudcov_tile,
-                           prio_sensors,
-                           dir_out,
-                           par,
-                           cols_initial)
+  records <- .select_main(records,
+                          aoi,
+                          has_SAR,
+                          num_timestamps,
+                          min_distance,
+                          min_improvement,
+                          max_sub_period,
+                          max_cloudcov_tile,
+                          prio_sensors,
+                          dir_out,
+                          par,
+                          cols_initial)
   
   return(records)
   

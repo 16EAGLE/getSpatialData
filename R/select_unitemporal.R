@@ -45,10 +45,9 @@ select_unitemporal <- function(records, aoi,
                                prio_sensors = NULL,
                                dir_out = NULL, verbose = TRUE) {
   
-  #### Checks
-  # use internal function for this
-  
+  .check_records(records,.cloudcov_colnames())
   cols_initial <- colnames(records)
+  
   #### Prep
   num_timestamps <- 1
   prep <- .select_prep_wrap(records,num_timestamps,"UT")
@@ -57,6 +56,9 @@ select_unitemporal <- function(records, aoi,
   has_SAR <- prep$has_SAR
   timestamp <- 1
   records[["sub_period"]] <- timestamp
+  
+  #### Checks
+  .select_checks(records,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="uni-temporal",par$sep)

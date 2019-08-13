@@ -768,10 +768,10 @@ rbind.different <- function(x) {
 #' @noRd
 .handle_cc_skip <- function(record, is_SAR = FALSE, dir_out = NULL) {
   
-  if (!is.null(dir_out)) record[["cloud_mask_file"]] <- "NONE"
-  record[["aoi_HOT_cloudcov_percent"]] <- ifelse(is_SAR,NA,100)
-  record[["aoi_HOT_mean_probability"]] <- ifelse(is_SAR,NA,100)
-  record[["scene_HOT_cloudcov_percent"]] <- ifelse(is_SAR,NA,9999)
+  if (!is.null(dir_out)) record["cloud_mask_file"] <- "NONE"
+  record["aoi_HOT_cloudcov_percent"] <- ifelse(is_SAR,NA,100)
+  record["aoi_HOT_mean_probability"] <- ifelse(is_SAR,NA,100)
+  record["scene_HOT_cloudcov_percent"] <- ifelse(is_SAR,NA,9999)
   return(record)
   
 }
@@ -804,12 +804,12 @@ rbind.different <- function(x) {
   }
   if (dir_given) { # save cloud mask if desired
     writeRaster(cMask,maskFilename,overwrite=T)
-    record[[cols$cloud_mask_path]] <- maskFilename
+    record[cols$cloud_mask_path] <- unlist(maskFilename)
   }
   ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
-  record[[cols$aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
-  record[[cols$aoi_HOT_mean_probability]] <- as.numeric(aoi_cProb)
-  record[[cols$scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
+  record[cols$aoi_hot_cc_percent] <- as.numeric(aoi_cPercent)
+  record[cols$aoi_HOT_mean_probability] <- as.numeric(aoi_cProb)
+  record[cols$scene_hot_cc_percent] <- as.numeric(scene_cPercent)
   return(record)
   
 }

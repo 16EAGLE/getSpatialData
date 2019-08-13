@@ -4,7 +4,13 @@
 #' upon these images. Cloud cover is computed currently using one of the following options:
 #' \itemize{
 #' \item Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
-#' } 
+#' }
+#' 
+#' #' @details When using HOT the estimation of the cloud cover is done on the red and blue information of the input RGB. Haze-optimal transformation (HOT) procedure is applied based on 
+#' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
+#' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
+#' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
+#' 
 #' @note if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.
@@ -18,9 +24,20 @@
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #' 
-#' @return \code{records} data.frame with two added columns holding the estimated cloud cover for the whole preview and for the aoi.
+#' @return \code{records} data.frame holding three added columns:
+#' \enumerate{
+#' \item cloud_mask_file: character path to the cloud mask file of the record
+#' \item aoi_HOT_cloudcov_percent: numeric percentage of the calculated aoi cloud cover.
+#' \item aoi_HOT_mean_probability: numeric mean aoi cloud cover probability (0-100).
+#' \item scene_HOT_cloudcov_percent: numeric percentage of the calculated scene cloud cover.
+#' }
 #' 
 #' @author Henrik Fisser
+#' 
+#' @importFrom utils object.size
+#' @importFrom sf st_as_sf
+#' @importFrom readr read_csv write_csv cols
+#' @importFrom raster stack
 #' 
 #' @examples
 #' ## Load packages
@@ -79,16 +96,106 @@
 #' 
 #' @export
 
-calc_cloudcov <- function(records, aoi = NULL,  
-                          maxDeviation = 20, cloudPrbThreshold = 40, 
-                          slopeDefault = 1.4, interceptDefault = -10, 
+calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
+                          cloudPrbThreshold = 35, slopeDefault = 1.4, interceptDefault = -10, 
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
-  sensor <- unique(records$sensor)
-  records <- .cloudcov_bridge(sensor=sensor,sceneCloudCoverCol=sceneCloudCoverCol,records=records,aoi=aoi,maxDeviation=maxDeviation,
-                        cloudPrbThreshold=cloudPrbThreshold,slopeDefault=slopeDefault,
-                        interceptDefault=interceptDefault,dir_out=dir_out,username=username,password=password,verbose=verbose)
-  
+  ## Check input
+  options("gSD.verbose"=verbose)
+  aoiClass <- class(aoi)
+  classNumErr <-  "has to be of class 'numeric'. But is: "
+  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  .check_records(records)
+  params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
+  check_num <- sapply(1:length(params),function(i) {
+    if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
+  })
+  .check_login()
+  cols_initial <- colnames(records)
+  numRecords <- nrow(records)
+  footprint <- records$footprint
+  out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
+  processingTime <- c()
+  previewSize <- c()
+  ## Do HOT cloud cover assessment consecutively
+  records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
+    out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
+    startTime <- Sys.time()
+    record <- records[i,]
+    identifier <- "record_id"
+    id <- record[[identifier]]
+    sensor <- record$product
+    is_SAR <- sensor == "Sentinel-1"
+    v <- verbose
+    # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
+    # otherwise run HOT afterwards
+    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]   
+    if (file.exists(csv_path)) {
+      out(paste0("Loading because already processed: ",id),msg=T)
+      record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
+      nms <- names(record_cc)
+      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms) {
+        if (file.exists(record_cc$cloud_mask_file)) {
+          return(record_cc)
+        }
+      }
+    } else {
+      out(paste0("Processing: ",id),msg=T)
+    }
+    # if preview exists not yet get it, then run HOT
+    if (sensor == "Sentinel-1") {
+      record_preview <- NULL
+    } else {
+      prev_col_given <- "preview_file" %in% names(record)
+      if (prev_col_given) {
+        pfile <- record$preview_file
+        preview_exists <- ifelse(is.na(pfile),FALSE,file.exists(pfile))
+        if (preview_exists) {
+          record_preview <- record
+        } else {
+          record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
+        }
+      } else {
+        record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
+      }
+    }
+    options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
+    verbose <- v
+    # pass preview to HOT function
+    cond <- !is.null(record_preview) && 
+      !inherits(record_preview,"try-error") && 
+      !is.na(record_preview$preview_file) &&
+      file.exists(record_preview$preview_file)
+    if (cond) {
+      preview <- stack(record_preview$preview_file)
+      record_cc <- try(calc_hot_cloudcov(record=record_preview,
+                                         preview=preview,
+                                         aoi=aoi,
+                                         cloudPrbThreshold=cloudPrbThreshold,
+                                         maxDeviation=maxDeviation,
+                                         slopeDefault=slopeDefault,
+                                         interceptDefault=interceptDefault,
+                                         dir_out=dir_out,
+                                         verbose=verbose))
+    }
+    if (isFALSE(cond) || class(record_cc)[1] != "sf" || is.na(record_cc)) {
+      record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
+    }
+    previewSize <- c(previewSize,object.size(preview))
+    endTime <- Sys.time()
+    if (i <= 5) {
+      elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
+      processingTime <- c(processingTime,elapsed)
+    }
+    if (numRecords >= 10 && i == 5) {
+      .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+    }
+    if (!is.null(dir_out)) write_csv(record_cc,csv_path)
+    return(record_cc)
+  })))
+  out(paste0("\n",sep(),"\nFinished preview cloud cover calculation\n",sep(),"\n"))
+  records <- .column_summary(records,cols_initial)
+  records$footprint <- footprint
+  records <- st_as_sf(records)
   return(records)
-  
 }

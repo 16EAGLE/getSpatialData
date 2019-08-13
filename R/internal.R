@@ -779,6 +779,7 @@ rbind.different <- function(x) {
 #' creates new columns and fills a one line records data.frame with calc_hot_cloudcov results
 #' finalizes the cloud mask and saves it
 #' @param record data.frame.
+#' @param aoi aoi.
 #' @param cMask raster cloud mask.
 #' @param HOT raster HOT cloud probabilitiy layer.
 #' @param scene_cPercent numeric calculated HOT scene cloud cover.
@@ -786,16 +787,21 @@ rbind.different <- function(x) {
 #' @param cols list of character column names.
 #' @param dir_given logical if a dir_out is given as argument.
 #' @return record data.frame with additional columns.
+#' @importFrom raster cellStats writeRaster mask
 #' @keywords internal
 #' @noRd
-.record_cloudcov_finish <- function(record, cMask, HOT, scene_cPercent,
-                                    maskFilename, cols, dir_given) {
+.record_cloudcov_finish <- function(record, aoi, cMask, HOT, scene_cPercent,
+                                    maskFilename, cols, dir_given, reload=F) {
   
-  cMask <- mask(cMask,aoi)
-  HOT_masked <- mask(HOT,aoi)
   aoi_cPercent <- .raster_percent(cMask) # calculate the absolute HOT cloud cover in aoi
-  aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
-  cMask[cMask==0] <- NA
+  if (!is.null(HOT)) {
+    HOT_masked <- mask(HOT,aoi)
+    aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
+  }
+  if (isFALSE(reload)) {
+    cMask <- mask(cMask,aoi)
+    cMask[cMask==0] <- NA
+  }
   if (dir_given) { # save cloud mask if desired
     writeRaster(cMask,maskFilename,overwrite=T)
     record[[cols$cloud_mask_path]] <- maskFilename
@@ -812,7 +818,7 @@ rbind.different <- function(x) {
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
-#' @importFrom raster mask crs extent
+#' @importFrom raster mask crs extent crs<-
 .preview_mask_edges <- function(preview) {
   
   ext <- try(extent(preview))
@@ -1016,7 +1022,7 @@ rbind.different <- function(x) {
 #' @noRd
 .extract_clear_date <- function(records, date_col_orig, date_col_name) {
   
-  records[[par$date_col]] <- as.character(records[[date_col_orig]])
+  records[[date_col_name]] <- as.character(records[[date_col_orig]])
   sent_recs <- which(records$sensor_group=="Sentinel")
   for (i in sent_recs) {
     records[i,date_col_name] <- as.character(substr(records[i,date_col_name],1,10))
@@ -1252,6 +1258,7 @@ sep <- function() {
   prep <- list(records=records,
                par=par,
                has_SAR=has_SAR)
+  return(prep)
   
 }
 
@@ -1406,7 +1413,7 @@ sep <- function() {
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
 #' @importFrom plyr compact
-#' @importFrom raster minValue maxValue writeRaster raster crs
+#' @importFrom raster minValue maxValue writeRaster raster crs crs<-
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
@@ -1577,7 +1584,7 @@ sep <- function() {
   
   # if all are SAR records
   if (has_SAR == 100) {
-    records <- .select_all_SAR(records, period_new, max_sub_period,
+    records <- .select_all_SAR(records, max_sub_period,
                                min_distance, num_timestamps, par)
     records <- .column_summary(records,cols_initial)
     return(records)
@@ -1828,7 +1835,6 @@ sep <- function() {
 
 #' selection process when only SAR given in records
 #' @param records data.frame.
-#' @param period_new character vector period_new.
 #' @param max_sub_period numeric max_sub_period.
 #' @param min_distance numeric min_distance.
 #' @param num_timestamps numeric num_timestamps.
@@ -1836,7 +1842,7 @@ sep <- function() {
 #' @return records data.frame ready for return to user
 #' @keywords internal
 #' @noRd
-.select_all_SAR <- function(records, period_new, max_sub_period,
+.select_all_SAR <- function(records, max_sub_period,
                                  min_distance, num_timestamps,
                                  par) {
   
@@ -2293,4 +2299,19 @@ sep <- function() {
                                         - increase 'max_period'.")) 
   
   console_summary_warning <- list(console_summary,warning)
+}
+
+#' prints character vectors in console combined into one message in out()
+#' @param x list of character vectors.
+#' @param type numeric as in out().
+#' @param msg logical as in out().
+#' @return nothing. Console print
+#' @keywords internal
+#' @noRd
+.out_vector <- function(x,type=1,msg=FALSE) {
+  
+  shout_out <- sapply(x,function(vec) {
+    print_out <- sapply(vec,function(v) out(v,type=type,msg=msg))
+  })
+  
 }

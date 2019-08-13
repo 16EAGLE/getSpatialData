@@ -7,9 +7,9 @@
 \alias{services_avail}
 \title{Session-wide login}
 \usage{
-login_CopHub(username, password = NULL, verbose = TRUE)
+login_CopHub(username = NULL, password = NULL, verbose = TRUE)
 
-login_USGS(username, password = NULL, verbose = TRUE)
+login_USGS(username = NULL, password = NULL, verbose = TRUE)
 
 services_avail(value = F, verbose = T)
 }

@@ -42,7 +42,7 @@ getLandsat_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, renam
       out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
     }
   }
-  aoi <- .make_aoi(aoi, type = "sf", quiet = T)
+  aoi <- .check_aoi(aoi, type = "sf", quiet = T)
 
   ## check time_range and name
   char_args <- list(time_range = time_range, name = name)

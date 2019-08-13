@@ -24,15 +24,15 @@
 #' @return A data frame of records (by default an \code{sf} data frame, see argument \code{as_sf}). Each row represents one record. The data frame can be further filtered by its columnwise attributes or plotted to view their spatial footprints. The records data frame can be used as input to other \code{getSpatialData} functions.
 #' 
 #' @section Sentinel:
-#' To query Sentinel records, login session-wide with your ESA Copernicus Open Access Hub using \link{login_CopHub} first.
+#' To query Sentinel records, login session-wide with your ESA Copernicus Open Access Hub credentials using \link{login_CopHub} first.
 #' 
 #' To query for records of Sentinel remote sensing instruments by \code{time_range}, \code{name} and \code{aoi}, argument \code{gnss} must be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
 #'
 #' @section Landsat:
-#' To query Landsat records, login session-wide with your SGS EROS Registration System (ERS) using \link{login_USGS} first.
+#' To query Landsat records, login session-wide with your USGS EROS Registration System (ERS) credentials using \link{login_USGS} first.
 #'   
 #' @section MODIS:
-#' To query MODIS records, login session-wide with your SGS EROS Registration System (ERS) using \link{login_USGS} first.
+#' To query MODIS records, login session-wide with your USGS EROS Registration System (ERS) credentials using \link{login_USGS} first.
 #' 
 #' @author Jakob Schwalb-Willmann
 #'

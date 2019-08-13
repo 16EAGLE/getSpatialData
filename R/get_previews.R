@@ -6,7 +6,7 @@
 #' @param records records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}
 #' @param dir_out character, a directory, to which previews should be saved. By default, previews are saved to the archive directory defined with \code{set_archive}.
 #' 
-#' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{gSD_login} for details.
+#' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
 #' @return A data frame of records (as defined with argument \code{records}), extended by two columns: \code{preview_file} (character, path to georeferenced preview) and \code{preview_file_jpg} (character, path to preview JPG).
 #' 
 #' @author Jakob Schwalb-Willmann

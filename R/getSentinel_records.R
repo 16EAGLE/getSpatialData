@@ -33,8 +33,8 @@ getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rena
         out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
       }
     }
-    aoi <- st_as_sfc(st_bbox(.make_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
-    aoi <- .make_aoi(aoi, type = "matrix")
+    aoi <- st_as_sfc(st_bbox(.check_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
+    aoi <- .check_aoi(aoi, type = "matrix")
   } else{
     aoi <- NULL
   }

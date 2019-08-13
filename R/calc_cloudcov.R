@@ -156,7 +156,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
           record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
         }
       } else {
-        record_preview <- try(get_previews(record,dir_out=dir_previews,verbose=F))
+        record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
       }
     }
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews

@@ -102,15 +102,14 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   
   ## Check input
   options("gSD.verbose"=verbose)
-  aoiClass <- class(aoi)
   classNumErr <-  "has to be of class 'numeric'. But is: "
-  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
+  aoi <- .check_aoi(aoi,"sf",quiet=T)
+  .check_login()
   .check_records(records)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
     if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
-  .check_login()
   cols_initial <- colnames(records)
   numRecords <- nrow(records)
   footprint <- records$footprint

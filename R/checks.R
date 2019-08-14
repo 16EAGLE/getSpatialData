@@ -189,6 +189,7 @@
 
 #' wrapper of all checks in select
 #' @param records data.frame.
+#' @param aoi aoi.
 #' @param prio_sensors character vector.
 #' @param par list.
 #' @param dir_out character.
@@ -198,10 +199,11 @@
 #' is created through check_dir_out.
 #' @keywords internal
 #' @noRd
-.select_checks <- function(records, prio_sensors = NULL,
+.select_checks <- function(records, aoi, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
   options("gSD.verbose"=verbose)
+  aoi <- .check_aoi(aoi,"sf",quiet=T)
   dir_out <- .check_dir_out(dir_out)
   # check if all columns are provided
   has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,

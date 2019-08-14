@@ -68,7 +68,7 @@ select_timeseries <- function(records, aoi,
   has_SAR <- prep$has_SAR
   
   #### Checks
-  .select_checks(records,prio_sensors,par,dir_out,verbose)
+  .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="time series",par$sep)

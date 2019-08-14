@@ -788,7 +788,8 @@ rbind.different <- function(x) {
   coords[4,2] <- coords[4,2] + 0.05
   coords[5,2] <- coords[5,2] + 0.38
   slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
-  preview_masked <- mask(preview,poly) 
+  preview_masked <- mask(preview,poly)
+  return(preview_masked)
   
 }
 

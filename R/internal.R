@@ -1014,13 +1014,13 @@ rbind.different <- function(x) {
   sensor_groups <- unique(records$product_group)
   for (s in sensor_groups) {
     if (s == sensor_groups[1]) {
-      titles <- records[which(records$sensor_group==s),identifier]
+      titles <- records[[identifier]][which(records$product_group==s)]
       tile_id <- sapply(titles,function(x) {return(substr(x,39,44))})
     } else if (s %in% sensor_groups[2:3]) {
       tile_id <- paste0(records$WRSPath,records$WRSRow)
     }
   }
-  records[["tile_id"]] <- tile_id
+  records[["tile_id"]] <- unlist(tile_id)
   return(records)
   
 }
@@ -1186,9 +1186,10 @@ sep <- function() {
   
   #records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,par$identifier)
+  records[[par$date_col]] <- sapply(records[[par$date_col]],as.character)
   period <- .identify_period(records[[par$date_col]])
   # calculates the sub_period column
-  records <- .select_sub_periods(records,period,num_timestamps,par$date_col) 
+  records <- .select_sub_periods(records,period,num_timestamps,par$date_col)
   
 }
 
@@ -1584,6 +1585,7 @@ sep <- function() {
   
   records <- subset(records,select=-sub_period) # remove sub-period column
   records <- subset(records,select=-cc_index)
+  records <- subset(records,select=-tile_id)
   
   records <- .column_summary(records,cols_initial)
   
@@ -2093,7 +2095,7 @@ sep <- function() {
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
   l <- length(dates)
   dates[l] <- dates[l] + 1
-  date_col_mirr <- sapply(records[,date_col],as.Date) # mirror of the date column as days since 1970-01-01
+  date_col_mirr <- sapply(records[[date_col]],as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
     within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
     records[within,"sub_period"] <- i

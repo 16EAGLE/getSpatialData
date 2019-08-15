@@ -105,7 +105,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   classNumErr <-  "has to be of class 'numeric'. But is: "
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   .check_login()
-  .check_records(records)
+  records <- .check_records(records,as_df=T)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
     if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
@@ -128,12 +128,13 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     v <- verbose
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
-    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]   
+    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (file.exists(csv_path)) {
       out(paste0("Loading because already processed: ",id),msg=T)
       record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
       nms <- names(record_cc)
-      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms) {
+      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
+          NROW(record_cc) > 0) {
         if (file.exists(record_cc$cloud_mask_file)) {
           return(record_cc)
         }
@@ -148,7 +149,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       prev_col_given <- "preview_file" %in% names(record)
       if (prev_col_given) {
         pfile <- record$preview_file
-        preview_exists <- ifelse(is.na(pfile),FALSE,file.exists(pfile))
+        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE",FALSE,file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
         } else {
@@ -163,8 +164,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     # pass preview to HOT function
     cond <- !is.null(record_preview) && 
       !inherits(record_preview,"try-error") && 
-      !is.na(record_preview$preview_file) &&
-      file.exists(record_preview$preview_file)
+      !is.na(record_preview$preview_file[[1]]) &&
+      file.exists(record_preview$preview_file[[1]])
     if (cond) {
       preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
@@ -194,7 +195,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   })))
   out(paste0("\n",sep(),"\nFinished preview cloud cover calculation\n",sep(),"\n"))
   records <- .column_summary(records,cols_initial)
-  records$footprint <- footprint
-  records <- st_as_sf(records)
   return(records)
+
 }
+
+

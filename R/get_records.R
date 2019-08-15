@@ -11,9 +11,9 @@
 #' @param ... additional, sensor-specific arguments:
 #' \itemize{
 #'    \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
-#'    \item \code{hub}, character, Copernicus Hub selection. Either
+#'    \item \code{hub}, character, Copernicus Hub selection for Sentinel queries. Either
 #' \itemize{
-#'    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+#'    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
 #'    \item "dhus" to look for operational Open Hub records only,
 #'    \item "s3" to look for Sentinel-3 pre-operational records only,
 #'    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
@@ -24,16 +24,12 @@
 #'
 #' @return A data frame of records (by default an \code{sf} data frame, see argument \code{as_sf}). Each row represents one record. The data frame can be further filtered by its columnwise attributes or plotted to view their spatial footprints. The records data frame can be used as input to other \code{getSpatialData} functions.
 #' 
-#' @section Sentinel:
-#' To query Sentinel records, login session-wide with your ESA Copernicus Open Access Hub credentials using \link{login_CopHub} first.
+#' @details
+#' To use these functions, you need to be logged in at the required services: To query Sentinel records, login with your ESA Copernicus Open Access Hub credentials using \link{login_CopHub}. To query MODIS and Landsat records, login with your USGS EROS Registration System (ERS) credentials using \link{login_USGS}. See \code{\link{login}} for details.
 #' 
-#' To query for records of Sentinel remote sensing instruments by \code{time_range}, \code{name} and \code{aoi}, argument \code{gnss} must be \code{FALSE} (default). If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
+#' @section GNSS:
+#' If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
 #'
-#' @section Landsat:
-#' To query Landsat records, login session-wide with your USGS EROS Registration System (ERS) credentials using \link{login_USGS} first.
-#'   
-#' @section MODIS:
-#' To query MODIS records, login session-wide with your USGS EROS Registration System (ERS) credentials using \link{login_USGS} first.
 #' 
 #' @author Jakob Schwalb-Willmann
 #'

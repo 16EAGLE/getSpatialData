@@ -14,9 +14,9 @@ get_previews(records, dir_out = NULL, ..., verbose = TRUE)
 \item{...}{additional, sensor-specific arguments:
 \itemize{
    \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
-   \item \code{hub}, character, Copernicus Hub selection. Either
+   \item \code{hub}, character, Copernicus Hub selection for Sentinel queries. Either
 \itemize{
-   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
+   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
    \item "dhus" to look for operational Open Hub records only,
    \item "s3" to look for Sentinel-3 pre-operational records only,
    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,

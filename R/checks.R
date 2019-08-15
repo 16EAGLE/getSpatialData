@@ -21,15 +21,19 @@
 
 #' check records
 #'
-#' @param records
+#' @param records object.
+#' @param col.names character vector.
+#' @param as_df logical.
 #'
 #' @keywords internal
 #' @noRd
-.check_records <- function(records, col.names = NULL){
+.check_records <- function(records, col.names = NULL, as_df = FALSE){
   if(!isTRUE(inherits(records, "data.frame"))) out("Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'.", type = 3)
   if(!is.null(col.names)){
     catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
   }
+  if (as_df) records <- as.data.frame(records)
+  return(records)
 }
 
 #' check dir_out
@@ -135,7 +139,7 @@
 }
 
 #' creates an error if requested coverage is higher than sensor revisit time
-#' @param sensor character name of sensor.
+#' @param sensor character vector of sensor(s).
 #' @param period character vector of start and end date.
 #' @param num_timestamps numeric number of timestamps. 
 #' @return nothing. Console communication
@@ -143,12 +147,17 @@
 #' @noRd
 .select_handle_revisit <- function(sensor, period, num_timestamps) {
   
-  revisit_times <- list("Landsat"=8,"Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
+  revisit_times <- list("LANDSAT_8_C1"=8,"LANDSAT_ETM_C1"=8,"LANDSAT_TM_C1"=16,"LANDSAT_MSS_C1"=16,
+                        "MODIS_MOD09A1_V6"=8,"MODIS_MYD09A1_V6"=8,"MODIS_MOD09Q1_V6"=8,
+                        "MODIS_MOD09Q1_V6"=8,"MODIS_MOD09GA_V6"=1,"MODIS_MYD09GA_V6"=1,
+                        "MODIS_MOD09GQ_V6"=1,"MODIS_MYD09GQ_V6"=1,
+                        "MODIS_MOD09CMG_V6"=1,"MODIS_MYD09CMG_V6"=1,
+                        "Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
   s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
-  out(cat("- Number of timestamps selected:",num_timestamps,s))
+  out(cat("Number of timestamps selected:",num_timestamps,s))
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
   } else if (sub_period == r) {
@@ -190,6 +199,8 @@
 #' wrapper of all checks in select
 #' @param records data.frame.
 #' @param aoi aoi.
+#' @param period character vector.
+#' @param num_timestamps numeric.
 #' @param prio_sensors character vector.
 #' @param par list.
 #' @param dir_out character.
@@ -199,7 +210,7 @@
 #' is created through check_dir_out.
 #' @keywords internal
 #' @noRd
-.select_checks <- function(records, aoi, prio_sensors = NULL,
+.select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
   options("gSD.verbose"=verbose)
@@ -210,10 +221,13 @@
                                                      par$preview_col,par$cloud_mask_col))
   if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
+  .select_handle_revisit(unlist(records$product),period,num_timestamps)
   # check if needed files exist
-  check <- sapply(list(preview_file=records$preview_file,cloud_mask_file=records$cloud_mask_file),function(x) {
+  check <- sapply(list(preview_file=records$preview_file,
+                       cloud_mask_file=records$cloud_mask_file),function(x) {
     .select_check_files(x,names(x))
   })
-  if (any(!is.na(check))) out("Cannot find files on disk",3)
+  if (any(!is.na(check))) out("Cannot find (some) files on disk",3)
+  return(records)
 
 }

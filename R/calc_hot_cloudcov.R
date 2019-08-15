@@ -36,11 +36,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   sceneCloudCoverCol <- "cloudcov"
   error <- "try-error"
   currTitle <- record[[identifier]]
-  # for dividing the blue DNs with values between this value and the value below into equal interval bins
-  bThresh_low <- 20 
-  bThresh_high <- 160 # below this value a pixel cannot be classified as cloud
-  hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
-  maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
+  aoi <- .check_aoi(aoi,"sp")
   mask_path <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
   if (file.exists(mask_path)) {
     cMask <- raster(mask_path)
@@ -51,13 +47,17 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     return(record)
   }
   
+  # for dividing the blue DNs with values between this value and the value below into equal interval bins
+  bThresh_low <- 20 
+  bThresh_high <- 160 # below this value a pixel cannot be classified as cloud
+  hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
+  maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
+  
   crs <- try(proj4string(preview))
   if (is.na(crs) || inherits(crs,error)) {
     record <- .handle_cc_skip(record,dir_out=dir_out)
     return(record)
   }
-  
-  aoi <- .check_aoi(aoi,"sp")
   
   # Handle broken preview (indicated by non-existence of DNs > 40)
   broken_check <- preview > 40

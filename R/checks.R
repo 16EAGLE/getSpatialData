@@ -223,6 +223,7 @@
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
   .select_handle_revisit(unlist(records$product),period,num_timestamps)
   # check if needed files exist
+  out("Checking if all needed clouds mask and preview rasters exist..",msg=T)
   check <- sapply(list(preview_file=records$preview_file,
                        cloud_mask_file=records$cloud_mask_file),function(x) {
     .select_check_files(x,names(x))

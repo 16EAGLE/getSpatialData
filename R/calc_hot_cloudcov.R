@@ -21,7 +21,6 @@
 #' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster cellStats raster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
-#' @importFrom sf st_as_sf st_transform
 #' @importFrom sp proj4string
 #' 
 #' @keywords internal
@@ -58,7 +57,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     return(record)
   }
   
-  aoi <- .handle_aoi(aoi,crs)
+  aoi <- .check_aoi(aoi,"sp")
   
   # Handle broken preview (indicated by non-existence of DNs > 40)
   broken_check <- preview > 40
@@ -69,7 +68,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50, no valid observations
   # If preview is broken or nor valid observations in aoi return
   if (isTRUE(cond)) {
-    record <- .handle_cc_skip(record,dir_out=dir_out)
     return(NA)
   }
   
@@ -184,12 +182,13 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask)
   ## Calculate aoi cloud cover percentage
-  if (isFALSE(hotFailed)) {
-    record <- .record_cloudcov_finish(record,cMask,HOT,scene_cPercent,maskFilename,cols,dir_given)
-  } else {
+  if (hotFailed) {
     record <- .handle_cc_skip(record,dir_out=dir_out)
     out(hotFailWarning,type=2)
     return(NA)
+  } else {
+    record <- .record_cloudcov_finish(record,aoi,cMask,HOT,
+                                      scene_cPercent,maskFilename,cols,dir_given)
   }
   return(record)
   

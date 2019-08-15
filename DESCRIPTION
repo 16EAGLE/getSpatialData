@@ -30,7 +30,6 @@ Imports:
   L1pack,
   processx,
   stats,
-  plyr,
   methods,
   readr
 RoxygenNote: 6.1.1

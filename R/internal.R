@@ -542,7 +542,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
                            c("meta_url", NA, "metadataUrl", "metadataUrl"),
                            c("meta_url_fgdc", NA, "fgdcMetadataUrl", "fgdcMetadataUrl"),
                            c("summary", "summary", "summary", "summary"),
-                           c("date_aquistion", NA, "acquisitionDate", "acquisitionDate"),
+                           c("date_acquisition", NA, "acquisitionDate", "acquisitionDate"),
                            c("start_time", "beginposition", "StartTime", "AcquisitionStartDate"),
                            c("stop_time", "endposition", "StopTime", "AcquisitionEndDate"),
                            c("date_ingestion", "ingestiondate", NA, NA),
@@ -973,7 +973,7 @@ rbind.different <- function(x) {
 #' @noRd
 .extract_clear_date <- function(records, date_col_orig, date_col_name) {
   
-  records[[date_col_name]] <- as.character(records[[date_col_orig]])
+  records[[date_col_name]] <- records[[date_col_orig]]
   sent_recs <- which(records$sensor_group=="Sentinel")
   for (i in sent_recs) {
     records[i,date_col_name] <- as.character(substr(records[i,date_col_name],1,10))
@@ -999,7 +999,7 @@ rbind.different <- function(x) {
 #' @return \code{days} numeric number of days between.
 #' @keywords internal
 #' @noRd
-.calc_days_period <- function(period) {
+.period_days <- function(period) {
   days <- as.numeric(as.Date(period[2]) - as.Date(period[1]))
 }
 
@@ -1011,7 +1011,7 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid <- function(records, identifier) {
   
-  sensor_groups <- unique(records$sensor_group)
+  sensor_groups <- unique(records$product_group)
   for (s in sensor_groups) {
     if (s == sensor_groups[1]) {
       titles <- records[which(records$sensor_group==s),identifier]
@@ -1156,11 +1156,11 @@ rbind.different <- function(x) {
               cloud_mask_col="cloud_mask_file",
               aoi_cc_prb_col="aoi_HOT_mean_probability",
               cc_index_col="cc_index",
-              date_col="date_clear",
+              date_col="date_acquisition",
               identifier="record_id")
   par$sensor_group <- unique(records$sensor_group)
   par$sensor <- unique(records$sensor)
-  par$date_col_orig <- ifelse(par$sensor_group == "Landsat","acquisitionDate","beginposition")
+  #par$date_col_orig <- "date_acquisition"
   par$tileids <- unique(records[[par$tileid_col]])
   par$sep <- sep()
   return(par)
@@ -1179,12 +1179,12 @@ sep <- function() {
 #' @param records data.frame.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
-#' @return records data.frame with 
+#' @return records data.frame 
 #' @keywords internal
 #' @noRd
 .select_prep <- function(records, num_timestamps, par) {
   
-  records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
+  #records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,par$identifier)
   period <- .identify_period(records[[par$date_col]])
   # calculates the sub_period column
@@ -1203,7 +1203,7 @@ sep <- function() {
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
   par <- .select_params(records,mode)
-  records <- .select_prep(records,num_timestamps,par) 
+  records <- .select_prep(records,num_timestamps,par)
   par$period <- .identify_period(records[[par$date_col]])
   has_SAR <- .has_SAR(par$sensor) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
   prep <- list(records=records,
@@ -1924,7 +1924,7 @@ sep <- function() {
     # first try to use all records of this order
     order <- x[!is.na(x)]
     period_tmp <- .select_bridge_period(records,order,period_new,date_col)
-    period_tmp_le <- .calc_days_period(period_tmp)
+    period_tmp_le <- .period_days(period_tmp)
     if (period_tmp_le <= max_sub_period) { # the case where all records from current order x are within period_new
       period_new <- period_tmp
       sub_within[[i]] <- order

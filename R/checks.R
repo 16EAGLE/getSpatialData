@@ -213,6 +213,7 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
+  records <- .unlist_df(records)
   options("gSD.verbose"=verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   dir_out <- .check_dir_out(dir_out)

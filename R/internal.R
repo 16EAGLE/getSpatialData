@@ -751,7 +751,7 @@ rbind.different <- function(x) {
 .record_cloudcov_finish <- function(record, aoi, cMask, HOT, scene_cPercent,
                                     mask_path, cols, dir_given, reload=F) {
   
-  aoi_cPercent <- .raster_percent(cMask) # calculate the absolute HOT cloud cover in aoi
+  aoi_cPercent <- .raster_percent(cMask,aoi=aoi) # calculate the absolute HOT cloud cover in aoi
   if (is.null(HOT)) {
     aoi_cProb <- 9999
   } else {

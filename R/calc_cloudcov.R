@@ -28,7 +28,6 @@
 #' \enumerate{
 #' \item cloud_mask_file: character path to the cloud mask file of the record
 #' \item aoi_HOT_cloudcov_percent: numeric percentage of the calculated aoi cloud cover.
-#' \item aoi_HOT_mean_probability: numeric mean aoi cloud cover probability (0-100).
 #' \item scene_HOT_cloudcov_percent: numeric percentage of the calculated scene cloud cover.
 #' }
 #' 
@@ -104,7 +103,6 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   options("gSD.verbose"=verbose)
   classNumErr <-  "has to be of class 'numeric'. But is: "
   aoi <- .check_aoi(aoi,"sf",quiet=T)
-  .check_login()
   records <- .check_records(records,as_df=T)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
@@ -112,7 +110,6 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   })
   cols_initial <- colnames(records)
   numRecords <- nrow(records)
-  footprint <- records$footprint
   out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()
@@ -131,12 +128,12 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (file.exists(csv_path)) {
       out(paste0("Loading because already processed: ",id),msg=T)
-      record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
-      nms <- names(record_cc)
+      record <- as.data.frame(read_csv(csv_path,col_types=cols()))
+      nms <- names(record)
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
-          NROW(record_cc) > 0) {
-        if (file.exists(record_cc$cloud_mask_file)) {
-          return(record_cc)
+          NROW(record) > 0) {
+        if (file.exists(record$cloud_mask_file)) {
+          return(record)
         }
       }
     } else {
@@ -153,9 +150,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
         if (preview_exists) {
           record_preview <- record
         } else {
+          .check_login()
           record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
         }
       } else {
+        .check_login()
         record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
       }
     }
@@ -175,10 +174,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          maxDeviation=maxDeviation,
                                          slopeDefault=slopeDefault,
                                          interceptDefault=interceptDefault,
+                                         cols=.cloudcov_colnames(),
                                          dir_out=dir_out,
                                          verbose=verbose))
     }
-    if (isFALSE(cond) || class(record_cc)[1] != "sf" || is.na(record_cc)) {
+    if (isFALSE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     previewSize <- c(previewSize,object.size(preview))

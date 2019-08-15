@@ -1543,7 +1543,6 @@ sep <- function() {
   }
   
   #### Start Process for optical data selection
-  .select_handle_revisit(par$sensor,par$period,num_timestamps) # communicate to the user in case max_period is in conflict with sensor revisit time
   selected <- list() # list to be filled by all selected 'record_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
   period_new <- c()
   sub_periods <- unique(records$sub_period)

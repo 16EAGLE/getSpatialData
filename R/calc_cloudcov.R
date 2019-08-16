@@ -157,6 +157,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
         .check_login()
         record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
       }
+      record_preview <- as.data.frame(record_preview)
     }
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
@@ -193,7 +194,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (!is.null(dir_out)) write_csv(record_cc,csv_path)
     return(record_cc)
   })))
-  out(paste0("\n",sep(),"\nFinished preview cloud cover calculation\n",sep(),"\n"))
+  out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
   records <- .column_summary(records,cols_initial)
   return(records)
 

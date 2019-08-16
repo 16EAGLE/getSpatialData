@@ -79,8 +79,13 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
       v <- values(prev)
       rm.prev <- apply((v == 0), MARGIN = 1, function(x) all(x))
       cc.keep <- xyFromCell(prev, which(rm.prev == F))
-      prev <- crop(prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
-      
+      # check if has non-zeros DNs
+      has_non_zeros <- any(v > 0)
+      if (has_non_zeros) {
+        prev <- crop(prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
+      } else {
+        stop()
+      }
       # assign preview CRS and footprint
       footprint <- st_sfc(footprint, crs = records.crs)
       if(group == "MODIS") footprint <- st_transform(x = footprint, crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")

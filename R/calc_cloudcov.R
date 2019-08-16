@@ -28,7 +28,6 @@
 #' \enumerate{
 #' \item cloud_mask_file: character path to the cloud mask file of the record
 #' \item aoi_HOT_cloudcov_percent: numeric percentage of the calculated aoi cloud cover.
-#' \item aoi_HOT_mean_probability: numeric mean aoi cloud cover probability (0-100).
 #' \item scene_HOT_cloudcov_percent: numeric percentage of the calculated scene cloud cover.
 #' }
 #' 
@@ -102,18 +101,15 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   
   ## Check input
   options("gSD.verbose"=verbose)
-  aoiClass <- class(aoi)
   classNumErr <-  "has to be of class 'numeric'. But is: "
-  if (aoiClass[1] != "sf" && aoiClass != "SpatialPolygonsDataFrame" && aoiClass != "SpatialPolygons" && aoiClass != "matrix") {out(paste0("Aoi has to be of class 'sp' or 'sf' or 'matrix' but is of class:\n",aoiClass),type=3)}
-  .check_records(records)
+  aoi <- .check_aoi(aoi,"sf",quiet=T)
+  records <- .check_records(records,as_df=T)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
     if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
-  .check_login()
   cols_initial <- colnames(records)
   numRecords <- nrow(records)
-  footprint <- records$footprint
   out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()
@@ -129,14 +125,15 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     v <- verbose
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
-    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]   
+    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (file.exists(csv_path)) {
       out(paste0("Loading because already processed: ",id),msg=T)
-      record_cc <- as.data.frame(read_csv(csv_path,col_types=cols()))
-      nms <- names(record_cc)
-      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms) {
-        if (file.exists(record_cc$cloud_mask_file)) {
-          return(record_cc)
+      record <- as.data.frame(read_csv(csv_path,col_types=cols()))
+      nms <- names(record)
+      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
+          NROW(record) > 0) {
+        if (file.exists(record$cloud_mask_file)) {
+          return(record)
         }
       }
     } else {
@@ -149,13 +146,15 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       prev_col_given <- "preview_file" %in% names(record)
       if (prev_col_given) {
         pfile <- record$preview_file
-        preview_exists <- ifelse(is.na(pfile),FALSE,file.exists(pfile))
+        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE",FALSE,file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
         } else {
+          .check_login()
           record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
         }
       } else {
+        .check_login()
         record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
       }
     }
@@ -164,8 +163,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     # pass preview to HOT function
     cond <- !is.null(record_preview) && 
       !inherits(record_preview,"try-error") && 
-      !is.na(record_preview$preview_file) &&
-      file.exists(record_preview$preview_file)
+      !is.na(record_preview$preview_file[[1]]) &&
+      file.exists(record_preview$preview_file[[1]])
     if (cond) {
       preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
@@ -175,10 +174,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          maxDeviation=maxDeviation,
                                          slopeDefault=slopeDefault,
                                          interceptDefault=interceptDefault,
+                                         cols=.cloudcov_colnames(),
                                          dir_out=dir_out,
                                          verbose=verbose))
     }
-    if (isFALSE(cond) || class(record_cc)[1] != "sf" || is.na(record_cc)) {
+    if (isFALSE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     previewSize <- c(previewSize,object.size(preview))
@@ -195,7 +195,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   })))
   out(paste0("\n",sep(),"\nFinished preview cloud cover calculation\n",sep(),"\n"))
   records <- .column_summary(records,cols_initial)
-  records$footprint <- footprint
-  records <- st_as_sf(records)
   return(records)
+
 }
+
+

@@ -542,7 +542,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
                            c("meta_url", NA, "metadataUrl", "metadataUrl"),
                            c("meta_url_fgdc", NA, "fgdcMetadataUrl", "fgdcMetadataUrl"),
                            c("summary", "summary", "summary", "summary"),
-                           c("date_aquistion", NA, "acquisitionDate", "acquisitionDate"),
+                           c("date_acquisition", NA, "acquisitionDate", "acquisitionDate"),
                            c("start_time", "beginposition", "StartTime", "AcquisitionStartDate"),
                            c("stop_time", "endposition", "StopTime", "AcquisitionEndDate"),
                            c("date_ingestion", "ingestiondate", NA, NA),
@@ -589,6 +589,16 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   
   # sort columns
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
+}
+
+
+#' unlists all columns of a data.frame
+#' @param records data.frame.
+#' @param records data.frame with all columns unlisted
+#' @keywords internal
+#' @noRd
+.unlist_df <- function(records) {
+  for (i in 1:NCOL(records)) records[,i] <- unlist(records[,i])
 }
 
 #' rbind different dfs
@@ -679,7 +689,6 @@ rbind.different <- function(x) {
   
   cols <- list(cloud_mask_path="cloud_mask_file",
                aoi_hot_cc_percent="aoi_HOT_cloudcov_percent",
-               aoi_HOT_mean_probability="aoi_HOT_mean_probability",
                scene_hot_cc_percent="scene_HOT_cloudcov_percent")
 
 }
@@ -720,7 +729,6 @@ rbind.different <- function(x) {
   
   if (!is.null(dir_out)) record["cloud_mask_file"] <- "NONE"
   record["aoi_HOT_cloudcov_percent"] <- ifelse(is_SAR,NA,100)
-  record["aoi_HOT_mean_probability"] <- ifelse(is_SAR,NA,100)
   record["scene_HOT_cloudcov_percent"] <- ifelse(is_SAR,NA,9999)
   return(record)
   
@@ -741,10 +749,12 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .record_cloudcov_finish <- function(record, aoi, cMask, HOT, scene_cPercent,
-                                    maskFilename, cols, dir_given, reload=F) {
+                                    mask_path, cols, dir_given, reload=F) {
   
-  aoi_cPercent <- .raster_percent(cMask) # calculate the absolute HOT cloud cover in aoi
-  if (!is.null(HOT)) {
+  aoi_cPercent <- .raster_percent(cMask,aoi=aoi) # calculate the absolute HOT cloud cover in aoi
+  if (is.null(HOT)) {
+    aoi_cProb <- 9999
+  } else {
     HOT_masked <- mask(HOT,aoi)
     aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
   }
@@ -753,12 +763,12 @@ rbind.different <- function(x) {
     cMask[cMask==0] <- NA
   }
   if (dir_given) { # save cloud mask if desired
-    writeRaster(cMask,maskFilename,overwrite=T)
-    record[cols$cloud_mask_path] <- unlist(maskFilename)
+    if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T)
+    record[cols$cloud_mask_path] <- mask_path
   }
+  
   ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
   record[cols$aoi_hot_cc_percent] <- as.numeric(aoi_cPercent)
-  record[cols$aoi_HOT_mean_probability] <- as.numeric(aoi_cProb)
   record[cols$scene_hot_cc_percent] <- as.numeric(scene_cPercent)
   return(record)
   
@@ -788,7 +798,8 @@ rbind.different <- function(x) {
   coords[4,2] <- coords[4,2] + 0.05
   coords[5,2] <- coords[5,2] + 0.38
   slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
-  preview_masked <- mask(preview,poly) 
+  preview_masked <- mask(preview,poly)
+  return(preview_masked)
   
 }
 
@@ -829,22 +840,26 @@ rbind.different <- function(x) {
 #' @param x raster.
 #' @param mode character specifies the mode of calculation.
 #' @param custom numeric vector with two values: [[1]] are cloud values [[2]] are non-cloud values. Only if mode == "custom".
-#' @param aoi aoi. Only if mode == "aoi".
+#' @param aoi aoi.
 #' @return \code{percent} numeric percentage
 #' @keywords internal
 #' @importFrom raster as.matrix extent res crs
 #' @noRd
 .raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL) {
   
-  if (mode != "aoi") {x_mat <- as.matrix(x)}
   if (mode == "na") {
-    percent <- (length(which(x_mat == 0)) / length(which(!is.na(x_mat)))) * 100
+    na_mask <- is.na(x)
+    x <- mask(na_mask,aoi)
+    x_mat <- as.matrix(x)
+    # clouds = 1 and clear = 0 now
+    percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
   } else if (mode == "custom") {
+    x_mat <- as.matrix(x)
     val1 <- length(which(x_mat == custom[[1]]))
     val2 <- length(which(x_mat == custom[[2]]))
     percent <- (val1 / sum(val1,val2)) * 100
   } else if (mode == "aoi") {
-    percent <- .calc_aoi_coverage(aoi,x)
+    percent <- .calc_aoi_coverage(x,aoi)
   }
   # due to the calculation based on pixel values it might happen that 'percent' exceeds 100 slightly. In these cases use 100
   percent <- ifelse(percent > 100,100,percent)
@@ -868,13 +883,13 @@ rbind.different <- function(x) {
 }
 
 #' calculates the number of cells of value 1 covering the aoi
-#' @param aoi aoi.
 #' @param x raster with the resolution.
+#' @param aoi aoi.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
 #' @importFrom raster extent raster res mask ncell values<- area aggregate extract
 #' @keywords internal
 #' @noRd
-.calc_aoi_coverage <- function(aoi,x) {
+.calc_aoi_coverage <- function(x,aoi) {
   
   # calculate aoi number of cells (calculation is suitable for large areas)
   e <- extent(aoi)
@@ -972,7 +987,7 @@ rbind.different <- function(x) {
 #' @noRd
 .extract_clear_date <- function(records, date_col_orig, date_col_name) {
   
-  records[[date_col_name]] <- as.character(records[[date_col_orig]])
+  records[[date_col_name]] <- records[[date_col_orig]]
   sent_recs <- which(records$sensor_group=="Sentinel")
   for (i in sent_recs) {
     records[i,date_col_name] <- as.character(substr(records[i,date_col_name],1,10))
@@ -998,7 +1013,7 @@ rbind.different <- function(x) {
 #' @return \code{days} numeric number of days between.
 #' @keywords internal
 #' @noRd
-.calc_days_period <- function(period) {
+.period_days <- function(period) {
   days <- as.numeric(as.Date(period[2]) - as.Date(period[1]))
 }
 
@@ -1010,22 +1025,22 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid <- function(records, identifier) {
   
-  sensor_groups <- unique(records$sensor_group)
+  sensor_groups <- unique(records$product_group)
   for (s in sensor_groups) {
     if (s == sensor_groups[1]) {
-      titles <- records[which(records$sensor_group==s),identifier]
+      titles <- records[[identifier]][which(records$product_group==s)]
       tile_id <- sapply(titles,function(x) {return(substr(x,39,44))})
     } else if (s %in% sensor_groups[2:3]) {
       tile_id <- paste0(records$WRSPath,records$WRSRow)
     }
   }
-  records[["tile_id"]] <- tile_id
+  records[["tile_id"]] <- unlist(tile_id)
   return(records)
   
 }
 
 #' selects from a numeric data.frame column the i lowest value and checks if it is lower than a provided numeric
-#' @param records data.frame.
+#' @param rec_tile_sub data.frame.
 #' @param max numeric maximum allowed value.
 #' @param i numeric.
 #' @param column character name of the column to be ordered.
@@ -1033,14 +1048,13 @@ rbind.different <- function(x) {
 #' @return \code{chosen} numeric index to the matching data.frame row.
 #' @keywords internal
 #' @noRd
-.df_get_lowest <- function(records, max, i, column, max_column) {
+.df_get_lowest <- function(rec_tile_sub, max, i, column, max_column) {
   
-  records_ord <- records[order(records[[column]]),]
+  records_ord <- rec_tile_sub[order(rec_tile_sub[[column]]),]
   if (i > NROW(records_ord)) return(NA)
   j <- 1
-  j <- ifelse(length(unique(records[[column]])) < i,i,1)
-  chosen <- which(records[[column]]==records_ord[i,column])[j]
-  val <- records[chosen,max_column]
+  chosen <- which(rec_tile_sub[[column]]==records_ord[i,column])[j]
+  val <- rec_tile_sub[chosen,max_column]
   if (as.numeric(val) <= max) return(chosen) else return(NA)
   
 }
@@ -1153,13 +1167,11 @@ rbind.different <- function(x) {
               tileid_col="tile_id",
               preview_col="preview_file",
               cloud_mask_col="cloud_mask_file",
-              aoi_cc_prb_col="aoi_HOT_mean_probability",
-              cc_index_col="cc_index",
-              date_col="date_clear",
+              date_col="date_acquisition",
               identifier="record_id")
   par$sensor_group <- unique(records$sensor_group)
   par$sensor <- unique(records$sensor)
-  par$date_col_orig <- ifelse(par$sensor_group == "Landsat","acquisitionDate","beginposition")
+  #par$date_col_orig <- "date_acquisition"
   par$tileids <- unique(records[[par$tileid_col]])
   par$sep <- sep()
   return(par)
@@ -1178,16 +1190,17 @@ sep <- function() {
 #' @param records data.frame.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
-#' @return records data.frame with 
+#' @return records data.frame 
 #' @keywords internal
 #' @noRd
 .select_prep <- function(records, num_timestamps, par) {
   
-  records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
+  #records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,par$identifier)
+  records[[par$date_col]] <- sapply(records[[par$date_col]],as.character)
   period <- .identify_period(records[[par$date_col]])
   # calculates the sub_period column
-  records <- .select_sub_periods(records,period,num_timestamps,par$date_col) 
+  records <- .select_sub_periods(records,period,num_timestamps,par$date_col)
   
 }
 
@@ -1202,7 +1215,7 @@ sep <- function() {
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
   par <- .select_params(records,mode)
-  records <- .select_prep(records,num_timestamps,par) 
+  records <- .select_prep(records,num_timestamps,par)
   par$period <- .identify_period(records[[par$date_col]])
   has_SAR <- .has_SAR(par$sensor) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
   prep <- list(records=records,
@@ -1298,7 +1311,6 @@ sep <- function() {
 #' @param preview_col character name of the preview path column.
 #' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
 #' @importFrom raster writeRaster stack mask
-#' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
@@ -1334,7 +1346,7 @@ sep <- function() {
       return(layer_save)
     })
   })
-  preview_paths <- compact(preview_paths)
+  preview_paths <- .gsd_compact(preview_paths)
   preview_mos <- lapply(1:length(layers),function(j) {
     curr_layers <- lapply(preview_paths,function(x) path <- x[j])
     save_path_pmos <- paste0(save_pmos,"_",layers[j],".tif")
@@ -1362,7 +1374,6 @@ sep <- function() {
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
-#' @importFrom plyr compact
 #' @importFrom raster minValue maxValue writeRaster raster crs crs<-
 #' @keywords internal
 #' @noRd
@@ -1373,9 +1384,10 @@ sep <- function() {
   
   dir_tmp <- .tmp_dir(dir_out,1)
   le_first_order <- length(sub[[1]])
-  sub <- unlist(compact(sub))
+  sub <- unlist(.gsd_compact(sub))
   collection <- sapply(sub,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) # get paths to cloud masks. This is the queue for processing
-  # this vector are all orders ordered from best records (lowest aoi cc) to worst records (highest aoi cc) in a queue
+  # this vector are all orders ordered from best records (lowest aoi cc) 
+  # to worst records (highest aoi cc) in a queue
   names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
   collection <- collection[which(collection != "NONE")]
   # start mosaicking
@@ -1399,7 +1411,6 @@ sep <- function() {
   writeRaster(base_mos,base_mos_path,overwrite=T)
   rm(base_mos)
   base_coverage <- -1000
-  needs_addition <- TRUE # starting with TRUE because at the beginning it is always TRUE
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
     if (i == start) {out("Current coverage of valid pixels")}
@@ -1424,13 +1435,13 @@ sep <- function() {
     rm(next_record,base_mos,curr_base_mos_crop,curr_mos_tmp)
     # calculate by how much valid coverage is improved when adding the record to the tile area
     has_potential <- cov_aft > cov_init # only check for tile
+    base_mos_path_new <- file.path(dir_tmp,paste0("base_mosaic_",i,"_tmp.tif")) # do not overwrite base_mos directly
     if (has_potential) {
       base_mos <- .select_bridge_mosaic(base_tmp,aoi,base_mos_path_new) # mosaic with added record
       base_cov_tmp <- .raster_percent(base_mos,mode="aoi",aoi=aoi)
       add_it <- .exceeds_min_improvement(min_improvement,base_coverage,base_cov_tmp)
       if (add_it) {
         base_records <- c(base_records,x) # add save path of current mosaic
-        base_mos_path_new <- file.path(dir_tmp,paste0("base_mosaic_",i,"_tmp.tif")) # do not overwrite base_mos directly
         writeRaster(base_mos,base_mos_path,overwrite=T) # overwrite base mosaic
         unlink(base_mos_path_new)
         base_coverage <- base_cov_tmp
@@ -1526,12 +1537,6 @@ sep <- function() {
                          dir_out,
                          cols_initial) {
   
-  if (has_SAR %in% c(0,1)) { # if has some or none SAR records, so optical is given as well
-    # calculate the synthesis of absolute aoi cloud cover and mean aoi cloud cover probability
-    records <- .select_cc_index(records,aoi_cc_col=par$aoi_cc_col,aoi_cc_prb_col=par$aoi_cc_prb_col,
-                                cc_index_col=par$cc_index_col,ratio=0.8)
-  }
-  
   # if all are SAR records
   if (has_SAR == 100) {
     records <- .select_all_SAR(records, max_sub_period,
@@ -1541,9 +1546,7 @@ sep <- function() {
   }
   
   #### Start Process for optical data selection
-  .select_handle_revisit(par$sensor,par$period,num_timestamps) # communicate to the user in case max_period is in conflict with sensor revisit time
   selected <- list() # list to be filled by all selected 'record_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
-  period_new <- c()
   sub_periods <- unique(records$sub_period)
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
   for (t in 1:length(sub_periods[!is.na(sub_periods)])) {
@@ -1582,7 +1585,7 @@ sep <- function() {
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
   
   records <- subset(records,select=-sub_period) # remove sub-period column
-  records <- subset(records,select=-cc_index)
+  records <- subset(records,select=-tile_id)
   
   records <- .column_summary(records,cols_initial)
   
@@ -1601,7 +1604,7 @@ sep <- function() {
 #' @param par list holding everything inserted into this parameter list in .select_params().
 #' @param dir_out character directory where to save intermediate product.
 #' @param timestamp numeric of the current timestamp.
-#' @return \code{selected} list of selected records with all items returned by .select_process_sub
+#' @return \code{selected_ts} list of selected records with all items returned by .select_process_sub
 #' @keywords internal
 #' @noRd
 .select_process <- function(records, aoi,
@@ -1614,14 +1617,15 @@ sep <- function() {
   base_records <- c()
   ids <- c()
   valid_pixels <- 0
-  le_prio_is_one <- .select_one_prio_sensor(prio_sensors)
+  prio_sensors <- ifelse(is.null(prio_sensors) || length(prio_sensors) == 1,1,prio_sensors)
+  le_prio_is_one <- length(prio_sensors) == 1
   for (s in prio_sensors){
     if (le_prio_is_one) {
       # in case prio_sensors is not given process all sensors together
-      s_match <- which(!is.na(records$sensor))  
+      s_match <- which(!is.na(records$product))  
     } else {
       # in case prio_sensors is given process sensors in this order
-      s_match <- which(records$sensor==s)
+      s_match <- which(records$product==s)
     }
     sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
     if (length(sensor_match) == 0) { # no records for sensors s at timestamp
@@ -1641,12 +1645,17 @@ sep <- function() {
       tstamp$records <- .select_within_period(records,tstamp$period,par$date_col) # subset to records in period
     }
     # run the selection process
-    selected <- .select_process_sub(tstamp$records,aoi,
+    selected <- .select_process_sub(tstamp$records,
+                                    aoi,
                                     tstamp$period,
-                                    period_new=period_new,base_records=base_records,
-                                    max_sub_period,max_cloudcov_tile=max_cloudcov_tile,
-                                    min_improvement=min_improvement,
-                                    par=par,dir_out=dir_out,ts=timestamp)
+                                    period_new=period_new,
+                                    base_records=base_records,
+                                    max_sub_period,
+                                    max_cloudcov_tile,
+                                    min_improvement,
+                                    par,
+                                    dir_out,
+                                    ts=timestamp)
     if (isFALSE(le_prio_is_one)) {
       period_new <- selected$period # for selection of records from next sensor in prio_sensors
       base_records <- c(base_records,selected$cmask_paths) # for base mosaic for selection from next sensor
@@ -1662,20 +1671,12 @@ sep <- function() {
   selected_ts <- list(ids=ids,
                       cmask_paths=base_records,
                       valid_pixels=valid_pixels)
+  return(selected_ts)
 
-}
-
-#' checks if argument 'prio_sensors' has length 1
-#' @param prio_sensors character vector.
-#' @return le_prio_is_one logical if length of prio_sensors is 1.
-#' @keywords internal
-#' @noRd
-.select_one_prio_sensor <- function(prio_sensors) {
-  if (is.null(prio_sensors)) prio_sensors <- 1
-  le_prio_is_one <- length(prio_sensors) == 1
 }
 
 #' calls the different steps of selection for a sub-period
+#' this includes enforcement of max_cloudcov_tile and max_sub_period
 #' @param records data.frame subsetted to a sub-period.
 #' @param aoi aoi.
 #' @param period character vector of start and end date.
@@ -1697,22 +1698,30 @@ sep <- function() {
                                 max_sub_period, max_cloudcov_tile, min_improvement, 
                                 par, dir_out, ts) {
   
-  tiles <- unique(records[[par$tileid_col]])
-  tiles <- tiles[!is.na(tiles)]
-  # the sub is an ordering of all available records per tile according to aoi cloud cover and aoi cloud cover probability
-  sub <- .select_sub(records=records,tiles=tiles,max_cloudcov_tile=max_cloudcov_tile,
-                     aoi_cc_col=par$aoi_cc_col,cc_index_col=par$cc_index_col,tileid_col=par$tileid_col,
-                     date_col=par$date_col,par$identifier)
+  # the sub is an ordering of all available records per tile according to aoi cloud cover
+  # this is also the step where max_cloudcov_tile is ensured
+  sub <- .select_sub(records=records,
+                     tiles=par$tileids,
+                     max_cloudcov_tile=max_cloudcov_tile,
+                     aoi_cc_col=par$aoi_cc_col,
+                     tileid_col=par$tileid_col,
+                     date_col=par$date_col,
+                     identifier=par$identifier)
+  # this step enforces max_sub_period
   sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
-                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col,
-                                     cc_index_col=par$cc_index_col)
+                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col)
   # make best mosaic of cloud masks for first timestamp
   out(par$sep)
   out(paste0("Calculating best mosaic for timestamp: ",ts))
-  selected <- .select_calc_mosaic(records,base_records=base_records,
-                                  aoi,sub_within,par$cloud_mask_col,
+  selected <- .select_calc_mosaic(records,
+                                  base_records=base_records,
+                                  aoi,
+                                  sub_within,
+                                  par$cloud_mask_col,
                                   min_improvement=min_improvement,
-                                  ts=ts,dir_out,par$identifier)
+                                  ts=ts,
+                                  dir_out,
+                                  par$identifier)
   selected$period <- .identify_period(records[records[[par$identifier]]==selected$ids])
   out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
@@ -1866,7 +1875,6 @@ sep <- function() {
 #' @param tiles character vector of the tile ids.
 #' @param period character vector of start and end date.
 #' @param aoi_cc_col character name of aoi cloud cover column.
-#' @param cc_index_col character name of the cloud cover index column.
 #' @param tileid_col character name of tile id column.
 #' @param date_col character name of the date column.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
@@ -1875,7 +1883,7 @@ sep <- function() {
 #' @keywords internal
 #' @noRd
 .select_sub <- function(records, tiles, max_cloudcov_tile,
-                        aoi_cc_col, cc_index_col, tileid_col, date_col, identifier) {
+                        aoi_cc_col, tileid_col, date_col, identifier) {
   
   sub <- lapply(tiles,function(x) {
     rec_tile_sub <- records[which(records[[tileid_col]]==x),]
@@ -1884,10 +1892,14 @@ sep <- function() {
     selected <- c()
     while(!is.na(lwst_cc)) {
       i <- i+1
-      lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,
-                                column=cc_index_col, max_column=aoi_cc_col)
-      if (!is.na(lwst_cc)) {
-        selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
+      if (i > NROW(rec_tile_sub)) {
+        lwst_cc <- NA
+      } else {
+        lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,
+                                  column=aoi_cc_col,max_column=aoi_cc_col)
+        if (!is.na(lwst_cc)) {
+          selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
+        }
       }
     }
     return(unique(selected))
@@ -1896,7 +1908,8 @@ sep <- function() {
   return(sub)
 }
 
-#' returns a sub list of indices pointing to records within max_sub_period, returned in orders according to aoi cloud cover 
+#' returns a sub list of indices pointing to records within max_sub_period, 
+#' returned in orders according to aoi cloud cover 
 #' @param records data.frame.
 #' @param sub list of numeric vectors each pointing to a record.
 #' @param period character vector of start and end date.
@@ -1904,16 +1917,15 @@ sep <- function() {
 #' @param period_new character vector of an existing period for this timestamp.
 #' @param date_col character name of the date column.
 #' @param aoi_cc_col character name of aoi cloud cover column.
-#' @param cc_index_col character name of the cloud cover index column.
 #' @return \code{sub_within} list of numeric vectors, each number is an index to a record in \code{records}
-#' @importFrom plyr compact
 #' @keywords internal
 #' @noRd
 .select_force_period <- function(records, sub, period, max_sub_period, period_new, 
-                                 date_col, aoi_cc_col, cc_index_col) {
+                                 date_col, aoi_cc_col) {
   
-  # check if covered period of timestamp is within max_sub_period and re-calculate period consecutively with record of next-lowest cloud cover
-  sub <- compact(sub)
+  # check if covered period of timestamp is within max_sub_period
+  # and re-calculate period consecutively with record of next-lowest cloud cover
+  sub <- .gsd_compact(sub)
   max_num_sel <- max(sapply(sub,length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i])))) # to matrix
   orders <- data.frame(orders)
@@ -1923,7 +1935,7 @@ sep <- function() {
     # first try to use all records of this order
     order <- x[!is.na(x)]
     period_tmp <- .select_bridge_period(records,order,period_new,date_col)
-    period_tmp_le <- .calc_days_period(period_tmp)
+    period_tmp_le <- .period_days(period_tmp)
     if (period_tmp_le <= max_sub_period) { # the case where all records from current order x are within period_new
       period_new <- period_tmp
       sub_within[[i]] <- order
@@ -1938,26 +1950,6 @@ sep <- function() {
   }
   return(sub_within)
   
-}
-
-#' creates a cloud cover index value per record, a synthesis of aoi cloud cover % and aoi mean cloud cover probability
-#' @param records data.frame.
-#' @param aoi_cc_col character name of aoi cloud cover column.
-#' @param aoi_cc_prb_col character name of the mean aoi cloud cover probability column.
-#' @param cc_index_col character name of the added column holding the cloud cover index.
-#' @param ratio numeric between 0 and 1. How to weight cloud cover and cloud probability. The value steers
-#' the weight of cloud cover, all remaining is cloud probability. Default is 0.7.
-#' @return \code{records} data.frame with one additional column: 'cc_index'.
-#' @keywords internal
-#' @noRd
-.select_cc_index <- function(records, aoi_cc_col, aoi_cc_prb_col, cc_index_col, ratio = 0.7) {
-  
-  aoi_cc <- as.numeric(records[[aoi_cc_col]]) # aoi cc cover
-  aoi_cc_prb <- as.numeric(records[[aoi_cc_prb_col]]) # mean aoi cc probability
-  cc_index <- ((aoi_cc * ratio) + (aoi_cc_prb * (1 - ratio)))
-  records[[cc_index_col]] <- cc_index
-  return(records)
-    
 }
 
 #' finds optimal dates from a records order within a period of a timestamp and max_sub-period.
@@ -1996,6 +1988,19 @@ sep <- function() {
   incl <- .select_subset_to_best_period(dates, best_period)
   order <- x[incl]
   return(order)
+  
+}
+
+#' removes NULLs and NAs from list.
+#' @param x list.
+#' @return x list without NULLs and NAs.
+#' @keywords internal
+#' @noRd
+.gsd_compact <- function(x) {
+  
+  not_na <- sapply(x,function(y) {return((!is.na(y) && !is.null(y)))})
+  x <- x[not_na]
+  return(x)
   
 }
 
@@ -2092,7 +2097,7 @@ sep <- function() {
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
   l <- length(dates)
   dates[l] <- dates[l] + 1
-  date_col_mirr <- sapply(records[,date_col],as.Date) # mirror of the date column as days since 1970-01-01
+  date_col_mirr <- sapply(records[[date_col]],as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
     within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
     records[within,"sub_period"] <- i

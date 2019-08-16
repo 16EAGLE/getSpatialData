@@ -58,7 +58,7 @@ select_unitemporal <- function(records, aoi,
   records[["sub_period"]] <- timestamp
   
   #### Checks
-  .select_checks(records,prio_sensors,par,dir_out,verbose)
+  .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="uni-temporal",par$sep)

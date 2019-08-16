@@ -47,7 +47,7 @@
 select_bitemporal <- function(records, aoi, 
                               min_distance, min_improvement = 5, 
                               max_sub_period, max_cloudcov_tile = 80,
-                              prio_sensors = NULL,
+                              prio_sensors = c(),
                               dir_out = NULL, verbose = TRUE) {
   
   .check_records(records,.cloudcov_colnames())

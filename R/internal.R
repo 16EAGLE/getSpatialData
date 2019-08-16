@@ -710,7 +710,7 @@ rbind.different <- function(x) {
   sumProcessingTime <- meanProcessingTime * stillToGoFor
   if (sumProcessingTime < 1) {
     sumProcessingTime <- "less than 1 minute"
-  } else if (sumProcessingTime == 1) {
+  } else if (round(sumProcessingTime) == 1) {
     sumProcessingTime <- "1 minute"
   } else {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")

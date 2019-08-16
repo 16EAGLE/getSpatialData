@@ -11,6 +11,7 @@
 #' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
+#' @param cols character vector of column names.
 #' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #'        
@@ -21,7 +22,6 @@
 #' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster cellStats raster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
-#' @importFrom sf st_as_sf st_transform
 #' @importFrom sp proj4string
 #' 
 #' @keywords internal
@@ -29,36 +29,35 @@
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
                               cloudPrbThreshold = 40, slopeDefault = 1.4, 
-                              interceptDefault = -10, dir_out = NULL, verbose = TRUE) {
+                              interceptDefault = -10, cols = NULL, dir_out = NULL, verbose = TRUE) {
   
   identifier <- "record_id"
   dir_given <- !is.null(dir_out)
-  cols <- .cloudcov_colnames()
   sceneCloudCoverCol <- "cloudcov"
   error <- "try-error"
   currTitle <- record[[identifier]]
+  aoi <- .check_aoi(aoi,"sp")
+  mask_path <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
+  if (file.exists(mask_path)) {
+    cMask <- raster(mask_path)
+    # when re-loading the existing cMask the HOT scene_cPercent cannot be calculated because already aoi masked
+    out("Loading existing HOT aoi cloud mask but no HOT scene cloud cover can be calculated from it, only for aoi",msg=T)
+    record <- .record_cloudcov_finish(record,aoi,cMask,HOT=NULL,
+                                      scene_cPercent=9999,mask_path,cols,dir_given,reload=T)
+    return(record)
+  }
+  
   # for dividing the blue DNs with values between this value and the value below into equal interval bins
   bThresh_low <- 20 
   bThresh_high <- 160 # below this value a pixel cannot be classified as cloud
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
-  maskFilename <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
-  if (file.exists(maskFilename)) {
-    cMask <- raster(maskFilename)
-    # when re-loading the existing cMask the HOT scene_cPercent cannot be calculated because already aoi masked
-    out("Loading existing HOT aoi cloud mask but no HOT scene cloud cover can be calculated from it, only for aoi",msg=T)
-    record <- .record_cloudcov_finish(record,aoi,cMask,HOT=NULL,
-                                      scene_cPercent=9999,maskFilename,cols,dir_given,reload=T)
-    return(record)
-  }
   
   crs <- try(proj4string(preview))
   if (is.na(crs) || inherits(crs,error)) {
     record <- .handle_cc_skip(record,dir_out=dir_out)
     return(record)
   }
-  
-  aoi <- .handle_aoi(aoi,crs)
   
   # Handle broken preview (indicated by non-existence of DNs > 40)
   broken_check <- preview > 40
@@ -69,7 +68,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50, no valid observations
   # If preview is broken or nor valid observations in aoi return
   if (isTRUE(cond)) {
-    record <- .handle_cc_skip(record,dir_out=dir_out)
     return(NA)
   }
   
@@ -181,15 +179,18 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     numTry <- numTry + 1
   }
   
+  print(hotFailed)
+  
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask)
   ## Calculate aoi cloud cover percentage
-  if (isFALSE(hotFailed)) {
-    record <- .record_cloudcov_finish(record,cMask,HOT,scene_cPercent,maskFilename,cols,dir_given)
-  } else {
+  if (hotFailed) {
     record <- .handle_cc_skip(record,dir_out=dir_out)
     out(hotFailWarning,type=2)
     return(NA)
+  } else {
+    record <- .record_cloudcov_finish(record,aoi,cMask,HOT,
+                                      scene_cPercent,mask_path,cols,dir_given)
   }
   return(record)
   

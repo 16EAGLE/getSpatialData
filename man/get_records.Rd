@@ -7,22 +7,22 @@
 \alias{getMODIS_records}
 \title{Query available product records}
 \usage{
-get_records(time_range, name, aoi = NULL, as_sf = TRUE,
+get_records(time_range, products, aoi = NULL, as_sf = TRUE,
   rename_cols = TRUE, ..., verbose = TRUE)
 
-getSentinel_records(time_range, name, aoi = NULL, as_sf = TRUE,
+getSentinel_records(time_range, products, aoi = NULL, as_sf = TRUE,
   rename_cols = TRUE, ..., verbose = TRUE)
 
-getLandsat_records(time_range, name, aoi = NULL, as_sf = TRUE,
+getLandsat_records(time_range, products, aoi = NULL, as_sf = TRUE,
   rename_cols = TRUE, ..., verbose = TRUE)
 
-getMODIS_records(time_range, name, aoi = NULL, as_sf = TRUE,
+getMODIS_records(time_range, products, aoi = NULL, as_sf = TRUE,
   rename_cols = TRUE, ..., verbose = TRUE)
 }
 \arguments{
 \item{time_range}{character, a vector of two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. \code{c("2017-05-15", "2017-06-15")}}
 
-\item{name}{character, product name(s). Use \code{\link{get_names}} to get a full list of all available products. If multiple products are supplied, the returned records are combined across products.}
+\item{products}{character, product name(s). Use \code{\link{get_products}} to get a full list of all available products. If multiple products are supplied, the returned records are combined across products.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
@@ -50,7 +50,7 @@ getMODIS_records(time_range, name, aoi = NULL, as_sf = TRUE,
 A data frame of records (by default an \code{sf} data frame, see argument \code{as_sf}). Each row represents one record. The data frame can be further filtered by its columnwise attributes or plotted to view their spatial footprints. The records data frame can be used as input to other \code{getSpatialData} functions.
 }
 \description{
-\code{get_records} queries a service for available records using basic input search parameters such as product name (see \code{\link{get_names}}), AOI and time range. The function returns a data frame of records that can be further filtered and that other \code{getSpatialData} functions use as input.
+\code{get_records} queries a service for available records using basic input search parameters such as product name (see \code{\link{get_products}}), AOI and time range. The function returns a data frame of records that can be further filtered and that other \code{getSpatialData} functions use as input.
 }
 \details{
 To use these functions, you need to be logged in at the required services: To query Sentinel records, login with your ESA Copernicus Open Access Hub credentials using \link{login_CopHub}. To query MODIS and Landsat records, login with your USGS EROS Registration System (ERS) credentials using \link{login_USGS}. See \code{\link{login}} for details.

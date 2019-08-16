@@ -32,7 +32,7 @@
   if(!is.null(col.names)){
     catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
   }
-  if (as_df) records <- as.data.frame(records)
+  if(as_df) records <- as.data.frame(records) else records <- st_sf(records, sfc_last = F)
   return(records)
 }
 
@@ -71,6 +71,14 @@
 #' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
 #' @noRd
 .check_aoi <- function(aoi, type = "matrix", quiet = F){
+  
+  if(is.null(aoi)){
+    if(is.TRUE(getOption("gSD.aoi_set"))){
+      aoi <- getOption("gSD.aoi")
+    } else{
+      out("Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI.", type = 3)
+    }
+  }
   
   ## if not sfc, convert to sfc
   if(!inherits(aoi, c("Spatial", "sfc", "matrix"))) out("Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object.", type = 3)
@@ -233,3 +241,31 @@
   return(records)
 
 }
+
+
+#' checks time_range argument
+#' @param time_range char vector
+#' @return nothing, breaks, if something is wrong
+#' @keywords internal
+#' @noRd
+.check_time_range <- function(time_range){
+  if(any(!is.character(time_range), length(time_range) != 2, all(nchar(time_range) != c(10,10)))){
+    out("Argument 'time_range' must be a character vector containing two elements, formatted as c('YYYY-MM-DD', 'YYYY-MM-DD'), indicating start and stop date.", type=3)
+  }
+}
+
+#' checks name argument
+#' @param name char vector
+#' @return nothing, breaks, if something is wrong
+#' @keywords internal
+#' @noRd
+.check_products <- function(products, products_available = NULL){
+  if(any(!is.character(products), length(products) < 1)){
+    out("Argument 'products' must be a character containing at least one element.", type=3)
+  } 
+  if(!is.null(products_available)){
+    products_valid <- unlist(sapply(products, function(x) any(grepl(x, products_available)), simplify = F))
+    if(!all(products_valid)) out(paste0("Unknown product(s): ", paste0("'", paste0(products[!products_valid], collapse = "', '"), "'"), ". Please use get_products() to obtain the names of all available products."), type = 3)
+  }
+}
+

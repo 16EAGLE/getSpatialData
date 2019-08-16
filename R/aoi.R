@@ -67,7 +67,7 @@ view_aoi <- function(color = "green"){
   aoi.m <- getOption("gSD.aoi")
   
   aoi.sf <- .check_aoi(aoi.m, type = "sf", quiet = T)
-  mapview(aoi.sf, col.regions = color)
+  mapview(aoi.sf, layer.nam = "AOI", label = "AOI", col.regions = color)
 }
 
 #' @rdname aoi

@@ -61,7 +61,6 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   if(length(records) > 1) records <- rbind.different(.gsd_compact(records)) else records <- records[[1]]
   
   # convert to sf
-  records$footprint <- st_as_sfc(records$footprint, crs = 4326)
   return(.check_records(records, as_df = !as_sf))
 }
 

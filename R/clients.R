@@ -112,6 +112,7 @@
     records <- if(isTRUE(rename_cols)) .translate_records(records, name)
     records$is_gnss <- gnss
     
+    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     return(records)
   }
 }
@@ -204,6 +205,7 @@
     if(extras$maxCloudScene < 100 ) records <- records[records$SceneCloudCover <= extras$maxCloudScene,]
     
     colnames(records)[colnames(records) == "spatialFootprint"] <- "footprint"
+    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     
     # translate record column names
     records <- if(isTRUE(rename_cols)) .translate_records(records, name)

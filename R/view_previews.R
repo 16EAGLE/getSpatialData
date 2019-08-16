@@ -27,7 +27,7 @@ view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  .check_records(records, col.names = "preview_file")
+  records <- .check_records(records, col.names = "preview_file")
   
   na.previews <- is.na(records$preview_file)
   if(all(na.previews)) out("Column 'preview_file' does not contain paths to preview files. See get_previews() to get previews.")
@@ -66,7 +66,7 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  .check_records(records, col.names = "preview_file")
+  records <- .check_records(records, col.names = "preview_file")
   
   # load raster
   out("Composing preview plot...")

@@ -183,7 +183,7 @@ getSentinel_records <- function(time_range, name, aoi = NULL, as_sf = TRUE, rena
       rdf[1, match(names(x), rn)] <- sapply(x, as.character)
       return(rdf)
     }))
-    if(isTRUE(check_avail)) records$download_available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
+    #if(isTRUE(check_avail)) records$download_available <- as.logical(toupper(unlist(.get_odata(records$uuid, cred, field = "Online/$value"))))
     
     # convert expected numeric fields
     fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",

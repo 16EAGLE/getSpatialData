@@ -850,11 +850,11 @@ rbind.different <- function(x) {
   if (mode == "na") {
     na_mask <- is.na(x)
     x <- mask(na_mask,aoi)
-    x_mat <- as.matrix(x)
+    x_mat <- as.integer(as.matrix(x))
     # clouds = 1 and clear = 0 now
     percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
   } else if (mode == "custom") {
-    x_mat <- as.matrix(x)
+    x_mat <- as.integer(as.matrix(x))
     val1 <- length(which(x_mat == custom[[1]]))
     val2 <- length(which(x_mat == custom[[2]]))
     percent <- (val1 / sum(val1,val2)) * 100
@@ -899,7 +899,7 @@ rbind.different <- function(x) {
   correction_small <- correction < 1
   correction <- ifelse(correction_small,1,correction)
   r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=(res(x)*correction))
-  values(r) <- 1
+  values(r) <- as.integer(1)
   aoi_npixels <- length(extract(r,aoi)[[1]])
   aoi_ncell <- aoi_npixels * (correction^2)
   if (correction_small) {
@@ -1036,26 +1036,6 @@ rbind.different <- function(x) {
   }
   records[["tile_id"]] <- unlist(tile_id)
   return(records)
-  
-}
-
-#' selects from a numeric data.frame column the i lowest value and checks if it is lower than a provided numeric
-#' @param rec_tile_sub data.frame.
-#' @param max numeric maximum allowed value.
-#' @param i numeric.
-#' @param column character name of the column to be ordered.
-#' @param max_column character name of the column for which max shall be checked. Can be equal to column.
-#' @return \code{chosen} numeric index to the matching data.frame row.
-#' @keywords internal
-#' @noRd
-.df_get_lowest <- function(rec_tile_sub, max, i, column, max_column) {
-  
-  records_ord <- rec_tile_sub[order(rec_tile_sub[[column]]),]
-  if (i > NROW(records_ord)) return(NA)
-  j <- 1
-  chosen <- which(rec_tile_sub[[column]]==records_ord[i,column])[j]
-  val <- rec_tile_sub[chosen,max_column]
-  if (as.numeric(val) <= max) return(chosen) else return(NA)
   
 }
 
@@ -1870,7 +1850,7 @@ sep <- function() {
 
 #### SELECT SUB-PROCESSES
 
-#' selects initial records for the first sub-period
+#' selects initial records for the first sub-period while ensuring max_cloudcov_tile
 #' @param records data.frame subsetted to a sub-period.
 #' @param tiles character vector of the tile ids.
 #' @param period character vector of start and end date.
@@ -1887,18 +1867,24 @@ sep <- function() {
   
   sub <- lapply(tiles,function(x) {
     rec_tile_sub <- records[which(records[[tileid_col]]==x),]
-    i <- 0
-    lwst_cc <- 0
+    i <- as.integer(0)
+    lwst_cc <- as.integer(0)
     selected <- c()
-    while(!is.na(lwst_cc)) {
+    rec_ord <- rec_tile_sub[order(rec_tile_sub[[aoi_cc_col]]),]
+    while(!is.na(lwst_cc) && i <= NROW(rec_tile_sub)) {
       i <- i+1
       if (i > NROW(rec_tile_sub)) {
         lwst_cc <- NA
       } else {
-        lwst_cc <- .df_get_lowest(rec_tile_sub,max=max_cloudcov_tile,i,
-                                  column=aoi_cc_col,max_column=aoi_cc_col)
-        if (!is.na(lwst_cc)) {
-          selected[i] <- which(records[,identifier] == rec_tile_sub[lwst_cc,identifier])
+        lwst_cc <- rec_ord[i,identifier] # id of i lowest
+        # ensure max_cloudcov_tile
+        cc <- rec_ord[i,aoi_cc_col]
+        above_max <- ifelse(is.na(cc) || any(is.null(c(lwst_cc,cc))),TRUE,
+                            cc > max_cloudcov_tile)
+        if (above_max) {
+          lwst_cc <- NA
+        } else {
+          selected[i] <- which(records[,identifier] == lwst_cc) # get index of record in records
         }
       }
     }

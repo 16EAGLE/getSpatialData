@@ -50,7 +50,7 @@
 select_timeseries <- function(records, aoi,
                               num_timestamps, min_distance, min_improvement = 5, 
                               max_sub_period, max_cloudcov_tile = 80, 
-                              prio_sensors = NULL, 
+                              prio_sensors = c(), 
                               dir_out = NULL, verbose = TRUE) {
   
   records <- .check_records(records,.cloudcov_colnames(),as_df=T)

@@ -52,7 +52,7 @@ A data frame of records (by default an \code{sf} data frame, see argument \code{
 \description{
 \code{get_records} queries a service for available records using basic input search parameters such as product name (see \code{\link{get_names}}), AOI and time range. The function returns a data frame of records that can be further filtered and that other \code{getSpatialData} functions use as input.
 }
-\note{
+\details{
 To use these functions, you need to be logged in at the required services: To query Sentinel records, login with your ESA Copernicus Open Access Hub credentials using \link{login_CopHub}. To query MODIS and Landsat records, login with your USGS EROS Registration System (ERS) credentials using \link{login_USGS}. See \code{\link{login}} for details.
 }
 \section{GNSS}{

@@ -760,14 +760,15 @@ rbind.different <- function(x) {
     aoi_cProb <- 9999
   } else {
     HOT_masked <- mask(HOT,aoi)
-    aoi_cProb <- raster::cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
+    aoi_cProb <- cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
   }
   if (isFALSE(reload)) {
     cMask <- mask(cMask,aoi)
     cMask[cMask==0] <- NA
   }
   if (dir_given) { # save cloud mask if desired
-    if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T)
+    if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T,
+                                             dataType="INT2S")
     record[cols$cloud_mask_path] <- mask_path
   }
   
@@ -1133,7 +1134,7 @@ rbind.different <- function(x) {
       r_load <- raster(x[[i]])
       r_aggr <- aggregate(r_load,adj)
       r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
-      writeRaster(r_aggr,r_save_path,overwrite=T)
+      writeRaster(r_aggr,r_save_path,overwrite=T,dataType="INT2S")
       return(r_save_path)
     })
   } else {
@@ -1244,15 +1245,19 @@ sep <- function() {
 #' @param aoi aoi.
 #' @param save_path save_path (should end with '.tif').
 #' @return mos_base_crop.
-#' @importFrom raster mask crop
+#' @importFrom raster mask crop raster dataType
 #' @keywords internal
 #' @noRd
 .select_bridge_mosaic <- function(paths, aoi, save_path) {
   
+  tmp_load <- raster(paths[1])
+  datatype <- dataType(tmp_load)
+  srcnodata <- ifelse(datatype == "INT2S","-32,767","-3.3999999521443642e+38")
   mos_base <- .make_mosaic(paths,save_path)
   mos_base_mask <- mask(mos_base,aoi)
   mos_base_crop <- crop(mos_base_mask,aoi)
-  writeRaster(mos_base_crop,save_path,overwrite=T)
+  writeRaster(mos_base_crop,save_path,overwrite=T,
+              srcnodata=srcnodata,datatype=datatype)
   return(mos_base_crop)
   
 }
@@ -1263,14 +1268,16 @@ sep <- function() {
 #' @param save_path character, full path where to save the mosaic (has to end with '.tif').
 #' @param mode character, optional. If mode == "rgb" no masking of the raster to only 1 values is done. 
 #' If mode == "mask" the raster will be returned with 1 and NA. Default is mode == "mask".
+#' @param srcnodata character nodata value in x. Default is for FLT4S.
 #' @return \code{mos} raster mosaic
 #' @keywords internal
 #' @importFrom gdalUtils gdalbuildvrt
 #' @noMd
-.make_mosaic <- function(x, save_path, mode = "mask") {
+.make_mosaic <- function(x, save_path, mode = "mask", 
+                         srcnodata = NULL, datatype = NULL) {
   
-  write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c("-3.3999999521443642e+38"),vrtnodata="0",
-                            seperate=F,overwrite=T)
+  write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(srcnodata),vrtnodata="0",
+                            seperate=F,overwrite=T,datatype=datatype)
   mos <- raster(save_path)
   if (mode == "rgb") {
     return(mos)
@@ -1409,11 +1416,9 @@ sep <- function() {
   # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
-  #writeRaster(base_mos,base_mos_path,overwrite=T)
   # cleanup
   .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
   rm(base_mos)
-  unlink()
   base_coverage <- -1000
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
@@ -1433,7 +1438,7 @@ sep <- function() {
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset)
     crop_p <- file.path(tmp_dir,"crop_tmp.tif")
     curr_mos_tmp_p <- file.path(tmp_dir,"curr_mos_tmp.tif")
-    writeRaster(curr_base_mos_crop,crop_p,overwrite=T)
+    writeRaster(curr_base_mos_crop,crop_p,overwrite=T,dataType="INT2S")
     curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
     cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
     # cleanup
@@ -1475,12 +1480,15 @@ sep <- function() {
 
 #' extracts the grd and gri file path from a raster object and deletes them
 #' @param dir character directory the tmp dir.
+#' @param patterns character vector of file extensions of files to be deleted.
+#' Default are ".gri" and ".grd".
 #' @return nothing. Deletes all files in tmp folder on disk
 #' @keywords internal
 #' @noRd
-.delete_tmp_files <- function(dir) {
+.delete_tmp_files <- function(dir, patterns = c(".gri",".grd")) {
   
-  files <- list.files(dir)
+  patterns <- paste0(patterns,"$")
+  files <- sapply(patterns,function(p) list.files(dir,pattern=p))
   paths_del <- file.path(dir,files)
   del <- sapply(paths_del,function(path) {
     try <- try(unlink(path))

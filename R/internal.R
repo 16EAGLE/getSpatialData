@@ -768,7 +768,7 @@ rbind.different <- function(x) {
   }
   if (dir_given) { # save cloud mask if desired
     if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T,
-                                             dataType="INT2S")
+                                             datatype="INT2S")
     record[cols$cloud_mask_path] <- mask_path
   }
   
@@ -906,18 +906,18 @@ rbind.different <- function(x) {
 #' @param aoi_vals list of numerics if the needed values have been calculated already they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster mask ncell area aggregate extract
+#' @importFrom raster ncell area aggregate extract
 #' @keywords internal
 #' @noRd
-.calc_aoi_coverage <- function(x, aoi, aoi_vals) {
+.calc_aoi_coverage <- function(x, aoi, aoi_vals = NULL) {
   
   if (is.null(aoi_vals)) {
     aoi_vals <- .calc_aoi_corr_vals(aoi,x)
   }
   aoi_ncell <- aoi_vals[[1]]
   correction <- aoi_vals[[2]]
-  correction_is_small <- correction < 1
-  if (correction_is_small) {
+  correction_is_small <- correction <= 1
+  if(correction_is_small) {
     x_aggr <- x
   } else {
     x_aggr <- aggregate(x,correction)
@@ -936,7 +936,7 @@ rbind.different <- function(x) {
 #' @param aoi aoi.
 #' @param x raster with the resolution.
 #' @return list of two numerics: [[1]] number of cells in aoi [[2]] correction value
-#' @importFrom raster extent raster res crs values<- extract
+#' @importFrom raster extent raster res crs values<- extract mask
 #' @keywords internal
 #' @noRd
 .calc_aoi_corr_vals <- function(aoi,x) {
@@ -949,6 +949,7 @@ rbind.different <- function(x) {
   correction <- ifelse(correction < 1,1,correction)
   r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=(res(x)*correction))
   values(r) <- as.integer(1)
+  r <- mask(r,aoi)
   aoi_npixels <- length(extract(r,aoi)[[1]])
   aoi_ncell <- aoi_npixels * (correction^2)
   return(list(aoi_ncell,correction))
@@ -1088,7 +1089,7 @@ rbind.different <- function(x) {
 #' @noRd
 .exceeds_min_improvement <- function(min_improvement, cov_init, cov_aft, proportion = 1) {
   
-  improvement <- (1 - (cov_init / cov_aft)) * proportion
+  improvement <- (1 - (cov_init / cov_aft))  * 100
   return(improvement >= min_improvement)
   
 }
@@ -1451,7 +1452,7 @@ sep <- function() {
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
     if (i == start) {out("Current coverage of valid pixels")}
-    print(i)
+    #print(i)
     x <- collection[i] # do it this way in order to keep id
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
@@ -1468,7 +1469,6 @@ sep <- function() {
     crop_p <- file.path(tmp_dir,"crop_tmp.tif")
     curr_mos_tmp_p <- file.path(tmp_dir,"curr_crop_mos_tmp.tif")
     writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
-    tile_ncell <- .calc_aoi_corr_vals(aoi_subset,curr_base_mos_crop)[[1]] # for improvement calc
     curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
     cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
     # cleanup
@@ -1476,8 +1476,7 @@ sep <- function() {
     unlink(curr_mos_tmp_p)
     rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
     # calculate if valid coverage is improved when adding the record to the tile area
-    proportion <- tile_ncell / aoi_ncell
-    add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft,proportion)
+    add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft)
     if (add_it) {
       save_str <- "base_mos_tmp_"
       base_mos_path_tmp <- file.path(tmp_dir,paste0(save_str,i,".tif"))

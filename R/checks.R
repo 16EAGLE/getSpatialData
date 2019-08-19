@@ -269,3 +269,11 @@
   }
 }
 
+#' checks verbose argument
+#' @param verbose logical
+#' @return nothing
+#' @keywords internal
+#' @noRd
+.check_verbose <- function(verbose){
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+}

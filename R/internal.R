@@ -315,7 +315,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #'
 #' @param aoi aoi
 #' @param time_range time_range
-#' @param name name
+#' @param product_name name
 #' @param api.key api.key
 #' @param meta.fields meta.fields
 #'
@@ -324,21 +324,21 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #'
 #' @keywords internal
 #' @noRd
-.EE_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
+.EE_query <- function(aoi, time_range, product_name, api.key, meta.fields = NULL){
   
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
   
-  out(paste0("Searching records for product name '", name, "'..."))
-  query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
+  out(paste0("Searching records for product name '", product_name, "'..."))
+  query <- lapply(product_name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
   query.cont <- lapply(query, content)
-  if(all(c(length(name) == 1), query.cont[[1]]$error != "")){
+  if(all(c(length(product_name) == 1), query.cont[[1]]$error != "")){
     out("No results could be obtained for this product, time range and AOI.", msg = T)
   } else{
     
     query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
     query.cont <- query.cont[query.use]
-    query.names <- name[query.use]
+    query.names <- product_name[query.use]
     
     query.results <- lapply(query.cont, function(x) x$data$results)
     if(length(query.results) != 0){
@@ -530,10 +530,10 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 
 #' translate records column names to gSD standard
 #' @param records df as returned by client
-#' @param name product name 
+#' @param product_name product name 
 #' @keywords internal
 #' @noRd
-.translate_records <- function(records, name){
+.translate_records <- function(records, product_name){
   
   # set-up column name dictionary
   dict <- rbind.data.frame(c("product", NA, NA, NA),
@@ -564,7 +564,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
                            c("levels_available", NA, "levels_available", NA),
                            c("footprint", "footprint", "footprint", "footprint"), stringsAsFactors = F)
   colnames(dict) <- c("gSD", "Sentinel", "Landsat", "MODIS")
-  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(name), USE.NAMES = F)
+  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(product_name), USE.NAMES = F)
   which.valid <- !is.na(dict[,which.col])
   
   # translate column names
@@ -577,9 +577,9 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   records$product_group <- colnames(dict)[which.col]
   
   # address product-specific cases
-  records$product <- name
+  records$product <- product_name
   if(which(which.col) == 2){ # special cases for Sentinel
-    records$date_aquistion <- sapply(strsplit(records$start_time, "T"), '[', 1)
+    records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
     records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
     })
@@ -2282,5 +2282,23 @@ sep <- function() {
 #' @noRd
 quiet <- function(expr){
   return(suppressWarnings(suppressMessages(expr)))
+}
+
+
+#' add aoi to a mapview map
+#' @param map a mapview object
+#' @param aoi_colour colour of aoi
+#' @param homebutton whether to show layer home buttons or not
+#' @return nothing. runs expression
+#' @keywords internal
+#' @noRd
+.add_aoi <- function(map = NULL, aoi_colour, homebutton = F){
+  if(isFALSE(getOption("gSD.aoi_set"))){
+    out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+  } else{
+    aoi.sf <- getOption("gSD.aoi")
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
+    if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
+  }
 }
 

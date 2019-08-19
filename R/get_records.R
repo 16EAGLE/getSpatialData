@@ -48,13 +48,14 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
     if(is.null(products)) products <- extras$platform
   }
   
+  .check_verbose(verbose)
   .check_time_range(time_range)
   .check_products(products, products_available = get_products())
   is.CopHub <- grepl("Sentinel", products)
   
   # get records
-  records <- mapply(x.fun = c("EE", "CopHub")[as.numeric(is.CopHub)+1], x.name = products, function(x.fun, x.name){
-    eval(parse(text = paste0(".records_", x.fun, "(time_range = time_range, name = x.name, aoi = aoi, as_sf = as_sf, ..., verbose = verbose)")))
+  records <- mapply(client = c("EE", "CopHub")[as.numeric(is.CopHub)+1], product_name = products, function(client, product_name){
+    eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, as_sf = as_sf, ..., verbose = verbose)")))
   }, USE.NAMES = F, SIMPLIFY = F)
   
   # bind records

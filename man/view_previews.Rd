@@ -6,7 +6,7 @@
 \title{View or plot previews of records}
 \usage{
 view_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
-  value = FALSE, verbose = TRUE)
+  verbose = TRUE)
 
 plot_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
   separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE)
@@ -18,8 +18,6 @@ plot_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
 
 \item{aoi_colour}{character, colour of the AOI. Ignored, if \code{show_aoi = FALSE}.}
 
-\item{value}{logical, whether to return the displayed map/plot object (\code{TRUE}) or not.}
-
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 
 \item{separate}{logical, whether previews should be displayed separately on a \code{cowplot} grid (\code{TRUE}) or as a mosaic in a single plot (\code{FALSE}, default).}
@@ -27,7 +25,7 @@ plot_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
 \item{maxcol}{numeric, maximum number of columns that the plot grid should have.}
 }
 \value{
-None or a \code{mapview}/\code{plot} object
+A \code{mapview}/\code{ggplot} object
 }
 \description{
 \code{view_previews} and \code{plot_previews} load and display georeferenced previews acquired using \code{\link{get_previews}}.

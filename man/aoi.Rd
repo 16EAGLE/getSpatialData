@@ -9,14 +9,16 @@
 \usage{
 set_aoi(aoi)
 
-view_aoi(color = "green")
+view_aoi(aoi = NULL, aoi_colour = "deepskyblue", ...)
 
 get_aoi(type = "sf")
 }
 \arguments{
-\item{aoi}{nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.}
+\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. If \code{set_aoi} is called and \code{aoi} is undefined, an interactve \code{mapedit} viewer should open letting you draw an AOI polygon.}
 
-\item{color}{chracter, polygon filling color.}
+\item{aoi_colour}{chracter, AOI colour.}
+
+\item{...}{deprecated arguments}
 
 \item{type}{character, AOI object type, either "matrix", "sf" or "sp".}
 }

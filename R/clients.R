@@ -9,7 +9,7 @@
 #' @keywords internal
 #' @noRd
 #' 
-.records_CopHub <- function(time_range, name, aoi = NULL, rename_cols = TRUE, ..., verbose = TRUE){
+.records_CopHub <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, ...){
   
   ## check ... extras
   extras <- list(...)
@@ -25,7 +25,6 @@
   }
   if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
   if(!is.null(password)){ password = password} else{ password = getPass()}
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
   ## Global AOI
   if(!isTRUE(gnss)){
@@ -36,8 +35,8 @@
   }
   
   ## url assembler function
-  cop.url <- function(ext.xy, url.root, name, time.range, row.start){
-    if(name == "Sentinel-5P") name <- "Sentinel-5"
+  cop.url <- function(ext.xy, url.root, product_name, time.range, row.start){
+    if(product_name == "Sentinel-5P") product_name <- "Sentinel-5"
     qs <- list(url.root = paste0(url.root, "/"),
                search = c("search?start=", "&rows=100&q="),  #"search?q=", #start=0&rows=1000&
                and = "%20AND%20",
@@ -48,22 +47,22 @@
     if(!is.null(ext.xy)) aoi.str <- paste0(apply(ext.xy, MARGIN = 1, function(x) paste0(x, collapse = "%20")), collapse = ",")
     
     return(paste0(qs$url.root, qs$search[1], toString(row.start), qs$search[2], "(", if(!is.null(ext.xy)) paste0(qs$aoi.poly[1], aoi.str, qs$aoi.poly[2], qs$and) else "",
-                  qs$platformname, name, qs$and,
+                  qs$platformname, product_name, qs$and,
                   qs$time$`[`, time.range[1], qs$time$to, time.range[2], qs$time$`]`, ")"))
   }
   
   ## Manage API access
-  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else name, user = username, pw = password)
+  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else product_name, user = username, pw = password)
   
   ## query API
   row.start <- -100; re.query <- T; give.return <- T
   query.list <- list()
   
-  out(paste0("Searching records for product name '", name, "'..."))
+  out(paste0("Searching records for product name '", product_name, "'..."))
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
     
-    query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], name = name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
+    query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], product_name = product_name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
     query.xml <- suppressMessages(xml_contents(as_xml_document(content(query, as = "text"))))
     query.list <- c(query.list, lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
     
@@ -109,7 +108,7 @@
     records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
     # translate record column names
-    records <- if(isTRUE(rename_cols)) .translate_records(records, name)
+    records <- if(isTRUE(rename_cols)) .translate_records(records, product_name)
     records$is_gnss <- gnss
     
     records$footprint <- st_as_sfc(records$footprint, crs = 4326)
@@ -127,7 +126,7 @@
 #' @keywords internal
 #' @noRd
 #' 
-.records_EE <- function(time_range, name, aoi = NULL, rename_cols = TRUE, ..., verbose = TRUE){
+.records_EE <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, ...){
   
   ## check ... extras
   extras <- list(...)
@@ -149,22 +148,28 @@
     if(is.null(password)) password = getPass()
     api.key <- .ERS_login(username, password)
   }
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
   # check aoi
   aoi <- .check_aoi(aoi, type = "sf", quiet = T)
   
-  meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
-                   "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
+  if(grepl("LANDSAT", product_name)){
+    meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
+      "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
+  }
+  if(grepl("MODIS", product_name)){
+    meta.fields <- c("Acquisition Start Date", "Acquisition End Date", "Horizontal Tile Number", "Vertical Tile Number",
+                     "Auto Quality Flag", "Auto Quality Flag Explanation", "Science Quality Flag",
+                     "Science Quality Flag Expln","Missing Data Percentage")
+  }
   
   ## query
-  records <- .EE_query(aoi, time_range, name, api.key, meta.fields)
+  records <- .EE_query(aoi, time_range, product_name, api.key, meta.fields)
   
   if(is.null(records)){
     out("No results could be obtained for this product, time range and AOI.", msg = T)
   }else{
     
-    if(grepl("LANDSAT", name)){
+    if(grepl("LANDSAT", product_name)){
       ## Connect to ESPA to retrieve available products for (no use of entityId, displayId instead)
       out("Recieving available product levels from USGS-EROS ESPA...", msg = T)
       records <- do.call(rbind.data.frame, apply(records, MARGIN = 1, function(x, names = colnames(records)){
@@ -193,7 +198,7 @@
       fields.numeric <- names(records)[sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
     }
     
-    if(grepl("MODIS", name)){
+    if(grepl("MODIS", product_name)){
       fields.numeric <- names(records)[sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
     }
     
@@ -208,7 +213,7 @@
     records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     
     # translate record column names
-    records <- if(isTRUE(rename_cols)) .translate_records(records, name)
+    records <- if(isTRUE(rename_cols)) .translate_records(records, product_name)
     
     return(records)
   }

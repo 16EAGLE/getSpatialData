@@ -3,9 +3,10 @@
 #' Functions that set, view and get a session-wide area of interest (AOI) that can be used by all \code{getSpatialData} functions.
 #'
 #' @inheritParams getSentinel_records
-#' @param aoi nothing, if an interactve \code{mapedit} viewer should open letting you draw an AOI polygon. Otherwise, sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter.
+#' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. If \code{set_aoi} is called and \code{aoi} is undefined, an interactve \code{mapedit} viewer should open letting you draw an AOI polygon.
 #' @param type character, AOI object type, either "matrix", "sf" or "sp".
-#' @param color chracter, polygon filling color.
+#' @param aoi_colour chracter, AOI colour.
+#' @param ... deprecated arguments
 #'
 #' @details
 #' \code{set_aoi} defines a session AOI that is used for querying data within the running session (if no other AOI is provided with a query function call). If called without argument, an interactive \code{mapedit} viewer is opened letting you draw an AOI polygon. Otherwise, the function supports \code{sf}, \code{sp} or matrix objects as \code{aoi} input  (see argument \code{aoi}).
@@ -41,6 +42,7 @@
 #' @importFrom mapedit drawFeatures
 #' @export
 set_aoi <- function(aoi){
+  
   ## draw aoi with mapedit, if aoi is not defined
   if(missing(aoi)){
     aoi <- drawFeatures(crs = 4326)$geometry
@@ -53,29 +55,26 @@ set_aoi <- function(aoi){
   ## set aoi
   options(gSD.aoi=aoi.sf)
   options(gSD.aoi_set=TRUE)
-  #out(paste0("Session AOI has been set successfully."), msg = T)
 }
 
 
 #' @rdname aoi
-#' @importFrom sf st_sfc st_polygon
 #' @importFrom mapview mapview
 #' @export
-view_aoi <- function(color = "green"){
+view_aoi <- function(aoi = NULL, aoi_colour = "deepskyblue", ...){
   
-  if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)
-  aoi.m <- getOption("gSD.aoi")
+  if(missing(aoi_colour)){
+    extras <- list(...)
+    aoi_colour <- extras$color # deprecated argument
+  }
   
-  aoi.sf <- .check_aoi(aoi.m, type = "sf", quiet = T)
-  mapview(aoi.sf, col.regions = color)
+  aoi.sf <- .check_aoi(aoi, type = "sf")
+  .add_aoi(aoi_colour = aoi_colour, homebutton = T)
 }
 
 #' @rdname aoi
 #' @importFrom sf st_sfc st_polygon
 #' @export
 get_aoi <- function(type = "sf"){
-  
-  if(is.FALSE(getOption("gSD.aoi_set"))) out("No AOI has been set yet, use 'set_aoi()' to define an AOI.", type = 3)
-  aoi <- getOption("gSD.aoi")
-  .check_aoi(aoi, type = type, quiet = T)
+  .check_aoi(aoi = NULL, type = type)
 }

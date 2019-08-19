@@ -315,7 +315,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #'
 #' @param aoi aoi
 #' @param time_range time_range
-#' @param name name
+#' @param product_name name
 #' @param api.key api.key
 #' @param meta.fields meta.fields
 #'
@@ -324,77 +324,81 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #'
 #' @keywords internal
 #' @noRd
-.EE_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
+.EE_query <- function(aoi, time_range, product_name, api.key, meta.fields = NULL){
   
   spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
   temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
   
-  out(paste0("Searching records for product name '", name, "'..."))
-  query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
+  out(paste0("Searching records for product name '", product_name, "'..."))
+  query <- lapply(product_name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
   query.cont <- lapply(query, content)
-  if(length(name) == 1) if(query.cont[[1]]$error != "") out("Invalid query. This dataset seems to be not available for the specified time range.", type = 3)
-  query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
-  query.cont <- query.cont[query.use]
-  query.names <- name[query.use]
-  
-  query.results <- lapply(query.cont, function(x) x$data$results)
-  if(length(query.results) != 0){
-    
-    query.df <- unlist(mapply(y = query.results, n = query.names, function(y, n) lapply(y, function(x, ds_name = n){
-      x.names <- names(x)
-      x.char <- as.character(x)
-      
-      df <- rbind.data.frame(x.char, stringsAsFactors = F)
-      colnames(df) <- x.names
-      
-      # Make sf polygon filed from spatialFootprint
-      spf.sub <- grep("spatialFoot", x.names)
-      spf <- unlist(x[spf.sub])
-      spf <- as.numeric(spf[grep("coordinates", names(spf))])
-      df[,spf.sub] <- st_as_text(.check_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
-      
-      df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
-      colnames(df)[ncol(df)] <- "product"
-      return(df)
-    }), SIMPLIFY = F), recursive = F)
-    
-    ## Read out meta data
-    out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
-    meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
-    meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
-    meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
-      z <- try(y$metadataValue[[1]], silent = T)
-      if(inherits(z, "try-error")) NULL else z
-    }, USE.NAMES = F))
-    meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
-    
-    ## Define meta fields that are usefull for the query output
-    if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
-    meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
-    meta.df <- mapply(FUN = function(v, n, i){
-      x <- v[i]
-      x <- lapply(x, function(x) if(is.null(x)) "" else x)
-      x <- rbind.data.frame(x, stringsAsFactors = F)
-      colnames(x) <- gsub(" ", "", n[i])
-      return(x)
-    }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
-    
-    query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
-      ## apply meaningful order and replace startTime and endTime with meta outputs
-      x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
-      colnames(x)[1] <- colnames(q)[1]
-      return(x)
-    }, SIMPLIFY = F)
-    
-    return.names <- unique(unlist(lapply(query.df, colnames)))
-    return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names), stringsAsFactors = F)
-    return.df <-  do.call(rbind.data.frame, lapply(query.df, function(x, rn = return.names,  rdf = return.df){
-      rdf[1, match(colnames(x), rn)] <- x
-      return(rdf)
-    }))
-    return(return.df)
+  if(all(c(length(product_name) == 1), query.cont[[1]]$error != "")){
+    out("No results could be obtained for this product, time range and AOI.", msg = T)
   } else{
-    return(NULL)
+    
+    query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
+    query.cont <- query.cont[query.use]
+    query.names <- product_name[query.use]
+    
+    query.results <- lapply(query.cont, function(x) x$data$results)
+    if(length(query.results) != 0){
+      
+      query.df <- unlist(mapply(y = query.results, n = query.names, function(y, n) lapply(y, function(x, ds_name = n){
+        x.names <- names(x)
+        x.char <- as.character(x)
+        
+        df <- rbind.data.frame(x.char, stringsAsFactors = F)
+        colnames(df) <- x.names
+        
+        # Make sf polygon filed from spatialFootprint
+        spf.sub <- grep("spatialFoot", x.names)
+        spf <- unlist(x[spf.sub])
+        spf <- as.numeric(spf[grep("coordinates", names(spf))])
+        df[,spf.sub] <- st_as_text(.check_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
+        
+        df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
+        colnames(df)[ncol(df)] <- "product"
+        return(df)
+      }), SIMPLIFY = F), recursive = F)
+      
+      ## Read out meta data
+      out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
+      meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
+      meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
+      meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
+        z <- try(y$metadataValue[[1]], silent = T)
+        if(inherits(z, "try-error")) NULL else z
+      }, USE.NAMES = F))
+      meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
+      
+      ## Define meta fields that are usefull for the query output
+      if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
+      meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
+      meta.df <- mapply(FUN = function(v, n, i){
+        x <- v[i]
+        x <- lapply(x, function(x) if(is.null(x)) "" else x)
+        x <- rbind.data.frame(x, stringsAsFactors = F)
+        colnames(x) <- gsub(" ", "", n[i])
+        return(x)
+      }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
+      
+      query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
+        ## apply meaningful order and replace startTime and endTime with meta outputs
+        x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
+        colnames(x)[1] <- colnames(q)[1]
+        return(x)
+      }, SIMPLIFY = F)
+      
+      return.names <- unique(unlist(lapply(query.df, colnames)))
+      return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names), stringsAsFactors = F)
+      return.df <-  do.call(rbind.data.frame, lapply(query.df, function(x, rn = return.names,  rdf = return.df){
+        rdf[1, match(colnames(x), rn)] <- x
+        return(rdf)
+      }))
+      return(return.df)
+    } else{
+      return(NULL)
+    }
   }
 }
 
@@ -526,10 +530,10 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 
 #' translate records column names to gSD standard
 #' @param records df as returned by client
-#' @param name product name 
+#' @param product_name product name 
 #' @keywords internal
 #' @noRd
-.translate_records <- function(records, name){
+.translate_records <- function(records, product_name){
   
   # set-up column name dictionary
   dict <- rbind.data.frame(c("product", NA, NA, NA),
@@ -560,7 +564,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
                            c("levels_available", NA, "levels_available", NA),
                            c("footprint", "footprint", "footprint", "footprint"), stringsAsFactors = F)
   colnames(dict) <- c("gSD", "Sentinel", "Landsat", "MODIS")
-  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(name), USE.NAMES = F)
+  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(product_name), USE.NAMES = F)
   which.valid <- !is.na(dict[,which.col])
   
   # translate column names
@@ -573,9 +577,9 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   records$product_group <- colnames(dict)[which.col]
   
   # address product-specific cases
-  records$product <- name
+  records$product <- product_name
   if(which(which.col) == 2){ # special cases for Sentinel
-    records$date_aquistion <- sapply(strsplit(records$start_time, "T"), '[', 1)
+    records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
     records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
     })
@@ -2324,3 +2328,22 @@ sep <- function() {
 quiet <- function(expr){
   return(suppressWarnings(suppressMessages(expr)))
 }
+
+
+#' add aoi to a mapview map
+#' @param map a mapview object
+#' @param aoi_colour colour of aoi
+#' @param homebutton whether to show layer home buttons or not
+#' @return nothing. runs expression
+#' @keywords internal
+#' @noRd
+.add_aoi <- function(map = NULL, aoi_colour, homebutton = F){
+  if(isFALSE(getOption("gSD.aoi_set"))){
+    out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+  } else{
+    aoi.sf <- getOption("gSD.aoi")
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
+    if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
+  }
+}
+

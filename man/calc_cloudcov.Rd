@@ -34,7 +34,6 @@ calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
 \enumerate{
 \item cloud_mask_file: character path to the cloud mask file of the record
 \item aoi_HOT_cloudcov_percent: numeric percentage of the calculated aoi cloud cover.
-\item aoi_HOT_mean_probability: numeric mean aoi cloud cover probability (0-100).
 \item scene_HOT_cloudcov_percent: numeric percentage of the calculated scene cloud cover.
 }
 }

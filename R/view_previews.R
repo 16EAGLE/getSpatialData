@@ -7,14 +7,13 @@
 #' @param aoi_colour character, colour of the AOI. Ignored, if \code{show_aoi = FALSE}.
 #' @param separate logical, whether previews should be displayed separately on a \code{cowplot} grid (\code{TRUE}) or as a mosaic in a single plot (\code{FALSE}, default).
 #' @param maxcol numeric, maximum number of columns that the plot grid should have.
-#' @param value logical, whether to return the displayed map/plot object (\code{TRUE}) or not.
 #' 
 #' @details 
 #' \code{view_previews} renders previews as RGB images on an interactive map using \code{mapview} and \code{leaflet}.
 #' 
 #' \code{plot_previews} plots previews to a graphics device using \code{ggplot2}.
 #' 
-#' @return None or a \code{mapview}/\code{plot} object
+#' @return A \code{mapview}/\code{ggplot} object
 #' 
 #' @author Jakob Schwalb-Willmann
 #' 
@@ -23,11 +22,12 @@
 #' 
 #' @name view_previews
 #' @export
-view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", value = FALSE, verbose = TRUE){
+view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", verbose = TRUE){
   
   # checks
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  .check_records(records, col.names = "preview_file")
+  .check_verbose(verbose)
+  records <- .check_records(records, col.names = c("preview_file", "footprint", "record_id"))
+  records <- records[!duplicated(records$record_id),]
   
   na.previews <- is.na(records$preview_file)
   if(all(na.previews)) out("Column 'preview_file' does not contain paths to preview files. See get_previews() to get previews.")
@@ -38,35 +38,25 @@ view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   out("Composing preview map...")
   prev <- lapply(records$preview_file, stack)
   
-  map.list <- mapply(x = prev, y = records$record_id, function(x, y) viewRGB(x, r=1, g=2, b=3, layer.name = y), SIMPLIFY = F)
+  map.list <- mapply(x = prev, y = records$record_id, function(x, y) viewRGB(x, r=1, g=2, b=3, layer.name = y, homebutton = FALSE), SIMPLIFY = F)
   map <- map.list[[1]]
   for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
   
-  # add AOI
-  if(isTRUE(show_aoi)){
-    if(isFALSE(getOption("gSD.aoi_set"))){
-      out("Records are previewed without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-    } else{
-      aoi.sf <- getOption("gSD.aoi")
-      map <- map + mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F)
-    }
-  }
+  if(isTRUE(show_aoi)) map <- .add_aoi(map, aoi_colour)
   
-  # display
-  print(quiet(map))
-  if(isTRUE(value)) return(map)
+  return(map)
 }
 
 #' @rdname view_previews
 #' @importFrom RStoolbox ggRGB
-#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes_ scale_colour_identity guides guide_legend scale_x_continuous scale_y_continuous
+#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes_string scale_colour_identity guides guide_legend scale_x_continuous scale_y_continuous
 #' @importFrom cowplot plot_grid get_legend
 #' @export
 plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE){
   
   # checks
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  .check_records(records, col.names = "preview_file")
+  .check_verbose(verbose)
+  records <- .check_records(records, col.names = c("preview_file", "footprint", "record_id"))
   
   # load raster
   out("Composing preview plot...")
@@ -86,8 +76,8 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   
   # fun to add aoi
   aoi <- function(x){
-    aoi.sf <- getOption("gSD.aoi")
-    quiet(x + geom_sf(data = st_sf(geometry = aoi.sf, colour = aoi_colour), aes_(colour = "colour"), fill = NA, show.legend = T) +
+    aoi.sf <- .check_aoi(aoi = NULL, type = "sf")
+    quiet(x + geom_sf(data = st_sf(geometry = aoi.sf, colour = aoi_colour), aes_string(colour = "colour"), fill = NA, show.legend = T) +
             scale_colour_identity(guide = "legend", labels = "AOI", name = ""))
   }
   
@@ -111,26 +101,20 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   }
   
   for(i in 1:length(gg$layers)) gg$layers[[i]]$geom_params$na.rm <- T
-  print(gg)
-  if(isTRUE(value)) return(gg)
+  return(gg)
 }
 
 #' @rdname getSpatialData-deprecated
 #' @export
-getSentinel_preview <- function(...){
-  
+getSentinel_preview <- function(records, ...){
   .Deprecated("view_previews", "getSpatialData", "This function is deprecated. Use get_previews, view_previews and plot_previews to download, view or plot previews for different sensors at once.")
-  extras <- list(...)
-  if(!is.null(extras$record)){
+  
+  if(missing(records)){
+    extras <- list(...)
     records <- extras$record
-    extras$record <- NULL
-  }
-  if(!is.null(extras$records)){
-    records <- extras$records
-    extras$records <- NULL
   }
   
-  view_previews(records, ...)
+  view_previews(...)
 }
 
 

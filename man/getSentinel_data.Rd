@@ -19,16 +19,6 @@ getSentinel_data(records, dir_out = NULL, force = FALSE,
 
 \item{password}{to be removed.}
 
-\item{hub}{character, Copernicus Hub selection. Either
-\itemize{
-   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected \code{platform},
-   \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
-   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
-   \item "GNSS" to look for GNSS RINEX records only,
-   \item or a valid API URL.
-}}
-
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}

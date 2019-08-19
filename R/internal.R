@@ -825,13 +825,26 @@ rbind.different <- function(x) {
 #' creates a temp dir (tmp_dir) and/or deletes it
 #' @param dir_out character directory as parent dir.
 #' @param action numeric, 1 for create.
+#' @param change_raster_tmp logical if TRUE the raster tmp dir will be 
+#' changed to the created tmp dir.
+#' @param tmp_orig character directory. If change_raster_tmp == TRUE and action == 2
+#' the raster tmp dir will be changed to this dir.
+#' @importFrom raster rasterOptions
 #' @keywords internal
 #' @noRd
-.tmp_dir <- function(dir_out, action = 2) {
+.tmp_dir <- function(dir_out, action = 2, change_raster_tmp = F, tmp_orig = NULL) {
   
   tmp_dir <- file.path(dir_out,"tmp")
   if (dir.exists(tmp_dir)) {unlink(tmp_dir,recursive=T)}
   if (action == 1) {dir.create(tmp_dir)}
+  if (isTRUE(change_raster_tmp)) {
+    if (action == 1) {
+      rasterOptions(tmpdir=tmp_dir)
+    } else {
+      rasterOptions(tmp_orig)
+    }
+    
+  }
   return(tmp_dir)
   
 }
@@ -875,7 +888,7 @@ rbind.different <- function(x) {
 #' @noRd
 .calc_aoi_area <- function(aoi) {
   
-  if (class(aoi) != "SpatialPolygons") {
+  if (class(aoi)[1] != "SpatialPolygons") {
     aoi_sp <- as(aoi,"Spatial")
   } else {aoi_sp <- aoi}
   aoi_area <- raster::area(aoi_sp) / 1000000
@@ -1014,7 +1027,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .period_days <- function(period) {
-  days <- as.numeric(as.Date(period[2]) - as.Date(period[1]))
+  days <- as.integer(as.Date(period[2]) - as.Date(period[1]))
 }
 
 #' creates clean tile ids
@@ -1091,7 +1104,7 @@ rbind.different <- function(x) {
   return(x)
 }
 
-#' aggregates a raster according to the aoi area size.
+#' aggregates rasters according to the aoi area size.
 #' @param x character vector of paths to rasters to check on. All have to have
 #' the same resolution.
 #' @param x_names character vector of names refering to x.
@@ -1099,20 +1112,21 @@ rbind.different <- function(x) {
 #' @param factor numeric adjustment for aoi_area resulting in an adjustment 
 #' @param dir_out character directory where to save adjusted rasters if necessary
 #' @return x_adj or x (if nothing modified in data) characer vector of paths to (aggregated) rasters.
-#' @importFrom raster raster aggregate
+#' @importFrom raster raster aggregate writeRaster res
 #' @keywords internal
 #' @noRd
-.aggr_raster <- function(x, x_names, aoi, factor = 500000, dir_out) {
+.aggr_rasters <- function(x, x_names, aoi, factor = 750000, dir_out) {
   
   aoi_area <- .calc_aoi_area(aoi)
   adj <- aoi_area / factor
-  res_ref <- raster(x[[1]]) # check the resolution and modify adjustment according to it
-  target_res <- 0.00023 * adj # the Sentinel-2 preview resolution * adj is the target res 
+  res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
+  target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
+  # do not reduce the resolution to the equivalent of double the Sentinel-2 preview resolution
+  if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref
-  if (adj > 1) {
+  if (adj >= 1.5) {
     x_adj <- sapply(1:length(x),function(i) {
-      curr <- x[[i]]
-      r_load <- raster(curr)
+      r_load <- raster(x[[i]])
       r_aggr <- aggregate(r_load,adj)
       r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
       writeRaster(r_aggr,r_save_path,overwrite=T)
@@ -1267,12 +1281,14 @@ sep <- function() {
 #' @param aoi aoi.
 #' @param dir_out character directory.
 #' @return \code{save_path_cmos} character path where cloud mask mosaic is saved
+#' @importFrom raster tmpDir
 #' @keywords internal
 #' @noRd
 .select_cmask_mos <- function(s, aoi, dir_out) {
   
   save_path_cmos <- file.path(dir_out,paste0("cloud_mask_mosaic_timestamp",s$timestamp,".tif"))
   cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths,aoi,save_path_cmos)
+  .delete_tmp_files(raster::tmpDir())
   return(save_path_cmos)
   
 }
@@ -1287,7 +1303,7 @@ sep <- function() {
 #' @param cloud_mask_col character name of cloud mask path column.
 #' @param preview_col character name of the preview path column.
 #' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
-#' @importFrom raster writeRaster stack mask
+#' @importFrom raster writeRaster stack mask tmpDir
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
@@ -1299,7 +1315,8 @@ sep <- function() {
   layers <- c("red","green","blue")
   sensors_given <- unique(records$sensor_group)
   sensors_ref <- c("Sentinel-2","Landsat","Sentinel-3","MODIS")
-  tmp_dir <- .tmp_dir(dir_out,action=1)
+  tmp_dir_orig <- tmpDir()
+  tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
   preview_paths <- lapply(id_sel,function(i) {
     p_path <- records[i,preview_col] # preview
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
@@ -1332,7 +1349,8 @@ sep <- function() {
   preview_mos_stack <- stack(preview_mos)
   save_pmos_final <- paste0(save_pmos,"_",i,"_rgb.tif")
   writeRaster(preview_mos_stack,save_pmos_final,overwrite=T)
-  .tmp_dir(dir_out,action=2)
+  .delete_tmp_files(tmp_dir)
+  .tmp_dir(dir_out,action=2,TRUE,tmp_dir_orig)
   return(save_pmos_final)
   
 }
@@ -1351,22 +1369,24 @@ sep <- function() {
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
-#' @importFrom raster minValue maxValue writeRaster raster crs crs<-
+#' @importFrom raster minValue maxValue writeRaster raster crs crs<- tmpDir
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
-.select_calc_mosaic <- function(records, base_records, aoi, sub, cloud_mask_col, 
+.select_calc_mosaic <- function(records, base_records, aoi, sub_within, cloud_mask_col, 
                                 min_improvement,
                                 ts, dir_out, identifier) {
   
-  dir_tmp <- .tmp_dir(dir_out,1)
-  le_first_order <- length(sub[[1]])
-  sub <- unlist(.gsd_compact(sub))
-  collection <- sapply(sub,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) # get paths to cloud masks. This is the queue for processing
+  dir_tmp_orig <- tmpDir()
+  dir_tmp <- .tmp_dir(dir_out,1,TRUE)
+  if (!class(aoi)[1] %in% c("SpatialPolygons","SpatialPolygonsDataFrame")) aoi <- as(aoi,"Spatial")
+  le_first_order <- length(sub_within[[1]])
+  sub_within <- unlist(.gsd_compact(sub_within)) # vector of integer indices
+  collection <- sapply(sub_within,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) # get paths to cloud masks. This is the queue for processing
   # this vector are all orders ordered from best records (lowest aoi cc) 
-  # to worst records (highest aoi cc) in a queue
-  names(collection) <- sapply(sub,function(x) return(records[x,identifier]))
-  collection <- collection[which(collection != "NONE")]
+  # to worst records (highest aoi cc) in a queue and respecting the tile order
+  names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
+  collection <- collection[intersect(which(collection != "NONE"),which(!is.na(collection)))]
   # start mosaicking
   # create the first base mosaic from the first order of collection (best records per tile)
   # if base_records are given through arguments these are records selected for a prio_sensor
@@ -1380,23 +1400,27 @@ sep <- function() {
   }
   # aggregate raster adjusted to aoi area size in order to speed up process
   names <- names(base_records)
-  base_records <- .aggr_raster(base_records,names,aoi=aoi,dir_out=dir_tmp)
+  base_records <- .aggr_rasters(base_records,names,aoi=aoi,dir_out=dir_tmp)
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(dir_tmp,"base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
-  writeRaster(base_mos,base_mos_path,overwrite=T)
+  #writeRaster(base_mos,base_mos_path,overwrite=T)
+  # cleanup
+  .delete_tmp_files(dir_tmp) # delete temp raster grd files in r tmp
   rm(base_mos)
+  unlink()
   base_coverage <- -1000
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
     if (i == start) {out("Current coverage of valid pixels")}
+    print(i)
     x <- collection[i] # do it this way in order to keep id
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
     base_mos <- raster(base_mos_path) # current mosaic
     name_x <- names(x)
-    x <- .aggr_raster(x,name_x,aoi=aoi,dir_out=dir_tmp)
+    x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=dir_tmp)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
     curr_base_mos_crop <- crop(base_mos,next_record) # crop base mosaic to tile area of next
@@ -1406,27 +1430,30 @@ sep <- function() {
     crop_p <- file.path(dir_tmp,"crop_tmp.tif")
     curr_mos_tmp_p <- file.path(dir_tmp,"curr_mos_tmp.tif")
     writeRaster(curr_base_mos_crop,crop_p,overwrite=T)
-    base_tmp <- c(crop_p,x)
-    curr_mos_tmp <- .select_bridge_mosaic(base_tmp,aoi,curr_mos_tmp_p) # in this tile add next_record
+    curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
     cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
-    rm(next_record,base_mos,curr_base_mos_crop,curr_mos_tmp)
-    # calculate by how much valid coverage is improved when adding the record to the tile area
-    has_potential <- cov_aft > cov_init # only check for tile
-    base_mos_path_new <- file.path(dir_tmp,paste0("base_mosaic_",i,"_tmp.tif")) # do not overwrite base_mos directly
-    if (has_potential) {
-      base_mos <- .select_bridge_mosaic(base_tmp,aoi,base_mos_path_new) # mosaic with added record
-      base_cov_tmp <- .raster_percent(base_mos,mode="aoi",aoi=aoi)
-      add_it <- .exceeds_min_improvement(min_improvement,base_coverage,base_cov_tmp)
-      if (add_it) {
-        base_records <- c(base_records,x) # add save path of current mosaic
-        writeRaster(base_mos,base_mos_path,overwrite=T) # overwrite base mosaic
-        unlink(base_mos_path_new)
-        base_coverage <- base_cov_tmp
-        rm(base_mos)
-        cov <- as.character(round(base_coverage,2))
-        cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
-        out(paste0("\r", "-      ",cov,"  %"), flush = T)
-      }
+    # cleanup
+    .delete_tmp_files(curr_mos_tmp)
+    unlink(curr_mos_tmp_p)
+    rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
+    # calculate if valid coverage is improved when adding the record to the tile area
+    add_it <- (cov_aft - cov_init) > min_improvement
+    if (add_it) {
+      save_str <- "base_mos_tmp_"
+      base_mos_path_tmp <- file.path(dir_tmp,paste0(save_str,i,".tif"))
+      base_mos_path_previous <- file.path(dir_tmp,paste0(save_str,i-1,".tif"))
+      if (file.exists(base_mos_path_previous)) {unlink(base_mos_path_previous)} # delete previous temp mosaic
+      base_records <- c(base_records,x) # add save path of current mosaic
+      base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
+      base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi)
+      base_mos_path <- base_mos_path_tmp
+      # cleanup
+      .delete_tmp_files(dir_tmp) # delete temp raster grd files in r tmp
+      rm(base_mos)
+      # coverage console update
+      cov <- as.character(round(base_coverage,2))
+      cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
+      out(paste0("\r", "-      ",cov,"  %"), flush = T)
     }
     if (round(base_coverage) == 100) {
       break
@@ -1438,8 +1465,23 @@ sep <- function() {
                    cMask_paths=base_records,
                    valid_pixels=base_coverage)
   
-  del <- .tmp_dir(dir_out)
+  .tmp_dir(dir_out,2,TRUE,dir_tmp_orig)
   return(selected)
+}
+
+#' extracts the grd and gri file path from a raster object and deletes them
+#' @param dir character directory the tmp dir.
+#' @return nothing. Deletes all files in tmp folder on disk
+#' @keywords internal
+#' @noRd
+.delete_tmp_files <- function(dir) {
+  
+  files <- list.files(dir)
+  paths_del <- file.path(dir,files)
+  del <- sapply(paths_del,function(path) {
+    try <- try(unlink(path))
+  })
+  
 }
 
 #' calculates the final cloud mask and preview RGB mosaic per timestamp
@@ -1684,7 +1726,8 @@ sep <- function() {
                      tileid_col=par$tileid_col,
                      date_col=par$date_col,
                      identifier=par$identifier)
-  # this step enforces max_sub_period
+  # this step enforces max_sub_period. It returns a list of vectors of indices 
+  # pointing to records in records. The list is ordererd according to aoi cloud cover
   sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
                                      date_col=par$date_col,aoi_cc_col=par$aoi_cc_col)
   # make best mosaic of cloud masks for first timestamp
@@ -1923,10 +1966,9 @@ sep <- function() {
   orders <- data.frame(orders)
   sub_within <- list()
   for (i in 1:NCOL(orders)) {
-    print(i)
-    x <- orders[,i]
-    # first try to use all records of this order
-    order <- x[!is.na(x)]
+    order <- orders[,i]
+    order <- order[!is.na(order)]
+    # first, try to use all records of this order
     dates_x <- records[order,date_col]
     period_tmp <- .select_bridge_period(dates_x,period_new)
     period_tmp_le <- .period_days(period_tmp)
@@ -1937,9 +1979,10 @@ sep <- function() {
       # for the case where at least one of record of order x is not within period_new
       # try with all values in all possible combinations (not orders). Might be that 
       # from 0 to all records except one are within period
-      order_within <- .select_remove_dates(order, records, period_new, max_sub_period, date_col, aoi_cc_col)
+      order_within <- .select_remove_dates(order,records,period_new,max_sub_period,
+                                           date_col, aoi_cc_col)
       if (!is.na(order_within)) {
-        period_new <- c(period_new,.select_bridge_period(records[order_within,date_col],period_new))
+        period_new <- c(.select_bridge_period(records[order_within,date_col],period_new))
         sub_within[[i]] <- order_within
       }
     }
@@ -1978,15 +2021,15 @@ sep <- function() {
   
   # select best period with maximum values in sum of grades while ensuring max_sub_period
   # if a period_new is given test all possible periods combined with period_new
-  best_period <- .select_best_period(date_grade = date_grade, dates_seq = dates_seq, 
-                                     min_date = min_date, max_date = max_date,
-                                     period_new = period_new,
-                                     max_sub_period = max_sub_period)
-  if (is.na(best_period)) {
+  best_period <- try(.select_best_period(date_grade = date_grade, dates_seq = dates_seq, 
+                                         min_date = min_date, max_date = max_date,
+                                         period_new = period_new,
+                                         max_sub_period = max_sub_period))
+  if (inherits(best_period,"try-error")) {
     return(NA)
   } else {
     incl <- .select_subset_to_best_period(dates, best_period)
-    order <- x[incl]
+    order <- ifelse(length(incl) == 0,NA,x[incl])
     return(order)
   }
   
@@ -2094,7 +2137,7 @@ sep <- function() {
 .select_sub_periods <- function(records, period, num_timestamps, date_col) {
   
   period <- sapply(period,as.Date)
-  days <- as.numeric(diff(period))
+  days <- as.integer(diff(period))
   le_subperiods <- days / num_timestamps
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
   l <- length(dates)

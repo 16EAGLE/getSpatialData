@@ -1442,7 +1442,7 @@ sep <- function() {
     curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
     cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
     # cleanup
-    .delete_tmp_files(curr_mos_tmp)
+    .delete_tmp_files(tmp_dir)
     unlink(curr_mos_tmp_p)
     rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
     # calculate if valid coverage is improved when adding the record to the tile area

@@ -13,6 +13,7 @@
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
 #' @param cols character vector of column names.
 #' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
+#' @param tmp_dir character directory the temp dir.
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #'        
 #' @return A data.frame, one line as the input with one additional column holding the estimated cloud cover within the aoi.
@@ -29,7 +30,7 @@
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
                               cloudPrbThreshold = 40, slopeDefault = 1.4, 
-                              interceptDefault = -10, cols = NULL, dir_out = NULL, verbose = TRUE) {
+                              interceptDefault = -10, cols = NULL, dir_out = NULL, tmp_dir = NULL, verbose = TRUE) {
   
   identifier <- "record_id"
   dir_given <- !is.null(dir_out)
@@ -178,8 +179,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     }
     numTry <- numTry + 1
   }
-  
-  print(hotFailed)
   
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask)

@@ -113,6 +113,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()
+  
+  # create temp dir
+  tmp_dir_orig <-  base::tempdir() # in order to change it to default at the end of function
+  tmp_dir <- .tmp_dir(dir_out,1,TRUE)
+  
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
@@ -195,6 +200,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     return(record_cc)
   })))
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
+  .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
   records <- .column_summary(records,cols_initial)
   return(records)
 

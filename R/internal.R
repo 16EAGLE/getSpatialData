@@ -1315,7 +1315,7 @@ sep <- function() {
   layers <- c("red","green","blue")
   sensors_given <- unique(records$sensor_group)
   sensors_ref <- c("Sentinel-2","Landsat","Sentinel-3","MODIS")
-  tmp_dir_orig <- tmpDir()
+  tmp_dir_orig <- base::tempdir()
   tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
   preview_paths <- lapply(id_sel,function(i) {
     p_path <- records[i,preview_col] # preview
@@ -1368,8 +1368,8 @@ sep <- function() {
 #' @param dir_out character directory where to save intermediate product.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
-#' Side effect: creates a dir_tmp, writes into it, deletes dir_tmp with all files.
-#' @importFrom raster minValue maxValue writeRaster raster crs crs<- tmpDir
+#' Side effect: creates a tmp_dir, writes into it, deletes tmp_dir with all files.
+#' @importFrom raster minValue maxValue writeRaster raster crs crs<-
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
@@ -1377,8 +1377,8 @@ sep <- function() {
                                 min_improvement,
                                 ts, dir_out, identifier) {
   
-  dir_tmp_orig <- tmpDir()
-  dir_tmp <- .tmp_dir(dir_out,1,TRUE)
+  tmp_dir_orig <- base::tempdir()
+  tmp_dir <- .tmp_dir(dir_out,1,TRUE)
   if (!class(aoi)[1] %in% c("SpatialPolygons","SpatialPolygonsDataFrame")) aoi <- as(aoi,"Spatial")
   le_first_order <- length(sub_within[[1]])
   sub_within <- unlist(.gsd_compact(sub_within)) # vector of integer indices
@@ -1400,14 +1400,14 @@ sep <- function() {
   }
   # aggregate raster adjusted to aoi area size in order to speed up process
   names <- names(base_records)
-  base_records <- .aggr_rasters(base_records,names,aoi=aoi,dir_out=dir_tmp)
+  base_records <- .aggr_rasters(base_records,names,aoi=aoi,dir_out=tmp_dir)
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
-  base_mos_path <- file.path(dir_tmp,"base_mosaic_tmp.tif")
+  base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
   #writeRaster(base_mos,base_mos_path,overwrite=T)
   # cleanup
-  .delete_tmp_files(dir_tmp) # delete temp raster grd files in r tmp
+  .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
   rm(base_mos)
   unlink()
   base_coverage <- -1000
@@ -1420,15 +1420,15 @@ sep <- function() {
     # check if record tile is within the area of non-covered pixels at all
     base_mos <- raster(base_mos_path) # current mosaic
     name_x <- names(x)
-    x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=dir_tmp)
+    x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
     curr_base_mos_crop <- crop(base_mos,next_record) # crop base mosaic to tile area of next
     aoi_subset <- as(extent(next_record),"SpatialPolygons")
     crs(aoi_subset) <- crs(next_record)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset)
-    crop_p <- file.path(dir_tmp,"crop_tmp.tif")
-    curr_mos_tmp_p <- file.path(dir_tmp,"curr_mos_tmp.tif")
+    crop_p <- file.path(tmp_dir,"crop_tmp.tif")
+    curr_mos_tmp_p <- file.path(tmp_dir,"curr_mos_tmp.tif")
     writeRaster(curr_base_mos_crop,crop_p,overwrite=T)
     curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
     cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
@@ -1440,15 +1440,15 @@ sep <- function() {
     add_it <- (cov_aft - cov_init) > min_improvement
     if (add_it) {
       save_str <- "base_mos_tmp_"
-      base_mos_path_tmp <- file.path(dir_tmp,paste0(save_str,i,".tif"))
-      base_mos_path_previous <- file.path(dir_tmp,paste0(save_str,i-1,".tif"))
+      base_mos_path_tmp <- file.path(tmp_dir,paste0(save_str,i,".tif"))
+      base_mos_path_previous <- file.path(tmp_dir,paste0(save_str,i-1,".tif"))
       if (file.exists(base_mos_path_previous)) {unlink(base_mos_path_previous)} # delete previous temp mosaic
       base_records <- c(base_records,x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
       base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi)
       base_mos_path <- base_mos_path_tmp
       # cleanup
-      .delete_tmp_files(dir_tmp) # delete temp raster grd files in r tmp
+      .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
       rm(base_mos)
       # coverage console update
       cov <- as.character(round(base_coverage,2))
@@ -1465,7 +1465,7 @@ sep <- function() {
                    cMask_paths=base_records,
                    valid_pixels=base_coverage)
   
-  .tmp_dir(dir_out,2,TRUE,dir_tmp_orig)
+  .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
   return(selected)
 }
 

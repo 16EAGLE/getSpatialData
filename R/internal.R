@@ -2030,15 +2030,16 @@ sep <- function() {
 .select_best_period <- function(date_grade, dates_seq, min_date, max_date, 
                                period_new, max_sub_period) {
   
-  max_sub_half <- (max_sub_period - 1) / 2
-  if ((max_sub_half %% 2) != 0) max_sub_half <- max_sub_half - 0.5
+  max_sub_half <- round((max_sub_period - 1) / 2)
+  air_plus <- ifelse(max_sub_half*2+1 < max_sub_period,max_sub_half+1,max_sub_half)
+  air_minus <- max_sub_half
   if (is.null(period_new)) {
     # for each date in dates_seq create the sub_period around it according to max_sub_period
     # calculate the sum grade of all dates within that sub_period
     # check optionally if this sub_period matches max_sub_period together within period_new
     # return the mean grade value or NA
     sum_grade <- sapply(dates_seq,function(d) {
-      period_tmp <- c(d - max_sub_half, d + max_sub_half)
+      period_tmp <- c(d - air_minus, d + air_plus)
       if (period_tmp[1] < min_date) period_tmp[1] <- min_date
       if (period_tmp[2] > max_date) period_tmp[2] <- max_date
       first <- which(dates_seq==period_tmp[1])
@@ -2047,7 +2048,7 @@ sep <- function() {
       return(sum_grade)
     })
     best_mid_date <- dates_seq[which(sum_grade == max(sum_grade))][1]
-    best_period <- c(round(best_mid_date-max_sub_half),(best_mid_date+max_sub_half))
+    best_period <- c(round(best_mid_date-air_minus),(best_mid_date+air_plus))
   } else {
     # find optimal new sub-period from period_new and given grades of dates
     # 1 remove dates from dates_seq and date_grade that cannot be within

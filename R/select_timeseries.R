@@ -71,7 +71,7 @@ The minimum number for select_timeseries is: 3"),3)
   .select_checks(records,aoi,par$period,num_timestamps,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
-  .select_start_info(mode="time series",par$sep)
+  .select_start_info(mode="Time Series",par$sep)
   records <- .select_main(records,
                           aoi,
                           has_SAR,

@@ -61,7 +61,7 @@ select_unitemporal <- function(records, aoi,
   .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
-  .select_start_info(mode="uni-temporal",par$sep)
+  .select_start_info(mode="Uni-Temporal",par$sep)
   records <- .select_main(records,
                           aoi,
                           has_SAR,

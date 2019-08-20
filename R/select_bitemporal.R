@@ -64,7 +64,7 @@ select_bitemporal <- function(records, aoi,
   .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
-  .select_start_info(mode="bi-temporal",par$sep)
+  .select_start_info(mode="Bi-Temporal",par$sep)
   records <- .select_main(records,
                           aoi,
                           has_SAR,

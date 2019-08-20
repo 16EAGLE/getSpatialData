@@ -1478,7 +1478,7 @@ sep <- function() {
     rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
     # calculate if valid coverage is improved when adding the record to the tile area
     if (((cov_init + (cov_init / 100) * min_improvement)) > 100) {
-      add_it <- cov_aft > cov_init
+      add_it <- round(cov_aft) > 99
     } else {
       add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft)
     }

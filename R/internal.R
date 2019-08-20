@@ -1236,6 +1236,7 @@ sep <- function() {
 #' @noRd
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
+  records <- .unlist_df(records)
   par <- .select_params(records,mode)
   records <- .select_prep(records,num_timestamps,par)
   par$period <- .identify_period(records[[par$date_col]])
@@ -1476,7 +1477,11 @@ sep <- function() {
     unlink(curr_mos_tmp_p)
     rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
     # calculate if valid coverage is improved when adding the record to the tile area
-    add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft)
+    if (((cov_init + (cov_init / 100) * min_improvement)) > 100) {
+      add_it <- cov_aft > cov_init
+    } else {
+      add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft)
+    }
     if (add_it) {
       save_str <- "base_mos_tmp_"
       base_mos_path_tmp <- file.path(tmp_dir,paste0(save_str,i,".tif"))

@@ -1449,12 +1449,9 @@ sep <- function() {
   rm(base_mos)
   base_coverage <- -1000
   aoi_vals <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
-  aoi_ncell <- aoi_vals[[1]]
-  
+
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
-    if (i == start) {out("Current coverage of valid pixels")}
-    #print(i)
     x <- collection[i] # do it this way in order to keep id
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
@@ -1468,6 +1465,10 @@ sep <- function() {
     crs(aoi_subset) <- crs(next_record)
     aoi_subset <- intersect(aoi_subset,aoi)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,aoi_vals)
+    if (i == start) {
+      out("Current coverage of valid pixels")
+      .out_cov(cov_init)
+    }
     crop_p <- file.path(tmp_dir,"crop_tmp.tif")
     curr_mos_tmp_p <- file.path(tmp_dir,"curr_crop_mos_tmp.tif")
     writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
@@ -1498,9 +1499,7 @@ sep <- function() {
       rm(base_mos)
       .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
       # coverage console update
-      cov <- as.character(round(base_coverage,2))
-      cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
-      out(paste0("\r", "-      ",cov,"  %"), flush = T)
+      .out_cov(base_coverage)
     }
     if (round(base_coverage) == 100) {
       break
@@ -2364,6 +2363,19 @@ sep <- function() {
     print_out <- sapply(vec,function(v) out(v,type=type,msg=msg))
   })
   
+}
+
+#' communicates the current coverage of valid pixels in select to user through .out()
+#' @param base_coverage numeric.
+#' @return nothing. Console communication
+#' @keywords internal
+#' @noRd
+.out_cov <- function(base_coverage) {
+  
+  cov <- as.character(round(base_coverage,2))
+  cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
+  out(paste0("\r", "-      ",cov,"  %"), flush = T)
+
 }
 
 #' run silent

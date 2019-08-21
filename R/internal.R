@@ -1088,10 +1088,10 @@ rbind.different <- function(x) {
 #' @return exceeds logical.
 #' @keywords internal
 #' @noRd
-.exceeds_min_improvement <- function(min_improvement, cov_init, cov_aft, proportion = 1) {
+.exceeds_min_improvement <- function(min_improvement, cov_init, cov_aft) {
   
-  improvement <- (1 - (cov_init / cov_aft))  * 100
-  return(improvement >= min_improvement)
+  add_it <- min_improvement < ((cov_aft - cov_init) / cov_init)
+  return(add_it)
   
 }
 
@@ -1421,7 +1421,8 @@ sep <- function() {
   if (!class(aoi)[1] %in% c("SpatialPolygons","SpatialPolygonsDataFrame")) aoi <- as(aoi,"Spatial")
   le_first_order <- length(sub_within[[1]])
   sub_within <- unlist(.gsd_compact(sub_within)) # vector of integer indices
-  collection <- sapply(sub_within,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) # get paths to cloud masks. This is the queue for processing
+  # get paths to cloud masks. This is the queue for processing
+  collection <- sapply(sub_within,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) 
   # this vector are all orders ordered from best records (lowest aoi cc) 
   # to worst records (highest aoi cc) in a queue and respecting the tile order
   names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
@@ -1456,6 +1457,10 @@ sep <- function() {
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
     base_mos <- raster(base_mos_path) # current mosaic
+    if (i == start) {
+      out("Current coverage of valid pixels")
+      .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,aoi_vals))
+    }
     name_x <- names(x)
     x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
     names(x) <- name_x
@@ -1465,24 +1470,31 @@ sep <- function() {
     crs(aoi_subset) <- crs(next_record)
     aoi_subset <- intersect(aoi_subset,aoi)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,aoi_vals)
-    if (i == start) {
-      out("Current coverage of valid pixels")
-      .out_cov(cov_init)
-    }
-    crop_p <- file.path(tmp_dir,"crop_tmp.tif")
-    curr_mos_tmp_p <- file.path(tmp_dir,"curr_crop_mos_tmp.tif")
-    writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
-    curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
-    cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
-    # cleanup
-    .delete_tmp_files(tmp_dir)
-    unlink(curr_mos_tmp_p)
-    rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
-    # calculate if valid coverage is improved when adding the record to the tile area
-    if (((cov_init + (cov_init / 100) * min_improvement)) > 100) {
-      add_it <- round(cov_aft) > 99
+    if (round(cov_init) == 99) {
+      add_it <- FALSE
     } else {
-      add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft)
+      print(cov_init)
+      crop_p <- file.path(tmp_dir,"crop_tmp.tif")
+      curr_mos_tmp_p <- file.path(tmp_dir,"curr_crop_mos_tmp.tif")
+      writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
+      curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
+      cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
+      tile_proportion <- (.calc_aoi_corr_vals(aoi_subset,next_record)[[1]] / aoi_vals[[1]] # n cells of tile / n cells whole aoi
+      print(tile_proportion)
+      print(cov_aft)
+      # cleanup
+      .delete_tmp_files(tmp_dir)
+      unlink(curr_mos_tmp_p)
+      rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
+      # calculate if valid coverage is improved when adding the record to the tile area
+      cov_init <- cov_init * tile_proportion # scale up to whole aoi
+      cov_aft <- cov_aft * tile_proportion
+      if (((cov_init + (cov_init / 100) * min_improvement)) >= 100) {
+        add_it <- round(cov_aft) > 99
+      } else {
+        add_it <- .exceeds_min_improvement(min_improvement,cov_init,cov_aft)
+      }
+      print(add_it)
     }
     if (add_it) {
       save_str <- "base_mos_tmp_"
@@ -1512,6 +1524,7 @@ sep <- function() {
                    valid_pixels=base_coverage)
   
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
+  
   return(selected)
 }
 

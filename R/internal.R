@@ -1090,7 +1090,7 @@ rbind.different <- function(x) {
 #' @noRd
 .exceeds_min_improvement <- function(min_improvement, cov_init, cov_aft) {
   
-  add_it <- min_improvement < ((cov_aft - cov_init) / cov_init)
+  add_it <- min_improvement < (((cov_aft - cov_init) / cov_init) * 100)
   return(add_it)
   
 }
@@ -1479,7 +1479,7 @@ sep <- function() {
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
       cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
-      tile_proportion <- (.calc_aoi_corr_vals(aoi_subset,next_record)[[1]] / aoi_vals[[1]] # n cells of tile / n cells whole aoi
+      tile_proportion <- (.calc_aoi_corr_vals(aoi_subset,next_record)[[1]] / aoi_vals[[1]]) # n cells of tile / n cells whole aoi
       print(tile_proportion)
       print(cov_aft)
       # cleanup
@@ -1487,8 +1487,8 @@ sep <- function() {
       unlink(curr_mos_tmp_p)
       rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
       # calculate if valid coverage is improved when adding the record to the tile area
-      cov_init <- cov_init * tile_proportion # scale up to whole aoi
-      cov_aft <- cov_aft * tile_proportion
+      cov_init <- base_coverage + (cov_init * tile_proportion) # scale up to whole aoi
+      cov_aft <- base_coverage + (cov_aft * tile_proportion)
       if (((cov_init + (cov_init / 100) * min_improvement)) >= 100) {
         add_it <- round(cov_aft) > 99
       } else {

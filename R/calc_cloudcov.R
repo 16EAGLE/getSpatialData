@@ -118,17 +118,17 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   tmp_dir_orig <-  base::tempdir() # in order to change it to default at the end of function
   tmp_dir <- .tmp_dir(dir_out,1,TRUE)
   
+  identifier <- "record_id"
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()
     record <- records[i,]
-    identifier <- "record_id"
     id <- record[[identifier]]
-    if (is.na(id)) {
+    sensor <- record$product
+    if (any(is.na(c(id,sensor)))) {
       return(.handle_cc_skip(record,FALSE,dir_out))
     }
-    sensor <- record$product
     is_SAR <- sensor == "Sentinel-1"
     v <- verbose
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return

@@ -125,6 +125,9 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     record <- records[i,]
     identifier <- "record_id"
     id <- record[[identifier]]
+    if (is.na(id)) {
+      return(.handle_cc_skip(record,FALSE,dir_out))
+    }
     sensor <- record$product
     is_SAR <- sensor == "Sentinel-1"
     v <- verbose

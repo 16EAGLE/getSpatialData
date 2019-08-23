@@ -1218,7 +1218,6 @@ sep <- function() {
 #' @noRd
 .select_prep <- function(records, num_timestamps, par) {
   
-  #records <- .extract_clear_date(records,par$date_col_orig,par$date_col)
   records <- .make_tileid(records,par$identifier)
   records[[par$date_col]] <- sapply(records[[par$date_col]],as.character)
   period <- .identify_period(records[[par$date_col]])
@@ -1238,8 +1237,8 @@ sep <- function() {
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
   records <- .unlist_df(records)
-  par <- .select_params(records,mode)
   records <- .select_prep(records,num_timestamps,par)
+  par <- .select_params(records,mode)
   par$period <- .identify_period(records[[par$date_col]])
   has_SAR <- .has_SAR(par$sensor) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
   prep <- list(records=records,
@@ -1308,8 +1307,8 @@ sep <- function() {
 .make_mosaic <- function(x, save_path, mode = "mask", 
                          srcnodata = NULL, datatype = NULL) {
   
-  write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),vrtnodata=as.character(scrnodata),
-                            seperate=F,overwrite=T,datatype=datatype)
+  write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),
+                            vrtnodata=as.character(srcnodata),seperate=F,overwrite=T,datatype=datatype)
   mos <- raster(save_path)
   if (mode == "rgb") {
     return(mos)
@@ -1388,7 +1387,9 @@ sep <- function() {
     curr_layers <- lapply(preview_paths,function(x) path <- x[j])
     save_path_pmos <- paste0(save_pmos,"_",layers[j],".tif")
     pmos <- .select_bridge_mosaic(curr_layers,aoi,save_path_pmos)
+    if (class(pmos) != "RasterLayer") return(NA) else return(pmos)
   })
+  preview_mos <- .gsd_compact(preview_mos)
   preview_mos_stack <- stack(preview_mos)
   save_pmos_final <- paste0(save_pmos,"_",i,"_rgb.tif")
   writeRaster(preview_mos_stack,save_pmos_final,overwrite=T)
@@ -1422,8 +1423,10 @@ sep <- function() {
   
   tmp_dir_orig <- base::tempdir()
   tmp_dir <- .tmp_dir(dir_out,1,TRUE)
+  r <- "RasterLayer"
   if (!class(aoi)[1] %in% c("SpatialPolygons","SpatialPolygonsDataFrame")) aoi <- as(aoi,"Spatial")
   le_first_order <- length(sub_within[[1]])
+  
   # sort the orders of sub_within according to the aoi cloud cover of the same tile in previous order
   # this way for each order those tiles will be checked first that had the highest cloud cover in previous order
   # it shall result in handling large gaps first and small gaps late
@@ -1437,6 +1440,7 @@ sep <- function() {
     sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous,decreasing=TRUE)]
     return(sorted_order)
   }))
+  
   sub_within <- unlist(.gsd_compact(sub_within_sorted)) # vector of integer indices
   # get paths to cloud masks. This is the queue for processing
   collection <- sapply(sub_within,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) 
@@ -1444,7 +1448,7 @@ sep <- function() {
   # to worst records (highest aoi cc) in a queue and respecting the tile order
   names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
   collection <- collection[intersect(which(collection != "NONE"),which(!is.na(collection)))]
-  # start mosaicking
+  
   # create the first base mosaic from the first order of collection (best records per tile)
   # if base_records are given through arguments these are records selected for a prio_sensor
   # that create the base mosaic
@@ -1462,22 +1466,25 @@ sep <- function() {
   # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
-  if (is.na(base_mos)) start <- 1
+  if (class(base_mos) != r) start <- 1
   # cleanup
   .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
   rm(base_mos)
   base_coverage <- -1000
   aoi_vals <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
+  
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
     x <- collection[i] # do it this way in order to keep id
-    # before calculating the next mosaic, 
-    # check if record tile is within the area of non-covered pixels at all
     base_mos <- raster(base_mos_path) # current mosaic
+    
     if (i == start) {
       out("Current coverage of valid pixels..")
       .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,aoi_vals),(i-1))
     }
+    
+    # before calculating the next mosaic, 
+    # check if record tile is within the area of non-covered pixels at all
     name_x <- names(x)
     x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
     names(x) <- name_x
@@ -1487,6 +1494,7 @@ sep <- function() {
     crs(aoi_subset) <- crs(next_record)
     aoi_subset <- intersect(aoi_subset,aoi)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,aoi_vals)
+    
     if (round(cov_init) == 99) {
       add_it <- FALSE
     } else {
@@ -1494,7 +1502,7 @@ sep <- function() {
       curr_mos_tmp_p <- file.path(tmp_dir,"curr_crop_mos_tmp.tif")
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
-      if (is.na(curr_mos_tmp)) {
+      if (class(curr_mos_tmp) != r) {
         add_it <- FALSE
       } else {
         cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
@@ -1515,13 +1523,14 @@ sep <- function() {
         }
       }
     }
+    
     if (add_it) {
       save_str <- "base_mos_tmp_"
       curr <- paste0(save_str,i,".tif")
       base_mos_path_tmp <- file.path(tmp_dir,curr)
       base_records <- c(base_records,x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
-      if (!is.na(base_mos)) {
+      if (class(base_mos) == r) {
         # cleanup
         rm(base_mos)
         # delete previous base_mos_tmp tifs

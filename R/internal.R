@@ -860,11 +860,12 @@ rbind.different <- function(x) {
 #' @param mode character specifies the mode of calculation.
 #' @param custom numeric vector with two values: [[1]] are cloud values [[2]] are non-cloud values. Only if mode == "custom".
 #' @param aoi aoi.
+#' @param aoi_ncell integer number of cells in aoi.
 #' @return \code{percent} numeric percentage
 #' @keywords internal
 #' @importFrom raster as.matrix extent res crs
 #' @noRd
-.raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL, aoi_vals = NULL) {
+.raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL, aoi_ncell = NULL) {
   
   if (mode == "na") {
     na_mask <- is.na(x)
@@ -878,7 +879,7 @@ rbind.different <- function(x) {
     val2 <- length(which(x_mat == custom[[2]]))
     percent <- (val1 / sum(val1,val2)) * 100
   } else if (mode == "aoi") {
-    percent <- .calc_aoi_coverage(x,aoi,aoi_vals)
+    percent <- .calc_aoi_coverage(x,aoi,aoi_ncell)
   }
   # due to the calculation based on pixel values it might happen that 'percent' exceeds 100 slightly. In these cases use 100
   percent <- ifelse(percent > 100,100,percent)
@@ -902,41 +903,36 @@ rbind.different <- function(x) {
 }
 
 #' calculates the number of cells of value 1 covering the aoi
-#' @param x raster with the resolution.
+#' @param x raster for which the percentage of value 1 in aoi shall be calculated.
 #' @param aoi aoi.
-#' @param aoi_vals list of numerics if the needed values have been calculated already they can
+#' @param aoi_ncell list of numerics if the needed values have been calculated already they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
 #' @importFrom raster ncell area aggregate extract
 #' @keywords internal
 #' @noRd
-.calc_aoi_coverage <- function(x, aoi, aoi_vals = NULL) {
+.calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
   
-  if (is.null(aoi_vals)) {
-    aoi_vals <- .calc_aoi_corr_vals(aoi,x)
+  if (is.null(aoi_ncell)) {
+    aoi_ncell <- .calc_aoi_corr_vals(aoi,x)
   }
-  aoi_ncell <- aoi_vals[[1]]
-  correction <- aoi_vals[[2]]
-  correction_is_small <- correction <= 1
-  if(correction_is_small) {
-    x_aggr <- x
-  } else {
-    x_aggr <- aggregate(x,correction)
-  }
-  # calculate number of cells with value 1 in aoi
-  x_aggr_npixels <- extract(x_aggr,aoi)[[1]]
-  x_aggr_valid <- length(x_aggr_npixels[!is.na(x_aggr_npixels)])
-  x_ncell <- ifelse(correction_is_small,x_aggr_valid,x_aggr_valid * (correction^2))
+  
+  x_vals <- getValues(x)
+  # x_vals contains the NAs from outside the aoi
+  outside_aoi <- length(x_vals) - aoi_ncell 
+  # calc number of pixels with value 1
+  x_valid <- length(x_vals[!is.na(x_vals)])
   
   # calculate percentage of pixels with value 1 in aoi
-  percent <- (x_ncell / aoi_ncell) * 100
+  percent <- (x_valid / aoi_ncell) * 100
+  return(percent)
   
 }
 
 #' calculate aoi correction values for coverage calculation
 #' @param aoi aoi.
 #' @param x raster with the resolution.
-#' @return list of two numerics: [[1]] number of cells in aoi [[2]] correction value
+#' @return integer number of pixels in aoi.
 #' @importFrom raster extent raster res crs values<- extract mask
 #' @keywords internal
 #' @noRd
@@ -945,15 +941,12 @@ rbind.different <- function(x) {
   # calculate aoi number of cells (calculation is suitable for large areas)
   e <- extent(aoi)
   # calculate area of aoi in order to get a suitable resolution for percentage cells computations
-  aoi_area <- .calc_aoi_area(aoi)
-  correction <- aoi_area / 100000 # correction for resolution
-  correction <- ifelse(correction < 1,1,correction)
-  r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=(res(x)*correction))
+  r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=res(x))
   values(r) <- as.integer(1)
   r <- mask(r,aoi)
-  aoi_npixels <- length(extract(r,aoi)[[1]])
-  aoi_ncell <- aoi_npixels * (correction^2)
-  return(list(aoi_ncell,correction))
+  r_vals <- getValues(r)
+  aoi_npixels <- length(which(r_vals == 1))
+  return(aoi_npixels)
   
 }
 
@@ -1308,7 +1301,7 @@ sep <- function() {
                          srcnodata = NULL, datatype = NULL) {
   
   write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),
-                            vrtnodata=as.character(srcnodata),seperate=F,overwrite=T,datatype=datatype)
+                            vrtnodata="0",seperate=F,overwrite=T,datatype=datatype)
   mos <- raster(save_path)
   if (mode == "rgb") {
     return(mos)
@@ -1471,7 +1464,7 @@ sep <- function() {
   .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
   rm(base_mos)
   base_coverage <- -1000
-  aoi_vals <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
+  n_pixel_aoi <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
@@ -1480,7 +1473,7 @@ sep <- function() {
     
     if (i == start) {
       out("Current coverage of valid pixels..")
-      .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,aoi_vals),(i-1))
+      .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi),(i-1))
     }
     
     # before calculating the next mosaic, 
@@ -1493,7 +1486,7 @@ sep <- function() {
     aoi_subset <- as(extent(next_record),"SpatialPolygons")
     crs(aoi_subset) <- crs(next_record)
     aoi_subset <- intersect(aoi_subset,aoi)
-    cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,aoi_vals)
+    cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,n_pixel_aoi)
     
     if (round(cov_init) == 99) {
       add_it <- FALSE
@@ -1506,16 +1499,12 @@ sep <- function() {
         add_it <- FALSE
       } else {
         cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
-        #tile_proportion <- (.calc_aoi_corr_vals(aoi_subset,next_record)[[1]] / aoi_vals[[1]]) # n cells of tile / n cells whole aoi
-        #print(tile_proportion)
         # cleanup
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
         rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
         # calculate if valid coverage in whole aoi is improved > min_improvement 
         # when adding the record to the tile area
-        #cov_aft <- base_coverage + ((cov_aft * tile_proportion) - (cov_init * tile_proportion))
-        #cov_init <- base_coverage 
         if (((cov_init + (cov_init / 100) * min_improvement)) > 100) {
           add_it <- cov_aft > cov_init && cov_init < 99
         } else {
@@ -1541,7 +1530,7 @@ sep <- function() {
           if (file.exists(del_path) && del_file != curr) unlink(del_path)
         })
         base_mos <- raster(base_mos_path_tmp)
-        base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,aoi_vals)
+        base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
         base_mos_path <- base_mos_path_tmp
         # cleanup
         rm(base_mos)

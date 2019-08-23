@@ -918,8 +918,6 @@ rbind.different <- function(x) {
   }
   
   x_vals <- getValues(x)
-  # x_vals contains the NAs from outside the aoi
-  outside_aoi <- length(x_vals) - aoi_ncell 
   # calc number of pixels with value 1
   x_valid <- length(x_vals[!is.na(x_vals)])
   

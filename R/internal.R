@@ -2302,3 +2302,14 @@ quiet <- function(expr){
   }
 }
 
+
+#' translate gSD CMR product names to CMR concept id
+#' @param products product name vector
+#' @return CMR concept ids
+#' @keywords internal
+#' @noRd
+.getCMR_id <- function(products = NULL){
+  srtm_names <- list("SRTM_global_3arc_V003" = "C204582034-LPDAAC_ECS",
+                     "SRTM_global_1arc_V001" = "C1000000240-LPDAAC_ECS")
+  if(is.null(products)) unlist(srtm_names) else unlist(srtm_names[products])
+}

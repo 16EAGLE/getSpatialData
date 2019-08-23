@@ -36,7 +36,8 @@ get_products <- function(grouped = FALSE){
   .check_login(services = c("USGS", "Copernicus"))
   products <- list("Sentinel" = getSentinel_products(),
                    "Landsat" = getLandsat_products(),
-                   "MODIS" = getMODIS_products())
+                   "MODIS" = getMODIS_products(),
+                   "SRTM" = getSRTM_products())
   if(isTRUE(grouped)) products else unlist(products, use.names = F)
 }
 
@@ -80,6 +81,12 @@ getMODIS_products <- function(username = NULL, password = NULL){
   }
   
   .EE_ds(api.key, "MODIS_") # no comparison so far
+}
+
+#' @rdname get_products
+#' @export
+getSRTM_products <- function(){
+  grep("SRTM", names(.getCMR_id()), value = T)
 }
 
 #' @rdname getSpatialData-deprecated

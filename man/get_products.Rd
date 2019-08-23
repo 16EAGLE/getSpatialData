@@ -5,6 +5,7 @@
 \alias{getSentinel_products}
 \alias{getLandsat_products}
 \alias{getMODIS_products}
+\alias{getSRTM_products}
 \title{Get product names}
 \usage{
 get_products(grouped = FALSE)
@@ -14,6 +15,8 @@ getSentinel_products()
 getLandsat_products(username = NULL, password = NULL)
 
 getMODIS_products(username = NULL, password = NULL)
+
+getSRTM_products()
 }
 \arguments{
 \item{grouped}{logical, whether to return a list of names grouped by platform/sensor (\code{TRUE}) or not.}

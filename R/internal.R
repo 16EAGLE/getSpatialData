@@ -881,7 +881,8 @@ rbind.different <- function(x) {
   } else if (mode == "aoi") {
     percent <- .calc_aoi_coverage(x,aoi,aoi_ncell)
   }
-  # due to the calculation based on pixel values it might happen that 'percent' exceeds 100 slightly. In these cases use 100
+  # due to the calculation based on pixel values it might happen that percent 
+  # exceeds 100 slightly. In these cases use 100
   percent <- ifelse(percent > 100,100,percent)
 
 }
@@ -908,14 +909,12 @@ rbind.different <- function(x) {
 #' @param aoi_ncell list of numerics if the needed values have been calculated already they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster ncell area aggregate extract
+#' @importFrom raster ncell area getValues
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
   
-  if (is.null(aoi_ncell)) {
-    aoi_ncell <- .calc_aoi_corr_vals(aoi,x)
-  }
+  if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi,x)
   
   x_vals <- getValues(x)
   # calc number of pixels with value 1
@@ -1147,6 +1146,7 @@ rbind.different <- function(x) {
   # do not reduce the resolution to the equivalent of double the Sentinel-2 preview resolution
   if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref
+  adj <- ifelse(adj < 2 && adj > 1,2,adj)
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
       r_load <- raster(x[[i]])
@@ -1271,8 +1271,8 @@ sep <- function() {
   tmp_load <- raster(paths[1])
   datatype <- dataType(tmp_load)
   srcnodata <- ifelse(datatype == "INT2S","-32767","-3.3999999521443642e+38")
-  mos_base <- try(.make_mosaic(paths,save_path,srcnodata=srcnodata,datatype=datatype))
-  if (inherits(mos_base,"try-error")) {
+  mos_base <- .make_mosaic(paths,save_path,srcnodata=srcnodata,datatype=datatype)
+  if (class(mos_base) != "RasterLayer") {
     return(NA)
   } else {
     mos_base_mask <- mask(mos_base,aoi)
@@ -1298,13 +1298,17 @@ sep <- function() {
 .make_mosaic <- function(x, save_path, mode = "mask", 
                          srcnodata = NULL, datatype = NULL) {
   
-  write_mos <- gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),
-                            vrtnodata="0",seperate=F,overwrite=T,datatype=datatype)
-  mos <- raster(save_path)
-  if (mode == "rgb") {
-    return(mos)
+  write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),
+                            vrtnodata="0",seperate=F,overwrite=T,datatype=datatype))
+  if (inherits(write_mos,"try-error")) {
+    return(NA)
   } else {
-    mos <- mos==1
+    mos <- raster(save_path)
+    if (mode == "rgb") {
+      return(mos)
+    } else {
+      mos <- mos==1
+    }
   }
   
 }
@@ -1463,20 +1467,21 @@ sep <- function() {
   rm(base_mos)
   base_coverage <- -1000
   n_pixel_aoi <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
+  le_collection <- length(collection)
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:length(collection)) {
     x <- collection[i] # do it this way in order to keep id
-    base_mos <- raster(base_mos_path) # current mosaic
-    
     if (i == start) {
+      base_mos <- raster(base_mos_path) # current mosaic
       out("Current coverage of valid pixels..")
-      .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi),(i-1))
+      .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi),(i-1),le_collection)
     }
     
+    name_x <- names(x)
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
-    name_x <- names(x)
+    base_mos <- raster(base_mos_path) # current mosaic
     x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
@@ -1534,7 +1539,7 @@ sep <- function() {
         rm(base_mos)
         .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
         # coverage console update
-        .out_cov(base_coverage,i)
+        .out_cov(base_coverage,i,le_collection)
       }
     }
     if (round(base_coverage) >= 99) {
@@ -1823,16 +1828,19 @@ sep <- function() {
   # make best mosaic of cloud masks for first timestamp
   out(par$sep)
   out(paste0("Calculating mosaic for timestamp: ",ts))
-  selected <- .select_calc_mosaic(records,
-                                  base_records=base_records,
-                                  aoi,
-                                  sub_within,
-                                  par$cloud_mask_col,
-                                  min_improvement=min_improvement,
-                                  ts=ts,
-                                  dir_out,
-                                  par$identifier)
-  selected$period <- .identify_period(records[records[[par$identifier]]==selected$ids])
+  selected <- try(.select_calc_mosaic(records,
+                                      base_records=base_records,
+                                      aoi,
+                                      sub_within,
+                                      par$cloud_mask_col,
+                                      min_improvement=min_improvement,
+                                      ts=ts,
+                                      dir_out,
+                                      par$identifier))
+  if (inherits(selected,"try-error")) {
+    out(paste0("\nSelection error at timestamp: ",ts),2)
+  }
+  selected$period <- .identify_period(records[which(records[[par$identifier]]==selected$ids),par$date_col])
   out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
   
@@ -2409,14 +2417,15 @@ sep <- function() {
 #' communicates the current coverage of valid pixels in select to user through .out()
 #' @param base_coverage numeric.
 #' @param i integer.
+#' @param le_collection integer length of the records queue to look at.
 #' @return nothing. Console communication
 #' @keywords internal
 #' @noRd
-.out_cov <- function(base_coverage, i) {
+.out_cov <- function(base_coverage, i, le_collection) {
   
   cov <- as.character(round(base_coverage,2))
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
-  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," records  "), flush = T)
+  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," records  "), flush = T)
 
 }
 

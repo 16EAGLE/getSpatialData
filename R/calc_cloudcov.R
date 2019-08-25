@@ -205,10 +205,10 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       record[["preview_file"]] <- "NONE"
       record_preview <- record
     }
-    
     if (isFALSE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
+    
     previewSize <- c(previewSize,object.size(preview))
     endTime <- Sys.time()
     if (i <= 5) {
@@ -218,14 +218,18 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (numRecords >= 10 && i == 5) {
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
+    
+    # write csv if desired
     if (!is.null(dir_out)) {
       if ("footprint" %in% names(record_cc)) {
-        cols_remain <- setdiff(1:NCOL(records),c(which(names(record_cc) == "footprint")))
+        cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == "footprint")))
         record_cc <- record_cc[,cols_remain]
       }
       write_csv(record_cc,csv_path)
     }
+    
     return(record_cc)
+    
   })))
   
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))

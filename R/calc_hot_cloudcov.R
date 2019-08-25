@@ -90,7 +90,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
-  # for dividing the blue DNs with values between this value and the value below into equal interval bins
+  # for dividing the blue DNs with values between these threshold values into equal interval bins
   rThreshLow <- 20
   rThreshHigh <- mean(cellStats(preview,mean)) / 2
 

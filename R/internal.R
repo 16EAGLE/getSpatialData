@@ -1304,7 +1304,7 @@ sep <- function() {
 #' @return \code{mos} raster mosaic
 #' @keywords internal
 #' @importFrom gdalUtils gdalbuildvrt
-#' @noMd
+#' @noRd
 .make_mosaic <- function(x, save_path, mode = "mask", 
                          srcnodata = NULL, datatype = NULL) {
   

@@ -121,7 +121,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   
   identifier <- "record_id"
   ## Do HOT cloud cover assessment consecutively
-  records_test <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
+  records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()

@@ -949,25 +949,34 @@ rbind.different <- function(x) {
 
 #' disaggregates a Landsat or MODIS preview or preview cloud mask to the resolution of Landsat or Sentinel-2
 #' @param x raster layer to be disaggregated
-#' @param x_sensor character name of sensor to be disaggregated. Can be "Landsat" or "MODIS".
+#' @param x_sensor character name of sensor to be disaggregated. Can be "Landsat" or "MODIS" or "Sentinel-3".
 #' @param y_sensor character name of sensor to which x shall be disaggregated.
 #' @return \code{x_dis} raster layer disaggregated.
-#' @importFrom raster disaggregate
+#' @importFrom raster disaggregate res
 #' @keywords internal
 #' @noRd
-.disaggr_raster <- function(x, x_sensor, y_sensor) {
+.disaggr_raster <- function(x, x_sensor, y_sensor, aoi) {
+  
+  aoi_area <- .calc_aoi_area(aoi)
+  adj_ref <- aoi_area / factor
+  res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
+  target_res <- 0.0019 * adj_ref # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
+  # do not reduce the resolution to the equivalent of more than double the Sentinel-2 preview resolution
+  if (target_res > 0.0042) target_res <- 0.004 
+  adj_ref <- target_res / res_ref
+  adj_ref <- ifelse(adj_ref < 2 && adj_ref > 1,2,adj_ref)
   
   options <- list(s2="Sentinel-2",s3="Sentinel-3",l="Landsat",m="MODIS")
   if (x_sensor == options$l && y_sensor == options$s2) {
-    adj <- 3.028734
+    adj <- 3/adj_ref
   } else if (x_sensor == options$m && y_sensor == options$s2) {
-    adj <- 3.028734 # adjust it still
+    adj <- 3 # change it still
   } else if  (x_sensor == options$s3 && y_sensor == options$s2) {
-    adj <- 3.028734 # adjust it still
+    adj <- 3 # change it still
   } else if (x_sensor == options$s3 && y_sensor == options$l) {
-    adj <- 3.028734 # adjust it still 
+    adj <- 3 # change it still 
   }
-  x_dis <- raster::disaggregate(x,adj)
+  x_dis <- disaggregate(x,adj)
   
 }
 
@@ -1262,16 +1271,17 @@ sep <- function() {
 #' @param paths character paths to rasters to be mosaicked.
 #' @param aoi aoi.
 #' @param save_path save_path (should end with '.tif').
+#' @param mode character mode can be "rgb" or "mask" as in .make_mosaic.
 #' @return mos_base_crop.
 #' @importFrom raster mask crop raster dataType
 #' @keywords internal
 #' @noRd
-.select_bridge_mosaic <- function(paths, aoi, save_path) {
+.select_bridge_mosaic <- function(paths, aoi, save_path, mode = "mask") {
   
   tmp_load <- raster(paths[1])
   datatype <- dataType(tmp_load)
   srcnodata <- ifelse(datatype == "INT2S","-32767","-3.3999999521443642e+38")
-  mos_base <- .make_mosaic(paths,save_path,srcnodata=srcnodata,datatype=datatype)
+  mos_base <- .make_mosaic(paths,save_path,mode=mode,srcnodata=srcnodata,datatype=datatype)
   if (class(mos_base) != "RasterLayer") {
     return(NA)
   } else {
@@ -1346,7 +1356,7 @@ sep <- function() {
 #' @author Henrik Fisser
 .select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
   
-  id_sel <- sapply(s$ids,function(x) which(records[,identifier]==x))
+  id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
   save_pmos <- file.path(dir_out,paste0("preview_mosaic_timestamp",s$timestamp))
   # mask preview tiles by cloud masks
   layers <- c("red","green","blue")
@@ -1354,6 +1364,9 @@ sep <- function() {
   sensors_ref <- c("Sentinel-2","Landsat","Sentinel-3","MODIS")
   tmp_dir_orig <- base::tempdir()
   tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
+  
+  # cloud mask previews band-wise
+  # this returns a list of paths to each of the three cloud-masked bands per record
   preview_paths <- lapply(id_sel,function(i) {
     p_path <- records[i,preview_col] # preview
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
@@ -1361,14 +1374,13 @@ sep <- function() {
     preview <- stack(p_path)
     # disaggregate preview to the resolution of other sensor in records that has higher resolution
     sensors_adj <- c("landsat","modis","sentinel-3")
-    cond <- grepl(tolower(records[i,"sensor_group"]),sensors_adj)
+    cond <- grepl(tolower(records[i,"product_group"]),sensors_adj)
     if (isTRUE(any(cond)) && length(sensors_given) > 1) {
       y_sensor <- sensors_ref[which(sensors_given %in% sensors_ref)]
       x_sensor <- firstup(sensors_adj[which(cond==T)])
-      preview_adj <- try(.disaggr_raster(preview,x_sensor=x_sensor,y_sensor=y_sensor))
-      #if (inherits(preview_adj,"try-error")) preview_adj <- preview
+      preview <- try(.disaggr_raster(preview,x_sensor=x_sensor,y_sensor=y_sensor))
     }
-    preview_aoi <- mask(preview_adj,aoi)
+    preview_aoi <- mask(preview,aoi)
     preview_masked <- .mask_raster(preview_aoi,cMask)
     preview_save <- file.path(tmp_dir,paste0(records[i,identifier],"_cloud_masked"))
     paths_sep <- sapply(1:nlayers(preview_masked),function(j) {
@@ -1377,14 +1389,19 @@ sep <- function() {
       return(layer_save)
     })
   })
+  
   preview_paths <- .gsd_compact(preview_paths)
+  
+  # create the mosaic band-wise
+  # this returns a list of band-wise mosaics
   preview_mos <- lapply(1:length(layers),function(j) {
     curr_layers <- lapply(preview_paths,function(x) path <- x[j])
     save_path_pmos <- paste0(save_pmos,"_",layers[j],".tif")
-    pmos <- .select_bridge_mosaic(curr_layers,aoi,save_path_pmos)
+    pmos <- .select_bridge_mosaic(unlist(curr_layers),aoi,save_path_pmos,mode="rgb")
     if (class(pmos) != "RasterLayer") return(NA) else return(pmos)
   })
-  preview_mos <- .gsd_compact(preview_mos)
+  
+  # stack all band
   preview_mos_stack <- stack(preview_mos)
   save_pmos_final <- paste0(save_pmos,"_",i,"_rgb.tif")
   writeRaster(preview_mos_stack,save_pmos_final,overwrite=T)
@@ -1549,7 +1566,8 @@ sep <- function() {
   
   # return ids of selected records and percentage of valid pixels of final mosaic
   selected <- list(ids=names(base_records),
-                   cMask_paths=base_records,
+                   cMask_paths=records[which(records[[identifier]]==names(base_records)),
+                                       cloud_mask_col]
                    valid_pixels=base_coverage)
   
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
@@ -1689,8 +1707,8 @@ sep <- function() {
   #3 the timestamp number for which the record is selected
   out(paste0(par$sep,"\nSelection Process Summary per timestamp",par$sep))
   # create final mosaics for each timestamp and summary message per timestamp
-  records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
-                                  par=par,dir_out=dir_out)
+  records_test <- .select_save_mosaics(records,selected=selected,aoi=aoi,
+                                       par=par,dir_out=dir_out)
   # create optional warning(s) and overall summary message
   csw <- .select_summary_ts(selected)
   w <- csw[2:3] # warnings
@@ -1840,7 +1858,7 @@ sep <- function() {
   if (inherits(selected,"try-error")) {
     out(paste0("\nSelection error at timestamp: ",ts),2)
   }
-  selected$period <- .identify_period(records[which(records[[par$identifier]]==selected$ids),par$date_col])
+  selected$period <- .identify_period(records[which(records[[par$identifier]] %in% selected$ids),par$date_col])
   out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
   

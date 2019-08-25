@@ -121,6 +121,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   identifier <- "record_id"
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
+    
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()
     record <- records[i,]
@@ -147,6 +148,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     } else {
       out(paste0("Processing: ",id),msg=T)
     }
+    
     # if preview exists not yet get it, then run HOT
     if (sensor == "Sentinel-1") {
       record_preview <- NULL
@@ -159,22 +161,34 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
           record_preview <- record
         } else {
           .check_login()
-          record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
+          record_preview <- tryCatch({
+            get_previews(record,dir_out=dir_out,verbose=F)
+          },
+          error=function(err) {
+            return(err)
+          })
         }
       } else {
         .check_login()
-        record_preview <- try(get_previews(record,dir_out=dir_out,verbose=F))
+        record_preview <- tryCatch({
+          get_previews(record,dir_out=dir_out,verbose=F)
+          },
+          error=function(err) {
+            return(err)
+          }
+        )
       }
-      record_preview <- as.data.frame(record_preview)
     }
+    
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     # pass preview to HOT function
     cond <- !is.null(record_preview) && 
-      !inherits(record_preview,"try-error") && 
+      !inherits(record_preview,"error") && 
       !is.na(record_preview$preview_file[[1]]) &&
       file.exists(record_preview$preview_file[[1]])
     if (cond) {
+      record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
                                          preview=preview,
@@ -186,7 +200,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          cols=.cloudcov_colnames(),
                                          dir_out=dir_out,
                                          verbose=verbose))
+    } else {
+      record[["preview_file"]] <- "NONE"
+      record_preview <- record
     }
+    
     if (isFALSE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
@@ -202,6 +220,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (!is.null(dir_out)) write_csv(record_cc,csv_path)
     return(record_cc)
   })))
+  
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
   records <- .column_summary(records,cols_initial)

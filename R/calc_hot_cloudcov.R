@@ -106,22 +106,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   valDf <- data.frame(na.omit(values(prvStck)))
   bBins <- lapply(rThreshLow:rThreshHigh,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
-  #redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]],decreasing=T),]}) # order the data.frame by red values (ascending!)
-  redMax <- lapply(redMax,function(x){
-    redNrow <- NROW(x)
-    if (redNrow >= rThresh) {
-      x <- try(x[redNrow:(redNrow-rThresh),]) # more or as many red values as rThresh are available. Take values from last value (highest in order) to last value minus rThresh
-    } else {
-      # in case less than rThresh values are available take the maximum number of available values
-      x <- try(x[redNrow:1,]) # do it complicated in order to order from high to low
-    }
-  })
   meanRed <- sapply(bBins,function(x){mean(x[["red"]])})
   meanBlue <- sapply(bBins,function(x){mean(x[["blue"]])})
   
   # run least-alternate deviation regression
   lad <- tryCatch({
-    L1pack::lad(meanRed ~ meanBlue,method="BR")
+    L1pack::lad(meanBlue ~ meanRed,method="BR")
     },
     error=function(err) {
       return(err)
@@ -150,10 +140,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     hotFailed <- TRUE
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
-  x11()
-  plot(HOT)
-  x11()
-  plotRGB(preview)
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101 # start with 101 to enter loop

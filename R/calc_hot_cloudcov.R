@@ -156,7 +156,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     cMask[safe_cloud] <- NA
     if (inherits(cMask,error)) hotFailed <- TRUE
     # calculate current cloud coverage
-    cPercent <- .raster_percent(cMask)
+    cPercent <- .raster_percent(cMask,aoi=aoi)
     try(ccDeviationFromProvider <- as.numeric(record[[sceneCloudCoverCol]][1]) - as.numeric(cPercent)) # difference between scene cloud cover from HOT and from data provider
     if (inherits(ccDeviationFromProvider,error) 
         || is.na(ccDeviationFromProvider) 

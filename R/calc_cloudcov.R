@@ -219,7 +219,9 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     if (!is.null(dir_out)) {
-      if ("footprint" %in% names(record_cc)) record_cc <- subset(record_cc,select=-footprint)
+      if ("footprint" %in% names(record_cc)) {
+        record_cc <- subset(record_cc,select=-footprint)
+      }
       write_csv(record_cc,csv_path)
     }
     return(record_cc)

@@ -602,14 +602,17 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @keywords internal
 #' @noRd
 .unlist_df <- function(records) {
-  for (i in 1:NCOL(records)) {
-    if (names(records)[i] == "footprint") {
-      records[,i] <- records[,i]
-    } else {
+  
+  is_list <- which(sapply(1:NCOL(records),function(i) {
+    return(class(records[,i]))
+  }) == "list")
+  if (length(is_list) > 0) {
+    for (i in is_list) {
       records[,i] <- unlist(records[,i])
     }
   }
   return(records)
+  
 }
 
 #' rbind different dfs

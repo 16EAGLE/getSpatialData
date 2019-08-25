@@ -109,7 +109,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
   cols_initial <- colnames(records)
-  numRecords <- nrow(records)
+  numRecords <- NROW(records)
   out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()

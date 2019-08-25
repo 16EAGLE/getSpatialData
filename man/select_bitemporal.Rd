@@ -5,7 +5,7 @@
 \title{Selects remote sensing records bi-temporally}
 \usage{
 select_bitemporal(records, aoi, min_distance, min_improvement = 5,
-  max_sub_period, max_cloudcov_tile = 80, prio_sensors = NULL,
+  max_sub_period, max_cloudcov_tile = 80, prio_sensors = c(),
   dir_out = NULL, verbose = TRUE)
 }
 \arguments{

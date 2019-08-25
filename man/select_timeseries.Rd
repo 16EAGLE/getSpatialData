@@ -6,7 +6,7 @@
 \usage{
 select_timeseries(records, aoi, num_timestamps, min_distance,
   min_improvement = 5, max_sub_period, max_cloudcov_tile = 80,
-  prio_sensors = NULL, dir_out = NULL, verbose = TRUE)
+  prio_sensors = c(), dir_out = NULL, verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 

@@ -4,7 +4,8 @@
 \alias{.make_mosaic}
 \title{create mosaic}
 \usage{
-.make_mosaic(x, save_path, mode = "mask")
+.make_mosaic(x, save_path, mode = "mask", srcnodata = NULL,
+  datatype = NULL)
 }
 \arguments{
 \item{x}{list of paths to raster files.}
@@ -13,6 +14,8 @@
 
 \item{mode}{character, optional. If mode == "rgb" no masking of the raster to only 1 values is done. 
 If mode == "mask" the raster will be returned with 1 and NA. Default is mode == "mask".}
+
+\item{srcnodata}{character nodata value in x. Default is for FLT4S.}
 }
 \value{
 \code{mos} raster mosaic

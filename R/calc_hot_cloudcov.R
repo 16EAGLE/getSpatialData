@@ -173,7 +173,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   }
   
   # calc scene cc percentage 
-  scene_cPercent <- .raster_percent(cMask)
+  scene_cPercent <- .raster_percent(cMask,aoi)
   ## Calculate aoi cloud cover percentage
   if (hotFailed) {
     record <- .handle_cc_skip(record,dir_out=dir_out)

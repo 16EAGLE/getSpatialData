@@ -1566,8 +1566,7 @@ sep <- function() {
   
   # return ids of selected records and percentage of valid pixels of final mosaic
   selected <- list(ids=names(base_records),
-                   cMask_paths=records[which(records[[identifier]]==names(base_records)),
-                                       cloud_mask_col]
+                   cMask_paths=records[which(records[[identifier]]==names(base_records)),cloud_mask_col],
                    valid_pixels=base_coverage)
   
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)

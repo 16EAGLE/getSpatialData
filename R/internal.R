@@ -602,7 +602,13 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @keywords internal
 #' @noRd
 .unlist_df <- function(records) {
-  for (i in 1:NCOL(records)) records[,i] <- unlist(records[,i])
+  for (i in 1:NCOL(records)) {
+    if (names(records)[i] == "footprint") {
+      records[,i] <- records[,i]
+    } else {
+      records[,i] <- unlist(records[,i])
+    }
+  }
   return(records)
 }
 

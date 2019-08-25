@@ -220,7 +220,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     }
     if (!is.null(dir_out)) {
       if ("footprint" %in% names(record_cc)) {
-        record_cc <- subset(record_cc,select=-footprint)
+        cols_remain <- setdiff(1:NCOL(records),c(which(names(record_cc) == "footprint")))
+        record_cc <- record_cc[,cols_remain]
       }
       write_csv(record_cc,csv_path)
     }

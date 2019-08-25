@@ -48,9 +48,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     return(record)
   }
   
-  # for dividing the blue DNs with values between this value and the value below into equal interval bins
-  bThresh_low <- 20 
-  bThresh_high <- 160 # below this value a pixel cannot be classified as cloud
+
+  #bThresh_high <- 160 # below this value a pixel cannot be classified as cloud
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   
@@ -91,9 +90,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
+  # for dividing the blue DNs with values between this value and the value below into equal interval bins
+  rThreshLow <- 20
+  rThreshHigh <- mean(cellStats(preview,mean)) / 2
+
   # create a mask where blue band has values below 160
   # at the end these values will be switched to clear-sky where since it is assumed they cannot be cloud
   safe_clear <- prvStck[[1]] <= 160
+  safe_cloud <- prvStck[[1]] >= 230
   ## Calculate least-alternate deviation (LAD) regression
   # this step computes first safe clear-sky pixels adpated from the bins method from Zhu & Helmer 2018
   # the procedure was adapted slightly because here it is being computed with discontinuous DN values. Suitable values for
@@ -103,9 +107,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   # a confusion of bright or reddish land surfaces with clouds
   rThresh <- 20 # from the blue bins take the 20 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
-  bBins <- lapply(bThresh_low:bThresh_high,function(x){which(valDf[[2]] == x)}) # these are the bins of interest for blue DNs
-  bBins <- lapply(bBins,function(x){data.frame(red=valDf[x,1],blue=valDf[x,2])}) # get the red and blue DNs where bins are valid
-  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]],decreasing=T),]}) # order the data.frame by red values (ascending!)
+  bBins <- lapply(rThreshLow:rThreshHigh,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(bBins,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
+  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]],decreasing=F),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
     redNrow <- NROW(x)
     if (redNrow >= rThresh) {
@@ -120,7 +124,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   
   # run least-alternate deviation regression
   lad <- tryCatch({
-    L1pack::lad(meanBlue ~ meanRed,method="BR")
+    L1pack::lad(meanRed ~ meanBlue,method="BR")
     },
     error=function(err) {
       return(err)
@@ -162,6 +166,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     # values in the HOT layer because they deviate too strongly from relatively bright
     # reference pixels (e.g. in desert areas)
     cMask[safe_clear] <- 1
+    #cMask[safe_cloud] <- NA
     if (inherits(cMask,error)) hotFailed <- TRUE
     # calculate current cloud coverage
     cPercent <- .raster_percent(cMask)

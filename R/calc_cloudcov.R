@@ -125,7 +125,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()
-    record <- records[i,]
+    record <- as.data.frame(records[i,])
     id <- record[[identifier]]
     sensor <- record$product
     if (any(is.na(c(id,sensor)))) {
@@ -222,9 +222,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     # write csv if desired
     if (!is.null(dir_out)) {
       if ("footprint" %in% names(record_cc)) {
+        # remove footprint list column for writing csv
         cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == "footprint")))
-        record_cc <- .unlist_df(record_cc)
+        # unlist columns for writing csv
         record_cc <- record_cc[,cols_remain]
+        record_cc <- .unlist_df(record_cc)
       }
       write_csv(record_cc,csv_path)
     }

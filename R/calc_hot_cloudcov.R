@@ -87,8 +87,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   }
   prvStck <- stack(bBand,rBand)
   # for dividing the blue DNs with values between these threshold values into equal interval bins
-  rThreshLow <- 20
-  rThreshHigh <- mean(cellStats(preview,mean)) / 2
+  rThreshLow <- 40
+  rThreshHigh <- mean(cellStats(preview,mean))
+  rThreshHigh <- ifelse(rThreshHigh < 60,60,rThreshHigh)
 
   # create a mask where blue band has values below 160
   # at the end these values will be switched to clear-sky where since it is assumed they cannot be cloud
@@ -105,7 +106,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   valDf <- data.frame(na.omit(values(prvStck)))
   bBins <- lapply(rThreshLow:rThreshHigh,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
-  redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]],decreasing=F),]}) # order the data.frame by red values (ascending!)
+  #redMax <- lapply(1:length(bBins),function(x){bBins[[x]][order(bBins[[x]][["red"]],decreasing=T),]}) # order the data.frame by red values (ascending!)
   redMax <- lapply(redMax,function(x){
     redNrow <- NROW(x)
     if (redNrow >= rThresh) {
@@ -115,8 +116,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
       x <- try(x[redNrow:1,]) # do it complicated in order to order from high to low
     }
   })
-  meanRed <- sapply(redMax,function(x){mean(x[["red"]])})
-  meanBlue <- sapply(redMax,function(x){mean(x[["blue"]])})
+  meanRed <- sapply(bBins,function(x){mean(x[["red"]])})
+  meanBlue <- sapply(bBins,function(x){mean(x[["blue"]])})
   
   # run least-alternate deviation regression
   lad <- tryCatch({
@@ -149,6 +150,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     hotFailed <- TRUE
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
+  x11()
+  plot(HOT)
+  x11()
+  plotRGB(preview)
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101 # start with 101 to enter loop
@@ -162,7 +167,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     # values in the HOT layer because they deviate too strongly from relatively bright
     # reference pixels (e.g. in desert areas)
     cMask[safe_clear] <- 1
-    #cMask[safe_cloud] <- NA
+    cMask[safe_cloud] <- NA
     if (inherits(cMask,error)) hotFailed <- TRUE
     # calculate current cloud coverage
     cPercent <- .raster_percent(cMask)

@@ -223,11 +223,13 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (!is.null(dir_out)) {
       if ("footprint" %in% names(record_cc)) {
         cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == "footprint")))
+        record_cc <- .unlist_df(record_cc)
         record_cc <- record_cc[,cols_remain]
       }
       write_csv(record_cc,csv_path)
     }
     
+    record_cc <- .unlist_df(record_cc)
     return(record_cc)
     
   })))

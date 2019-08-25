@@ -117,11 +117,11 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   
   # create temp dir
   tmp_dir_orig <-  base::tempdir() # in order to change it to default at the end of function
-  tmp_dir <- .tmp_dir(dir_out,1,TRUE)
+  tmp_dir <- .tmp_dir(dir_out,1,change_raster_tmp=TRUE)
   
   identifier <- "record_id"
   ## Do HOT cloud cover assessment consecutively
-  records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
+  records_test <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     
     out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=verbose)
     startTime <- Sys.time()
@@ -143,6 +143,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
           NROW(record) > 0) {
         if (file.exists(record$cloud_mask_file)) {
+          print(NCOL(record))
           return(record)
         }
       }
@@ -232,6 +233,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     }
     
     record_cc <- .unlist_df(record_cc)
+    print(NCOL(record_cc))
     return(record_cc)
     
   })))

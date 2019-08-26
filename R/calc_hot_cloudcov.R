@@ -87,9 +87,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   }
   prvStck <- stack(bBand,rBand)
   # for dividing the blue DNs with values between these threshold values into equal interval bins
-  rThreshLow <- 40
-  rThreshHigh <- mean(cellStats(preview,mean))
-  rThreshHigh <- ifelse(rThreshHigh < 60,60,rThreshHigh)
+  
+  bThreshHigh <- mean(c(mean(preview[[3]][preview[[3]] < 230]),mean(preview[[1]][preview[[1]] < 230])))
+  bThreshLow <- bThreshHigh - 100
+  bThreshHigh <- ifelse(bThreshHigh < 30,60,bThreshHigh)
+  bThreshLow <- ifelse(bThreshLow < 5,10,bThreshLow)
 
   # create a mask where blue band has values below 160
   # at the end these values will be switched to clear-sky where since it is assumed they cannot be cloud
@@ -104,14 +106,19 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   # a confusion of bright or reddish land surfaces with clouds
   rThresh <- 20 # from the blue bins take the 20 highest red values
   valDf <- data.frame(na.omit(values(prvStck)))
-  bBins <- lapply(rThreshLow:rThreshHigh,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(bThreshLow:bThreshHigh,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(bBins,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
   meanRed <- sapply(bBins,function(x){mean(x[["red"]])})
   meanBlue <- sapply(bBins,function(x){mean(x[["blue"]])})
   
+  order <- order(meanRed,decreasing=F)[1:50]
+  
+  meanRed <- meanRed[order]
+  meanBlue <- meanBlue[order]
+  
   # run least-alternate deviation regression
   lad <- tryCatch({
-    L1pack::lad(meanBlue ~ meanRed,method="BR")
+    L1pack::lad(meanRed~meanBlue,method="BR")
     },
     error=function(err) {
       return(err)
@@ -129,7 +136,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
   }
 
-  ## Calculate cloud probability layer for the whole scene
+  # calculate cloud probability layer for the whole scene
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
   ## Calculate HOT cloud probablity layer
@@ -140,6 +147,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     hotFailed <- TRUE
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
+  
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101 # start with 101 to enter loop

@@ -143,7 +143,6 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
           NROW(record) > 0) {
         if (file.exists(record$cloud_mask_file)) {
-          print(NCOL(record))
           return(record)
         }
       }

@@ -145,8 +145,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
 
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
-  print(slope)
-  
+
   # get a sharper clear-sky-line
   # if mean of blue in likely clear-sky areas is higher red multiply slope by 2 else divide by 2
   slope <- ifelse(mean_blue_red[1] > mean_blue_red[2],slope*2,slope/2)

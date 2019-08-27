@@ -224,6 +224,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       if ("footprint" %in% names(record_cc)) {
         # remove footprint list column for writing csv
         cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == "footprint")))
+        print(cols_remain)
         # unlist columns for writing csv
         record_cc <- record_cc[,cols_remain]
         record_cc <- .unlist_df(record_cc)

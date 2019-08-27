@@ -1227,7 +1227,7 @@ sep <- function() {
 #' @noRd
 .select_prep <- function(records, num_timestamps, par) {
   
-  records <- .make_tileid(records,par$identifier)
+  #records <- .make_tileid(records,par$identifier)
   records[[par$date_col]] <- sapply(records[[par$date_col]],as.character)
   period <- .identify_period(records[[par$date_col]])
   # calculates the sub_period column
@@ -1725,8 +1725,7 @@ sep <- function() {
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
   
   records <- subset(records,select=-sub_period) # remove sub-period column
-  records <- subset(records,select=-tile_id)
-  
+
   records <- .column_summary(records,cols_initial)
   
   return(records)

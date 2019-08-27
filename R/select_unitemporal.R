@@ -45,7 +45,7 @@ select_unitemporal <- function(records, aoi,
                                prio_sensors = c(),
                                dir_out = NULL, verbose = TRUE) {
   
-  .check_records(records,.cloudcov_colnames())
+  records <- .check_records(records,.cloudcov_colnames(),as_df=T)
   cols_initial <- colnames(records)
   
   #### Prep
@@ -58,7 +58,7 @@ select_unitemporal <- function(records, aoi,
   records[["sub_period"]] <- timestamp
   
   #### Checks
-  .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
+  .select_checks(records,aoi,par$period,num_timestamps,prio_sensors,par,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="Uni-Temporal",par$sep)

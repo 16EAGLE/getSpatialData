@@ -118,7 +118,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   # create temp dir
   tmp_dir_orig <-  base::tempdir() # in order to change it to default at the end of function
   tmp_dir <- .tmp_dir(dir_out,1,change_raster_tmp=TRUE)
-  
+  v <- verbose
   identifier <- "record_id"
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
@@ -132,7 +132,6 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
       return(.handle_cc_skip(record,FALSE,dir_out))
     }
     is_SAR <- sensor == "Sentinel-1"
-    v <- verbose
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]

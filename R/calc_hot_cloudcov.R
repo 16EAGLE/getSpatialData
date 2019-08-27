@@ -50,11 +50,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     return(record)
   }
   
-  i <- i+1
-  record <- records[i,]
-  record <- get_previews(record,dir_out=dir_out,verbose=F)
-  preview <- stack(record$preview_file)
-
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   

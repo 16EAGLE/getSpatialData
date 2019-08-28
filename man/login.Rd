@@ -7,9 +7,11 @@
 \alias{services_avail}
 \title{Session-wide login}
 \usage{
-login_CopHub(username = NULL, password = NULL, verbose = TRUE)
+login_CopHub(username = NULL, password = NULL, n_retry = 3,
+  verbose = TRUE)
 
-login_USGS(username = NULL, password = NULL, verbose = TRUE)
+login_USGS(username = NULL, password = NULL, n_retry = 3,
+  verbose = TRUE)
 
 services_avail(value = F, verbose = T)
 }
@@ -17,6 +19,8 @@ services_avail(value = F, verbose = T)
 \item{username}{character, user name to login at the respective service.}
 
 \item{password}{character, password to login at the respective service.}
+
+\item{n_retry}{numeric, number of attempts to login, if login fails}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 

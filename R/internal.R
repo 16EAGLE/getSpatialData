@@ -276,13 +276,18 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @param password password
 #' @keywords internal
 #' @noRd
-.ERS_login <- function(username, password){
-  x <- POST(paste0(getOption("gSD.api")$ee, 'login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  v <- content(x)$data
-  if(is.null(v)) out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)
-  return(v)
+.ERS_login <- function(username, password, n_retry = 3){
+  
+  .login <- function(username, password){
+    x <- POST(paste0(getOption("gSD.api")$ee, 'login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
+    stop_for_status(x, "connect to server.")
+    warn_for_status(x)
+    v <- content(x)$data
+    if(is.null(v)) stop("Login failes. ") else return(v)
+  }
+  
+  .retry(.login, username = username, password = password, fail = expression(out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)),
+         n = n_retry)
 }
 
 #' logout from ERS with API key
@@ -2313,3 +2318,25 @@ quiet <- function(expr){
                      "SRTM_global_1arc_V001" = "C1000000240-LPDAAC_ECS")
   if(is.null(products)) unlist(srtm_names) else unlist(srtm_names[products])
 }
+
+
+#' retry the evaluation of an expression n times, if it fails, evaluate another expression
+#' @param fun function to execute
+#' @param ... arguments to fun
+#' @param fail expression, such as expression(stop("Failure"))
+#' @param n number of retries
+#' @param value whether to return x or not
+#' @return value of test.epxr or nothing
+#' @keywords internal
+#' @noRd
+.retry <- function(fun, ..., fail, n = 3, value = TRUE){
+  while(n != 0){
+    x <- try(fun(...), silent = T)
+    if(inherits(x, "try-error")){
+      n <- n-1
+      if(n == 0) x <- eval(fail)
+    } else n <- 0
+  }
+  if(isTRUE(value)) return(x)
+}
+

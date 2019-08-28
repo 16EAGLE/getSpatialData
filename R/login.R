@@ -5,6 +5,7 @@
 #' @inheritParams getSentinel_records
 #' @param username character, user name to login at the respective service.
 #' @param password character, password to login at the respective service.
+#' @param n_retry numeric, number of attempts to login, if login fails
 #' @param value logical, whether to return a data frame containing service status or not. Default is \code{FALSE}.
 #'
 #' @details
@@ -39,7 +40,7 @@
 
 #' @seealso \link{get_records}
 #'
-login_CopHub <- function(username = NULL, password = NULL, verbose = TRUE){
+login_CopHub <- function(username = NULL, password = NULL, n_retry = 3, verbose = TRUE){
   
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(is.null(username)) username <- getPass("Username (Copernicus Open Access Hub):")
@@ -49,22 +50,20 @@ login_CopHub <- function(username = NULL, password = NULL, verbose = TRUE){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
   
-  # save credentials
-  options(gSD.dhus_user=username)
-  options(gSD.dhus_pass=password)
-  options(gSD.dhus_set=TRUE)
-  
   # verify credentials
-  x <- try(gSD.get(paste0(getOption("gSD.api")$dhus, "odata/v1/"), username, password), silent = T)
-  if(inherits(x, "try-error")) out("Login failed. Please retry later or call services_avail() to check if ESA Copernicus services are currently unavailable.", type=3)
+  .retry(gSD.get, url = paste0(getOption("gSD.api")$dhus, "odata/v1/"), username = username, password = password, value = F,
+         fail = out("Login failed. Please retry later or call services_avail() to check if ESA Copernicus services are currently unavailable.", type=3),
+         n = n_retry)
   
+  # save credentials, if login was succesfull
+  options(gSD.dhus_user = username, gSD.dhus_pass = password, gSD.dhus_set = TRUE)
   out("Login successfull. ESA Copernicus credentials have been saved for the current session.", msg = T)
 }
 
 
 #' @rdname login
 #' @export
-login_USGS <- function(username = NULL, password = NULL, verbose = TRUE){
+login_USGS <- function(username = NULL, password = NULL, n_retry = 3, verbose = TRUE){
   
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   if(is.null(username)) username <- getPass("Username (USGS EROS Registration System):")
@@ -74,13 +73,11 @@ login_USGS <- function(username = NULL, password = NULL, verbose = TRUE){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
   }
   
-  ## verify
-  options(gSD.usgs_apikey=.ERS_login(username, password))
+  # verify credentials
+  .ERS_login(username, password, n_retry = n_retry) -> key
   
   # save credentials
-  options(gSD.usgs_user=username)
-  options(gSD.usgs_pass=password)
-  options(gSD.usgs_set=TRUE)
+  options(gSD.usgs_apikey = key, gSD.usgs_user = username, gSD.usgs_pass = password, gSD.usgs_set = TRUE)
   out("Login successfull. USGS ERS credentials have been saved for the current session.", msg = T)
 }
 

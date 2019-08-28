@@ -25,15 +25,6 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   dir_out <- .check_dir_out(dir_out, "previews")
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
-  # check login
-  records$gSD.cred <- NA
-  if("Sentinel" %in% records$product_group){
-    .check_login(services = "Copernicus")
-    records[records$product_group == "Sentinel",]$gSD.cred <- lapply(records[records$product_group == "Sentinel",]$product, function(x){
-      .CopHub_select(x = extras$hub, p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
-    })
-  }
-  
   # save names
   records.names <- colnames(records)
   
@@ -44,6 +35,17 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   # file 
   records$gSD.dir <- paste0(dir_out, "/", records$product_group, "/")
   catch <- sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
+  files <- paste0(records$gSD.dir, records$record_id, "_preview.jpg")
+  
+  # check login
+  groups_download <- unique(records$product_group[!sapply(files, file.exists)])
+  records$gSD.cred <- NA
+  if("Sentinel" %in% groups_download){
+    .check_login(services = "Copernicus")
+    records[records$product_group == "Sentinel",]$gSD.cred <- lapply(records[records$product_group == "Sentinel",]$product, function(x){
+      .CopHub_select(x = extras$hub, p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
+    })
+  }
   
   # download preview jpg files
   out("Downloading previews...")

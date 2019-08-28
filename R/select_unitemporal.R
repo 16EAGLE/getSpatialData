@@ -41,7 +41,7 @@
 #' 
 #' @export
 select_unitemporal <- function(records, aoi,
-                               min_improvement = 5, max_sub_period, max_cloudcov_tile = 80, 
+                               min_improvement = 100, max_sub_period, max_cloudcov_tile = 80, 
                                prio_sensors = c(),
                                dir_out = NULL, verbose = TRUE) {
   
@@ -52,16 +52,16 @@ select_unitemporal <- function(records, aoi,
   num_timestamps <- 1
   prep <- .select_prep_wrap(records,num_timestamps,"UT")
   records <- prep$records
-  par <- prep$par
+  params <- prep$params
   has_SAR <- prep$has_SAR
   timestamp <- 1
   records[["sub_period"]] <- timestamp
   
   #### Checks
-  .select_checks(records,aoi,par$period,num_timestamps,prio_sensors,par,dir_out,verbose)
+  .select_checks(records,aoi,params$period,num_timestamps,prio_sensors,params,dir_out,verbose)
   
   #### Main Process
-  .select_start_info(mode="Uni-Temporal",par$sep)
+  .select_start_info(mode="Uni-Temporal",params$sep)
   records <- .select_main(records,
                           aoi,
                           has_SAR,
@@ -72,7 +72,7 @@ select_unitemporal <- function(records, aoi,
                           max_cloudcov_tile,
                           prio_sensors,
                           dir_out,
-                          par,
+                          params,
                           cols_initial)
   
   return(records)

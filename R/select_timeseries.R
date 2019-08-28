@@ -21,7 +21,7 @@
 #' The first scene the next timestamp could include would be the 31st May 2019 thus.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
 #' The value is the percentage of not yet covered area that shall be covered additionally if adding the record. This protects from
-#' adding masses of records that improve coverage by only a few pixels. Default is 5.
+#' adding masses of records that improve coverage by only a few pixels. Default is 100.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
 #' This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
@@ -48,7 +48,7 @@
 #' @export
 
 select_timeseries <- function(records, aoi,
-                              num_timestamps, min_distance, min_improvement = 5, 
+                              num_timestamps, min_distance, min_improvement = 100, 
                               max_sub_period, max_cloudcov_tile = 80, 
                               prio_sensors = c(), 
                               dir_out = NULL, verbose = TRUE) {
@@ -64,14 +64,14 @@ The minimum number for select_timeseries is: 3"),3)
   #### Prep
   prep <- .select_prep_wrap(records,num_timestamps,"TS")
   records <- prep$records
-  par <- prep$par
+  params <- prep$params
   has_SAR <- prep$has_SAR
   
   #### Checks
-  .select_checks(records,aoi,par$period,num_timestamps,prio_sensors,par,dir_out,verbose)
+  .select_checks(records,aoi,params$period,num_timestamps,prio_sensors,params,dir_out,verbose)
   
   #### Main Process
-  .select_start_info(mode="Time Series",par$sep)
+  .select_start_info(mode="Time Series",params$sep)
   records <- .select_main(records,
                           aoi,
                           has_SAR,
@@ -82,7 +82,7 @@ The minimum number for select_timeseries is: 3"),3)
                           max_cloudcov_tile,
                           prio_sensors,
                           dir_out,
-                          par,
+                          params,
                           cols_initial)
   
   return(records)

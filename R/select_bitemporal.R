@@ -57,14 +57,14 @@ select_bitemporal <- function(records, aoi,
   num_timestamps <- 2
   prep <- .select_prep_wrap(records,num_timestamps,"BT")
   records <- prep$records
-  par <- prep$par
+  params <- prep$params
   has_SAR <- prep$has_SAR
   
   #### Checks
-  .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
+  .select_checks(records,aoi,prio_sensors,params,dir_out,verbose)
   
   #### Main Process
-  .select_start_info(mode="Bi-Temporal",par$sep)
+  .select_start_info(mode="Bi-Temporal",params$sep)
   records <- .select_main(records,
                           aoi,
                           has_SAR,
@@ -75,7 +75,7 @@ select_bitemporal <- function(records, aoi,
                           max_cloudcov_tile,
                           prio_sensors,
                           dir_out,
-                          par,
+                          params,
                           cols_initial)
 
   return(records)

@@ -9,7 +9,7 @@ get_previews(records, dir_out = NULL, ..., verbose = TRUE)
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
 
-\item{dir_out}{character, a directory, to which previews should be saved. By default, previews are saved to the archive directory defined with \code{set_archive}.}
+\item{dir_out}{character, a directory, to which the downloaded file(s) should be saved. By default, these are saved to the archive directory defined with \code{set_archive}.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{

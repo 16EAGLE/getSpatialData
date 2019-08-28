@@ -32,7 +32,7 @@ set_archive <- function(dir_archive, create = T){
   if(!dir.exists(dir_archive)) if(isTRUE(create)) dir.create(dir_archive, recursive = T) else out("The defined directory does not exist.", type=3)
   
   options(gSD.archive = path.expand(dir_archive))
-  options(gSD.archive_data = paste0(dir_archive, "/data"))
+  options(gSD.archive_datasets = paste0(dir_archive, "/datasets"))
   options(gSD.archive_previews = paste0(dir_archive, "/previews"))
   #options(gSD.archive_prep = paste0(dir_archive, "/prep_data"))
   options(gSD.archive_set = TRUE)

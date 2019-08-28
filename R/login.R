@@ -97,7 +97,7 @@ services_avail <- function(value = F, verbose = T){
   
   # get service status (login for ESPA)
   response <- lapply(urls, function(x) try(gSD.get(x), silent = T))
-  if(isTRUE(getOption("gSD.usgs_set"))) response$espa <- try(gSD.get(urls$espa, username = getOption("gSD.usgs_user"), password = getOption("gSD.usgs_pass")))
+  if(isTRUE(getOption("gSD.usgs_set"))) response$espa <- try(gSD.get(urls$espa, username = getOption("gSD.usgs_user"), password = getOption("gSD.usgs_pass")), silent = T)
   
   df <- do.call(rbind, lapply(response, function(x) if(!inherits(x, "try-error")) rbind.data.frame(http_status(x), stringsAsFactors = F) else NA))
   df$code <- sapply(response, function(y) if(!inherits(y, "try-error")) y$status_code else NA)

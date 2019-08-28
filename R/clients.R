@@ -177,10 +177,10 @@
         x <- rbind.data.frame(x, stringsAsFactors = F)
         colnames(x) <- names
         
-        tryCatch({
-          response <- gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = username, password = password)
+        response <- try(gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = username, password = password), silent = T)
+        if(inherits(response, "try-error")) response <- "l1" else{
           response <- if(all(names(content(response)) == "not_implemented")) "'l1'" else unlist(content(response)[[1]]$products) #paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
-        }, error = function(e) response <- "l1")
+        }
         
         x <- do.call(rbind.data.frame, rep(list(x), length(response)))
         x$level <- response

@@ -730,7 +730,7 @@ rbind.different <- function(x) {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
   sumDataDownload <- meanPreviewSize * stillToGoFor
-  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be downloaded approx.: ",sumDataDownload," MB\n"))
+  out(paste0("\n5 records are processed.\nProcessing time for all remaining records, in sum approx.: ",sumProcessingTime,"\nData amount to be processed approx.: ",sumDataDownload," MB\n"))
 }
 
 #' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given
@@ -906,7 +906,7 @@ rbind.different <- function(x) {
 .calc_aoi_area <- function(aoi) {
   
   if (class(aoi)[1] != "SpatialPolygons") {
-    aoi_sp <- as(aoi,"Spatial")
+    aoi_sp <- as(aoi,"SpatialPolygons")
   } else {aoi_sp <- aoi}
   aoi_area <- raster::area(aoi_sp) / 1000000
   
@@ -1185,28 +1185,27 @@ rbind.different <- function(x) {
 #' returns internal params used in select_*
 #' @param records data.frame.
 #' @param mode character which mode is used: "TS", "BT" or "UT".
-#' @return \code{par} list of characters.
+#' @return \code{params} list of characters.
 #' @keywords internal
 #' @noRd
-.select_params <- function(records,mode) {
+.select_params <- function(records, mode) {
   
   modes <- list("TS"="timeseries","BT"="bitemporal","UT"="unitemporal")
-  par <- list(selected_col=paste0("selected_for_",modes[[mode]]), # logical column if a record is selected at all
+  params <- list(selected_col=paste0("selected_for_",modes[[mode]]), # logical column if a record is selected at all
               pmos_col="rgb_mosaic_file", # path to the RGB mosaic tif where record is included
               cmos_col="cmask_mosaic_file", # path to the cloud mask mosaic tif where record is included
-              timestamp_col="selected_for_timestamp", # the timestamp number for which the record is selected
+              timestamp_col="selected_for_timestamp", # for the timestamp number for which the record is selected
               aoi_cc_col="aoi_HOT_cloudcov_percent",
               tileid_col="tile_id",
               preview_col="preview_file",
               cloud_mask_col="cloud_mask_file",
               date_col="date_acquisition",
               identifier="record_id")
-  par$sensor_group <- unique(records$sensor_group)
-  par$sensor <- unique(records$sensor)
-  #par$date_col_orig <- "date_acquisition"
-  par$tileids <- unique(records[[par$tileid_col]])
-  par$sep <- sep()
-  return(par)
+  params$sensor_group <- unique(records$sensor_group)
+  params$sensor <- unique(records$sensor)
+  params$tileids <- unique(records[[params$tileid_col]])
+  params$sep <- sep()
+  return(params)
   
 }
 
@@ -1221,17 +1220,16 @@ sep <- function() {
 #' prep process of a selection process
 #' @param records data.frame.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
-#' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
+#' @param params list holding everything inserted into this parameter list in the calling select function (8 parameters).
 #' @return records data.frame 
 #' @keywords internal
 #' @noRd
-.select_prep <- function(records, num_timestamps, par) {
+.select_prep <- function(records, num_timestamps, params) {
   
-  #records <- .make_tileid(records,par$identifier)
-  records[[par$date_col]] <- sapply(records[[par$date_col]],as.character)
-  period <- .identify_period(records[[par$date_col]])
+  records[[params$date_col]] <- sapply(records[[params$date_col]],as.character)
+  period <- .identify_period(records[[params$date_col]])
   # calculates the sub_period column
-  records <- .select_sub_periods(records,period,num_timestamps,par$date_col)
+  records <- .select_sub_periods(records,period,num_timestamps,params$date_col)
   
 }
 
@@ -1246,12 +1244,12 @@ sep <- function() {
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
   records <- .unlist_df(records)
-  records <- .select_prep(records,num_timestamps,par)
-  par <- .select_params(records,mode)
-  par$period <- .identify_period(records[[par$date_col]])
-  has_SAR <- .has_SAR(par$sensor) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
+  params <- .select_params(records,mode)
+  params$period <- .identify_period(records[[params$date_col]])
+  records <- .select_prep(records,num_timestamps,params)
+  has_SAR <- .has_SAR(params$sensor) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
   prep <- list(records=records,
-               par=par,
+               params=params,
                has_SAR=has_SAR)
   return(prep)
   
@@ -1271,6 +1269,7 @@ sep <- function() {
     val <- ifelse(col == selected_col,FALSE,NA)
     records[[col]] <- val
   }
+  return(records)
   
 }
 
@@ -1289,7 +1288,7 @@ sep <- function() {
   
   tmp_load <- raster(paths[1])
   datatype <- dataType(tmp_load)
-  srcnodata <- ifelse(datatype == "INT2S","-32767","-3.3999999521443642e+38")
+  srcnodata <- ifelse(datatype == "INT2S","-32768","-3.3999999521443642e+38")
   mos_base <- .make_mosaic(paths,save_path,mode=mode,srcnodata=srcnodata,datatype=datatype)
   if (class(mos_base) != "RasterLayer") {
     return(NA)
@@ -1318,7 +1317,7 @@ sep <- function() {
                          srcnodata = NULL, datatype = NULL) {
   
   write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),
-                            vrtnodata="0",seperate=F,overwrite=T,datatype=datatype))
+                            vrtnodata=c(srcnodata),seperate=F,overwrite=T,datatype=datatype))
   if (inherits(write_mos,"try-error")) {
     return(NA)
   } else {
@@ -1342,7 +1341,9 @@ sep <- function() {
 #' @noRd
 .select_cmask_mos <- function(s, aoi, dir_out) {
   
-  save_path_cmos <- file.path(dir_out,paste0("cloud_mask_mosaic_timestamp",s$timestamp,".tif"))
+  vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n")
+  save_str <- paste0(sample(vec,10),collapse = "")
+  save_path_cmos <- file.path(dir_out,paste0(save_str,"cloud_mask_mosaic_timestamp",s$timestamp,".tif"))
   cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths,aoi,save_path_cmos)
   .delete_tmp_files(raster::tmpDir())
   return(save_path_cmos)
@@ -1366,7 +1367,9 @@ sep <- function() {
 .select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
   
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
-  save_pmos <- file.path(dir_out,paste0("preview_mosaic_timestamp",s$timestamp))
+  vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n")
+  save_str <- paste0(sample(vec,10),collapse = "")
+  save_pmos <- file.path(dir_out,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
   # mask preview tiles by cloud masks
   layers <- c("red","green","blue")
   sensors_given <- unique(records$sensor_group)
@@ -1575,7 +1578,8 @@ sep <- function() {
   
   # return ids of selected records and percentage of valid pixels of final mosaic
   selected <- list(ids=names(base_records),
-                   cMask_paths=records[which(records[[identifier]]==names(base_records)),cloud_mask_col],
+                   cMask_paths=records[which(records[[identifier]] %in% names(base_records)),
+                                       cloud_mask_col],
                    valid_pixels=base_coverage)
   
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
@@ -1605,33 +1609,30 @@ sep <- function() {
 #' @param records data.frame.
 #' @param selected list of lists, each of the list is one timestamp and holds the ids, timestamp numbers and cloud mask paths.
 #' @param aoi aoi.
-#' @param selected_col character name of the logical column name in records data.frame (selected TRUE/FALSE).
-#' @param pmos_col character name of the column where to enter the paths to the preview mosaics.
-#' @param cmos_col character name of the column where to enter the paths to the cloud mask mosaics.
-#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param params list.
 #' @param dir_out character directory.
 #' @return records with four additional columns: selected_col, timestamp_col, pmos_col, cmos_col. Cloud mask and preview mosaics are saved in dir_out.
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
 .select_save_mosaics <- function(records, selected, aoi, 
-                                 par, dir_out) {
+                                 params, dir_out) {
   
   console_info <- list()
-  cols <- c(par$selected_col,par$timestamp_col,par$pmos_col,par$cmos_col)
-  records <- .select_prep_cols(records, cols, par$selected_col)
+  cols <- c(params$selected_col,params$timestamp_col,params$pmos_col,params$cmos_col)
+  records <- .select_prep_cols(records,cols,params$selected_col)
   for (i in 1:length(selected)) {
     s <- selected[[i]]
     id_sel <- s$ids
     #A cloud mask mosaic
     save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
     #B preview mosaic
-    save_path_pmos <- .select_preview_mos(records,s,aoi,i,par$identifier,dir_out,
-                                          cloud_mask_col=par$cloud_mask_col,preview_col=par$preview_col)
+    save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
+                                          cloud_mask_col=params$cloud_mask_col,preview_col=params$preview_col)
     #C add columns to records
     insert <- c(TRUE,s$timestamp,save_path_pmos,save_path_cmos)
     for (j in 1:length(cols)) {
-      records[id_sel,cols[j]] <- insert[j]      
+      records[which(records[[params$identifier]] %in% id_sel),cols[j]] <- insert[j]      
     }
     # get print info
     console_info[[i]] <- .select_final_info(s)
@@ -1653,7 +1654,7 @@ sep <- function() {
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
-#' @param par list holding everything inserted into this parameter list in .select_params().
+#' @param params list holding everything inserted into this parameter list in .select_params().
 #' @param dir_out character directory where to save intermediate product.
 #' @param cols_initial character vector of records column names as input from user.
 #' @return records data.frame ready for return to user.
@@ -1669,14 +1670,14 @@ sep <- function() {
                          max_sub_period,
                          max_cloudcov_tile,
                          prio_sensors,
-                         par,
                          dir_out,
+                         params,
                          cols_initial) {
   
   # if all are SAR records
   if (has_SAR == 100) {
     records <- .select_all_SAR(records, max_sub_period,
-                               min_distance, num_timestamps, par)
+                               min_distance, num_timestamps, params)
     records <- .column_summary(records,cols_initial)
     return(records)
   }
@@ -1692,18 +1693,18 @@ sep <- function() {
                                        min_distance=min_distance, 
                                        max_sub_period=max_sub_period,max_cloudcov_tile=max_cloudcov_tile, 
                                        min_improvement=min_improvement,
-                                       par=par,dir_out=dir_out))
+                                       params=params,dir_out=dir_out))
     if (inherits(selected_ts,"try-error")) {
       out("\nSelection failed for timestamp: ",t)
     }
-    selected_ts$timestamp <- t
+    selected_ts[["timestamp"]] <- t
     selected[[t]] <- selected_ts # insert 'selected_ts' list into selected list
   }
   
   # if some are SAR records
   if (has_SAR == 1) {
     selected <- .select_some_SAR(records, selected, max_sub_period,
-                                 min_distance, num_timestamps, par)
+                                 min_distance, num_timestamps, params)
   }
   
   # create resulting mosaics and add columns to records
@@ -1713,10 +1714,13 @@ sep <- function() {
   #1 logical column if a record is selected at all
   #2 path to the RGB mosaic tif where record is included
   #3 the timestamp number for which the record is selected
-  out(paste0(par$sep,"\nSelection Process Summary per timestamp",par$sep))
+  mode_console <- ifelse(length(selected)==1,""," per timestamp")
+  sep <- params$sep
+  out(paste0(sep,"\nSelection Process Summary",
+             mode_console,sep))
   # create final mosaics for each timestamp and summary message per timestamp
-  records_test <- .select_save_mosaics(records,selected=selected,aoi=aoi,
-                                       par=par,dir_out=dir_out)
+  records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
+                                       params=params,dir_out=dir_out)
   # create optional warning(s) and overall summary message
   csw <- .select_summary_ts(selected)
   w <- csw[2:3] # warnings
@@ -1740,7 +1744,7 @@ sep <- function() {
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
-#' @param par list holding everything inserted into this parameter list in .select_params().
+#' @param params list holding everything inserted into this parameter list in .select_params().
 #' @param dir_out character directory where to save intermediate product.
 #' @param timestamp numeric of the current timestamp.
 #' @return \code{selected_ts} list of selected records with all items returned by .select_process_sub
@@ -1750,8 +1754,8 @@ sep <- function() {
                             timestamp,
                             min_distance, max_sub_period, max_cloudcov_tile, 
                             min_improvement, prio_sensors = NULL,
-                            par, dir_out) {
-  
+                            params, dir_out) {
+
   period_new <- c()
   base_records <- c()
   ids <- c()
@@ -1772,16 +1776,16 @@ sep <- function() {
     } 
     tstamp <- new.env()
     tstamp$records <- records[sensor_match,]
-    tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[par$preview_col]])),]
+    tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
     .catch_empty_records(tstamp$records,ts=timestamp)
-    tstamp$period <- .identify_period(tstamp$records[[par$date_col]])
+    tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
     if (timestamp > 1) {
       # enforce to min_distance from previous timestamp
       tstamp$first_date <- .select_force_distance(period_new,min_distance)
       tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
                                                period_initial=tstamp$period,
                                                min_distance,max_sub_period)
-      tstamp$records <- .select_within_period(records,tstamp$period,par$date_col) # subset to records in period
+      tstamp$records <- .select_within_period(records,tstamp$period,params$date_col) # subset to records in period
     }
     # run the selection process
     selected <- .select_process_sub(tstamp$records,
@@ -1792,7 +1796,7 @@ sep <- function() {
                                     max_sub_period,
                                     max_cloudcov_tile,
                                     min_improvement,
-                                    par,
+                                    params,
                                     dir_out,
                                     ts=timestamp)
     if (isFALSE(le_prio_is_one)) {
@@ -1825,7 +1829,7 @@ sep <- function() {
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
 #' The value is the percentage of not yet covered area that shall be covered additionally when adding the record.
-#' @param par list holding everything inserted into this parameter list in the calling select function (8 parameters).
+#' @param params list holding everything inserted into this parameter list in the calling select function (8 parameters).
 #' @param dir_out character directory where to save intermediate product.
 #' @param ts numeric of the current timestamp.
 #' @return \code{selected} list of [[ids]] character vector of selected ids, [[cMask_paths]] character vector to cloud masks, 
@@ -1835,37 +1839,37 @@ sep <- function() {
 .select_process_sub <- function(records, aoi,
                                 period, period_new = c(), base_records = NULL,
                                 max_sub_period, max_cloudcov_tile, min_improvement, 
-                                par, dir_out, ts) {
+                                params, dir_out, ts) {
   
   # the sub is an ordering of all available records per tile according to aoi cloud cover
   # this is also the step where max_cloudcov_tile is ensured
   sub <- .select_sub(records=records,
-                     tiles=par$tileids,
+                     tiles=params$tileids,
                      max_cloudcov_tile=max_cloudcov_tile,
-                     aoi_cc_col=par$aoi_cc_col,
-                     tileid_col=par$tileid_col,
-                     date_col=par$date_col,
-                     identifier=par$identifier)
+                     aoi_cc_col=params$aoi_cc_col,
+                     tileid_col=params$tileid_col,
+                     date_col=params$date_col,
+                     identifier=params$identifier)
   # this step enforces max_sub_period. It returns a list of vectors of indices 
   # pointing to records in records. The list is ordererd according to aoi cloud cover
   sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
-                                     date_col=par$date_col,aoi_cc_col=par$aoi_cc_col)
+                                     date_col=params$date_col,aoi_cc_col=params$aoi_cc_col)
   # make best mosaic of cloud masks for first timestamp
-  out(par$sep)
+  out(params$sep)
   out(paste0("Calculating mosaic for timestamp: ",ts))
   selected <- try(.select_calc_mosaic(records,
                                       base_records=base_records,
                                       aoi,
                                       sub_within,
-                                      par$cloud_mask_col,
+                                      params$cloud_mask_col,
                                       min_improvement=min_improvement,
                                       ts=ts,
                                       dir_out,
-                                      par$identifier))
+                                      params$identifier))
   if (inherits(selected,"try-error")) {
     out(paste0("\nSelection error at timestamp: ",ts),2)
   }
-  selected$period <- .identify_period(records[which(records[[par$identifier]] %in% selected$ids),par$date_col])
+  selected$period <- .identify_period(records[which(records[[params$identifier]] %in% selected$ids),params$date_col])
   out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
   return(selected)
   
@@ -1878,14 +1882,14 @@ sep <- function() {
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param max_sub_period numeric maximum length of sub-period.
-#' @param par list holding everything inserted into this parameter list in the calling select function.
+#' @param params list holding everything inserted into this parameter list in the calling select function.
 #' @return \code{SAR_selected} list of [[ids]] character vector of selected ids per timestamp, [[period]] character vector
 #' of two dates and [[sub-period]] numeric the sub-period number
 #' character vector of two dates (start and end date of SAR sub-period)
 #' @keywords internal
 #' @noRd
 .select_SAR <- function(records, period_new = NULL, 
-                        max_sub_period, min_distance, num_timestamps, par) {
+                        max_sub_period, min_distance, num_timestamps, params) {
   
   subperiods <- unique(records$sub_period)
   # if the length of the current sub-period is longer than max_sub_period grade all dates in sub_period
@@ -1897,15 +1901,15 @@ sep <- function() {
     if (s > 1) {
       # enforce min_distance
       previous_period <- selected_SAR[[s-1]][["period"]] # get the previous selected sub-period
-      period_initial <- .identify_period(records_in_s[[par$date_col]])
+      period_initial <- .identify_period(records_in_s[[params$date_col]])
       # earliest date of next sub-period adjusted
       first_date <- .select_force_distance(previous_period,min_distance)
       period_s <- .select_handle_next_sub(first_date,period_initial,
                                           min_distance,max_sub_period)
       records_in_s <- .select_within_period(records_in_s,period_s) # subset to records within period_s
     }
-    tiles_s <- records_in_s[[par$tileid_col]]
-    dates_s <- sapply(records_in_s[[par$date_col]],as.Date)
+    tiles_s <- records_in_s[[params$tileid_col]]
+    dates_s <- sapply(records_in_s[[params$date_col]],as.Date)
     if (!is.null(period_new)) {
       period_new_dates <- sapply(period_new,as.Date)
       dates_combined <- c(dates_s,period_new_dates)
@@ -1920,7 +1924,7 @@ sep <- function() {
       date_grade <- sapply(dates_seq,function(date) {
         records_match <- which(dates_s==date)
         # include one record per tile for the grading as for SAR several records on one date = no benefit
-        grade <- length(unique(records[records_match,par$tileid_col]))
+        grade <- length(unique(records[records_match,params$tileid_col]))
       })
       # calculate best_period based on date_grade, in combination with period_new
       # and while ensuring max_sub_period
@@ -1930,12 +1934,12 @@ sep <- function() {
                                          max_sub_period = max_sub_period)
       if (!is.na(best_period)) {
         incl <- .select_subset_to_best_period(dates_s, best_period)
-        ids <- records_in_s[incl,par$identifier] # ids of selected records in upated sub-period
+        ids <- records_in_s[incl,params$identifier] # ids of selected records in upated sub-period
       }
     } else {
-      ids <- records_in_s[[par$identifier]] # all ids of records in sub-period
+      ids <- records_in_s[[params$identifier]] # all ids of records in sub-period
     }
-    dates_sel <- records_in_s[which(ids %in% records[[par$identifier]]),par$date_col]
+    dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]),params$date_col]
     period <- .identify_period(dates_sel)
     selected_SAR[[s]] <- list("ids"=ids,"period"=period,"sub-period"=s)
   }
@@ -1949,7 +1953,7 @@ sep <- function() {
 #' @param max_sub_period numeric max_sub_period.
 #' @param min_distance numeric min_distance.
 #' @param num_timestamps numeric num_timestamps.
-#' @param par list par.
+#' @param params list par.
 #' @return records data.frame ready for return to user
 #' @keywords internal
 #' @noRd
@@ -1959,7 +1963,7 @@ sep <- function() {
   
   selected_SAR <- .select_SAR(records,period_new = NULL,max_sub_period,min_distance,
                               num_timestamps,par)
-  records <- .select_finish_SAR(records, selected_SAR, num_timestamps, par)
+  records <- .select_finish_SAR(records, selected_SAR, num_timestamps, params)
   return(records)
   
 }
@@ -1970,12 +1974,12 @@ sep <- function() {
 #' @param max_sub_period numeric max_sub_period.
 #' @param min_distance numeric min_distance.
 #' @param num_timestamps numeric num_timestamps.
-#' @param par list par.
+#' @param params list par.
 #' @return selected list of lists where each list is a selected list of one timestamp
 #' @keywords internal
 #' @noRd
 .select_some_SAR <- function(records, selected, max_sub_period,
-                                  min_distance, num_timestamps, par) {
+                                  min_distance, num_timestamps, params) {
   
   # SAR records shall be searched within max_sub_period combined
   # with the periods selected for optical 
@@ -1997,11 +2001,11 @@ sep <- function() {
 #' @param records data.frame.
 #' @param selected_SAR list of [[ids]] character vector of selected ids per timestamp, [[period]] character vector
 #' of two dates and [[sub-period]] numeric the sub-period number
-#' @param par list holding everything inserted into this parameter list in the calling select function.
+#' @param params list holding everything inserted into this parameter list in the calling select function.
 #' @return records data.frame with two added columns, ready for return to user.
 #' @keywords internal
 #' @noRd
-.select_finish_SAR <- function(records, selected_SAR, num_timestamps, par) {
+.select_finish_SAR <- function(records, selected_SAR, num_timestamps, params) {
   
   csw_SAR <- .select_SAR_summary(records,selected_SAR,num_timestamps,par)
   summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
@@ -2009,12 +2013,12 @@ sep <- function() {
   if (!is.null(w)) out(w,type=2) # warning
   ids <- sapply(selected_SAR,function(x) {return(x[["ids"]])})
   # add columns to records
-  cols <- c(par$selected_col,par$timestamp_col)
+  cols <- c(params$selected_col,params$timestamp_col)
   records <- .select_prep_cols(records,cols)
   for (ts in 1:length(ids)) {
-    ids_match <- match(ids[ts],records[[par$identifier]])
-    records[ids_match,par$selected_col] <- TRUE # is record selected at all
-    records[ids_match,par$timestamp_col] <- ts # timestamp for which record is selected
+    ids_match <- match(ids[ts],records[[params$identifier]])
+    records[ids_match,params$selected_col] <- TRUE # is record selected at all
+    records[ids_match,params$timestamp_col] <- ts # timestamp for which record is selected
   }
   return(records)
   
@@ -2388,17 +2392,17 @@ sep <- function() {
 #' @param SAR_selected list of [[ids]] character vector of selected ids per timestamp, [[period]] character vector
 #' of two dates and [[sub-period]] numeric the sub-period number.
 #' @param records data.frame.
-#' @param par list holding everything inserted into this parameter list in the calling select function.
+#' @param params list holding everything inserted into this parameter list in the calling select function.
 #' @return \code{console_summary_warning} list of two character vectors holding the messages:
 #' [[1]] Summary info
 #' [[2]] Warning if minimum coverage of tiles does not reach number of tiles.
 #' @keywords internal
 #' @noRd
-.select_SAR_summary <- function(records, selected_SAR, num_timestamps, par) {
+.select_SAR_summary <- function(records, selected_SAR, num_timestamps, params) {
   
   sep <- "\n----------------------------------------------------------------"
   covered_tiles_ts_wise <- sapply(selected_SAR,function(s) {
-    num_tiles <- length(unique(records[match(s[["ids"]],records[[par$identifier]]),par$tileid_col]))
+    num_tiles <- length(unique(records[match(s[["ids"]],records[[params$identifier]]),params$tileid_col]))
   })
   header <- paste0("\n-- Selection Process Summary Overall --")
   info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
@@ -2410,7 +2414,7 @@ sep <- function() {
   }
   console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,sep,"\n")
   # check if for all timestamps all tiles are covered
-  check_tile_cov <- which(covered_tiles_ts_wise != length(par$tileids))
+  check_tile_cov <- which(covered_tiles_ts_wise != length(params$tileids))
   # return warning if check_tile_cov has length > 0
   le <- length(check_tile_cov)
   char <- c()
@@ -2450,6 +2454,7 @@ sep <- function() {
   
   cov <- as.character(round(base_coverage,2))
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
+  i <- ifelse(i==0,1,i)
   out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," records  "), flush = T)
 
 }

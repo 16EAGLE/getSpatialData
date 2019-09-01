@@ -137,7 +137,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (file.exists(csv_path)) {
-      out(paste0(out_status,"Loading because already processed: ",id),msg=T,verbose=v)
+      out(paste0(out_status,"Loading (already processed): ",id),msg=T,verbose=v)
       record <- as.data.frame(read_csv(csv_path,col_types=cols()))
       nms <- names(record)
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&

@@ -137,7 +137,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (file.exists(csv_path)) {
-      out(paste0(out_status,"Loading (already processed): ",id),msg=T,verbose=v)
+      out(paste0(out_status,"Loading (yet processed): ",id),msg=T,verbose=v)
       record <- as.data.frame(read_csv(csv_path,col_types=cols()))
       nms <- names(record)
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
@@ -161,7 +161,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
         if (preview_exists) {
           record_preview <- record
         } else {
-          .check_login()
+          .check_login(records=record)
           record_preview <- tryCatch({
             get_previews(record,dir_out=dir_out,verbose=F)
           },
@@ -170,7 +170,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
           })
         }
       } else {
-        .check_login()
+        .check_login(records=record)
         record_preview <- tryCatch({
           get_previews(record,dir_out=dir_out,verbose=F)
           },
@@ -183,12 +183,17 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
+    
     # pass preview to HOT function
-    cond <- !is.null(record_preview) && 
-      !inherits(record_preview,"error") && 
-      !is.na(record_preview$preview_file[[1]]) &&
-      file.exists(record_preview$preview_file[[1]])
+    cond <- is.null(record_preview) && 
+      inherits(record_preview,"error") && 
+      is.na(record_preview$preview_file[[1]]) &&
+      !file.exists(record_preview$preview_file[[1]])
+    
     if (cond) {
+      record[["preview_file"]] <- "NONE"
+      record_preview <- record
+    } else {
       record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
@@ -201,11 +206,9 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          cols=.cloudcov_colnames(),
                                          dir_out=dir_out,
                                          verbose=verbose))
-    } else {
-      record[["preview_file"]] <- "NONE"
-      record_preview <- record
     }
-    if (isFALSE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
+    
+    if (isTRUE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     

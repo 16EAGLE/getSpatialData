@@ -102,6 +102,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   
   ## Check input
   options("gSD.verbose"=verbose)
+  dir_out <- .check_dir_out(dir_out,which="cloud_masks")
   classNumErr <-  "has to be of class 'numeric'. But is: "
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   records <- .check_records(records,as_df=T)
@@ -209,7 +210,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                                          verbose=verbose))
     }
     
-    if (isTRUE(cond) || class(record_cc) != "data.frame" || is.na(record_cc)) {
+    if (isTRUE(get_preview_failed) || class(record_cc) != "data.frame" || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     

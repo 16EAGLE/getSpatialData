@@ -163,8 +163,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20,
   ccDeviationFromProvider <- 101 # start with 101 to enter loop
   while (isFALSE(hotFailed)
          && numTry <= maxTry 
-         && abs(ccDeviationFromProvider) > maxDeviation 
-         && (ccDeviationFromProvider >= 2 || ccDeviationFromProvider <= -2)) { # tolerance 2
+         && abs(ccDeviationFromProvider) > maxDeviation) { # tolerance 2
     cMask <- try(HOT < cloudPrbThreshold) # threshold to seperate cloud pixels
     # values that are considered as safe clear according to bThresh_high
     # are all set to 1. This reduces an error e.g. where dark surfaces have high

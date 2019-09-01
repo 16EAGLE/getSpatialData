@@ -55,19 +55,23 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20,
   
   if (is.na(crs(preview))) crs(preview) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   
-  # Handle broken preview (indicated by non-existence of DNs > 40)
-  broken_check <- preview > 40
-  cond <- ifelse(any(maxValue(broken_check) == 0),TRUE,FALSE)
+  # Check if preview is broken (has no observations with DN >= 20)
+  prev_vals <- as.integer(as.vector(values(preview)))
+  is_broken <- all(prev_vals < 20)
+  
   # Check for valid observations in aoi
-  prevMasked <- mask(preview,aoi)
-  maxValPrevMasked <- maxValue(prevMasked)
-  cond <- maxValPrevMasked[1] < 50 || is.na(maxValPrevMasked[1]) # max value smaller 50, no valid observations
-  # If preview is broken or nor valid observations in aoi return
-  if (isTRUE(cond)) {
+  if (!is_broken) {
+    prevMasked <- mask(preview,aoi)
+    maxValPrevMasked <- maxValue(prevMasked)
+    not_valid_in_aoi <- maxValPrevMasked[1] < 20 || is.na(maxValPrevMasked[1]) # max value smaller 50, no valid observations
+  }
+  
+  # If preview is broken or nor valid observations in aoi return NA
+  if (isTRUE(any(c(is_broken,not_valid_in_aoi)))) {
     return(NA)
   }
   
-  # Mask NA values in preview (represented as 0 here)
+  # Mask NA values in preview (represented as RGB DN < 5 here)
   NA_mask <- (preview[[1]] > 5) * (preview[[2]] > 5) * (preview[[3]] > 5)
   preview <- mask(preview,NA_mask,maskvalue=0)
 
@@ -116,7 +120,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20,
   })
   
   meanRed <- sapply(bBins,function(x){mean(x[["red"]])})
-  meanBlue <- sapply(bBins,function(x){mean(x[["blue"]])})
+  meanBlue <- sapply(bBins,function(x){x[["blue"]][1]})
 
   # run least-alternate deviation regression
   lad <- tryCatch({

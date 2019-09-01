@@ -4,7 +4,7 @@
 \alias{select_unitemporal}
 \title{Selects remote sensing records uni-temporally}
 \usage{
-select_unitemporal(records, aoi, min_improvement = 5, max_sub_period,
+select_unitemporal(records, aoi, min_improvement = 100, max_sub_period,
   max_cloudcov_tile = 80, prio_sensors = c(), dir_out = NULL,
   verbose = TRUE)
 }

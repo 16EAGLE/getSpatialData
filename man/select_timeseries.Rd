@@ -5,7 +5,7 @@
 \title{Selects remote sensing records for a time series}
 \usage{
 select_timeseries(records, aoi, num_timestamps, min_distance,
-  min_improvement = 5, max_sub_period, max_cloudcov_tile = 80,
+  min_improvement = 100, max_sub_period, max_cloudcov_tile = 80,
   prio_sensors = c(), dir_out = NULL, verbose = TRUE)
 }
 \arguments{
@@ -28,7 +28,7 @@ The first scene the next timestamp could include would be the 31st May 2019 thus
 
 \item{min_improvement}{numeric the minimum increase of valid pixels percentage in mosaic when adding record.
 The value is the percentage of not yet covered area that shall be covered additionally if adding the record. This protects from
-adding masses of records that improve coverage by only a few pixels. Default is 5.}
+adding masses of records that improve coverage by only a few pixels. Default is 100.}
 
 \item{max_sub_period}{numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
 This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).}

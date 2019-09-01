@@ -14,7 +14,7 @@
       if("Sentinel" %in% records$product_group) services <- c(services, "Copernicus")
     }
   }
-  
+
   if(all("Copernicus" %in% services, !getOption("gSD.dhus_set"))) out("You are not logged in to Copernicus Hub (anymore). Please log in first using login_CopHub().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to Copernicus Hub.", msg = T)
   if(all("USGS" %in% services, !getOption("gSD.usgs_set"))) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to USGS ERS.", msg = T)
 }
@@ -115,7 +115,7 @@
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors) {
   
-  if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character (vector)",3)
+  if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character",3)
   optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
   some_wrong <- isFALSE(any(sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
   if (some_wrong) {
@@ -221,6 +221,7 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
+  dir_out <- .check_dir_out(dir_out,"preview_mosaics")
   records <- .unlist_df(records)
   options("gSD.verbose"=verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)

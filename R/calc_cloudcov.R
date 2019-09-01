@@ -124,7 +124,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     
-    out(paste0("[Aoi cloudcov calc ",i,"/",numRecords,"]"),msg=T,verbose=v)
+    out_status <- paste0("[Aoi cloudcov calc ",i,"/",numRecords,"] ")
     startTime <- Sys.time()
     record <- as.data.frame(records[i,])
     id <- record[[identifier]]
@@ -137,7 +137,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (file.exists(csv_path)) {
-      out(paste0("Loading because already processed: ",id),msg=T,verbose=v)
+      out(paste0(out_status,"Loading because already processed: ",id),msg=T,verbose=v)
       record <- as.data.frame(read_csv(csv_path,col_types=cols()))
       nms <- names(record)
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
@@ -147,7 +147,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
         }
       }
     } else {
-      out(paste0("Processing: ",id),msg=T,verbose=v)
+      out(paste0(out_status,"Processing: ",id),msg=T,verbose=v)
     }
     
     # if preview exists not yet get it, then run HOT

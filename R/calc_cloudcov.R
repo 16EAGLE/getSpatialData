@@ -184,13 +184,14 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
-    # pass preview to HOT function
-    cond <- is.null(record_preview) && 
-      inherits(record_preview,"error") && 
-      is.na(record_preview$preview_file[[1]]) &&
-      !file.exists(record_preview$preview_file[[1]])
+    preview_exists <- ifelse(inherits(record_preview,"data.frame"),
+                             ifelse("preview_file" %in% names(record_preview),
+                                    file.exists(record_preview$preview_file),FALSE),FALSE)
     
-    if (cond) {
+    # pass preview to HOT function
+    get_preview_failed <- is.null(record_preview) || inherits(record_preview,"error") || isFALSE(preview_exists)
+    
+    if (get_preview_failed) {
       record[["preview_file"]] <- "NONE"
       record_preview <- record
     } else {

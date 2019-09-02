@@ -108,6 +108,54 @@
   if(type == "sp") return(aoi.sp)
 }
 
+#' checks if an error of a http request is likely to be related to an expired login
+#' and tries to login with saved or given credentials.
+#' @param response a caught error message.
+#' @param record data.frame (single line used in the requested that returned an error).
+#' @param username character username.
+#' @param password character password.
+#' @return nothing. In case of failed login: error.
+#' @keywords internal
+#' @noRd
+.check_http_error <- function(response, record, username = NULL, password = NULL, verbose = FALSE) {
+  
+  response_char <- as.character(response)
+  is_http401_err <- all(c("http_401","error") %in% class(response)) && 
+    grepl("unauthorized",response_char,ignore.case=T)
+  
+  if (is_http401_err) {
+    
+    service <- ifelse("Landsat" %in% record$product_group | "MODIS" %in% record$product_group,"usgs",
+                      ifelse("Sentinel" %in% record$product_group,"dhus",NA))
+    
+    valid_input <- ifelse(is.na(service),FALSE,TRUE)
+    
+    if (valid_input) {
+      
+      if (any(is.null(c(username,password)))) {
+        username <- getOption(paste0("gSD.",service,"_user"))
+        password <- getOption(paste0("gSD.",service,"_pass"))
+      }
+      
+      # login
+      out("Renewing login..",msg=T,verbose=verbose)
+      if (service=="usgs") {
+        login <- try(login_USGS(username,password))
+      } else {
+        login <- try(login_CopHub(username,password))
+      }
+      
+      if (inherits(login,"try-error")) {
+        out(paste0("You are not logged in to ",
+                   ifelse(service=="usgs","USGS ERS","Copernicus Hub")," (anymore). Please log in first using login_CopHub()."),3)
+      }
+      
+    }
+  }
+  
+}
+
+
 #' checks the prio_sensors argument
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
 #' @return nothing. In case of problematic input in prio_sensors: error.

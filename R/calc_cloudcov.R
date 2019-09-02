@@ -17,7 +17,7 @@
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 20}.
-#' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 30}. It will be dynamically adjusted according to the input in \code{maxDeviation}.
+#' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 50}. It will be dynamically adjusted according to the input in \code{maxDeviation}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
 #' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
@@ -97,18 +97,18 @@
 #' @export
 
 calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
-                          cloudPrbThreshold = 30, slopeDefault = 1.4, interceptDefault = -10, 
+                          cloudPrbThreshold = 50, slopeDefault = 1.4, interceptDefault = -10, 
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
   ## Check input
   options("gSD.verbose"=verbose)
   dir_out <- .check_dir_out(dir_out,which="cloud_masks")
-  classNumErr <-  "has to be of class 'numeric'. But is: "
+  classNumErr <- " has to be of class 'numeric'. But is: "
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   records <- .check_records(records,as_df=T)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
-    if (!is.numeric(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
+    if (!is.numeric(params[[i]]) && !is.integer(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
   
   cols_initial <- colnames(records)
@@ -122,6 +122,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
   tmp_dir <- .tmp_dir(dir_out,1,change_raster_tmp=TRUE)
   v <- verbose
   identifier <- "record_id"
+  
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
     
@@ -130,10 +131,13 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     record <- as.data.frame(records[i,])
     id <- record[[identifier]]
     sensor <- record$product
+    
     if (any(is.na(c(id,sensor)))) {
       return(.handle_cc_skip(record,FALSE,dir_out))
     }
+    
     is_SAR <- sensor == "Sentinel-1"
+
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
@@ -155,8 +159,10 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (sensor == "Sentinel-1") {
       record_preview <- NULL
     } else {
+      
       prev_col_given <- "preview_file" %in% names(record)
       if (prev_col_given) {
+        
         pfile <- record$preview_file
         preview_exists <- ifelse(is.na(pfile) || pfile == "NONE",FALSE,file.exists(pfile))
         if (preview_exists) {
@@ -167,6 +173,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
             get_previews(record,dir_out=dir_out,verbose=F)
           },
           error=function(err) {
+            .check_http_error(record_preview,record,username,password,verbose=v)
             return(err)
           })
         }
@@ -174,11 +181,20 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
         .check_login(records=record)
         record_preview <- tryCatch({
           get_previews(record,dir_out=dir_out,verbose=F)
-          },
-          error=function(err) {
-            return(err)
-          }
-        )
+        },
+        error=function(err) {
+          .check_http_error(record_preview,record,username,password,verbose=v)
+          return(err)
+        })
+      }
+      
+      if (inherits(record_preview,"error")) {
+        record_preview <- tryCatch({
+          get_previews(record,dir_out=dir_out,verbose=F)
+        },
+        error=function(err) {
+          return(NULL)
+        })
       }
     }
     
@@ -189,13 +205,12 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
                              ifelse("preview_file" %in% names(record_preview),
                                     file.exists(record_preview$preview_file),FALSE),FALSE)
     
-    # pass preview to HOT function
-    get_preview_failed <- is.null(record_preview) || inherits(record_preview,"error") || isFALSE(preview_exists)
-    
+    get_preview_failed <- is.null(record_preview) || class(record_preview) %in% c("error","try-error") || isFALSE(preview_exists)
     if (get_preview_failed) {
       record[["preview_file"]] <- "NONE"
       record_preview <- record
     } else {
+      # pass preview to HOT function
       record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,

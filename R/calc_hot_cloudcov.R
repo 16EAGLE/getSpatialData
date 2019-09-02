@@ -7,7 +7,7 @@
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
 #' @param maxDeviation numeric between 0 and 100. The maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 20}.
-#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 30}. 
+#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 50}. 
 #' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.
@@ -29,7 +29,7 @@
 #' @noRd
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20, 
-                              cloudPrbThreshold = 30, slopeDefault = 1.4, 
+                              cloudPrbThreshold = 50, slopeDefault = 1.4, 
                               interceptDefault = -10, cols = NULL, dir_out = NULL, tmp_dir = NULL, verbose = TRUE) {
   
   identifier <- "record_id"

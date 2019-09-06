@@ -5,7 +5,7 @@
 \title{Calculate the cloud cover of Sentinel, Landsat or MODIS in an aoi before large data download}
 \usage{
 calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
-  cloudPrbThreshold = 30, slopeDefault = 1.4, interceptDefault = -10,
+  cloudPrbThreshold = 50, slopeDefault = 1.4, interceptDefault = -10,
   dir_out = NULL, username = NULL, password = NULL, verbose = TRUE)
 }
 \arguments{
@@ -15,7 +15,7 @@ calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
 
 \item{maxDeviation}{numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 20}.}
 
-\item{cloudPrbThreshold}{numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 30}. It will be dynamically adjusted according to the input in \code{maxDeviation}.}
+\item{cloudPrbThreshold}{numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 50}. It will be dynamically adjusted according to the input in \code{maxDeviation}.}
 
 \item{slopeDefault}{numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.}
 
@@ -38,15 +38,16 @@ calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
 }
 }
 \description{
-\code{calc_cloudcov} requests previews using \code{get_preview} and calculates the aoi cloud cover
-upon these images. Cloud cover is computed currently using one of the following options:
+\code{calc_cloudcov} calculates the aoi cloud cover and optionally saves raster cloud
+masks, all based on preview images. The previews are requested through \link{get_previews}.
+Cloud cover is computed currently using one of the following options:
 \itemize{
-\item Haze-Optimal-Transformation (HOT) (Zhu & Helmer (2018)).
+\item Haze-Optimal-Transformation (HOT) (Zhu & Helmer, 2018).
 }
 }
 \details{
-#' @details When using HOT the estimation of the cloud cover is done on the red and blue information of the input RGB. Haze-optimal transformation (HOT) procedure is applied based on 
-Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al. (2002)
+#' @details Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the red and blue information of the input RGB. HOT procedure is applied based on 
+Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al., 2002.
 "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
 HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
 }

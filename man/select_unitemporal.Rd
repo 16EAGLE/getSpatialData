@@ -19,9 +19,8 @@ If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is repro
 Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
 If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
-\item{min_improvement}{numeric the minimum increase of valid pixels percentage in mosaic when adding record.
-The value is the percentage of not yet covered area that shall be covered additionally if adding the record. This protects from
-adding masses of records that improve coverage by only a few pixels. Default is 5.}
+\item{min_improvement}{numeric the minimum increase of valid pixels percentage in a tile when adding record.
+This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.}
 
 \item{max_sub_period}{numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
 This determines how temporally close together the selected records per timestamp are (if mosaicking is needed).}

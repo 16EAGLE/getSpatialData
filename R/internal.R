@@ -1170,7 +1170,7 @@ rbind.different <- function(x) {
 #' @param factor numeric adjustment for aoi_area resulting in an adjustment 
 #' @param dir_out character directory where to save adjusted rasters if necessary
 #' @return x_adj or x (if nothing modified in data) characer vector of paths to (aggregated) rasters.
-#' @importFrom raster raster aggregate writeRaster res dataType
+#' @importFrom raster raster aggregate writeRaster res dataType nlayers
 #' @keywords internal
 #' @noRd
 .aggr_rasters <- function(x, x_names, aoi, factor = 750000, dir_out) {
@@ -1185,10 +1185,13 @@ rbind.different <- function(x) {
   adj <- ifelse(adj < 2 && adj > 1,2,adj)
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
-      r_load <- raster(x[[i]])
-      r_aggr <- aggregate(r_load,adj)
-      r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
-      writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
+      r_load <- stack(x[[i]])
+      for (j in nlayers(r_load)) {
+        layer <- r_load[[j]]
+        r_aggr <- aggregate(layer,adj)
+        r_save_path <- file.path(dir_out,paste0(x_names[i],"layer_",j,"_aggr.tif"))
+        writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
+      }
       return(r_save_path)
     })
   } else {

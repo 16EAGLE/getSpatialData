@@ -73,7 +73,7 @@
 #' @importFrom utils head tail
 #'
 #' @seealso \link{getLandsat_names} \link{getLandsat_records} \link{getLandsat_preview}
-#' @export
+#' @keywords internal
 #'
 getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NULL, wait_for_espa = NULL, force = FALSE, username = NULL, password = NULL, n.retry = 3, verbose = TRUE){
 

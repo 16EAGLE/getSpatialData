@@ -63,18 +63,19 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   }, USE.NAMES = F, SIMPLIFY = F))
   
   # georeferncing
-  out("Georeferncing previews...")
+  out("\nGeoreferncing previews...")
   records$preview_file <- unlist(mapply(file.jpg = records$preview_file_jpg, file.tif = gsub(".jpg", ".tif", records$preview_file_jpg),
                                  group = records$product_group, footprint = records$footprint, head = records$gSD.head, function(file.jpg, file.tif, group, footprint, head, records.crs = st_crs(records)){
     
+    if(is.na(file.jpg)) return(NA)
     if(file.exists(file.tif)){
-      out(paste0(head, "Skipping converting of '", file.jpg, "', since '", file.tif, "' already exists..."), msg = T)
+      out(paste0(head, "Skipping converting of '", file.jpg, "', since '", file.tif, "' already exists..."))
       return(file.tif)
     }
     
     # process
     tryCatch({
-      out(paste0(head, "Converting '", file.jpg, "' into '", file.tif, "'..."), msg = T)
+      out(paste0(head, "Converting '", file.jpg, "' into '", file.tif, "'..."))
       
       # crop preview
       prev <- stack(file.jpg)
@@ -100,7 +101,7 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
       writeRaster(prev, file.tif)
       return(file.tif)
     }, error = function(e){
-      out("Could not process preview.", type = 2)
+      out(paste0(head, "Could not process '", file.jpg, "'..."), type = 2)
       return(NA)
     })
   }, USE.NAMES = F, SIMPLIFY = F))

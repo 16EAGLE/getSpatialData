@@ -19,6 +19,43 @@
   if(all("USGS" %in% services, !getOption("gSD.usgs_set"))) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to USGS ERS.", msg = T)
 }
 
+#' check credentials
+#'
+#' @param username user
+#' @param password passw
+#' @param service service
+#'
+#' @keywords internal
+#' @noRd
+.check_credentials <- function(username, password, service){
+  
+  if(service == "Copernicus"){
+    if(is.TRUE(getOption("gSD.dhus_set"))){
+      if(is.null(username)) username <- getOption("gSD.dhus_user")
+      if(is.null(password)) password <- getOption("gSD.dhus_pass")
+    }
+    if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
+    if(!is.null(password)){ password = password} else{ password = getPass("Password (Copernicus Open Access Hub):")}
+    api.key <- NULL
+  }
+  
+  if(service == "USGS"){
+    if(is.null(username)){
+      if(is.TRUE(getOption("gSD.usgs_set"))){
+        username <- getOption("gSD.usgs_user")
+        password <- getOption("gSD.usgs_pass")
+        api.key <- getOption("gSD.usgs_apikey")
+      } else {
+        out("Argument 'username' needs to be of type 'character'. You can use 'login_USGS()' to define your login credentials globally.", type=3)
+      }
+    } else{
+      if(is.null(password)) password = getPass("Password (USGS EROS Registration System):")
+      api.key <- .ERS_login(username, password)
+    }
+  }
+  return(list("username" = username, "password" = password, "api.key" = api.key))
+}
+
 #' check records
 #'
 #' @param records object.

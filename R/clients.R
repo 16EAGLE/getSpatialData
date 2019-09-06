@@ -13,18 +13,11 @@
   
   ## check ... extras
   extras <- list(...)
-  if(!is.null(extras$username)) username <- extras$username else username <- NULL
-  if(!is.null(extras$password)) password <- extras$password else password <- NULL
+  username <- extras$username
+  password <- extras$password
   if(!is.null(extras$hub)) hub <- extras$hub else hub <- "auto"
   if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
-  
-  ## Global Copernicus Hub login
-  if(is.TRUE(getOption("gSD.dhus_set"))){
-    if(is.null(username)) username <- getOption("gSD.dhus_user")
-    if(is.null(password)) password <- getOption("gSD.dhus_pass")
-  }
-  if(!is.character(username)) out("Argument 'username' needs to be of type 'character'. You can use 'login_CopHub()' to define your login credentials globally.", type=3)
-  if(!is.null(password)){ password = password} else{ password = getPass()}
+  cred <- .check_credentials(username, password, service = "Copernicus")
   
   ## Global AOI
   if(!isTRUE(gnss)){
@@ -52,7 +45,7 @@
   }
   
   ## Manage API access
-  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else product_name, user = username, pw = password)
+  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else product_name, user = cred$username, pw = cred$password)
   
   ## query API
   row.start <- -100; re.query <- T; give.return <- T
@@ -108,7 +101,7 @@
     records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
     # translate record column names
-    records <- if(isTRUE(rename_cols)) .translate_records(records, product_name)
+    if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
     records$is_gnss <- gnss
     
     records$footprint <- st_as_sfc(records$footprint, crs = 4326)
@@ -132,22 +125,10 @@
   extras <- list(...)
   if(is.null(extras$maxCloudScene)) extras$maxCloudScene <- 100
   if(is.null(extras$maxCloudLand)) extras$maxCloudLand <- 100
-  if(!is.null(extras$username)) username <- extras$username else username <- NULL
-  if(!is.null(extras$password)) password <- extras$password else password <- NULL
+  username <- extras$username
+  password <- extras$password
   
-  ## Global USGS login
-  if(is.null(username)){
-    if(is.TRUE(getOption("gSD.usgs_set"))){
-      username <- getOption("gSD.usgs_user")
-      password <- getOption("gSD.usgs_pass")
-      api.key <- getOption("gSD.usgs_apikey")
-    } else {
-      out("Argument 'username' needs to be of type 'character'. You can use 'login_USGS()' to define your login credentials globally.", type=3)
-    }
-  } else{
-    if(is.null(password)) password = getPass()
-    api.key <- .ERS_login(username, password)
-  }
+  cred <- .check_credentials(username, password, service = "USGS")
   
   # check aoi
   aoi <- .check_aoi(aoi, type = "sf", quiet = T)
@@ -163,7 +144,7 @@
   }
   
   ## query
-  records <- .EE_query(aoi, time_range, product_name, api.key, meta.fields)
+  records <- .EE_query(aoi, time_range, product_name, cred$api.key, meta.fields)
   
   if(is.null(records)){
     out("No results could be obtained for this product, time range and AOI.", msg = T)
@@ -177,7 +158,7 @@
         x <- rbind.data.frame(x, stringsAsFactors = F)
         colnames(x) <- names
         
-        response <- try(gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = username, password = password), silent = T)
+        response <- try(gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = cred$username, password = cred$password), silent = T)
         if(inherits(response, "try-error")) response <- "l1" else{
           response <- if(all(names(content(response)) == "not_implemented")) "'l1'" else unlist(content(response)[[1]]$products) #paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
         }
@@ -213,7 +194,7 @@
     records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     
     # translate record column names
-    records <- if(isTRUE(rename_cols)) .translate_records(records, product_name)
+    if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
     
     return(records)
   }
@@ -332,3 +313,4 @@
   # mapview(r[[2]], map)
   
 }
+

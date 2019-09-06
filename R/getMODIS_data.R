@@ -48,7 +48,7 @@
 #' @importFrom httr http_error
 #'
 #' @seealso \link{getMODIS_names} \link{getMODIS_records} \link{getMODIS_preview}
-#' @export
+#' @keywords internal
 #'
 getMODIS_data <- function(records, dir_out = NULL, force = FALSE, n.retry = 3, verbose = TRUE){
 

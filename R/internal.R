@@ -142,18 +142,24 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 gSD.download <- function(url, file, name, head, type = "dataset", md5 = NULL, prog = T, force = F, ...){
   
   if(file.exists(file) & !isTRUE(force)){
-    out(paste0(head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."), msg = T)
+    #out(paste0("\r", head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."), flush = T)
+    out(paste0(head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."))
     return(TRUE)
   } else{
     
-    out(paste0(head, "Downloading ", type, " '", name, "' to '", file, "'..."), msg = T)
+    out(paste0(head, "Downloading ", type, " '", name, "' to '", file, "'..."))
     file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-    gSD.get(url, dir.file = file.tmp, prog = prog, ...)
+    response <- try(gSD.get(url, dir.file = file.tmp, prog = prog, ...), silent = T)
+    
+    if(inherits(response, "try-error")){
+      out(paste0(head, "Download of ", type, " '", name, "' failed:", gsub("\n", "", tail(strsplit(response[1], "\n ")[[1]], n = 1))), type = 2)
+      file.remove(file.tmp)
+      return(FALSE)
+    }
     
     if(!is.null(md5)){
-      if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
-      } else{
-        out(paste0("Download failed, MD5 check sums do not match."), type = 2)
+      if(!as.character(md5sum(file.tmp)) == tolower(md5)){
+        out(paste0(head, "Download of ", type, " '", name, "' failed: MD5 check sums do not match."), type = 2)
         file.remove(file.tmp)
         return(FALSE)
       }
@@ -172,32 +178,34 @@ gSD.download <- function(url, file, name, head, type = "dataset", md5 = NULL, pr
 #' @importFrom tools md5sum
 #' @keywords internal
 #' @noRd
-gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
+gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
   
-  files$download_attempts <- NA
-  i.retry <- n.retry
+  i <- n
   retry <- T
+  out(paste0("[Attempt ", toString((n-i)+1), "/", toString(n), "] Attempting downloads..."))
   
-  out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Attempting downloads..."))
-  while(isTRUE(retry) & i.retry > 0){
+  while(isTRUE(retry) & i > 0){
     
     # download per record
-    files$download_success <- apply(files, MARGIN = 1, FUN, ...)
-    files[which(files$download_success == TRUE & is.na(files$download_attempts)), "download_attempts"] <- (n.retry-i.retry)+1
+    records$download_success <- apply(records, MARGIN = 1, function(x){
+      gSD.download(url = x$dataset_url, file = x$dataset_file, name = x$record_id, head = x$gSD.head, type = "dataset", prog = T)
+    })
+    records[which(records$download_success == TRUE & is.na(records$download_attempts)), "download_attempts"] <- (n-i)+1
     
-    if(all(files$download_success == TRUE)){
+    # retry download
+    if(all(records$download_success == TRUE)){
       retry <- F
     } else{
       
-      files <- files[files$download_success == F,]
-      i.retry <- i.retry-1
+      records <- records[records$download_success == F,]
+      i <- i-1
       
-      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n.retry-i.retry)+1), "/", toString(n.retry), "] Reattempting downloads..."))
+      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n-i)+1), "/", toString(n), "] Reattempting downloads..."))
     }
   }
   
-  files$download_attempts[files$download_success == F] <- n.retry
-  return(files)
+  records$download_attempts[records$download_success == F] <- n
+  return(records)
 }
 
 #' column summary 
@@ -283,7 +291,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
     stop_for_status(x, "connect to server.")
     warn_for_status(x)
     v <- content(x)$data
-    if(is.null(v)) stop("Login failes. ") else return(v)
+    if(is.null(v)) stop("Login fails. ") else return(v)
   }
   
   .retry(.login, username = username, password = password, fail = expression(out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)),
@@ -578,23 +586,23 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
     if(length(i) > 0) dict$gSD[i] else x
   }, USE.NAMES = F)
   
-  # fill group
+  # product groups
   records$product_group <- colnames(dict)[which.col]
-  
-  # address product-specific cases
   records$product <- product_name
-  if(which(which.col) == 2){ # special cases for Sentinel
+  
+  # specific cases: Sentinel
+  if(which(which.col) == 2){
     records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
     records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
     })
+    records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
   
+  # specific cases: all EE products
   if(which(which.col) > 2){
     records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
   }
-  # fill up undefined default columns
-  #records[dict$gSD[sapply(dict$gSD, function(x) !(x %in% colnames(records)), USE.NAMES = F)]] <- NA
   
   # sort columns
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
@@ -2323,20 +2331,36 @@ quiet <- function(expr){
 #' retry the evaluation of an expression n times, if it fails, evaluate another expression
 #' @param fun function to execute
 #' @param ... arguments to fun
-#' @param fail expression, such as expression(stop("Failure"))
+#' @param fail expression evaluated when fun fails, such as expression(stop("Failure"))
+#' @param ini expression evaluated before caling fun
+#' @param final expression evaluated after success
 #' @param n number of retries
+#' @param delay delay in seconds per retry
 #' @param value whether to return x or not
 #' @return value of test.epxr or nothing
 #' @keywords internal
 #' @noRd
-.retry <- function(fun, ..., fail, n = 3, value = TRUE){
+.retry <- function(fun, ..., fail, ini = NULL, retry = NULL, final = NULL, n = 3, delay = 0, value = TRUE, verbose = T){
+  
+  # initial evaluation
+  if(!is.null(ini)) eval(ini)
+  
+  # retry evluation
   while(n != 0){
     x <- try(fun(...), silent = T)
     if(inherits(x, "try-error")){
+      
+      # retry evluation
+      eval(retry)
+      
+      # fail evaluation
       n <- n-1
       if(n == 0) x <- eval(fail)
     } else n <- 0
+    Sys.sleep(delay)
   }
+  
+  # final evaluation
+  eval(final)
   if(isTRUE(value)) return(x)
 }
-

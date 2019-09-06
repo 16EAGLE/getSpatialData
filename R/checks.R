@@ -115,6 +115,7 @@
 #' @param username character username.
 #' @param password character password.
 #' @return nothing. In case of failed login: error.
+#' @importFrom R.utils withTimeout
 #' @keywords internal
 #' @noRd
 .check_http_error <- function(response, record, username = NULL, password = NULL, verbose = FALSE) {
@@ -140,9 +141,9 @@
       # login
       out("Renewing login..",msg=T,verbose=verbose)
       if (service=="usgs") {
-        login <- try(login_USGS(username,password))
+        login <- try(withTimeout(login_USGS(username,password),onTimeout="silent",timeout=30))
       } else {
-        login <- try(login_CopHub(username,password))
+        login <- try(withTimeout(login_CopHub(username,password),onTimeout="silent",timeout=30))
       }
       
       if (inherits(login,"try-error")) {
@@ -213,7 +214,7 @@
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
   s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
-  out(cat("Number of timestamps selected:",num_timestamps,s))
+  out(cat("\nNumber of timestamps selected:",num_timestamps,s))
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
   } else if (sub_period == r) {
@@ -269,11 +270,11 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
-  dir_out <- .check_dir_out(dir_out,"preview_mosaics")
+  if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
+  #dir_out <- .check_dir_out(dir_out,"preview_mosaics")
   records <- .unlist_df(records)
   options("gSD.verbose"=verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
-  dir_out <- .check_dir_out(dir_out)
   # check if all columns are provided
   has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
                                                      par$preview_col,par$cloud_mask_col))

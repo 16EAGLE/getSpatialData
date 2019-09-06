@@ -144,6 +144,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     if (file.exists(csv_path)) {
       out(paste0(out_status,"Loading (yet processed): ",id),msg=T,verbose=v)
       record <- as.data.frame(read_csv(csv_path,col_types=cols()))
+      record <- .df_dates_to_chars(record)
       nms <- names(record)
       if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
           NROW(record) > 0) {
@@ -173,7 +174,6 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
             get_previews(record,dir_out=dir_out,verbose=F)
           },
           error=function(err) {
-            .check_http_error(record_preview,record,username,password,verbose=v)
             return(err)
           })
         }
@@ -183,12 +183,12 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
           get_previews(record,dir_out=dir_out,verbose=F)
         },
         error=function(err) {
-          .check_http_error(record_preview,record,username,password,verbose=v)
           return(err)
         })
       }
       
       if (inherits(record_preview,"error")) {
+        .check_http_error(record_preview,record,username,password,verbose=v)
         record_preview <- tryCatch({
           get_previews(record,dir_out=dir_out,verbose=F)
         },
@@ -207,13 +207,14 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     
     get_preview_failed <- is.null(record_preview) || class(record_preview) %in% c("error","try-error") || isFALSE(preview_exists)
     if (get_preview_failed) {
+      record[["preview_file_jpg"]] <- "NONE"
       record[["preview_file"]] <- "NONE"
       record_preview <- record
     } else {
       # pass preview to HOT function
       record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
-      record_cc <- try(calc_hot_cloudcov(record=record_preview,
+      record_cc <- try(getSpatialData:::calc_hot_cloudcov(record=record_preview,
                                          preview=preview,
                                          aoi=aoi,
                                          cloudPrbThreshold=cloudPrbThreshold,
@@ -226,16 +227,16 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     }
     
     if (isTRUE(get_preview_failed) || class(record_cc) != "data.frame" || is.na(record_cc)) {
-      record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
+      record_cc <- getSpatialData:::.handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     
     previewSize <- c(previewSize,object.size(preview))
     endTime <- Sys.time()
-    if (i <= 5) {
+    if (i <= 10) {
       elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
       processingTime <- c(processingTime,elapsed)
     }
-    if (numRecords >= 10 && i == 5) {
+    if (numRecords >= 15 && i == 10) {
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     
@@ -254,7 +255,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 20,
     record_cc <- .unlist_df(record_cc)
     return(record_cc)
     
-  })))
+  })),stringsAsFactors=F)
   
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)

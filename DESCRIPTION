@@ -31,7 +31,8 @@ Imports:
   processx,
   stats,
   methods,
-  readr
+  readr,
+  R.utils
 RoxygenNote: 6.1.1
 Suggests: 
   testthat

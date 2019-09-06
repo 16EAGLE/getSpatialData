@@ -19,9 +19,8 @@
 #' For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
 #' then the next timestamp will not include scenes in <= 10 days after 20th May 2019. 
 #' The first scene the next timestamp could include would be the 31st May 2019 thus.
-#' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
-#' The value is the percentage of not yet covered area that shall be covered additionally if adding the record. This protects from
-#' adding masses of records that improve coverage by only a few pixels. Default is 100.
+#' @param min_improvement numeric the minimum increase of valid pixels percentage in a tile when adding record.
+#' This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
 #' This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
@@ -80,6 +79,7 @@ The minimum number for select_timeseries is: 3"),3)
                           min_improvement,
                           max_sub_period,
                           max_cloudcov_tile,
+                          satisfaction_value,
                           prio_sensors,
                           dir_out,
                           params,

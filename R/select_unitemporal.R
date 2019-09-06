@@ -14,14 +14,14 @@
 #' If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
 #' Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
 #' If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
-#' The value is the percentage of not yet covered area that shall be covered additionally if adding the record. This protects from
-#' adding masses of records that improve coverage by only a few pixels. Default is 5.
+#' @param min_improvement numeric the minimum increase of valid pixels percentage in a tile when adding record.
+#' This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
 #' This determines how temporally close together the selected records per timestamp are (if mosaicking is needed).
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
 #' The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 #' or shadows. Default is 80. 
+#' @param satisfaction_value numeric percentage considered as cloud-free. Default is 98.
 #' @param prio_sensors character vector optioal. Sensor names ordered by priority. Selection is done in the order
 #' of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
 #' selection was not fullfilled by previous sensor.
@@ -41,7 +41,7 @@
 #' 
 #' @export
 select_unitemporal <- function(records, aoi,
-                               min_improvement = 100, max_sub_period, max_cloudcov_tile = 80, 
+                               min_improvement = 100, max_sub_period, max_cloudcov_tile = 80, satisfaction_value = 98,
                                prio_sensors = c(),
                                dir_out = NULL, verbose = TRUE) {
   
@@ -56,7 +56,7 @@ select_unitemporal <- function(records, aoi,
   has_SAR <- prep$has_SAR
   timestamp <- 1
   records[["sub_period"]] <- timestamp
-  
+
   #### Checks
   .select_checks(records,aoi,params$period,num_timestamps,prio_sensors,params,dir_out,verbose)
   
@@ -70,6 +70,7 @@ select_unitemporal <- function(records, aoi,
                           min_improvement,
                           max_sub_period,
                           max_cloudcov_tile,
+                          satisfaction_value,
                           prio_sensors,
                           dir_out,
                           params,

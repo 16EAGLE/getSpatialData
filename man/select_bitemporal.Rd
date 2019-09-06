@@ -9,7 +9,7 @@ select_bitemporal(records, aoi, min_distance, min_improvement = 5,
   dir_out = NULL, verbose = TRUE)
 }
 \arguments{
-\item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns.
+\item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 Records will be selected from these records.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
@@ -19,16 +19,16 @@ If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is repro
 Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
 If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
-\item{min_distance}{numeric the minimum number of days between the two used acquisitions for distinguished timestamps. 
-For example, if a scene from 20th May 2019 is selected for the first timestamp and \code{min_distance == 10} 
-then the second timestamp will not include scenes in <= 10 days after 20th May 2019. 
-The first scene, the second timestamp could include would be the 31st May 2019 thus.}
+\item{min_distance}{numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
+For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
+then the next timestamp will not include scenes in <= 10 days after 20th May 2019. 
+The first scene the next timestamp could include would be the 31st May 2019 thus.}
 
 \item{min_improvement}{numeric the minimum increase of valid pixels percentage in a tile when adding record.
 This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.}
 
 \item{max_sub_period}{numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
-This determines how temporally close together the selected records per timestamp are (if mosaicking is needed).}
+This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).}
 
 \item{max_cloudcov_tile}{numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
 The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze

@@ -81,7 +81,7 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
     if(x$product_group == "Sentinel"){
       download <- .retry(gSD.download, url = x$dataset_url, file = x$dataset_file, name = x$record_id, head = x$gSD.head, type = "dataset", prog = T,
                          fail = expression(out(paste0("Attempts to download '", name, "' failed.", type = 2))),
-                         retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."))), delay = 0, value = T)
+                         retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)), delay = 0, value = T)
       if(isTRUE(download)) x$dataset_file else NA
     } else NA
   })

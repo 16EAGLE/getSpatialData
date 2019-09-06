@@ -200,7 +200,7 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
       records <- records[records$download_success == F,]
       i <- i-1
       
-      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n-i)+1), "/", toString(n), "] Reattempting downloads..."))
+      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n-i)+1), "/", toString(n), "] Reattempting downloads..."), msg = T)
     }
   }
   

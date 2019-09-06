@@ -1186,8 +1186,7 @@ rbind.different <- function(x) {
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
       r_load <- stack(x[[i]])
-      layer <- r_load[[j]]
-      r_aggr <- aggregate(layer,adj)
+      r_aggr <- aggregate(r_load,adj)
       r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
       writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
       return(r_save_path)
@@ -1402,7 +1401,7 @@ sep <- function() {
   # aggregate previews
   preview_paths <- sapply(id_sel,function(i) return(records[i,preview_col]))
   nms <- names(preview_paths)
-  preview_paths_aggr <- .aggr_rasters(preview_paths,nms,aoi,dir_out=tmp_dir)
+  preview_paths_aggr <- .aggr_rasters(preview_paths[1],nms,aoi,dir_out=tmp_dir)
   names(preview_paths_aggr) <- nms
   
   # cloud mask previews band-wise

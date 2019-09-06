@@ -1186,12 +1186,10 @@ rbind.different <- function(x) {
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
       r_load <- stack(x[[i]])
-      for (j in nlayers(r_load)) {
-        layer <- r_load[[j]]
-        r_aggr <- aggregate(layer,adj)
-        r_save_path <- file.path(dir_out,paste0(x_names[i],"layer_",j,"_aggr.tif"))
-        writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
-      }
+      layer <- r_load[[j]]
+      r_aggr <- aggregate(layer,adj)
+      r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
+      writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
       return(r_save_path)
     })
   } else {

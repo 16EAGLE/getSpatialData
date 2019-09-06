@@ -1401,7 +1401,7 @@ sep <- function() {
   # aggregate previews
   preview_paths <- sapply(id_sel,function(i) return(records[i,preview_col]))
   nms <- names(preview_paths)
-  preview_paths_aggr <- .aggr_rasters(preview_paths[1],nms,aoi,dir_out=tmp_dir)
+  preview_paths_aggr <- .aggr_rasters(preview_paths[1:3],nms,aoi,dir_out=tmp_dir)
   names(preview_paths_aggr) <- nms
   
   # cloud mask previews band-wise
@@ -1414,7 +1414,7 @@ sep <- function() {
     preview <- stack(p_path)
     if (is.na(crs(preview))) crs(preview) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
     sensors_adj <- c("landsat","modis","sentinel-3")
-    cond <- grepl(tolower(records[i,"product_group"]),sensors_adj)
+    cond <- tolower(records[i,"product"]) %in% sensors_adj
     
     if (isTRUE(any(cond)) && length(sensors_given) > 1) {
       # disaggregate preview to the resolution of other sensor in records that has higher resolution

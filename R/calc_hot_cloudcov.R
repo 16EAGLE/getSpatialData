@@ -53,8 +53,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 20,
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
   
-  if (is.na(crs(preview))) crs(preview) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  
   # Check if preview is broken (has no observations with DN >= 20)
   prev_vals <- as.integer(as.vector(values(preview)))
   is_broken <- all(prev_vals < 20)

@@ -867,7 +867,7 @@ rbind.different <- function(x) {
 #' @noRd
 .tmp_dir <- function(dir_out, action = 2, change_raster_tmp = F, tmp_orig = NULL) {
   
-  tmp_dir <- file.path(dir_out,"tmp")
+  tmp_dir <- normalizePath(file.path(dir_out,"tmp"))
   if (dir.exists(tmp_dir) && action ==2) {unlink(tmp_dir,recursive=T)}
   if (action == 1) {dir.create(tmp_dir)}
   if (isTRUE(change_raster_tmp)) {
@@ -984,26 +984,17 @@ rbind.different <- function(x) {
 #' @noRd
 .disaggr_raster <- function(x, x_sensor, y_sensor, aoi) {
   
-  aoi_area <- .calc_aoi_area(aoi)
-  adj_ref <- aoi_area / factor
-  res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
-  target_res <- 0.0019 * adj_ref # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
-  # do not reduce the resolution to the equivalent of more than double the Sentinel-2 preview resolution
-  if (target_res > 0.0042) target_res <- 0.004 
-  adj_ref <- target_res / res_ref
-  adj_ref <- ifelse(adj_ref < 2 && adj_ref > 1,2,adj_ref)
+  x_sensor <- tolower(x_sensor)
   
-  options <- list(s2="Sentinel-2",s3="Sentinel-3",l="Landsat",m="MODIS")
-  if (x_sensor == options$l && y_sensor == options$s2) {
-    adj <- 3/adj_ref
-  } else if (x_sensor == options$m && y_sensor == options$s2) {
-    adj <- 3 # change it still
-  } else if  (x_sensor == options$s3 && y_sensor == options$s2) {
-    adj <- 3 # change it still
-  } else if (x_sensor == options$s3 && y_sensor == options$l) {
-    adj <- 3 # change it still 
-  }
-  x_dis <- disaggregate(x,adj)
+  # disaggregation parameters
+  res <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
+  target_res <- 0.0019 # the Sentinel-2 preview resolution
+  # do not reduce the resolution to the equivalent of more than double the Sentinel-2 preview resolution
+  adj <- res / target_res
+  adj <- ifelse(adj < 1,1,adj)
+  x_dis <- try(disaggregate(x,adj))
+  
+  if (inherits(x_dis,"try-error")) return(x) else return(x_dis)
   
 }
 
@@ -1044,6 +1035,20 @@ rbind.different <- function(x) {
 
 #### HELPERS
 
+#' creates a tileid from row/path
+#' @param records data.frame.
+#' @return \code{records} data.frame with a completely filled tile_id column.
+#' @keywords internal
+#' @noRd
+.make_tileid <- function(records) {
+  
+  tileid_not_given <- which(is.na(records$tile_id))
+  tileids <- paste0(na.omit(records$tile_number_horizontal),na.omit(records$tile_number_vertical))
+  records[tileid_not_given,"tile_id"] <- tileids
+  return(records)
+  
+}
+
 #' creates a character date column in the format "YYYY-MM-DD" for Sentinel records
 #' @param records data.frame.
 #' @param date_col_orig character name of the original date colum.
@@ -1054,7 +1059,7 @@ rbind.different <- function(x) {
 .extract_clear_date <- function(records, date_col_orig, date_col_name) {
   
   records[[date_col_name]] <- records[[date_col_orig]]
-  sent_recs <- which(records$sensor_group=="Sentinel")
+  sent_recs <- which(records$product_group=="Sentinel")
   for (i in sent_recs) {
     records[i,date_col_name] <- as.character(substr(records[i,date_col_name],1,10))
   }
@@ -1081,28 +1086,6 @@ rbind.different <- function(x) {
 #' @noRd
 .period_days <- function(period) {
   days <- as.integer(as.Date(period[2]) - as.Date(period[1]))
-}
-
-#' creates clean tile ids
-#' @param records data.frame.
-#' @param identifier numeric identifier column.
-#' @return \code{records} data.frame with an added column: 'tile_id'
-#' @keywords internal
-#' @noRd
-.make_tileid <- function(records, identifier) {
-  
-  sensor_groups <- unique(records$product_group)
-  for (s in sensor_groups) {
-    if (s == sensor_groups[1]) {
-      titles <- records[[identifier]][which(records$product_group==s)]
-      tile_id <- sapply(titles,function(x) {return(substr(x,39,44))})
-    } else if (s %in% sensor_groups[2:3]) {
-      tile_id <- paste0(records$WRSPath,records$WRSRow)
-    }
-  }
-  records[["tile_id"]] <- unlist(tile_id)
-  return(records)
-  
 }
 
 #' checks if an new coverage percentage exceeds the min_improvement argument
@@ -1150,17 +1133,6 @@ rbind.different <- function(x) {
 }
 
 #### RASTER HANDLING
-
-#' masks a raster with masks of 1 and NA (remain with pixels where mask == 1)
-#' @param x raster to be masked.
-#' @param mask raster mask with 1 for valid pixels and NA for pixels to be set NA.
-#' @return \code{x} masked raster
-#' @keywords internal
-#' @noRd
-.mask_raster <- function(x, mask) {
-  x[is.na(mask)] <- NA
-  return(x)
-}
 
 #' aggregates rasters according to the aoi area size.
 #' @param x character vector of paths to rasters to check on. All have to have
@@ -1219,9 +1191,9 @@ rbind.different <- function(x) {
               cloud_mask_col="cloud_mask_file",
               date_col="date_acquisition",
               identifier="record_id")
-  params$sensor_group <- unique(records$sensor_group)
-  params$sensor <- unique(records$sensor)
-  params$tileids <- unique(records[[params$tileid_col]])
+  params$product_group <- unique(na.omit(records$product_group))
+  params$product <- unique(na.omit(records$product))
+  params$tileids <- unique(na.omit(records[[params$tileid_col]]))
   params$sep <- sep()
   return(params)
   
@@ -1262,10 +1234,11 @@ sep <- function() {
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
   records <- .unlist_df(records)
+  records <- .make_tileid(records)
   params <- .select_params(records,mode)
   params$period <- .identify_period(records[[params$date_col]])
   records <- .select_prep(records,num_timestamps,params)
-  has_SAR <- .has_SAR(params$sensor) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
+  has_SAR <- .has_SAR(params$product) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
   prep <- list(records=records,
                params=params,
                has_SAR=has_SAR)
@@ -1305,9 +1278,9 @@ sep <- function() {
 .select_bridge_mosaic <- function(paths, aoi, save_path, mode = "mask") {
   
   tmp_load <- raster(paths[1])
-  datatype <- dataType(tmp_load)
-  srcnodata <- ifelse(datatype == "INT2S","-32768","-3.3999999521443642e+38")
-  mos_base <- .make_mosaic(paths,save_path,mode=mode,srcnodata=srcnodata,datatype=datatype)
+  src_datatype <- dataType(tmp_load)
+  srcnodata <- ifelse(src_datatype == "INT2S","-32768","-3.3999999521443642e+38")
+  mos_base <- .make_mosaic(paths,save_path,mode=mode,srcnodata=srcnodata,datatype=src_datatype)
   if (class(mos_base) != "RasterLayer") {
     return(NA)
   } else {
@@ -1315,7 +1288,7 @@ sep <- function() {
     mos_base_mask <- mask(mos_base,aoi)
     mos_base_crop <- crop(mos_base_mask,aoi)
     writeRaster(mos_base_crop,save_path,overwrite=T,
-                srcnodata=srcnodata,datatype=datatype)
+                srcnodata=srcnodata,datatype=src_datatype)
     
     return(mos_base_crop)
   }
@@ -1336,17 +1309,16 @@ sep <- function() {
 .make_mosaic <- function(x, save_path, mode = "mask", 
                          srcnodata = NULL, datatype = NULL) {
   
-  write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",srcnodata=c(as.character(srcnodata)),
-                            vrtnodata=c(srcnodata),seperate=F,overwrite=T,datatype=datatype))
+  write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",
+                                srcnodata=as.character(srcnodata),
+                                vrtnodata="0",
+                                seperate=F,overwrite=T,datatype=datatype))
+
   if (inherits(write_mos,"try-error")) {
     return(NA)
   } else {
     mos <- raster(save_path)
-    if (mode == "rgb") {
-      return(mos)
-    } else {
-      mos <- mos==1
-    }
+    if (mode == "rgb") return(mos) else mos <- mos==1
   }
   
 }
@@ -1374,85 +1346,88 @@ sep <- function() {
 #' @param records data.frame.
 #' @param s list 'selected' of a timestamp holding everything inserted in select_*().
 #' @param aoi aoi.
-#' @param i numeric index in the loop.
+#' @param i integer index in the loop.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @param dir_out character directory below which to save intermediate product in tmp.
 #' @param cloud_mask_col character name of cloud mask path column.
 #' @param preview_col character name of the preview path column.
+#' @param sensors_given character vector of the product_group given in records.
 #' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
 #' @importFrom raster writeRaster stack mask tmpDir
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
-.select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, cloud_mask_col, preview_col) {
+.select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, 
+                                cloud_mask_col, preview_col, sensors_given) {
   
   tmp_dir_orig <- base::tempdir()
   tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
   
+  r <- "RasterLayer"
+  wgs_crs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
-  vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n")
-  save_str <- paste0(sample(vec,10),collapse = "")
+  vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","")
+  save_str <- paste0(sample(vec,10),"_",collapse = "")
   save_pmos <- file.path(tmp_dir,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
-  # mask preview tiles by cloud masks
   layers <- c("red","green","blue")
-  sensors_given <- unique(records$sensor_group)
-  sensors_ref <- c("Sentinel-2","Landsat","Sentinel-3","MODIS")
   
-  # aggregate previews
-  preview_paths <- sapply(id_sel,function(i) return(records[i,preview_col]))
-  nms <- names(preview_paths)
-  preview_paths_aggr <- .aggr_rasters(preview_paths[1:3],nms,aoi,dir_out=tmp_dir)
-  names(preview_paths_aggr) <- nms
+  # disaggregation adjustment parameters
+  #sensors_ref <- c("Sentinel-2","Sentinel-3")
+  #sensors_adj <- c("Landsat","MODIS")
+  #disaggr_needed <- any(sensors_given %in% sensors_ref) && any(sensors_given %in% sensors_adj)
+  #if (disaggr_needed) y_sensor <- sensors_ref[which(sensors_given %in% sensors_ref)[1]]
   
   # cloud mask previews band-wise
   # this returns a list of paths to each of the three cloud-masked bands per record
-  preview_paths_ready <- lapply(id_sel,function(i) {
+  preview_paths <- lapply(id_sel,function(id_index) {
     
-    p_path <- preview_paths_aggr[which(id_sel==i)] # get path of aggregated preview
+    p_path <- records[id_index,preview_col]
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
-    cMask <- raster(records[i,cloud_mask_col]) # cloud mask
+    cMask <- raster(records[id_index,cloud_mask_col]) # cloud mask
     preview <- stack(p_path)
-    if (is.na(crs(preview))) crs(preview) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-    sensors_adj <- c("landsat","modis","sentinel-3")
-    cond <- tolower(records[i,"product"]) %in% sensors_adj
+    if (is.na(crs(cMask))) crs(cMask) <- wgs_crs
+    if (is.na(crs(preview))) crs(preview) <- wgs_crs
     
-    if (isTRUE(any(cond)) && length(sensors_given) > 1) {
+    #product_group_given <- records[id_index,"product_group"]
+    #do_disaggregation <- product_group_given %in% sensors_adj && disaggr_needed
+    #if (do_disaggregation) {
       # disaggregate preview to the resolution of other sensor in records that has higher resolution
-      y_sensor <- sensors_ref[which(sensors_given %in% sensors_ref)]
-      x_sensor <- firstup(sensors_adj[which(cond==T)])
-      preview <- try(.disaggr_raster(preview,x_sensor=x_sensor,y_sensor=y_sensor))
-    }
+    #  preview <- try(.disaggr_raster(preview,x_sensor=product_group_given,y_sensor=y_sensor))
+    #}
     
-    preview_aoi <- mask(preview,aoi)
-    preview_masked <- .mask_raster(preview_aoi,cMask)
-    preview_save <- file.path(tmp_dir,paste0(records[i,identifier],"_cloud_masked"))
-    paths_sep <- sapply(1:nlayers(preview_masked),function(j) {
-      layer_save <- paste0(preview_save,"_",i,"_",layers[j],".tif")
-      writeRaster(preview_masked[[j]],layer_save,overwrite=T)
+    preview_cloud_masked <- preview * cMask
+    preview_save <- file.path(tmp_dir,paste0(records[id_index,identifier],"_cmasked"))
+
+    paths_sep <- sapply(1:nlayers(preview_cloud_masked),function(j) {
+      layer_save <- paste0(preview_save,"_",id_index,"_",layers[j],".tif")
+      writeRaster(preview_cloud_masked[[j]],layer_save,overwrite=T)
       return(layer_save)
     })
     
   })
   
-  preview_paths <- .gsd_compact(preview_paths_ready)
+  preview_paths <- .gsd_compact(preview_paths)
   
   # create the mosaic band-wise
   # this returns a list of band-wise mosaics
   preview_mos <- lapply(1:length(layers),function(j) {
     curr_layers <- lapply(preview_paths,function(x) path <- x[j])
-    save_path_pmos <- file.path(tmp_dir,paste0(save_pmos,"_",layers[j],".tif"))
-    pmos <- .select_bridge_mosaic(unlist(curr_layers),aoi,save_path_pmos,mode="rgb")
-    if (class(pmos) != "RasterLayer") return(NA) else return(pmos)
+    save_path_pmos <- paste0(save_pmos,"_",layers[j],".grd")
+    pmos <- try(.select_bridge_mosaic(unlist(curr_layers),aoi,save_path_pmos,mode="rgb"))
+    if (class(pmos) != r) return(NA) else return(pmos)
   })
   
-  .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
+  if (any(sapply(preview_mos,class) != r)) out("Could not create preview RGB mosaic",2)
   
-  # stack all band
+  # stack all bands and write to file
   preview_mos_stack <- stack(preview_mos)
   save_pmos_final <- file.path(dir_out,paste0("rgb_preview_mosaic_ts",i,".tif"))
   writeRaster(preview_mos_stack,save_pmos_final,overwrite=T)
+  
+  # cleanup
   .delete_tmp_files(tmp_dir)
   .tmp_dir(dir_out,action=2,TRUE,tmp_dir_orig)
+  
   return(save_pmos_final)
   
 }
@@ -1483,27 +1458,30 @@ sep <- function() {
   tmp_dir_orig <- tempdir()
   tmp_dir <- .tmp_dir(dir_out,1,TRUE)
   r <- "RasterLayer"
+  curr_sensor <- unique(records$product)
   if (!class(aoi)[1] %in% c("SpatialPolygons","SpatialPolygonsDataFrame")) aoi <- as(aoi,"Spatial")
   le_first_order <- length(sub_within[[1]])
   
-  # sort the orders of sub_within according to the aoi cloud cover of the same tile in previous order
-  # this way for each order those tiles will be checked first that had the highest cloud cover in previous order
-  # it shall result in handling large gaps first and small gaps late
-  tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,"tile_id"]))))
-  cc_col <- "aoi_HOT_cloudcov_percent"
-  sub_within_sorted <- append(sub_within[1],lapply(2:length(sub_within),function(i) {
-    curr_tiles <- tile_mirror[[i]]
-    prev_tiles <- tile_mirror[[i-1]]
-    tile_in_previous <- which(curr_tiles %in% prev_tiles)
-    cc_previous <- records[sub_within[[i-1]][which(prev_tiles %in% curr_tiles)],cc_col] # cloud cover of records of previous order
-    sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous,decreasing=TRUE)]
-    return(sorted_order)
-  }))
-  
-  sub_within <- unlist(.gsd_compact(sub_within_sorted)) # vector of integer indices
+  if (length(sub_within) > 1) {
+    # sort the orders of sub_within according to the aoi cloud cover of the same tile in previous order
+    # this way for each order those tiles will be checked first that had the highest cloud cover in previous order
+    # it shall result in handling large gaps first and small gaps late
+    tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,"tile_id"]))))
+    cc_col <- "aoi_HOT_cloudcov_percent"
+    sub_within_sorted <- append(sub_within[1],lapply(2:length(sub_within),function(i) {
+      curr_tiles <- tile_mirror[[i]]
+      prev_tiles <- tile_mirror[[i-1]]
+      tile_in_previous <- which(curr_tiles %in% prev_tiles)
+      cc_previous <- records[sub_within[[i-1]][which(prev_tiles %in% curr_tiles)],cc_col] # cloud cover of records of previous order
+      sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous,decreasing=TRUE)]
+      return(sorted_order)
+    }))
+    
+    sub_within <- unlist(.gsd_compact(sub_within_sorted)) # vector of integer indices
+  }
   
   # get paths to cloud masks. This is the queue for processing
-  collection <- sapply(sub_within,function(x) cmask_path <- as.character(records[[cloud_mask_col]][x])) 
+  collection <- sapply(sub_within,function(x) cMask_path <- as.character(records[[cloud_mask_col]][x])) 
   # this vector are all orders ordered from best records (lowest aoi cc) 
   # to worst records (highest aoi cc) in a queue and respecting the tile order
   names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
@@ -1519,12 +1497,13 @@ sep <- function() {
   } else {
     start <- 1 # if base mosaic is the mosaic of a prio sensor process all of this sensor
   }
+  
   # aggregate raster adjusted to aoi area size in order to speed up process
   names <- names(base_records)
   base_records <- .aggr_rasters(base_records,names,aoi=aoi,dir_out=tmp_dir)
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
-  base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
+  base_mos_path <- normalizePath(file.path(tmp_dir,"base_mosaic_tmp.tif"))
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
   if (class(base_mos) != r) start <- 1
   # cleanup
@@ -1540,7 +1519,8 @@ sep <- function() {
     if (i == start) {
       base_mos <- raster(base_mos_path) # current mosaic
       out("Current coverage of valid pixels..")
-      .out_cov(.raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi),(i-1),le_collection)
+      base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
+      .out_cov(base_coverage,(i-1),le_collection,curr_sensor)
     }
     
     name_x <- names(x)
@@ -1560,7 +1540,7 @@ sep <- function() {
       add_it <- FALSE
     } else {
       crop_p <- file.path(tmp_dir,"crop_tmp.tif")
-      curr_mos_tmp_p <- file.path(tmp_dir,"curr_crop_mos_tmp.tif")
+      curr_mos_tmp_p <- normalizePath(file.path(tmp_dir,"curr_crop_mos_tmp.tif"))
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
       if (class(curr_mos_tmp) != r) {
@@ -1571,6 +1551,7 @@ sep <- function() {
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
         rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
+        
         # calculate if valid coverage in whole aoi is improved > min_improvement 
         # when adding the record to the tile area
         if (((cov_init + (cov_init / 100) * min_improvement)) > 100) {
@@ -1584,7 +1565,7 @@ sep <- function() {
     if (add_it) {
       save_str <- "base_mos_tmp_"
       curr <- paste0(save_str,i,".tif")
-      base_mos_path_tmp <- file.path(tmp_dir,curr)
+      base_mos_path_tmp <- normalizePath(file.path(tmp_dir,curr))
       base_records <- c(base_records,x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
       if (class(base_mos) == r) {
@@ -1599,15 +1580,15 @@ sep <- function() {
         })
         base_mos <- raster(base_mos_path_tmp)
         base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
-        base_mos_path <- base_mos_path_tmp
+        base_mos_path <- normalizePath(base_mos_path_tmp)
         # cleanup
         rm(base_mos)
         .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
         # coverage console update
-        .out_cov(base_coverage,i,le_collection)
+        .out_cov(base_coverage,i,le_collection,curr_sensor)
       }
     }
-    if (round(base_coverage) >= satisfaction_value) {
+    if (base_coverage >= satisfaction_value) {
       break
     }
   }
@@ -1657,14 +1638,18 @@ sep <- function() {
   console_info <- list()
   cols <- c(params$selected_col,params$timestamp_col,params$pmos_col,params$cmos_col)
   records <- .select_prep_cols(records,cols,params$selected_col)
+  
   for (i in 1:length(selected)) {
+    
     s <- selected[[i]]
     id_sel <- s$ids
     #A cloud mask mosaic
     save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
     #B preview mosaic
     save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
-                                          cloud_mask_col=params$cloud_mask_col,preview_col=params$preview_col)
+                                          cloud_mask_col=params$cloud_mask_col,
+                                          preview_col=params$preview_col,
+                                          sensors_given=params$product_group)
     #C add columns to records
     insert <- c(TRUE,s$timestamp,save_path_pmos,save_path_cmos)
     for (j in 1:length(cols)) {
@@ -1672,6 +1657,7 @@ sep <- function() {
     }
     # get print info
     console_info[[i]] <- .select_final_info(s)
+    
   }
   each_timestamp <- .out_vector(console_info)
   return(records)
@@ -1722,23 +1708,31 @@ sep <- function() {
   
   #### Start Process for optical data selection
   selected <- list() # list to be filled by all selected 'record_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
-  sub_periods <- unique(records$sub_period)
+  sub_periods <- unique(na.omit(records$sub_period))
   
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
-  for (t in 1:length(sub_periods[!is.na(sub_periods)])) {
+  for (t in 1:length(sub_periods)) {
+    
+    if (t > 1) previous_period <- selected[[t-1]]$period
+    
     selected_ts <- try(.select_process(records,
                                        aoi,
                                        timestamp=t,
                                        min_distance=min_distance, 
-                                       max_sub_period=max_sub_period,max_cloudcov_tile=max_cloudcov_tile, 
+                                       max_sub_period=max_sub_period,
+                                       max_cloudcov_tile=max_cloudcov_tile, 
                                        min_improvement=min_improvement,
+                                       previous_period=previous_period,
                                        satisfaction_value=satisfaction_value,
-                                       params=params,dir_out=dir_out))
+                                       params=params,
+                                       dir_out=dir_out))
+    
     if (inherits(selected_ts,"try-error")) {
       out("\nSelection failed for timestamp: ",t)
     }
     selected_ts[["timestamp"]] <- t
     selected[[t]] <- selected_ts # insert 'selected_ts' list into selected list
+    
   }
   
   # if some are SAR records
@@ -1756,7 +1750,7 @@ sep <- function() {
   mode_console <- ifelse(length(selected)==1,""," per timestamp")
   sep <- params$sep
   out(paste0(sep,"\nSelection Process Summary",
-             mode_console,sep))
+             mode_console))
   # create final mosaics for each timestamp and summary message per timestamp
   records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
                                   params=params,dir_out=dir_out)
@@ -1782,6 +1776,7 @@ sep <- function() {
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
+#' @param previous_period character vector selected period of previous timestamp.
 #' @param satisfaction_value numeric.
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
 #' @param params list holding everything inserted into this parameter list in .select_params().
@@ -1793,16 +1788,22 @@ sep <- function() {
 .select_process <- function(records, aoi,
                             timestamp,
                             min_distance, max_sub_period, max_cloudcov_tile, 
-                            min_improvement, satisfaction_value, prio_sensors = NULL,
+                            min_improvement, previous_period,
+                            satisfaction_value, prio_sensors = NULL,
                             params, dir_out) {
 
-  period_new <- c()
-  base_records <- c()
-  ids <- c()
-  valid_pixels <- 0
-  prio_sensors <- ifelse(is.null(prio_sensors) || length(prio_sensors) == 1,"none",prio_sensors)
-  le_prio_is_one <- length(prio_sensors) == 1
+  period_new <- c() # for selection from multiple sensors
+  base_records <- c() # same 
+  ids <- c() # same
+  valid_pixels <- 0 # same
   
+  if (is.null(prio_sensors) || length(prio_sensors) == 1) {
+    le_prio_is_one <- TRUE
+    prio_sensors <- "none"
+  } else {
+    le_prio_is_one <- FALSE
+  }
+
   for (s in prio_sensors){
     
     if (le_prio_is_one) {
@@ -1814,22 +1815,24 @@ sep <- function() {
     }
     sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
     if (length(sensor_match) == 0) { # no records for sensors s at timestamp
-      if (le_prio_is_one) .catch_empty_records(data.frame()) else break
+      if (le_prio_is_one) .catch_empty_records(data.frame(),timestamp) else break
     } 
     
     tstamp <- new.env()
     tstamp$records <- records[sensor_match,]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
-    .catch_empty_records(tstamp$records,ts=timestamp)
+    .catch_empty_records(tstamp$records,timestamp)
     tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
+    
     if (timestamp > 1) {
       # enforce to min_distance from previous timestamp
-      tstamp$first_date <- .select_force_distance(period_new,min_distance)
+      tstamp$first_date <- .select_force_distance(previous_period,min_distance)
       tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
                                                period_initial=tstamp$period,
                                                min_distance,max_sub_period)
       tstamp$records <- .select_within_period(records,tstamp$period,params$date_col) # subset to records in period
     }
+    
     # run the selection process
     selected <- .select_process_sub(tstamp$records,
                                     aoi,
@@ -1843,21 +1846,27 @@ sep <- function() {
                                     params,
                                     dir_out,
                                     ts=timestamp)
-    if (isFALSE(le_prio_is_one)) {
-      period_new <- selected$period # for selection of records from next sensor in prio_sensors
-      base_records <- c(base_records,selected$cmask_paths) # for base mosaic for selection from next sensor
-      ids <- c(ids,selected$ids) # ids of selected records
-      valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi
+    
+    if (class(selected) != "list") {
+      .catch_empty_records(data.frame(),timestamp)
     } else {
-      return(selected)
-    }
+      if (isFALSE(le_prio_is_one)) {
+        if (selected$valid_pixels < satisfaction_value) out("\nSelecting records for next sensor in 'prio_sensors'..",msg=T)
+        base_records <- c(base_records,selected$cMask_paths) # for base mosaic for selection from next sensor
+        ids <- c(ids,selected$ids) # ids of selected records
+        valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi
+      } else {
+        return(selected)
+      }
+    }  
   }
   
-  if (length(ids) == 0) .catch_empty_records(data.frame())
+  if (length(ids) == 0) .catch_empty_records(data.frame(),timestamp)
   
   selected_ts <- list(ids=ids,
-                      cmask_paths=base_records,
+                      cMask_paths=base_records,
                       valid_pixels=valid_pixels)
+  
   return(selected_ts)
 
 }
@@ -1896,10 +1905,16 @@ sep <- function() {
                      date_col=params$date_col,
                      identifier=params$identifier)
   
+  sub <- .check_list(sub)
+  if (class(sub) != "list") return(NA)
+  
   # this step enforces max_sub_period. It returns a list of vectors of indices 
   # pointing to records in records. The list is ordererd according to aoi cloud cover
   sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
                                      date_col=params$date_col,aoi_cc_col=params$aoi_cc_col)
+  
+  sub_within <- .check_list(sub_within)
+  if (class(sub_within) != "list") return(NA)
   
   # calculate best mosaic of cloud masks for first timestamp
   out(params$sep)
@@ -1918,13 +1933,12 @@ sep <- function() {
     out(paste0("\nSelection error at timestamp: ",ts),2)
   }
   selected$period <- .identify_period(records[which(records[[params$identifier]] %in% selected$ids),params$date_col])
-  out(paste0("\nCompleted selection process for timestamp: ",ts,"\n"))
+  out(paste0("\nCompleted selection process for timestamp: ",ts))
   return(selected)
   
 }
 
-#' select timestamps for SAR data according to num_timestamps and min_distance. This
-#' can be the fundament for an optical selection or if has_SAR == 100 (only SAR in records) it is the only selection
+#' select timestamps for SAR data according to num_timestamps, min_distance and max_sub_period.
 #' @param records data.frame.
 #' @param period_new list of character vectors of two dates, one vector for each timestamp.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
@@ -1944,11 +1958,14 @@ sep <- function() {
   # according to the number of the given records for each date and calculate the distance of each record
   # from this date. Exclude records consecutively until max_sub_period is reached
   selected_SAR <- list() # to be filled with the selected lists of selected ids and sub-periods
+  
   for (s in subperiods) {
+    
     records_in_s <- records[which(records$sub_period==s),]
+    
     if (s > 1) {
       # enforce min_distance
-      previous_period <- selected_SAR[[s-1]][["period"]] # get the previous selected sub-period
+      previous_period <- selected_SAR[[s-1]]$period # get the previous selected sub-period
       period_initial <- .identify_period(records_in_s[[params$date_col]])
       # earliest date of next sub-period adjusted
       first_date <- .select_force_distance(previous_period,min_distance)
@@ -1956,17 +1973,20 @@ sep <- function() {
                                           min_distance,max_sub_period)
       records_in_s <- .select_within_period(records_in_s,period_s) # subset to records within period_s
     }
-    tiles_s <- records_in_s[[params$tileid_col]]
+    
     dates_s <- sapply(records_in_s[[params$date_col]],as.Date)
+    
     if (!is.null(period_new)) {
       period_new_dates <- sapply(period_new,as.Date)
       dates_combined <- c(dates_s,period_new_dates)
       dates_s <- min(dates_combined,max(dates_combined))
     }
+    
     min_dates_s <- min(dates_s)
     max_dates_s <- max(dates_s)
     sub_period_le <- length(max_dates_s-min_dates_s)
     # grade dates and exclude consecutively
+    
     if (sub_period_le > max_sub_period) {
       dates_seq <- min_dates_s:max_dates_s
       date_grade <- sapply(dates_seq,function(date) {
@@ -2034,11 +2054,13 @@ sep <- function() {
   period_new_all <- lapply(selected,function(x) return(x[["period"]]))
   selected_SAR <- .select_SAR(records,period_new_all,max_sub_period,min_distance,
                               num_timestamps,par)
+  
   # add selected ids to selected list of optical records
   for (ts in 1:length(selected_SAR)) {
     ts_SAR <- selected_SAR[[ts]]
     optical_ids <- selected[[ts]][["ids"]]
     selected[[ts]][["ids"]] <- append(optical_ids,ts_SAR[["ids"]])
+    selected[[ts]][["period"]] <- .identify_period(c(selected[[ts]]$period,ts_SAR[["period"]]))
   }
   return(selected)
   
@@ -2135,7 +2157,6 @@ sep <- function() {
   
   # check if covered period of timestamp is within max_sub_period
   # and re-calculate period consecutively with record of next-lowest cloud cover
-  sub <- .gsd_compact(sub)
   max_num_sel <- max(sapply(sub,length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i]))))
   orders <- data.frame(orders)
@@ -2510,15 +2531,16 @@ sep <- function() {
 #' @param base_coverage numeric.
 #' @param i integer.
 #' @param le_collection integer length of the records queue to look at.
+#' @param sensor character sensor name.
 #' @return nothing. Console communication
 #' @keywords internal
 #' @noRd
-.out_cov <- function(base_coverage, i, le_collection) {
+.out_cov <- function(base_coverage, i, le_collection, sensor) {
   
   cov <- as.character(round(base_coverage,2))
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
   i <- ifelse(i==0,1,i)
-  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," records  "), flush = T)
+  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," records of sensor ",sensor,"  "), flush = T)
 
 }
 

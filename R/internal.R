@@ -1158,9 +1158,10 @@ rbind.different <- function(x) {
   adj <- ifelse(adj < 2 && adj > 1,2,adj)
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
+      r_save_path <- normalizePath(file.path(dir_out,paste0(x_names[i],"_aggr.tif")))
+      if (file.exists(r_save_path)) return(r_save_path)
       r_load <- stack(x[[i]])
       r_aggr <- aggregate(r_load,adj)
-      r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
       writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
       return(r_save_path)
     })
@@ -1446,6 +1447,8 @@ sep <- function() {
 #' @param ts numeric of the current timestamp.
 #' @param dir_out character directory where to save intermediate product.
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param delete_files logical TRUE if all files in tmp_dir shall be deleted at the end of the call.
+#' If it is a selection for multiple sensors this should be FALSE as long there is a next sensor following.
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a tmp_dir, writes into it, deletes tmp_dir with all files.
 #' @importFrom raster minValue maxValue writeRaster raster crs crs<- dataType intersect
@@ -1454,10 +1457,13 @@ sep <- function() {
 #' @author Henrik Fisser
 .select_calc_mosaic <- function(records, base_records, aoi, sub_within, cloud_mask_col, 
                                 min_improvement, satisfaction_value, 
-                                ts, dir_out, identifier) {
+                                ts, dir_out, identifier, delete_files) {
   
   tmp_dir_orig <- tempdir()
   tmp_dir <- .tmp_dir(dir_out,1,TRUE)
+  
+  if (is.null(base_records)) out("Current coverage of valid pixels..")
+
   r <- "RasterLayer"
   curr_sensor <- unique(records$product)
   if (!class(aoi)[1] %in% c("SpatialPolygons","SpatialPolygonsDataFrame")) aoi <- as(aoi,"Spatial")
@@ -1512,7 +1518,7 @@ sep <- function() {
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
   if (class(base_mos) != r) start <- 1
   # cleanup
-  .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
+  .delete_tmp_files(tmp_dir) # delete temp raster .grd files in r tmp
   rm(base_mos)
   base_coverage <- -1000
   n_pixel_aoi <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
@@ -1520,19 +1526,19 @@ sep <- function() {
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:le_collection) {
     
-    x <- collection[i] # do it this way in order to keep id
+    x <- collection[i] # current cloud mask
+    base_mos <- raster(base_mos_path) # current base mosaic
+    
     if (i == start) {
-      base_mos <- raster(base_mos_path) # current mosaic
-      out("Current coverage of valid pixels..")
+      is_last_record <- i == le_collection
       base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
-      .out_cov(base_coverage,(i-1),le_collection,curr_sensor)
-      if (i == le_collection) break
+      .out_cov(base_coverage,ifelse(is_last_record,i,i-1),le_collection,curr_sensor)
+      if (is_last_record) break
     }
     
     name_x <- names(x)
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
-    base_mos <- raster(base_mos_path) # current mosaic
     x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
@@ -1549,6 +1555,7 @@ sep <- function() {
       curr_mos_tmp_p <- normalizePath(file.path(tmp_dir,"curr_crop_mos_tmp.tif"))
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
+      
       if (class(curr_mos_tmp) != r) {
         add_it <- FALSE
       } else {
@@ -1574,6 +1581,7 @@ sep <- function() {
       base_mos_path_tmp <- normalizePath(file.path(tmp_dir,curr))
       base_records <- c(base_records,x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
+      
       if (class(base_mos) == r) {
         # cleanup
         rm(base_mos)
@@ -1605,7 +1613,9 @@ sep <- function() {
                                        cloud_mask_col],
                    valid_pixels=base_coverage)
   
-  .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
+  if (delete_files) {
+    .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
+  }
   
   return(selected)
 }
@@ -1719,8 +1729,8 @@ sep <- function() {
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
   for (t in 1:length(sub_periods)) {
     
-    if (t > 1) previous_period <- selected[[t-1]]$period
-    
+    previous_period <- ifelse(t > 1,selected[[t-1]]$period,NA)
+
     selected_ts <- try(.select_process(records,
                                        aoi,
                                        timestamp=t,
@@ -1730,6 +1740,7 @@ sep <- function() {
                                        min_improvement=min_improvement,
                                        previous_period=previous_period,
                                        satisfaction_value=satisfaction_value,
+                                       prio_sensors=prio_sensors,
                                        params=params,
                                        dir_out=dir_out))
     
@@ -1788,7 +1799,7 @@ sep <- function() {
 #' @param params list holding everything inserted into this parameter list in .select_params().
 #' @param dir_out character directory where to save intermediate product.
 #' @param timestamp numeric of the current timestamp.
-#' @return \code{selected_ts} list of selected records with all items returned by .select_process_sub
+#' @return \code{selected} list of selected records with all items returned by .select_process_sub
 #' @keywords internal
 #' @noRd
 .select_process <- function(records, aoi,
@@ -1798,6 +1809,7 @@ sep <- function() {
                             satisfaction_value, prio_sensors = NULL,
                             params, dir_out) {
 
+  completed_info <- paste0("\nCompleted selection process for timestamp: ",timestamp)
   period_new <- c() # for selection from multiple sensors
   base_records <- c() # same 
   ids <- c() # same
@@ -1839,6 +1851,8 @@ sep <- function() {
       tstamp$records <- .select_within_period(records,tstamp$period,params$date_col) # subset to records in period
     }
     
+    delete_files <- ifelse(le_prio_is_one,FALSE,ifelse(s == tail(prio_sensors,1),TRUE,FALSE))
+    
     # run the selection process
     selected <- .select_process_sub(tstamp$records,
                                     aoi,
@@ -1849,6 +1863,7 @@ sep <- function() {
                                     max_cloudcov_tile,
                                     min_improvement,
                                     satisfaction_value,
+                                    delete_files,
                                     params,
                                     dir_out,
                                     ts=timestamp)
@@ -1857,11 +1872,16 @@ sep <- function() {
       .catch_empty_records(data.frame(),timestamp)
     } else {
       if (isFALSE(le_prio_is_one)) {
-        if (selected$valid_pixels < satisfaction_value) out("\nSelecting records for next sensor in 'prio_sensors'..",msg=T)
+        # if combined selection of multiple optical sensors
+        if (selected$valid_pixels < satisfaction_value) out("\nSelecting records for next sensor in 'prio_sensors'")
         base_records <- c(base_records,selected$cMask_paths) # for base mosaic for selection from next sensor
-        ids <- c(ids,selected$ids) # ids of selected records
+        ids <- unique(c(ids,selected$ids)) # ids of selected records
+        names(base_records) <- ids
         valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi
+        period_new <- .identify_period(c(period_new,selected$period)) # combined period
       } else {
+        # if only one optical sensor is given
+        out(completed_info)
         return(selected)
       }
     }  
@@ -1869,11 +1889,14 @@ sep <- function() {
   
   if (length(ids) == 0) .catch_empty_records(data.frame(),timestamp)
   
-  selected_ts <- list(ids=ids,
-                      cMask_paths=base_records,
-                      valid_pixels=valid_pixels)
+  selected <- list(ids=ids,
+                   cMask_paths=base_records,
+                   valid_pixels=valid_pixels,
+                   period=period_new)
   
-  return(selected_ts)
+  out(completed_info)
+  
+  return(selected)
 
 }
 
@@ -1888,6 +1911,8 @@ sep <- function() {
 #' @param max_cloudcov_tile numeric maximum cloud cover per tile.
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
 #' The value is the percentage of not yet covered area that shall be covered additionally when adding the record.
+#' @param delete_files logical TRUE if all files in tmp_dir shall be deleted at the end of the call.
+#' If it is a selection for multiple sensors this should be FALSE as long there is a next sensor following.
 #' @param satisfaction_value numeric.
 #' @param params list holding everything inserted into this parameter list in the calling select function (8 parameters).
 #' @param dir_out character directory where to save intermediate product.
@@ -1897,9 +1922,9 @@ sep <- function() {
 #' @keywords internal
 #' @noRd
 .select_process_sub <- function(records, aoi,
-                                period, period_new = c(), base_records = NULL,
+                                period, period_new = NULL, base_records = NULL,
                                 max_sub_period, max_cloudcov_tile, min_improvement, satisfaction_value,
-                                params, dir_out, ts) {
+                                delete_files, params, dir_out, ts) {
   
   # the sub is an ordering of all available records per tile according to aoi cloud cover
   # this is also the step where max_cloudcov_tile is ensured
@@ -1923,8 +1948,11 @@ sep <- function() {
   if (class(sub_within) != "list") return(NA)
   
   # calculate best mosaic of cloud masks for first timestamp
-  out(params$sep)
-  out(paste0("Calculating mosaic for timestamp: ",ts))
+  if (is.null(base_records)) {
+    out(params$sep)
+    out(paste0("Calculating mosaic for timestamp: ",ts))
+  }
+  
   selected <- try(.select_calc_mosaic(records,
                                       base_records=base_records,
                                       aoi,
@@ -1934,12 +1962,12 @@ sep <- function() {
                                       satisfaction_value=satisfaction_value,
                                       ts=ts,
                                       dir_out,
-                                      params$identifier))
+                                      params$identifier,
+                                      delete_files=delete_files))
   if (inherits(selected,"try-error")) {
     out(paste0("\nSelection error at timestamp: ",ts),2)
   }
   selected$period <- .identify_period(records[which(records[[params$identifier]] %in% selected$ids),params$date_col])
-  out(paste0("\nCompleted selection process for timestamp: ",ts))
   return(selected)
   
 }
@@ -2444,20 +2472,20 @@ sep <- function() {
 #' @noRd
 .select_summary_ts <- function(selected) {
   
-  sep <- "\n----------------------------------------------------------------"
+  sep <- sep()
   coverages <- sapply(selected,function(x) {x$valid_pixels})
   num_timestamps <- length(selected)
   min_cov <- round(min(coverages))
   mean_cov <- round(mean(coverages))
   p <- " %"
-  header <- paste0("\n-- Selection Process Summary Overall --")
+  header <- paste0("\nSelection Process Summary Overall --")
   cov_pixels <- "overage of valid pixels "
   info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
   info2 <- paste0("\n- C",cov_pixels,"in timestamp-wise mosaics of selected records: ")
-  info3 <- paste0("\n-    Mean:     ",mean_cov,p)
-  info4 <- paste0("\n-    Lowest:   ",min_cov,p)
-  info5 <- paste0("\n-    Highest:  ",round(max(coverages)),p)
-  console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,info4,info5,sep,"\n")
+  info3 <- paste0("\n-      Mean:     ",mean_cov,p)
+  info4 <- paste0("\n-      Lowest:   ",min_cov,p)
+  info5 <- paste0("\n-      Highest:  ",round(max(coverages)),p)
+  console_summary <- paste0(sep,header,sep,info1,info2,info3,info4,info5,sep,"\n")
   
   # optional warnings
   min_thresh <- 60
@@ -2546,7 +2574,7 @@ sep <- function() {
   cov <- as.character(round(base_coverage,2))
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
   i <- ifelse(i==0,1,i)
-  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," records of sensor ",sensor,"  "), flush = T)
+  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," available records of sensor ",sensor,"  "), flush = T)
 
 }
 

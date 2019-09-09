@@ -214,7 +214,7 @@
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
   s <- ifelse(length(sensor)==1,"\n- Sensor: ","\nSensors: ")
-  out(cat("\nNumber of timestamps selected:",num_timestamps,s,sensor))
+  out(cat("\n- Number of timestamps selected:",num_timestamps,s,sensor))
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
   } else if (sub_period == r) {

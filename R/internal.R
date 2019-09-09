@@ -886,7 +886,7 @@ rbind.different <- function(x) {
 #' calculates percentage of a value in a raster or polygon with different modes.
 #' @param x raster.
 #' @param mode character specifies the mode of calculation.
-#' @param custom numeric vector with two values: [[1]] are cloud values [[2]] are non-cloud values. Only if mode == "custom".
+#' @param custom numeric vector with two values: [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
 #' @param aoi aoi.
 #' @param aoi_ncell integer number of cells in aoi.
 #' @return \code{percent} numeric percentage
@@ -2449,7 +2449,7 @@ sep <- function() {
 #' @keywords internal
 #' @noRd
 .select_start_info <- function(mode,sep) {
-  out(paste0(sep,"\n           Starting ",mode," Selection Process           "))
+  out(paste0(sep,"\n           Starting ",mode," Selection Process           ",sep))
 }
 
 #' constructs a console message to be given at the end of a selection process

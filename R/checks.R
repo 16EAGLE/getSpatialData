@@ -213,8 +213,8 @@
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
-  s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
-  out(cat("\nNumber of timestamps selected:",num_timestamps,s))
+  s <- ifelse(length(sensor)==1,"\n- Sensor: ","\nSensors: ")
+  out(cat("\nNumber of timestamps selected:",num_timestamps,s,sensor))
   if (sub_period < r) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
   } else if (sub_period == r) {
@@ -272,7 +272,6 @@
   
   if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
   #dir_out <- .check_dir_out(dir_out,"preview_mosaics")
-  records <- .unlist_df(records)
   options("gSD.verbose"=verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   # check if all columns are provided
@@ -280,7 +279,7 @@
                                                      par$preview_col,par$cloud_mask_col))
   if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
-  .select_handle_revisit(unlist(records$product),period,num_timestamps)
+  .select_handle_revisit(unique(unlist(records$product)),period,num_timestamps)
   # check if needed files exist
   out("Checking if all needed clouds mask and preview rasters exist..",msg=T)
   check <- sapply(list(preview_file=records$preview_file,
@@ -288,8 +287,19 @@
     .select_check_files(x,names(x))
   })
   if (any(!is.na(check))) out("Cannot find (some) files on disk",3)
-  return(records)
+  
+}
 
+#' call .gsd_compact and return NA if list is empty afterwards
+#' @param x list.
+#' @return x without NAs and NULLs
+#' @keywords internal
+#' @noRd
+.check_list <- function(x) {
+  
+  x <- .gsd_compact(x)
+  if (length(x) == 0) return(NA) else return(x)
+  
 }
 
 

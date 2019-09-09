@@ -24,7 +24,8 @@ select_bitemporal <- function(records, aoi,
                               prio_sensors = c(),
                               dir_out = NULL, verbose = TRUE) {
   
-  .check_records(records,.cloudcov_colnames())
+  #### Pre-checks
+  records <- .check_records(records,.cloudcov_colnames(),as_df=T)
   cols_initial <- colnames(records)
   
   #### Prep
@@ -34,7 +35,7 @@ select_bitemporal <- function(records, aoi,
   params <- prep$params
   has_SAR <- prep$has_SAR
   
-  #### Checks
+  #### Main checks
   .select_checks(records,aoi,prio_sensors,params,dir_out,verbose)
   
   #### Main Process

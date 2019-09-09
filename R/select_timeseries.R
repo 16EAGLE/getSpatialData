@@ -6,6 +6,9 @@
 #'  
 #' @details For running the selection you have to process \link{calc_cloudcov} first.
 #' 
+#' @note This functionality creates a 'tmp' folder below \code{dir_out} where
+#' temporary files are saved. This folder is being deleted at the end of the function call.
+#' 
 #' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 #' Records will be selected from these records.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
@@ -47,7 +50,7 @@
 #' @export
 
 select_timeseries <- function(records, aoi,
-                              num_timestamps, min_distance, min_improvement = 100, 
+                              num_timestamps, min_distance, min_improvement = 100, satisfaction_value = 98,
                               max_sub_period, max_cloudcov_tile = 80, 
                               prio_sensors = c(), 
                               dir_out = NULL, verbose = TRUE) {

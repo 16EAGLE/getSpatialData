@@ -3,8 +3,12 @@
 #' @description Selection is done according to aoi cloud cover (in case of optical data) 
 #' and temporal characteristics. Both optical and SAR records are supported as well as
 #' combined selection for different sensors across systems and data providers.#' 
+#' 
 #' @details For running the selection you have to process \link{calc_cloudcov} first.
-#'
+#' 
+#' @note This functionality creates a 'tmp' folder below \code{dir_out} where
+#' temporary files are saved. This folder is being deleted at the end of the function call.
+#' 
 #' @inheritParams select_timeseries
 # 
 #' @return \code{records} data.frame holding four additional columns:

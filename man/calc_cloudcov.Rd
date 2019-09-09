@@ -4,8 +4,8 @@
 \alias{calc_cloudcov}
 \title{Calculate the cloud cover of Sentinel, Landsat or MODIS in an aoi before large data download}
 \usage{
-calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
-  cloudPrbThreshold = 50, slopeDefault = 1.4, interceptDefault = -10,
+calc_cloudcov(records, aoi = NULL, maxDeviation = 5,
+  cloudPrbThreshold = 35, slopeDefault = 1.5, interceptDefault = -10,
   dir_out = NULL, username = NULL, password = NULL, verbose = TRUE)
 }
 \arguments{
@@ -13,13 +13,13 @@ calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
-\item{maxDeviation}{numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 20}.}
+\item{maxDeviation}{numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.}
 
-\item{cloudPrbThreshold}{numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 50}. It will be dynamically adjusted according to the input in \code{maxDeviation}.}
+\item{cloudPrbThreshold}{numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 35}. It will be dynamically adjusted according to the input in \code{maxDeviation}.}
 
-\item{slopeDefault}{numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.4, proven to work well for common land surfaces.f default values. In this case cloud cover will be set to 9999 \% for the given record.}
+\item{slopeDefault}{numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.5.}
 
-\item{interceptDefault}{numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10, proven to work well for common land surfaces.}
+\item{interceptDefault}{numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10.}
 
 \item{dir_out}{character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.}
 

@@ -51,7 +51,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   
   .check_verbose(verbose)
   .check_time_range(time_range)
-  if(isTRUE(check_products)) .check_products(products, products_available = get_products())
+  if(isTRUE(check_products)) .check_products(products, products_available = get_products(update_online = F))
   is.CopHub <- grepl("Sentinel", products)
   
   # get records

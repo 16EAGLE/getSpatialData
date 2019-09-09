@@ -553,7 +553,7 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
                            c("product_group", NA, NA, NA),
                            c("record_id", "title", "displayId", "displayId"),
                            c("entity_id", "uuid", "entityId", "entityId"),
-                           c("dataset_url", "url", NA, NA),
+                           c("dataset_url", "url", "dataset_url", NA),
                            c("md5_url", "url.alt", NA, NA),
                            c("preview_url", "url.icon", "browseUrl", "browseUrl"),
                            c("meta_url", NA, "metadataUrl", "metadataUrl"),
@@ -678,10 +678,13 @@ rbind.different <- function(x) {
     gSD.archive = FALSE,
     gSD.archive_set = FALSE,
     gSD.aoi = FALSE,
-    gSD.aoi_set = FALSE
+    gSD.aoi_set = FALSE,
+    gSD.products = NULL
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
+  
+  
   
   ## allocate gdal on load
   gdalUtils::gdal_setInstallation(rescan = T)

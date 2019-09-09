@@ -2,9 +2,18 @@
 % Please edit documentation in R/get_data.R
 \name{get_data}
 \alias{get_data}
+\alias{getSentinel_data}
+\alias{getLandsat_data}
+\alias{getMODIS_data}
 \title{Download datasets}
 \usage{
 get_data(records, dir_out = NULL, ..., verbose = TRUE)
+
+getSentinel_data(records, dir_out = NULL, ..., verbose = TRUE)
+
+getLandsat_data(records, dir_out = NULL, ..., verbose = TRUE)
+
+getMODIS_data(records, dir_out = NULL, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}

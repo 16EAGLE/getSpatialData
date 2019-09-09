@@ -4,19 +4,32 @@
 \alias{getMODIS_data}
 \title{Download MODIS data}
 \usage{
-getMODIS_data(records, dir_out = NULL, force = FALSE, n.retry = 3,
-  verbose = TRUE)
+getMODIS_data(records, dir_out = NULL, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getMODIS_records}.}
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getMODIS_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData archive folder.}
 
+\item{...}{additional, sensor-specific arguments:
+\itemize{
+   \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
+   \item \code{hub}, character, Copernicus Hub selection for Sentinel queries. Either
+\itemize{
+   \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
+   \item "dhus" to look for operational Open Hub records only,
+   \item "s3" to look for Sentinel-3 pre-operational records only,
+   \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
+   \item "GNSS" to look for GNSS RINEX records only,
+   \item or a valid API URL.
+}
+}}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
+
 \item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
-
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 Character vector of paths to the downloaded files.
@@ -64,3 +77,4 @@ files <- getMODIS_data(query[1:2,])
 \author{
 Jakob Schwalb-Willmann
 }
+\keyword{internal}

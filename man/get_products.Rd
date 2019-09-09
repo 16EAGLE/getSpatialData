@@ -8,22 +8,23 @@
 \alias{getSRTM_products}
 \title{Get product names}
 \usage{
-get_products(grouped = FALSE)
+get_products(product_groups = "all", grouped = FALSE,
+  update_online = TRUE)
 
 getSentinel_products()
 
-getLandsat_products(username = NULL, password = NULL)
+getLandsat_products(..., update_online = TRUE)
 
-getMODIS_products(username = NULL, password = NULL)
+getMODIS_products(..., update_online = TRUE)
 
 getSRTM_products()
 }
 \arguments{
+\item{product_groups}{character, either "all" or a combination of product names. Supported names are "Sentinel", "Landsat", "MODIS", "SRTM".}
+
 \item{grouped}{logical, whether to return a list of names grouped by platform/sensor (\code{TRUE}) or not.}
 
-\item{username}{character, user name to login at the respective service.}
-
-\item{password}{character, password to login at the respective service.}
+\item{update_online}{logical, whether to update the internal product list online (default, requires login) or not.}
 }
 \value{
 A character vector
@@ -32,7 +33,7 @@ A character vector
 \code{get_products} obtains the names of all products available through \code{getSpatialData}. The returned names can be used with the \link{get_records} functions for querying a specific product.
 }
 \note{
-To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
+If \code{update_online = TRUE}, you must be logged in at the services required for your request to use this function. See the examples and \link{login} for details.
 }
 \examples{
 \dontrun{
@@ -40,22 +41,25 @@ library(getSpatialData)
 
 # login
 login_USGS(username = "your_username")
-login_CopHub(username = "your_username")
 
-# get all available products
+# get all available products as one vector
 products <- get_products()
+
+# or grouped
+products <- get_products(grouped = T)
 products$Sentinel
 products$Landsat
 products$MODIS
 
-# or get products by service
-products <- getSentinel_products()
-products <- getLandsat_products()
-products <- getMODIS_products()
+# or get products by a specific service
+products <- get_products("Sentinel")
+products <- get_products("Landsat")
+products <- get_products("MODIS")
+
 }
 }
 \seealso{
-getSentinel_records getLandsat_records getMODIS_records
+getSentinel_records getLandsat_records getMODIS_records getSRTM_records
 }
 \author{
 Jakob Schwalb-Willmann

@@ -46,6 +46,9 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
   if("Sentinel" %in% groups){
     .check_login("Copernicus")
   }
+  if(any("Landsat" %in% groups, "MODIS" %in% groups)){
+    .check_login("USGS")
+  }
   
   # get credendtial info
   records$gSD.cred <- apply(records, MARGIN = 1, function(x){
@@ -60,6 +63,18 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
       content(gSD.get(x$md5_url, x$gSD.cred[[1]][1], x$gSD.cred[[1]][2]), USE.NAMES = F)
     } else NA
   }))
+  
+  # get URLs
+  sub.ls8l1 <- which(records$product == "LANDSAT_8_C1" & records$level == "l1")
+  if(length(sub.ls8l1) > 0){
+    
+    # Landsat 8 Level 1 AWS
+    records[sub.ls8l1,]$dataset_url <- lapply(records[sub.ls8l1,]$dataset_url, function(x){
+      paste0(gsub("index.html", "", x), sapply(as.character(xml_children(xml_children(xml_contents(content(gSD.get(x), encoding = "UTF-8"))[2])[4])), function(y){
+        strsplit(y,  '\"')[[1]][2]
+      }, USE.NAMES = F))
+    })
+  }
   
   # file name
   records$dataset_file <- unlist(apply(records, MARGIN = 1, function(x){

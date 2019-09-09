@@ -1974,7 +1974,7 @@ sep <- function() {
 
 #' select timestamps for SAR data according to num_timestamps, min_distance and max_sub_period.
 #' @param records data.frame.
-#' @param period_new list of character vectors of two dates, one vector for each timestamp.
+#' @param period_new_all list of character vectors of two dates, one vector for each timestamp.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param max_sub_period numeric maximum length of sub-period.
@@ -1984,7 +1984,7 @@ sep <- function() {
 #' character vector of two dates (start and end date of SAR sub-period)
 #' @keywords internal
 #' @noRd
-.select_SAR <- function(records, period_new = NULL, 
+.select_SAR <- function(records, period_new_all = NULL,
                         max_sub_period, min_distance, num_timestamps, params) {
   
   subperiods <- unique(records$sub_period)
@@ -1993,19 +1993,22 @@ sep <- function() {
   # from this date. Exclude records consecutively until max_sub_period is reached
   selected_SAR <- list() # to be filled with the selected lists of selected ids and sub-periods
   
-  for (s in subperiods) {
+  for (s in 1:length(subperiods)) {
     
     records_in_s <- records[which(records$sub_period==s),]
+    period_new <- period_new_all[[s]]
+    previous <- s-1
     
     if (s > 1) {
       # enforce min_distance
-      previous_period <- selected_SAR[[s-1]]$period # get the previous selected sub-period
+      # combined period of period_new from optical records (if not NULL because has_SAR == 100) and previous SAR period
+      previous_period <- .identify_period(c(period_new_all[[previous]],selected_SAR[[previous]]$period))
       period_initial <- .identify_period(records_in_s[[params$date_col]])
       # earliest date of next sub-period adjusted
       first_date <- .select_force_distance(previous_period,min_distance)
       period_s <- .select_handle_next_sub(first_date,period_initial,
                                           min_distance,max_sub_period)
-      records_in_s <- .select_within_period(records_in_s,period_s) # subset to records within period_s
+      records_in_s <- .select_within_period(records_in_s,period_s,params$date_col) # subset to records within period_s
     }
     
     dates_s <- sapply(records_in_s[[params$date_col]],as.Date)
@@ -2018,7 +2021,7 @@ sep <- function() {
     
     min_dates_s <- min(dates_s)
     max_dates_s <- max(dates_s)
-    sub_period_le <- length(max_dates_s-min_dates_s)
+    sub_period_le <- max_dates_s-min_dates_s
     # grade dates and exclude consecutively
     
     if (sub_period_le > max_sub_period) {
@@ -2028,12 +2031,16 @@ sep <- function() {
         # include one record per tile for the grading as for SAR several records on one date = no benefit
         grade <- length(unique(records[records_match,params$tileid_col]))
       })
+      
       # calculate best_period based on date_grade, in combination with period_new
       # and while ensuring max_sub_period
-      best_period <- .select_best_period(date_grade = date_grade, dates_seq = dates_seq, 
-                                         min_date = min(dates_seq), max_date = max(dates_seq),
-                                         period_new = period_new,
-                                         max_sub_period = max_sub_period)
+      best_period <- .select_best_period(date_grade=date_grade, 
+                                         dates_seq=dates_seq, 
+                                         min_date=min(dates_seq), 
+                                         max_date=max(dates_seq),
+                                         period_new=period_new,
+                                         max_sub_period=max_sub_period)
+      
       if (!is.na(best_period)) {
         incl <- .select_subset_to_best_period(dates_s, best_period)
         ids <- records_in_s[incl,params$identifier] # ids of selected records in upated sub-period
@@ -2043,7 +2050,7 @@ sep <- function() {
     }
     dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]),params$date_col]
     period <- .identify_period(dates_sel)
-    selected_SAR[[s]] <- list("ids"=ids,"period"=period,"sub-period"=s)
+    selected_SAR[[s]] <- list("ids"=ids,"period"=period,"timestamp"=s)
   }
   
   return(selected_SAR)
@@ -2060,11 +2067,12 @@ sep <- function() {
 #' @keywords internal
 #' @noRd
 .select_all_SAR <- function(records, max_sub_period,
-                                 min_distance, num_timestamps,
-                                 par) {
+                            min_distance, num_timestamps,
+                            params) {
   
-  selected_SAR <- .select_SAR(records,period_new = NULL,max_sub_period,min_distance,
-                              num_timestamps,par)
+  selected_SAR <- .select_SAR(records,period_new = NULL,
+                              max_sub_period,min_distance,
+                              num_timestamps,params)
   records <- .select_finish_SAR(records, selected_SAR, num_timestamps, params)
   return(records)
   
@@ -2087,7 +2095,7 @@ sep <- function() {
   # with the periods selected for optical 
   period_new_all <- lapply(selected,function(x) return(x[["period"]]))
   selected_SAR <- .select_SAR(records,period_new_all,max_sub_period,min_distance,
-                              num_timestamps,par)
+                              num_timestamps,params)
   
   # add selected ids to selected list of optical records
   for (ts in 1:length(selected_SAR)) {
@@ -2111,16 +2119,19 @@ sep <- function() {
 #' @noRd
 .select_finish_SAR <- function(records, selected_SAR, num_timestamps, params) {
   
-  csw_SAR <- .select_SAR_summary(records,selected_SAR,num_timestamps,par)
+  sep <- sep()
+  csw_SAR <- .select_SAR_summary(records,selected_SAR,num_timestamps,params)
+  out(paste0(sep,"\nSelection Process Overall Summary",sep))
+  out(paste0("- Number of timestamps: ",num_timestamps,"\n"))
   summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
   w <- csw_SAR[[2]]
-  if (!is.null(w)) out(w,type=2) # warning
-  ids <- sapply(selected_SAR,function(x) {return(x[["ids"]])})
+  if (!is.na(w)) out(w,type=2) # warning
+  ids <- lapply(selected_SAR,function(x) {return(x[["ids"]])})
   # add columns to records
   cols <- c(params$selected_col,params$timestamp_col)
-  records <- .select_prep_cols(records,cols)
+  records <- .select_prep_cols(records,cols,params$selected_col)
   for (ts in 1:length(ids)) {
-    ids_match <- match(ids[ts],records[[params$identifier]])
+    ids_match <- match(ids[[ts]],records[[params$identifier]])
     records[ids_match,params$selected_col] <- TRUE # is record selected at all
     records[ids_match,params$timestamp_col] <- ts # timestamp for which record is selected
   }
@@ -2478,7 +2489,7 @@ sep <- function() {
   min_cov <- round(min(coverages))
   mean_cov <- round(mean(coverages))
   p <- " %"
-  header <- paste0("\nSelection Process Summary Overall --")
+  header <- paste0("\nSelection Process Overall Summary")
   cov_pixels <- "overage of valid pixels "
   info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
   info2 <- paste0("\n- C",cov_pixels,"in timestamp-wise mosaics of selected records: ")
@@ -2518,26 +2529,23 @@ sep <- function() {
 #' @noRd
 .select_SAR_summary <- function(records, selected_SAR, num_timestamps, params) {
   
-  sep <- "\n----------------------------------------------------------------"
+  sep <- sep()
   covered_tiles_ts_wise <- sapply(selected_SAR,function(s) {
     num_tiles <- length(unique(records[match(s[["ids"]],records[[params$identifier]]),params$tileid_col]))
   })
-  header <- paste0("\n-- Selection Process Summary Overall --")
-  info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
-  info2 <- paste0("\n- Number of covered tiles in timestamp-wise SAR mosaics of selected records: ")
-  info3 <- c()
+  info <- c()
   for (i in 1:length(covered_tiles_ts_wise)) {
     num_tiles <- covered_tiles_ts_wise[i]
-    info3[i] <- paste0("\n    Timestamp ",i," covers:",num_tiles)
+    info[i] <- paste0("Timestamp ",i," covers: ",num_tiles," Sentinel-1 tiles")
   }
-  console_summary <- paste0(sep,sep,header,sep,info1,info2,info3,sep,"\n")
+  console_summary <- paste0(info,sep)
   # check if for all timestamps all tiles are covered
   check_tile_cov <- which(covered_tiles_ts_wise != length(params$tileids))
   # return warning if check_tile_cov has length > 0
   le <- length(check_tile_cov)
   char <- c()
   for (x in check_tile_cov) char <- ifelse(le == 1,x,paste0(char,x,", "))
-  warning <- ifelse(le == 0,NULL,paste0("\nFor timestamps: \n   ",char,
+  warning <- ifelse(le == 0,NA,paste0("\nFor timestamps: \n   ",char,
                                         "\nnot all tiles could be covered with the given parameters. You could e.g.:\n
                                         - decrease 'num_timestamps',
                                         - decrease 'min_distance',

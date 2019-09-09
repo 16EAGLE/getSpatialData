@@ -20,7 +20,7 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix writeRaster cellStats raster
+#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix cellStats raster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
 #' @importFrom sp proj4string

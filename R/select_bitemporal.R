@@ -24,7 +24,7 @@
 #' @export
 select_bitemporal <- function(records, aoi, 
                               min_distance, min_improvement = 5, 
-                              max_sub_period, max_cloudcov_tile = 80,
+                              max_sub_period, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(),
                               dir_out = NULL, verbose = TRUE) {
   
@@ -37,16 +37,15 @@ select_bitemporal <- function(records, aoi,
   prep <- .select_prep_wrap(records,num_timestamps,"BT")
   records <- prep$records
   params <- prep$params
-  has_SAR <- prep$has_SAR
-  
+
   #### Main checks
   .select_checks(records,aoi,prio_sensors,params,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="Bi-Temporal",params$sep)
-  records <- .select_main(records,
+  records_test <- .select_main(records,
                           aoi,
-                          has_SAR,
+                          prep$has_SAR,
                           num_timestamps,
                           min_distance,
                           min_improvement,

@@ -29,6 +29,7 @@
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
 #' The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 #' or shadows. Default is 80.
+#' @param satisfaction_value numeric percentage value at which mosaic is considered as cloud-free. Default is 98.
 #' @param prio_sensors character vector optioal. Sensor names ordered by priority. Selection is done in the order
 #' of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
 #' selection was not fullfilled by previous sensor.
@@ -50,8 +51,8 @@
 #' @export
 
 select_timeseries <- function(records, aoi,
-                              num_timestamps, min_distance, min_improvement = 100, satisfaction_value = 98,
-                              max_sub_period, max_cloudcov_tile = 80, 
+                              num_timestamps, min_distance, min_improvement = 100,
+                              max_sub_period, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(), 
                               dir_out = NULL, verbose = TRUE) {
   
@@ -69,8 +70,7 @@ The minimum number for select_timeseries is: 3"),3)
   prep <- .select_prep_wrap(records,num_timestamps,"TS")
   records <- prep$records
   params <- prep$params
-  has_SAR <- prep$has_SAR
-  
+
   #### Main checks
   .select_checks(records,aoi,params$period,num_timestamps,prio_sensors,params,dir_out,verbose)
   
@@ -78,7 +78,7 @@ The minimum number for select_timeseries is: 3"),3)
   .select_start_info(mode="Time Series",params$sep)
   records <- .select_main(records,
                           aoi,
-                          has_SAR,
+                          prep$has_SAR,
                           num_timestamps,
                           min_distance,
                           min_improvement,

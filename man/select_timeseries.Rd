@@ -6,7 +6,8 @@
 \usage{
 select_timeseries(records, aoi, num_timestamps, min_distance,
   min_improvement = 100, max_sub_period, max_cloudcov_tile = 80,
-  prio_sensors = c(), dir_out = NULL, verbose = TRUE)
+  satisfaction_value = 98, prio_sensors = c(), dir_out = NULL,
+  verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
@@ -36,6 +37,8 @@ This determines how temporally close together the selected records for one times
 The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 or shadows. Default is 80.}
 
+\item{satisfaction_value}{numeric percentage value at which mosaic is considered as cloud-free. Default is 98.}
+
 \item{prio_sensors}{character vector optioal. Sensor names ordered by priority. Selection is done in the order
 of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
 selection was not fullfilled by previous sensor.}
@@ -62,6 +65,10 @@ combined selection for different sensors across systems and data providers.
 }
 \details{
 For running the selection you have to process \link{calc_cloudcov} first.
+}
+\note{
+This functionality creates a 'tmp' folder below \code{dir_out} where
+temporary files are saved. This folder is being deleted at the end of the function call.
 }
 \author{
 Henrik Fisser

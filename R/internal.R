@@ -795,6 +795,7 @@ rbind.different <- function(x) {
     cMask[cMask==0] <- NA
   }
   if (dir_given) { # save cloud mask if desired
+    mask_path <- normalizePath(mask_path)
     if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T,
                                              datatype="INT2S")
     record[cols$cloud_mask_path] <- mask_path
@@ -1486,6 +1487,7 @@ sep <- function() {
   # to worst records (highest aoi cc) in a queue and respecting the tile order
   names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
   collection <- collection[intersect(which(collection != "NONE"),which(!is.na(collection)))]
+  le_collection <- length(collection)
   
   # create the first base mosaic from the first order of collection (best records per tile)
   # if base_records are given through arguments these are records selected for a prio_sensor
@@ -1497,6 +1499,9 @@ sep <- function() {
   } else {
     start <- 1 # if base mosaic is the mosaic of a prio sensor process all of this sensor
   }
+  
+  # if the base mosaics contains already all available records
+  start <- ifelse(start > le_collection,le_collection,start)
   
   # aggregate raster adjusted to aoi area size in order to speed up process
   names <- names(base_records)
@@ -1511,16 +1516,17 @@ sep <- function() {
   rm(base_mos)
   base_coverage <- -1000
   n_pixel_aoi <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
-  le_collection <- length(collection)
-  
+
   # add next cloud mask consecutively and check if it decreases the cloud coverage
-  for (i in start:length(collection)) {
+  for (i in start:le_collection) {
+    
     x <- collection[i] # do it this way in order to keep id
     if (i == start) {
       base_mos <- raster(base_mos_path) # current mosaic
       out("Current coverage of valid pixels..")
       base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
       .out_cov(base_coverage,(i-1),le_collection,curr_sensor)
+      if (i == le_collection) break
     }
     
     name_x <- names(x)

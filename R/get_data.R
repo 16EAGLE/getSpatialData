@@ -50,7 +50,14 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
     .check_login("USGS")
   }
   
+  # split records per treatment
+  sub <- list(Sentinel = which(records$product_group == "Sentinel"),
+              Landsat = which(records$product_group == "Landsat"),
+              Landsat_l1 = which(records$product == "LANDSAT_8_C1" & records$level == "l1"),
+              MODIS = which(records$product_group == "MODIS"))
+  
   # get credendtial info
+  
   records$gSD.cred <- apply(records, MARGIN = 1, function(x){
     if(x$product_group == "Sentinel"){
       .CopHub_select(x = extras$hub, p = x$product, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))

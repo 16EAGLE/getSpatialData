@@ -30,11 +30,6 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
   records$gSD.dir <- paste0(dir_out, "/", records$product, "/")
   catch <- sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
   
-  # fields
-  records$gSD.item <- 1:nrow(records)
-  records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
-  records$md5_checksum <- NA
-  
   ###############################
   ## exceptions to implement:
   # availability
@@ -51,12 +46,19 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
   }
   
   # split records per treatment
-  sub <- list(Sentinel = which(records$product_group == "Sentinel"),
-              Landsat = which(records$product_group == "Landsat"),
-              Landsat_l1 = which(records$product == "LANDSAT_8_C1" & records$level == "l1"),
-              MODIS = which(records$product_group == "MODIS"))
+  sub <- list(CopHub = which(records$product_group == "Sentinel"),
+              espa = which(records$product_group == "Landsat" & records$level != "l1"),
+              aws = which(records$product == "LANDSAT_8_C1" & records$level == "l1"),
+              laads = which(records$product_group == "MODIS"))
+  
+  # fields
+  records$gSD.item <- (1:nrow(records))[order(records$product_group)]
+  records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
+  records$md5_checksum <- NA
+  
   
   # get credendtial info
+  #if(nrow(records[sub$CopHub,]) 
   
   records$gSD.cred <- apply(records, MARGIN = 1, function(x){
     if(x$product_group == "Sentinel"){

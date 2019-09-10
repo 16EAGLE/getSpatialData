@@ -139,10 +139,19 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
 
-  # get a sharper clear-sky-line
+  # get a sharp clear-sky-line where slope is close to 1
   # if mean of blue in likely clear-sky areas is higher red multiply slope by 2 else divide by 2
-  slope <- ifelse(mean_blue_red[1] > mean_blue_red[2],slope*2,slope/2)
-  
+  # needed because slope values close to 1 lead to weak cloud seggregation
+  thresh <- c(0.6,1.4)
+  if (slope > thresh[1] && slope < thresh[2]) {
+    slope <- ifelse(mean_blue_red[1] > mean_blue_red[2],slope*2,slope/2)
+    in_t <- c(slope > thresh[1],slope < thresh[2])
+    if(in_t[1] && in_t[2]) {
+      # if slope is still close to 0
+      slope <- ifelse(slope < 1,slope/2,slope*2)
+    }
+  }
+
   # calculate HOT cloud probablity layer
   try(nominator <- abs(slope * rBand - bBand + intercept))
   try(denominator <- sqrt(1 + (slope^2)))

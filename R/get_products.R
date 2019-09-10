@@ -100,7 +100,7 @@ get_products <- function(product_groups = "all", grouped = FALSE, update_online 
   }
   
   # set option
-  options(list("gSD.products" = products))
+  options("gSD.products" = products)
   
   # return only requested products groups
   products <- products[product_groups]

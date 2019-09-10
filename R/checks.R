@@ -15,8 +15,15 @@
     }
   }
   
-  if(all("Copernicus" %in% services, !getOption("gSD.dhus_set"))) out("You are not logged in to Copernicus Hub (anymore). Please log in first using login_CopHub().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to Copernicus Hub.", msg = T)
-  if(all("USGS" %in% services, !getOption("gSD.usgs_set"))) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3) else if(isTRUE(verbose)) out("You are currently logged in to USGS ERS.", msg = T)
+  if(all("Copernicus" %in% services, !getOption("gSD.dhus_set"))) out("You are not logged in to Copernicus Hub (anymore). Please log in first using login_CopHub().", type = 3)
+  if("USGS" %in% services){
+    if(!getOption("gSD.usgs_set")) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3)
+    
+    # refresh session if needed
+    if(difftime(Sys.time(), getOption("gSD.usgs_time"), units = "mins") > getOption("gSD.usgs_refresh")){
+      login_USGS(getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"), verbose = F)
+    }
+  }
 }
 
 #' check credentials

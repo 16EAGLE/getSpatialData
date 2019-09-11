@@ -177,14 +177,6 @@
       
       # convert expected numeric fields
       fields.numeric <- names(records)[sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
-      
-      # add AWS urls
-      records$dataset_url <- NA
-      sub <- which(records$level == "l1" & records$product == "LANDSAT_8_C1")
-      records[sub,]$dataset_url <- sapply(records[sub,]$displayId, function(x){
-        hv <- strsplit(x, "_")[[1]][3]
-        paste0(getOption("gSD.api")$aws.l8, substr(hv, 1, 3), "/", substr(hv, 4, 6), "/", x, "/index.html")
-      }, USE.NAMES = F)
     }
     
     if(grepl("MODIS", product_name)){

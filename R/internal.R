@@ -139,7 +139,7 @@ gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
 #   file.rename(file.tmp, x$dataset_file)
 #   return(TRUE)
 # }
-gSD.download <- function(url, file, name, head, type = "dataset", md5 = NULL, prog = T, force = F, ...){
+gSD.download <- function(url, file, name, head, type = "dataset", md5 = NA, prog = T, force = F, ...){
   
   if(file.exists(file) & !isTRUE(force)){
     #out(paste0("\r", head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."), flush = T)
@@ -157,7 +157,7 @@ gSD.download <- function(url, file, name, head, type = "dataset", md5 = NULL, pr
       return(FALSE)
     }
     
-    if(!is.null(md5)){
+    if(!is.na(md5)){
       if(!as.character(md5sum(file.tmp)) == tolower(md5)){
         out(paste0(head, "Download of ", type, " '", name, "' failed: MD5 check sums do not match."), type = 2)
         file.remove(file.tmp)
@@ -546,14 +546,13 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
 #' @param product_name product name 
 #' @keywords internal
 #' @noRd
-.translate_records <- function(records, product_name){
+.translate_records <- function(records, product_name, na.omit = FALSE){
   
   # set-up column name dictionary
   dict <- rbind.data.frame(c("product", NA, NA, NA),
                            c("product_group", NA, NA, NA),
                            c("record_id", "title", "displayId", "displayId"),
                            c("entity_id", "uuid", "entityId", "entityId"),
-                           c("dataset_url", "url", "dataset_url", NA),
                            c("md5_url", "url.alt", NA, NA),
                            c("preview_url", "url.icon", "browseUrl", "browseUrl"),
                            c("meta_url", NA, "metadataUrl", "metadataUrl"),
@@ -573,19 +572,29 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
                            c("platform", "platformname", NA, NA),
                            c("platform_serial", "platformserialidentifier", NA, NA),
                            c("platform_id", "platformidentifier", NA, NA),
-                           c("level", "processinglevel", NA, NA),
-                           c("levels_available", NA, "levels_available", NA),
+                           c("level", "processinglevel", "level", NA),
                            c("footprint", "footprint", "footprint", "footprint"), stringsAsFactors = F)
   colnames(dict) <- c("gSD", "Sentinel", "Landsat", "MODIS")
   which.col <- sapply(tolower(colnames(dict)), grepl, tolower(product_name), USE.NAMES = F)
-  which.valid <- !is.na(dict[,which.col])
   
-  # translate column names
-  colnames(records) <- sapply(colnames(records), function(x){
-    i <- which(x == dict[,which.col])
-    if(length(i) > 0) dict$gSD[i] else x
-  }, USE.NAMES = F)
+  # translate
+  records <- do.call(cbind, lapply(1:length(dict$gSD), function(i){
+    sub <- dict[,which.col][i]
+    x <- if(is.na(sub)) data.frame(rep(NA, nrow(records))) else records[sub]
+    colnames(x) <- dict$gSD[i]
+    return(x)
+  }))
   
+  # colnames(records) <- sapply(colnames(records), function(x){
+  #   i <- which(x == dict[,which.col])
+  #   if(length(i) > 0) dict$gSD[i] else x
+  # }, USE.NAMES = F)
+  
+  # specific cases: all EE products
+  # if(which(which.col) > 2){
+  #   records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
+  # }
+
   # product groups
   records$product_group <- colnames(dict)[which.col]
   records$product <- product_name
@@ -599,11 +608,9 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
     records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
   
-  # specific cases: all EE products
-  if(which(which.col) > 2){
-    records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
-  }
-  
+  # kill columns that are NA (not active on default)
+  if(isTRUE(na.omit)) records <- records[apply(records, MARGIN = 2, function(x) !all(is.na(x))),]
+    
   # sort columns
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
 }

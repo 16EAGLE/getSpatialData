@@ -22,6 +22,7 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   if(is.null(extras$hub)) extras$hub <- "auto"
   
   # checks
+  records <- .check_records(records, c("product", "product_group", "record_id", "preview_url"))
   dir_out <- .check_dir_out(dir_out, "previews")
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
@@ -33,7 +34,7 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   records$gSD.head <- sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Preview ", toString(i), "/", toString(n), "] "))
   
   # file 
-  records$gSD.dir <- paste0(dir_out, "/", records$product_group, "/")
+  records$gSD.dir <- paste0(dir_out, "/", records$product, "/")
   catch <- sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
   files <- paste0(records$gSD.dir, records$record_id, "_preview.jpg")
   

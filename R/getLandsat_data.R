@@ -135,7 +135,7 @@ getLandsat_data <- function(records, level = "sr", source = "auto", dir_out = NU
     records$gSD.order <- F
     records$gSD.download <- F
 
-    ## spare existing once from being checked on ESPA
+    ## spare existing ones from being checked on ESPA
     if(!isTRUE(force)) records$gSD.check <- !file.exists(records$dataset_file) else records$gSD.check <- T
     
     ## check query and skip, if not available

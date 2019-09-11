@@ -13,7 +13,7 @@
 
 read_previews <- function(records){
   
-  .check_records(records, col.names = "preview_file")
+  records <- .check_records(records, col.names = "preview_file")
   return(lapply(records$preview_file, stack))
   
 }

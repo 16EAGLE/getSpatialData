@@ -154,7 +154,7 @@ gSD.download <- function(url, file, name, head, type = "dataset", md5 = NA, prog
     response <- try(gSD.get(url, dir.file = file.tmp, prog = prog, ...), silent = T)
     
     if(inherits(response, "try-error")){
-      if(grepl("aborted", as.character(attributes(response)$condition))) out("Download was aborted by an application callback.", type = 3)
+      if(grepl("aborted", as.character(attributes(response)$condition))) out("Operation was aborted by an application callback.", type = 3)
       out(paste0(head, "Download of ", type, " '", name, "' failed:", gsub("\n", "", tail(strsplit(response[1], "\n ")[[1]], n = 1))), type = 2)
       file.remove(file.tmp)
       return(FALSE)
@@ -549,44 +549,102 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
 #' @param product_name product name 
 #' @keywords internal
 #' @noRd
-.translate_records <- function(records, product_name, na.omit = FALSE){
-  
+.translate_records <- function(records, product_name){
+
   # set-up column name dictionary
-  dict <- rbind.data.frame(c("product", NA, NA, NA),
-                           c("product_group", NA, NA, NA),
-                           c("record_id", "title", "displayId", "displayId"),
-                           c("entity_id", "uuid", "entityId", "entityId"),
-                           c("md5_url", "url.alt", NA, NA),
-                           c("preview_url", "url.icon", "browseUrl", "browseUrl"),
-                           c("meta_url", NA, "metadataUrl", "metadataUrl"),
-                           c("meta_url_fgdc", NA, "fgdcMetadataUrl", "fgdcMetadataUrl"),
-                           c("summary", "summary", "summary", "summary"),
-                           c("date_acquisition", NA, "acquisitionDate", "acquisitionDate"),
-                           c("start_time", "beginposition", "StartTime", "AcquisitionStartDate"),
-                           c("stop_time", "endposition", "StopTime", "AcquisitionEndDate"),
-                           c("date_ingestion", "ingestiondate", NA, NA),
-                           c("date_modified", NA, "modifiedDate", "modifiedDate"),
-                           c("tile_number_horizontal", NA, "WRSPath", "HorizontalTileNumber"),
-                           c("tile_number_vertical", NA, "WRSRow", "VerticalTileNumber"),
-                           c("tile_id", "tileid", NA, NA),
-                           c("cloudcov", "cloudcoverpercentage", "SceneCloudCover", NA),
-                           c("sensor_id", "instrumentshortname", "SensorIdentifier", NA),
-                           c("sensor", "instrumentname", NA, NA),
-                           c("platform", "platformname", NA, NA),
-                           c("platform_serial", "platformserialidentifier", NA, NA),
-                           c("platform_id", "platformidentifier", NA, NA),
-                           c("level", "processinglevel", "level", NA),
-                           c("footprint", "footprint", "footprint", "footprint"), stringsAsFactors = F)
-  colnames(dict) <- c("gSD", "Sentinel", "Landsat", "MODIS")
-  which.col <- sapply(tolower(colnames(dict)), grepl, tolower(product_name), USE.NAMES = F)
+  records.names <- colnames(records)
+  dict <- rbind.data.frame(c("title", "record_id"),
+                           c("displayId", "record_id"),
+                           c("uuid", "entity_id"),
+                           c("entityId", "entity_id"),
+                           c("summary", "summary"),
+                           c("acquisitionDate", "date_acquisition"),
+                           c("beginposition", "start_time"),
+                           c("StartTime", "start_time"),
+                           c("AcquisitionStartDate", "start_time"),
+                           c("endposition", "stop_time"),
+                           c("StopTime", "stop_time"),
+                           c("AcquisitionEndDate", "stop_time"),
+                           c("ingestiondate", "date_ingestion"),
+                           c("modifiedDate", "date_modified"),
+                           c("creationdate", "date_creation"),
+                           c("tileid", "tile_id"),
+                           c("WRSPath", "tile_number_horizontal"),
+                           c("WRSRow", "tile_number_vertical"),
+                           c("HorizontalTileNumber", "tile_number_horizontal"),
+                           c("VerticalTileNumber", "tile_number_vertical"),
+                           c("url.alt", "md5_url"),
+                           c("browseUrl", "preview_url"),
+                           c("url.icon", "preview_url"),
+                           c("metadataUrl", "meta_url"),
+                           c("fgdcMetadataUrl", "meta_url_fgdc"),
+                           c("missiondatatakeid", "missiondatatakeid"),
+                           c("slicenumber", "slice_number"),
+                           c("orbitnumber", "orbit_number"),
+                           c("orbitdirection", "orbit_direction"),
+                           c("lastorbitnumber", "lastorbit_number"),
+                           c("relativeorbitnumber", "relativeorbit_number"),
+                           c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
+                           c("passnumber", "pass_number"),
+                           c("passdirection", "pass_direction"),
+                           c("relorbitdir", "relativeorbit_number"),
+                           c("relpassnumber", "relativepass_number"),
+                           c("relpassdirection", "relativepass_direction"),
+                           c("lastorbitdirection", "lastorbit_direction"),
+                           c("lastpassnumber", "lastpass_number"),
+                           c("lastpassdirection", "lastpass_direction"),
+                           c("lastrelorbitdirection", "lastrelativeorbit_direction"),
+                           c("lastrelpassnumber", "lastrelativepass_number"),
+                           c("lastrelpassdirection", "lastrelativepass_direction"),
+                           c("swathidentifier", "swath_id"),
+                           c("producttype", "product_type"),
+                           c("productclass", "product_class"),
+                           c("productconsolidation", "product_consolidation"),
+                           c("timeliness", "timeliness"),
+                           c("platformname", "platform"),
+                           c("platformidentifier", "platform_id"),
+                           c("platformserialidentifier", "platform_serial"),
+                           c("instrumentname", "sensor"),
+                           c("instrumentshortname", "sensor_id"),
+                           c("SensorIdentifier", "sensor_id"),
+                           c("sensoroperationalmode", "sensor_mode"),
+                           c("mode", "sensor_mode"),
+                           c("polarisationmode", "polarisation_mode"),
+                           c("acquisitiontype", "aquistion_type"),
+                           c("size", "size"),
+                           c("footprint", "footprint"),
+                           c("is_gnss", "is_gnss"),
+                           c("LandCloudCover", "cloudcov_land"),
+                           c("SceneCloudCover", "cloudcov_scene"),
+                           c("cloudCover", "cloudcov"),
+                           c("cloudcoverpercentage", "cloudcov"),
+                           c("highprobacloudspercentage", "cloudcov_highprob"),
+                           c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
+                           c("notvegetatedpercentage", "cloudcov_notvegetated"),
+                           c("snowicepercentage", "snowice"),
+                           c("unclassifiedpercentage", "unclassified"),
+                           c("vegetationpercentage", "vegetation"),
+                           c("waterpercentage", "water"),
+                           c("processingbaseline", "level_processingbaseline"),
+                           c("processinglevel", "level"),
+                           c("productlevel", "level"),
+                           c("level", "level"),
+                           c("AutoQualityFlag", "flag_autoquality"),
+                           c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
+                           c("ScienceQualityFlag", "flag_sciencequality"),
+                           c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
+                           c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
+  colnames(dict) <- c("clients", "gSD")
   
   # translate
-  records <- do.call(cbind, lapply(1:length(dict$gSD), function(i){
-    sub <- dict[,which.col][i]
-    x <- if(is.na(sub)) data.frame(rep(NA, nrow(records))) else records[sub]
-    colnames(x) <- dict$gSD[i]
+  records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
+    x <- records[[dict$clients[i]]]
+    if(!is.null(x)){
+      x <- data.frame(x, stringsAsFactors = F)
+      colnames(x) <- dict$gSD[i]
+    }
     return(x)
-  }))
+  }))), records[,!sapply(records.names, function(x) x %in% dict$clients, USE.NAMES = F)])
   
   # colnames(records) <- sapply(colnames(records), function(x){
   #   i <- which(x == dict[,which.col])
@@ -597,25 +655,27 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
   # if(which(which.col) > 2){
   #   records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
   # }
+  
+  records <- records[,!sapply(colnames(records), function(x) x %in%  c("orderUrl", "bulkOrdered", "ordered", "product", "dataAccessUrl", "sceneBounds", "platformshortname", "mission",
+    "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
+    "status", "filename", "format", "url", "downloadUrl"), USE.NAMES = F)]
 
   # product groups
-  records$product_group <- colnames(dict)[which.col]
-  records$product <- product_name
+  products <- get_products(grouped = T, update_online = F)
+  records <- cbind(data.frame(product_group = names(products)[sapply(products, function(x) any(grepl(product_name, x)))],
+                              product <- product_name, stringsAsFactors = F), records)
   
-  # specific cases: Sentinel
-  if(which(which.col) == 2){
+  # product-specfic cases
+  if(unique(records$product_group) == "Sentinel"){
     records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
-    records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
-      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
-    })
     records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
+  if(unique(records$product == "Sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
+      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
+  })
   
-  # kill columns that are NA (not active on default)
-  if(isTRUE(na.omit)) records <- records[apply(records, MARGIN = 2, function(x) !all(is.na(x))),]
-    
   # sort columns
-  records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
+  return(records[,order(colnames(records))]) # better sort by dict$gSD ?
 }
 
 

@@ -10,7 +10,7 @@
 #' @author Jakob Schwalb-Willmann
 #' 
 #' @importFrom xml2 xml_children xml_contents
-#' @importFrom httr content
+#' @importFrom httr content http_error
 #' 
 #' @name get_data
 #' @export

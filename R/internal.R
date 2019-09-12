@@ -72,10 +72,12 @@ gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog
   get.str <- paste0(get.str, "), silent = T)")
   eval(parse(text = get.str))
 
-  if(inherits(x, "try-error")) out(paste0("Could not process request: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
-  stop_for_status(x, "process request")
-  warn_for_status(x)
-  #message_for_status(x); cat("\n")
+  #if(inherits(x, "try-error")) out(paste0("Could not process request: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
+  if(!inherits(x, "try-error")){
+    stop_for_status(x, "process request")
+    warn_for_status(x)
+    #message_for_status(x); cat("\n")
+  }
   return(x)
 }
 
@@ -152,6 +154,7 @@ gSD.download <- function(url, file, name, head, type = "dataset", md5 = NA, prog
     response <- try(gSD.get(url, dir.file = file.tmp, prog = prog, ...), silent = T)
     
     if(inherits(response, "try-error")){
+      if(grepl("aborted", as.character(attributes(response)$condition))) out("Download was aborted by an application callback.", type = 3)
       out(paste0(head, "Download of ", type, " '", name, "' failed:", gsub("\n", "", tail(strsplit(response[1], "\n ")[[1]], n = 1))), type = 2)
       file.remove(file.tmp)
       return(FALSE)
@@ -2356,6 +2359,10 @@ quiet <- function(expr){
 #' @noRd
 .retry <- function(fun, ..., fail, ini = NULL, retry = NULL, final = NULL, n = 3, delay = 0, value = TRUE, verbose = T){
   
+  # get ...
+  extras <- list(...)
+  if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
+  
   # initial evaluation
   if(!is.null(ini)) eval(ini)
   
@@ -2365,7 +2372,7 @@ quiet <- function(expr){
     if(inherits(x, "try-error")){
       
       # retry evluation
-      eval(retry)
+      if(grepl("aborted", as.character(attributes(x)$condition))) out("Operation was aborted by an application callback.", type = 3) else eval(retry)
       
       # fail evaluation
       n <- n-1

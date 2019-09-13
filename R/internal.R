@@ -551,90 +551,10 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
 #' @noRd
 .translate_records <- function(records, product_name){
 
+  #"relativeorbit_number.1" "sensor_mode.1"          "level.1"
   # set-up column name dictionary
   records.names <- colnames(records)
-  dict <- rbind.data.frame(c("title", "record_id"),
-                           c("displayId", "record_id"),
-                           c("uuid", "entity_id"),
-                           c("entityId", "entity_id"),
-                           c("summary", "summary"),
-                           c("acquisitionDate", "date_acquisition"),
-                           c("beginposition", "start_time"),
-                           c("StartTime", "start_time"),
-                           c("AcquisitionStartDate", "start_time"),
-                           c("endposition", "stop_time"),
-                           c("StopTime", "stop_time"),
-                           c("AcquisitionEndDate", "stop_time"),
-                           c("ingestiondate", "date_ingestion"),
-                           c("modifiedDate", "date_modified"),
-                           c("creationdate", "date_creation"),
-                           c("tileid", "tile_id"),
-                           c("WRSPath", "tile_number_horizontal"),
-                           c("WRSRow", "tile_number_vertical"),
-                           c("HorizontalTileNumber", "tile_number_horizontal"),
-                           c("VerticalTileNumber", "tile_number_vertical"),
-                           c("url.alt", "md5_url"),
-                           c("browseUrl", "preview_url"),
-                           c("url.icon", "preview_url"),
-                           c("metadataUrl", "meta_url"),
-                           c("fgdcMetadataUrl", "meta_url_fgdc"),
-                           c("missiondatatakeid", "missiondatatakeid"),
-                           c("slicenumber", "slice_number"),
-                           c("orbitnumber", "orbit_number"),
-                           c("orbitdirection", "orbit_direction"),
-                           c("lastorbitnumber", "lastorbit_number"),
-                           c("relativeorbitnumber", "relativeorbit_number"),
-                           c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
-                           c("passnumber", "pass_number"),
-                           c("passdirection", "pass_direction"),
-                           c("relorbitdir", "relativeorbit_number"),
-                           c("relpassnumber", "relativepass_number"),
-                           c("relpassdirection", "relativepass_direction"),
-                           c("lastorbitdirection", "lastorbit_direction"),
-                           c("lastpassnumber", "lastpass_number"),
-                           c("lastpassdirection", "lastpass_direction"),
-                           c("lastrelorbitdirection", "lastrelativeorbit_direction"),
-                           c("lastrelpassnumber", "lastrelativepass_number"),
-                           c("lastrelpassdirection", "lastrelativepass_direction"),
-                           c("swathidentifier", "swath_id"),
-                           c("producttype", "product_type"),
-                           c("productclass", "product_class"),
-                           c("productconsolidation", "product_consolidation"),
-                           c("timeliness", "timeliness"),
-                           c("platformname", "platform"),
-                           c("platformidentifier", "platform_id"),
-                           c("platformserialidentifier", "platform_serial"),
-                           c("instrumentname", "sensor"),
-                           c("instrumentshortname", "sensor_id"),
-                           c("SensorIdentifier", "sensor_id"),
-                           c("sensoroperationalmode", "sensor_mode"),
-                           c("mode", "sensor_mode"),
-                           c("polarisationmode", "polarisation_mode"),
-                           c("acquisitiontype", "aquistion_type"),
-                           c("size", "size"),
-                           c("footprint", "footprint"),
-                           c("is_gnss", "is_gnss"),
-                           c("LandCloudCover", "cloudcov_land"),
-                           c("SceneCloudCover", "cloudcov_scene"),
-                           c("cloudCover", "cloudcov"),
-                           c("cloudcoverpercentage", "cloudcov"),
-                           c("highprobacloudspercentage", "cloudcov_highprob"),
-                           c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
-                           c("notvegetatedpercentage", "cloudcov_notvegetated"),
-                           c("snowicepercentage", "snowice"),
-                           c("unclassifiedpercentage", "unclassified"),
-                           c("vegetationpercentage", "vegetation"),
-                           c("waterpercentage", "water"),
-                           c("processingbaseline", "level_processingbaseline"),
-                           c("processinglevel", "level"),
-                           c("productlevel", "level"),
-                           c("level", "level"),
-                           c("AutoQualityFlag", "flag_autoquality"),
-                           c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
-                           c("ScienceQualityFlag", "flag_sciencequality"),
-                           c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
-                           c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
-  colnames(dict) <- c("clients", "gSD")
+  dict <- getOption("gSD.clients_dict")
   
   # translate
   records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
@@ -658,12 +578,12 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
   
   records <- records[,!sapply(colnames(records), function(x) x %in%  c("orderUrl", "bulkOrdered", "ordered", "product", "dataAccessUrl", "sceneBounds", "platformshortname", "mission",
     "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
-    "status", "filename", "format", "url", "downloadUrl"), USE.NAMES = F)]
+    "status", "filename", "format", "url", "downloadUrl", "mode", "productlevel"), USE.NAMES = F)]
 
   # product groups
   products <- get_products(grouped = T, update_online = F)
-  records <- cbind(data.frame(product_group = names(products)[sapply(products, function(x) any(grepl(product_name, x)))],
-                              product <- product_name, stringsAsFactors = F), records)
+  records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
+  records$product <- product_name
   
   # product-specfic cases
   if(unique(records$product_group) == "Sentinel"){
@@ -675,7 +595,7 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
   })
   
   # sort columns
-  return(records[,order(colnames(records))]) # better sort by dict$gSD ?
+  return(records)
 }
 
 
@@ -709,9 +629,93 @@ rbind.different <- function(x) {
 
 
 #' On package startup
+#' @importFrom pbapply pboptions
 #' @keywords internal
 #' @noRd
 .onLoad <- function(libname, pkgname){
+  
+  pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
+  clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
+                                    c("summary", "product"), # place holder
+                                    c("title", "record_id"),
+                                    c("displayId", "record_id"),
+                                    c("uuid", "entity_id"),
+                                    c("entityId", "entity_id"),
+                                    c("summary", "summary"),
+                                    c("beginposition", "date_acquisition"),
+                                    c("acquisitionDate", "date_acquisition"),
+                                    c("beginposition", "start_time"),
+                                    c("StartTime", "start_time"),
+                                    c("AcquisitionStartDate", "start_time"),
+                                    c("endposition", "stop_time"),
+                                    c("StopTime", "stop_time"),
+                                    c("AcquisitionEndDate", "stop_time"),
+                                    c("ingestiondate", "date_ingestion"),
+                                    c("modifiedDate", "date_modified"),
+                                    c("creationdate", "date_creation"),
+                                    c("footprint", "footprint"),
+                                    c("tileid", "tile_id"),
+                                    c("WRSPath", "tile_number_horizontal"),
+                                    c("WRSRow", "tile_number_vertical"),
+                                    c("HorizontalTileNumber", "tile_number_horizontal"),
+                                    c("VerticalTileNumber", "tile_number_vertical"),
+                                    c("url.alt", "md5_url"),
+                                    c("browseUrl", "preview_url"),
+                                    c("url.icon", "preview_url"),
+                                    c("metadataUrl", "meta_url"),
+                                    c("fgdcMetadataUrl", "meta_url_fgdc"),
+                                    c("slicenumber", "slice_number"),
+                                    c("orbitnumber", "orbit_number"),
+                                    c("orbitdirection", "orbit_direction"),
+                                    c("lastorbitnumber", "lastorbit_number"),
+                                    c("relativeorbitnumber", "relativeorbit_number"),
+                                    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
+                                    c("passnumber", "pass_number"),
+                                    c("passdirection", "pass_direction"),
+                                    c("relorbitdir", "relativeorbit_direction"),
+                                    c("relpassnumber", "relativepass_number"),
+                                    c("relpassdirection", "relativepass_direction"),
+                                    c("lastorbitdirection", "lastorbit_direction"),
+                                    c("lastpassnumber", "lastpass_number"),
+                                    c("lastpassdirection", "lastpass_direction"),
+                                    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
+                                    c("lastrelpassnumber", "lastrelativepass_number"),
+                                    c("lastrelpassdirection", "lastrelativepass_direction"),
+                                    c("swathidentifier", "swath_id"),
+                                    c("producttype", "product_type"),
+                                    c("productclass", "product_class"),
+                                    c("productconsolidation", "product_consolidation"),
+                                    c("timeliness", "timeliness"),
+                                    c("platformname", "platform"),
+                                    c("platformidentifier", "platform_id"),
+                                    c("platformserialidentifier", "platform_serial"),
+                                    c("instrumentname", "sensor"),
+                                    c("instrumentshortname", "sensor_id"),
+                                    c("SensorIdentifier", "sensor_id"),
+                                    c("sensoroperationalmode", "sensor_mode"),
+                                    c("polarisationmode", "polarisation_mode"),
+                                    c("acquisitiontype", "aquistion_type"),
+                                    c("size", "size"),
+                                    c("is_gnss", "is_gnss"),
+                                    c("LandCloudCover", "cloudcov_land"),
+                                    c("SceneCloudCover", "cloudcov_scene"),
+                                    c("cloudCover", "cloudcov"),
+                                    c("cloudcoverpercentage", "cloudcov"),
+                                    c("highprobacloudspercentage", "cloudcov_highprob"),
+                                    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
+                                    c("notvegetatedpercentage", "cloudcov_notvegetated"),
+                                    c("snowicepercentage", "snowice"),
+                                    c("unclassifiedpercentage", "unclassified"),
+                                    c("vegetationpercentage", "vegetation"),
+                                    c("waterpercentage", "water"),
+                                    c("processinglevel", "level"),
+                                    c("level", "level"),
+                                    c("AutoQualityFlag", "flag_autoquality"),
+                                    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
+                                    c("ScienceQualityFlag", "flag_sciencequality"),
+                                    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
+                                    c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
+  colnames(clients_dict) <- c("clients", "gSD")
   
   op <- options()
   op.gSD <- list(
@@ -753,7 +757,8 @@ rbind.different <- function(x) {
     gSD.archive_set = FALSE,
     gSD.aoi = FALSE,
     gSD.aoi_set = FALSE,
-    gSD.products = NULL
+    gSD.products = NULL,
+    gSD.clients_dict = clients_dict
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
@@ -761,7 +766,7 @@ rbind.different <- function(x) {
   
   
   ## allocate gdal on load
-  gdalUtils::gdal_setInstallation(rescan = T)
+  #gdalUtils::gdal_setInstallation(rescan = T)
   
   invisible()
 }
@@ -2445,3 +2450,28 @@ quiet <- function(expr){
   eval(final)
   if(isTRUE(value)) return(x)
 }
+
+#' verbose lapply
+#'
+#' @importFrom pbapply pblapply
+#' @noRd 
+.lapply <- function(X, FUN, ..., verbose = FALSE){
+  if(isTRUE(verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
+}
+
+#' verbose lapply
+#'
+#' @importFrom pbapply pblapply
+#' @noRd 
+.sapply <- function(X, FUN, ..., verbose = FALSE){
+  if(isTRUE(verbose)) pbsapply(X, FUN, ...) else sapply(X, FUN, ...)
+}
+
+#' verbose apply
+#'
+#' @importFrom pbapply pbapply
+#' @noRd 
+.apply <- function(X, MARGIN, FUN, ..., verbose = FALSE){
+  if(isTRUE(verbose)) pbapply(X, MARGIN, FUN, ...) else apply(X, MARGIN, FUN, ...)
+}
+

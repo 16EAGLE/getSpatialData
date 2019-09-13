@@ -17,6 +17,7 @@
   password <- extras$password
   if(!is.null(extras$hub)) hub <- extras$hub else hub <- "auto"
   if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
+  if(is.null(username)) .check_login("Copernicus")
   cred <- .check_credentials(username, password, service = "Copernicus")
   
   ## Global AOI
@@ -36,8 +37,8 @@
                aoi.poly = c("footprint:%22Intersects(POLYGON((", ")))%22"),
                platformname = "platformname:",
                time = list("[" = "beginposition:%5b", "to" = "%20TO%20", "]" = "%5d"))
-    time.range <- sapply(time.range, function(x) paste0(x, "T00:00:00.000Z"), USE.NAMES = F)
-    if(!is.null(ext.xy)) aoi.str <- paste0(apply(ext.xy, MARGIN = 1, function(x) paste0(x, collapse = "%20")), collapse = ",")
+    time.range <- .sapply(time.range, function(x) paste0(x, "T00:00:00.000Z"), USE.NAMES = F)
+    if(!is.null(ext.xy)) aoi.str <- paste0(.apply(ext.xy, MARGIN = 1, function(x) paste0(x, collapse = "%20")), collapse = ",")
     
     return(paste0(qs$url.root, qs$search[1], toString(row.start), qs$search[2], "(", if(!is.null(ext.xy)) paste0(qs$aoi.poly[1], aoi.str, qs$aoi.poly[2], qs$and) else "",
                   qs$platformname, product_name, qs$and,
@@ -57,7 +58,7 @@
     
     query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], product_name = product_name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
     query.xml <- suppressMessages(xml_contents(as_xml_document(content(query, as = "text"))))
-    query.list <- c(query.list, lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
+    query.list <- c(query.list, .lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
     
     if(length(query.list) == 0 & row.start == 0){
       out("No results could be obtained for this product, time range and AOI.", msg = T)
@@ -76,29 +77,29 @@
     field.names <- c("title", "url", "url.alt", "url.icon", "summary")
     
     ## get field.tag contents and assemble unique names vector
-    query.cont <- lapply(query.list, function(x, field = field.tag) unlist(lapply(field, function(f, y = x) grep(f, y, value = T))))
-    query.names <- lapply(query.cont, function(x, field.n = field.names) c(field.n, sapply(x[(length(field.n)+1):length(x)], function(y) strsplit(y, '\"')[[1]][2], USE.NAMES = F)))
+    query.cont <- .lapply(query.list, function(x, field = field.tag) unlist(.lapply(field, function(f, y = x) grep(f, y, value = T))))
+    query.names <- .lapply(query.cont, function(x, field.n = field.names) c(field.n, .sapply(x[(length(field.n)+1):length(x)], function(y) strsplit(y, '\"')[[1]][2], USE.NAMES = F)))
     
     ## make fields and treat url tags differently, as required field data is no content here
-    query.fields <- lapply(query.cont, function(x) sapply(x, function(y) strsplit(strsplit(y, ">")[[1]][2], "<")[[1]][1], USE.NAMES = F))
-    query.fields <- lapply(1:length(query.fields), function(i, qf = query.fields, qc = query.cont, qn = query.names){
+    query.fields <- .lapply(query.cont, function(x) .sapply(x, function(y) strsplit(strsplit(y, ">")[[1]][2], "<")[[1]][1], USE.NAMES = F))
+    query.fields <- .lapply(1:length(query.fields), function(i, qf = query.fields, qc = query.cont, qn = query.names){
       x <- qf[[i]]
-      x[which(is.na(x) == T)] <- sapply(qc[[i]][which(is.na(x) == T)], function(y) strsplit(strsplit(y, 'href=\"')[[1]][2], '\"/>')[[1]][1], USE.NAMES = F)
+      x[which(is.na(x) == T)] <- .sapply(qc[[i]][which(is.na(x) == T)], function(y) strsplit(strsplit(y, 'href=\"')[[1]][2], '\"/>')[[1]][1], USE.NAMES = F)
       names(x) <- qn[[i]]
       return(x)
     })
     
     records.names <- unique(unlist(query.names))
     records <- as.data.frame(stats::setNames(replicate(length(records.names),numeric(0), simplify = F), records.names))
-    records <- do.call(rbind.data.frame, lapply(query.fields, function(x, rn = records.names,  rdf = records){
-      rdf[1, match(names(x), rn)] <- sapply(x, as.character)
+    records <- do.call(rbind.data.frame, .lapply(query.fields, function(x, rn = records.names,  rdf = records){
+      rdf[1, match(names(x), rn)] <- .sapply(x, as.character)
       return(rdf)
     }))
     
     # convert expected numeric fields
-    fields.numeric <- names(records)[sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
+    fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("orbitnumber", "relativeorbitnumber", "cloudcoverpercentage", "highprobacloudspercentage", "mediumprobacloudspercentage",
                                                                               "snowicepercentage", "vegetationpercentage", "waterpercentage", "baresoilpercentage", "lowprobacloudspercentage")) x %in% y, USE.NAMES = F)]
-    records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+    records[,fields.numeric] <- .sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
     # translate record column names
     if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
@@ -127,6 +128,7 @@
   if(is.null(extras$maxCloudLand)) extras$maxCloudLand <- 100
   username <- extras$username
   password <- extras$password
+  if(is.null(username)) .check_login("USGS")
   
   cred <- .check_credentials(username, password, service = "USGS")
   
@@ -153,7 +155,7 @@
     if(grepl("LANDSAT", product_name)){
       ## Connect to ESPA to retrieve available products for (no use of entityId, displayId instead)
       out("Recieving available product levels from USGS-EROS ESPA...", msg = T)
-      records <- do.call(rbind.data.frame, apply(records, MARGIN = 1, function(x, names = colnames(records)){
+      records <- do.call(rbind.data.frame, .apply(records, MARGIN = 1, function(x, names = colnames(records)){
         
         x <- rbind.data.frame(x, stringsAsFactors = F)
         colnames(x) <- names
@@ -170,21 +172,21 @@
       
       ## Correct WRS fields
       wrs.sub <- grep("WRS", colnames(records))
-      records[,wrs.sub] <- apply(records[,wrs.sub], MARGIN = 2, function(x) sapply(x, function(y){
+      records[,wrs.sub] <- .apply(records[,wrs.sub], MARGIN = 2, function(x) .sapply(x, function(y){
         z <- strsplit(y, " ")[[1]]
         z[length(z)]
       }, USE.NAMES = F))
       
       # convert expected numeric fields
-      fields.numeric <- names(records)[sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
+      fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
     }
     
     if(grepl("MODIS", product_name)){
-      fields.numeric <- names(records)[sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
+      fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
     }
     
     # convert fields
-    records[,fields.numeric] <- sapply(fields.numeric, function(x) as.numeric(records[,x]))
+    records[,fields.numeric] <- .sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
     # cloud cover filter
     if(extras$maxCloudLand < 100 ) records <- records[records$LandCloudCover <= extras$maxCloudLand,]
@@ -242,7 +244,7 @@
   
   # assemble json query string and add further query keywords
   query.json <- paste0("polygon=",
-                       paste0(apply(aoi.matrix, MARGIN=1, function(x) paste0(x, collapse = "%2C")), collapse = "%2C"))
+                       paste0(.apply(aoi.matrix, MARGIN=1, function(x) paste0(x, collapse = "%2C")), collapse = "%2C"))
   query.product <- paste0("echo_collection_id=", id)
   query.sort <- "sort_key%5B%5D=-start_date&page_size=20"
   query.url <- paste0(url, "granules.json?", query.json, "&", query.product, "&", query.sort)
@@ -256,7 +258,7 @@
   
   # build a records data.frame containing all returned records
   fields <- names(response[[1]])
-  records <- do.call(rbind, lapply(response, function(x){
+  records <- do.call(rbind, .lapply(response, function(x){
     links <- grep("http", unlist(x$links), value = T)
     names(links) <- NULL
     

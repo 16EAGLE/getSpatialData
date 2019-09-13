@@ -15,9 +15,9 @@
     }
   }
   
-  if(all("Copernicus" %in% services, !getOption("gSD.dhus_set"))) out("You are not logged in to Copernicus Hub (anymore). Please log in first using login_CopHub().", type = 3)
+  if(all("Copernicus" %in% services, !getOption("gSD.dhus_set"))) out("You are not logged in to Copernicus Hub. Please login first using login_CopHub().", type = 3)
   if("USGS" %in% services){
-    if(!getOption("gSD.usgs_set")) out("You are not logged in to USGS ERS (anymore). Please log in first using login_USGS().", type = 3)
+    if(!getOption("gSD.usgs_set")) out("You are not logged in to USGS ERS. Please login first using login_USGS().", type = 3)
     
     # refresh session if needed
     if(difftime(Sys.time(), getOption("gSD.usgs_time"), units = "mins") > getOption("gSD.usgs_refresh")){
@@ -74,7 +74,7 @@
 .check_records <- function(records, col.names = NULL, as_df = FALSE){
   if(!isTRUE(inherits(records, "data.frame"))) out("Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'.", type = 3)
   if(!is.null(col.names)){
-    catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
+    catch <- .lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
   }
   if(as_df) records <- as.data.frame(records) else records <- st_sf(records, sfc_last = F)
   return(records)
@@ -161,7 +161,7 @@
   
   if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character (vector)",3)
   optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
-  some_wrong <- isFALSE(any(sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
+  some_wrong <- isFALSE(any(.sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
   if (some_wrong) {
     out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names()",3)
   }
@@ -177,7 +177,7 @@
 .select_check_files <- function(paths, item_name) {
   
   paths <- paths[intersect(which(!is.na(paths)),which(paths != "NONE"))]
-  exist <- sapply(paths,function(p) file.exists(p))
+  exist <- .sapply(paths,function(p) file.exists(p))
   all_on_disk <- isTRUE(all(exist))
   if (all_on_disk) {
     return(NA)
@@ -205,7 +205,7 @@
                         "MODIS_MOD09GQ_V6"=1,"MODIS_MYD09GQ_V6"=1,
                         "MODIS_MOD09CMG_V6"=1,"MODIS_MYD09CMG_V6"=1,
                         "Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
-  r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
+  r <- min(.sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
   s <- ifelse(length(sensor)==1,paste0("\n- Sensor: ",sensor),paste0("\nSensors: ",sensor))
@@ -243,7 +243,7 @@
     if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n",fail,"\n"),2)
   }
   
-  error <- sapply(c(missing,empty),function(x) !is.null(x))
+  error <- .sapply(c(missing,empty),function(x) !is.null(x))
   if (TRUE %in% error) return(TRUE) else return(FALSE)
   
 }
@@ -277,7 +277,7 @@
   .select_handle_revisit(unlist(records$product),period,num_timestamps)
   # check if needed files exist
   out("Checking if all needed clouds mask and preview rasters exist..",msg=T)
-  check <- sapply(list(preview_file=records$preview_file,
+  check <- .sapply(list(preview_file=records$preview_file,
                        cloud_mask_file=records$cloud_mask_file),function(x) {
     .select_check_files(x,names(x))
   })
@@ -308,7 +308,7 @@
     out("Argument 'products' must be a character containing at least one element.", type=3)
   } 
   if(!is.null(products_available)){
-    products_valid <- unlist(sapply(products, function(x) any(grepl(x, products_available)), simplify = F))
+    products_valid <- unlist(.sapply(products, function(x) any(grepl(x, products_available)), simplify = F))
     if(!all(products_valid)) out(paste0("Unknown product(s): ", paste0("'", paste0(products[!products_valid], collapse = "', '"), "'"), ". Please use get_products() to obtain the names of all available products."), type = 3)
   }
 }

@@ -57,7 +57,7 @@ login_CopHub <- function(username = NULL, password = NULL, n_retry = 3, verbose 
   
   # save credentials, if login was succesfull
   options(gSD.dhus_user = username, gSD.dhus_pass = password, gSD.dhus_set = TRUE, gSD.dhus_time = Sys.time())
-  out("Login successfull. ESA Copernicus credentials have been saved for the current session.", msg = T)
+  out("Login successfull. ESA Copernicus credentials have been saved for the current session.")
 }
 
 
@@ -78,14 +78,14 @@ login_USGS <- function(username = NULL, password = NULL, n_retry = 3, verbose = 
   
   # save credentials
   options(gSD.usgs_apikey = key, gSD.usgs_user = username, gSD.usgs_pass = password, gSD.usgs_set = TRUE, gSD.usgs_time = Sys.time())
-  out("Login successfull. USGS ERS credentials have been saved for the current session.", msg = T)
+  out("Login successfull. USGS ERS credentials have been saved for the current session.")
 }
 
 #' @rdname login
 #' @importFrom httr GET http_status
 #' @importFrom cli cat_bullet
 #' @export
-services_avail <- function(value = F, verbose = T){
+services <- function(value = F, verbose = T){
   
   .check_login()
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)

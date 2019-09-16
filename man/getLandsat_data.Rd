@@ -4,7 +4,8 @@
 \alias{getLandsat_data}
 \title{Download Landsat data}
 \usage{
-getLandsat_data(records, dir_out = NULL, ..., verbose = TRUE)
+getLandsat_data(records, dir_out = NULL, md5_check = TRUE, ...,
+  verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_records}.}

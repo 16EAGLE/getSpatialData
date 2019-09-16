@@ -2,18 +2,20 @@
 % Please edit documentation in R/check_availability.R
 \name{check_availability}
 \alias{check_availability}
-\title{Check on-demand availability of records}
+\title{Check download availability of records}
 \usage{
-check_availability(records)
+check_availability(records, verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
 A data frame of records (as defined with argument \code{records}), extended by a column \code{available_instantly} (logical).
 }
 \description{
-\code{check_availability} checks for each record whether it is available on-demand (and thus can be downloaded instantly) or not (and thus must be ordered before download).
+\code{check_availability} checks for each record whether it is available for direct download (can be downloaded instantly) or not (and thus must be ordered before download).
 }
 \note{
 To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.

@@ -4,7 +4,7 @@
 \alias{login}
 \alias{login_CopHub}
 \alias{login_USGS}
-\alias{services_avail}
+\alias{services}
 \title{Session-wide login}
 \usage{
 login_CopHub(username = NULL, password = NULL, n_retry = 3,
@@ -13,7 +13,7 @@ login_CopHub(username = NULL, password = NULL, n_retry = 3,
 login_USGS(username = NULL, password = NULL, n_retry = 3,
   verbose = TRUE)
 
-services_avail(value = F, verbose = T)
+services(value = F, verbose = T)
 }
 \arguments{
 \item{username}{character, user name to login at the respective service.}

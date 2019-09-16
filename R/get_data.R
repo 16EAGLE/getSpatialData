@@ -3,6 +3,7 @@
 #' \code{get_data} downloads the full datasets per records. File paths are added to the records data frame.
 #'
 #' @inheritParams get_previews
+#' @param md5_check logical, whether to check md5 checksums (if available) or not.
 #' 
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
 #' @return A data frame of records (as defined with argument \code{records}), extended by 
@@ -15,7 +16,7 @@
 #' @name get_data
 #' @export
 
-get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
+get_data <- function(records, dir_out = NULL, md5_check = TRUE, ..., verbose = TRUE){
   
   # check arguments
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -35,13 +36,6 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
   # fields
   records$gSD.item <- 1:nrow(records)
   records$gSD.head <- .sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
-  records$md5_checksum <- NA
-  
-  ###############################
-  ## exceptions to implement:
-  # availability
-  # order
-  ###############################
   
   # login check
   groups <- unique(records$product_group)
@@ -52,34 +46,43 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
     .check_login("USGS")
   }
   
-  # record subs for group-wise treatment
-  # sub <- list(CopHub = which(records$product_group == "Sentinel"),
-  #             espa = which(records$product_group == "Landsat" & records$level != "l1"),
-  #             aws = which(records$product == "LANDSAT_8_C1" & records$level == "l1"),
-  #             laads = which(records$product_group == "MODIS"))
+  # check availability
+  if(is.null(records$available_instantly)){
+    out("Checking download availability of records...")
+    records <- check_availability(records, verbose = FALSE)
+    if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+  }
+  sub <- which(records$available_instantly)
+  if(any(sub)) out("Some records are currently not available for download and will be skipped (see records$available_instantly).", type = 2)
   
   # get credendtial info
-  records$gSD.cred <- .apply(records, MARGIN = 1, function(x){
+  records$gSD.cred <- NA
+  records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
     if(x$product_group == "Sentinel"){
       list(.CopHub_select(x = extras$hub, p = x$product, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
     } else NA
   })
   
   # get MD5 checksums
-  out("Receiving MD5 checksums...")
-  records$md5_checksum <- unlist(.apply(records, MARGIN = 1, function(x){
-    if(x$product_group == "Sentinel"){
-      if(!is.null(x$md5_url)) content(gSD.get(x$md5_url, x$gSD.cred[1], x$gSD.cred[2]), USE.NAMES = F) else NA
-    } else NA
-  }, verbose = F))
+  records$md5_checksum <- NA
+  if(isTRUE(md5_check)){
+    out("Receiving MD5 checksums...")
+    records[sub,]$md5_checksum <- unlist(.apply(records[sub,], MARGIN = 1, function(x){
+      if(x$product_group == "Sentinel"){
+        cred <- unlist(x$gSD.cred)
+        if(!is.null(x$md5_url)) content(gSD.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
+      } else NA
+    }, verbose = F))
+  }
   
   # get URLs
   out("Assembling dataset URLs...")
-  records$dataset_url <- .apply(records, MARGIN = 1, function(x){
+  records$dataset_url <- NA
+  records[sub,]$dataset_url <- .apply(records[sub,], MARGIN = 1, function(x){
     
     # Sentinel Copernicus Hub
     if(x$product_group == "Sentinel"){
-      paste0(x$gSD.cred[3], "odata/v1/Products('", x$entity_id, "')/$value")
+      paste0(unlist(x$gSD.cred)[3], "odata/v1/Products('", x$entity_id, "')/$value")
       
     # Landsat 8 Level 1A AWS
     } else if(x$product == "LANDSAT_8_C1" & x$level == "l1"){
@@ -118,11 +121,12 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
   }, verbose = verbose)
   
   # file name
-  records$dataset_file <- .apply(records, MARGIN = 1, function(x){
+  records$dataset_file <- NA
+  records[sub,]$dataset_file <- .apply(records[sub,], MARGIN = 1, function(x){
     file <- paste0(x$gSD.dir, "/", x$record_id)
     
     if(x$product_group == "Sentinel"){
-      if(isTRUE(records$is_gnss)){
+      if(isTRUE(x$is_gnss)){
         paste0(file, ".TGZ")
       } else if(x$product == "Sentinel-5P"){
         paste0(file, ".nc")
@@ -140,17 +144,17 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
   })
   
   # download file
-  records$dataset_file <- .apply(records, MARGIN = 1, function(x){
+  records[sub,]$dataset_file <- .apply(records[sub,], MARGIN = 1, function(x){
     
-    x$dataset_url <- unlist(x$dataset_url, recursive = T)
-    x$dataset_file <- unlist(x$dataset_file, recursive = T)
-    if(any(is.na(x$dataset_url), is.na(x$dataset_file))) NA else {
+    dataset_url <- unlist(x$dataset_url, recursive = T)
+    dataset_file <- unlist(x$dataset_file, recursive = T)
+    if(any(is.na(dataset_url), is.na(dataset_file))) NA else {
     
       # attempt download
-      download <- .sapply(1:length(x$dataset_url), function(i){
-        file.head <- gsub("]", paste0(" | File ", i, "/", length(x$dataset_url), "]"), x$gSD.head)
-        .retry(gSD.download, url = x$dataset_url[i],
-               file = x$dataset_file[i],
+      download <- .sapply(1:length(dataset_url), function(i){
+        file.head <- gsub("]", paste0(" | File ", i, "/", length(dataset_url), "]"), x$gSD.head)
+        .retry(gSD.download, url = dataset_url[i],
+               file = dataset_file[i],
                name = x$record_id, head = file.head, type = "dataset",
                md5 = x$md5_checksum, prog = if(isTRUE(verbose)) TRUE else FALSE,
                fail = expression(out(paste0("Attempts to download '", name, "' failed.", type = 2))),
@@ -158,7 +162,7 @@ get_data <- function(records, dir_out = NULL, ..., verbose = TRUE){
       })
       
       # return downloaded files
-      files <- x$dataset_file[download]
+      files <- dataset_file[download]
       if(length(files) > 0) list(files) else NA
     }
   })

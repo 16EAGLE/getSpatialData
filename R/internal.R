@@ -297,7 +297,7 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
     if(is.null(v)) stop("Login fails. ") else return(v)
   }
   
-  .retry(.login, username = username, password = password, fail = expression(out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)),
+  .retry(.login, username = username, password = password, fail = expression(out("Login failed. Please retry later or call services() to check if USGS services are currently unavailable.", type = 3)),
          n = n_retry)
 }
 
@@ -698,7 +698,7 @@ rbind.different <- function(x) {
                                     c("size", "size"),
                                     c("is_gnss", "is_gnss"),
                                     c("LandCloudCover", "cloudcov_land"),
-                                    c("SceneCloudCover", "cloudcov_scene"),
+                                    c("SceneCloudCover", "cloudcov"),
                                     c("cloudCover", "cloudcov"),
                                     c("cloudcoverpercentage", "cloudcov"),
                                     c("highprobacloudspercentage", "cloudcov_highprob"),

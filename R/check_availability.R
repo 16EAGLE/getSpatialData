@@ -1,6 +1,6 @@
-#' Check on-demand availability of records
+#' Check download availability of records
 #' 
-#' \code{check_availability} checks for each record whether it is available on-demand (and thus can be downloaded instantly) or not (and thus must be ordered before download).
+#' \code{check_availability} checks for each record whether it is available for direct download (can be downloaded instantly) or not (and thus must be ordered before download).
 #'
 #' @inheritParams get_previews
 #' 
@@ -11,9 +11,10 @@
 #' 
 #' @export
 
-check_availability <- function(records){
+check_availability <- function(records, verbose = TRUE){
   
-  # check login
+  # checks
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   .check_login(records)
   
   # create new colunm

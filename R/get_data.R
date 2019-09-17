@@ -28,15 +28,6 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, ..., verbose = T
   # save names
   records.names <- colnames(records)
   
-  # create directories
-  dir_out <- .check_dir_out(dir_out, "datasets")
-  records$gSD.dir <- paste0(dir_out, "/", records$product, "/")
-  catch <- .sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
-  
-  # fields
-  records$gSD.item <- 1:nrow(records)
-  records$gSD.head <- .sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
-  
   # login check
   groups <- unique(records$product_group)
   if("Sentinel" %in% groups){
@@ -48,12 +39,13 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, ..., verbose = T
   
   # check availability
   if(is.null(records$available_instantly)){
-    out("Checking download availability of records...")
+    out("Column records$available_instantly not present, calling check_availabilty() to check download availability of records...")
     records <- check_availability(records, verbose = FALSE)
     if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   }
+  if(all(!records$available_instantly)) out("All supplied records are currently not availabe for download. Use order_records() to make them available for download.", type = 3)
   sub <- which(records$available_instantly)
-  if(any(sub)) out("Some records are currently not available for download and will be skipped (see records$available_instantly).", type = 2)
+  if(any(sub)) out("Some records are currently not available for download and will be skipped (see records$available_instantly). Use order_records() to make them available for download.", type = 2)
   
   # get credendtial info
   records$gSD.cred <- NA
@@ -120,6 +112,11 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, ..., verbose = T
     } else NA
   }, verbose = verbose)
   
+  # create directories
+  dir_out <- .check_dir_out(dir_out, "datasets")
+  records$gSD.dir <- paste0(dir_out, "/", records$product, "/")
+  catch <- .sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
+  
   # file name
   records$dataset_file <- NA
   records[sub,]$dataset_file <- .apply(records[sub,], MARGIN = 1, function(x){
@@ -143,27 +140,36 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, ..., verbose = T
     } else NA
   })
   
+  # items and head
+  records$gSD.item <- 1:nrow(records)
+  records$gSD.head <- .sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
+  
   # download file
-  records[sub,]$dataset_file <- .apply(records[sub,], MARGIN = 1, function(x){
+  records$dataset_file <- .apply(records, MARGIN = 1, function(x){
     
-    dataset_url <- unlist(x$dataset_url, recursive = T)
-    dataset_file <- unlist(x$dataset_file, recursive = T)
-    if(any(is.na(dataset_url), is.na(dataset_file))) NA else {
-    
-      # attempt download
-      download <- .sapply(1:length(dataset_url), function(i){
-        file.head <- gsub("]", paste0(" | File ", i, "/", length(dataset_url), "]"), x$gSD.head)
-        .retry(gSD.download, url = dataset_url[i],
-               file = dataset_file[i],
-               name = x$record_id, head = file.head, type = "dataset",
-               md5 = x$md5_checksum, prog = if(isTRUE(verbose)) TRUE else FALSE,
-               fail = expression(out(paste0("Attempts to download '", name, "' failed.", type = 2))),
-               retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)), delay = 0, value = T)
-      })
-      
-      # return downloaded files
-      files <- dataset_file[download]
-      if(length(files) > 0) list(files) else NA
+    if(isTRUE(x$available_instantly)){
+      dataset_url <- unlist(x$dataset_url, recursive = T)
+      dataset_file <- unlist(x$dataset_file, recursive = T)
+      if(any(is.na(dataset_url), is.na(dataset_file))) NA else {
+        
+        # attempt download
+        download <- .sapply(1:length(dataset_url), function(i){
+          file.head <- gsub("]", paste0(" | File ", i, "/", length(dataset_url), "]"), x$gSD.head)
+          .retry(gSD.download, url = dataset_url[i],
+                 file = dataset_file[i],
+                 name = paste0(x$record_id, if(!is.na(x$level)) paste0(" (", x$level, ")") else NULL), 
+                 head = file.head, type = "dataset", md5 = x$md5_checksum, prog = if(isTRUE(verbose)) TRUE else FALSE,
+                 fail = expression(out(paste0("Attempts to download '", name, "' failed.", type = 2))),
+                 retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)), delay = 0, value = T)
+        })
+        
+        # return downloaded files
+        files <- dataset_file[download]
+        if(length(files) > 0) list(files) else return(NA)
+      }
+    } else{
+      out(paste0(x$gSD.head, "Skipping download of dataset '", paste0(x$record_id, if(!is.na(x$level)) paste0(" (", x$level, ")") else NULL), "', since it is not available for download..."), msg = T)
+      return(NA)
     }
   })
   return(.column_summary(records, records.names))

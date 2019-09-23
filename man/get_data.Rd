@@ -7,17 +7,17 @@
 \alias{getMODIS_data}
 \title{Download datasets}
 \usage{
-get_data(records, dir_out = NULL, md5_check = TRUE, ...,
-  verbose = TRUE)
+get_data(records, dir_out = NULL, md5_check = TRUE, force = FALSE,
+  ..., verbose = TRUE)
 
-getSentinel_data(records, dir_out = NULL, md5_check = TRUE, ...,
-  verbose = TRUE)
+getSentinel_data(records, dir_out = NULL, md5_check = TRUE,
+  force = FALSE, ..., verbose = TRUE)
 
-getLandsat_data(records, dir_out = NULL, md5_check = TRUE, ...,
-  verbose = TRUE)
+getLandsat_data(records, dir_out = NULL, md5_check = TRUE,
+  force = FALSE, ..., verbose = TRUE)
 
-getMODIS_data(records, dir_out = NULL, md5_check = TRUE, ...,
-  verbose = TRUE)
+getMODIS_data(records, dir_out = NULL, md5_check = TRUE,
+  force = FALSE, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
@@ -25,6 +25,8 @@ getMODIS_data(records, dir_out = NULL, md5_check = TRUE, ...,
 \item{dir_out}{character, a directory, to which the downloaded file(s) should be saved. By default, these are saved to the archive directory defined with \code{set_archive}.}
 
 \item{md5_check}{logical, whether to check md5 checksums (if available) or not.}
+
+\item{force}{logical, whether to force download of files already existing or not.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{
@@ -43,7 +45,7 @@ getMODIS_data(records, dir_out = NULL, md5_check = TRUE, ...,
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
-A data frame of records (as defined with argument \code{records}), extended by
+A data frame of records (as defined with argument \code{records}), extended by additional columns.
 }
 \description{
 \code{get_data} downloads the full datasets per records. File paths are added to the records data frame.

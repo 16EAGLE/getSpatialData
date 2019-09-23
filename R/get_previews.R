@@ -5,7 +5,8 @@
 #' @inheritParams get_records
 #' @param records records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}
 #' @param dir_out character, a directory, to which the downloaded file(s) should be saved. By default, these are saved to the archive directory defined with \code{set_archive}.
-#' 
+#' @param force logical, whether to force download of files already existing or not.
+#'  
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
 #' @return A data frame of records (as defined with argument \code{records}), extended by two columns: \code{preview_file} (character, path to georeferenced preview) and \code{preview_file_jpg} (character, path to preview JPG).
 #' 
@@ -15,7 +16,7 @@
 #' @importFrom sf st_transform st_coordinates st_sfc
 #' @export
 
-get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
+get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = TRUE){
   
   # check hidden arguments
   extras <- list(...)
@@ -56,7 +57,7 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
                                        
     # download
     if(isFALSE(is.url(url))) return(NA) else{
-      download <- gSD.download(url = url, file = file, name = name, head = head, type = "preview", prog = F,
+      download <- gSD.download(url = url, file = file, name = name, head = head, type = "preview", prog = F, force = force,
                                username = if(!is.na(cred[[1]][1])) cred[[1]][1] else NULL,
                                password = if(!is.na(cred[[1]][1])) cred[[1]][2] else NULL)
       if(isFALSE(download)) return(NA) else return(file)

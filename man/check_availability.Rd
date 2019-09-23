@@ -12,7 +12,7 @@ check_availability(records, verbose = TRUE)
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
-A data frame of records (as defined with argument \code{records}), extended by a column \code{available_instantly} (logical).
+A data frame of records (as defined with argument \code{records}), extended by a column \code{download_available} (logical).
 }
 \description{
 \code{check_availability} checks for each record whether it is available for direct download (can be downloaded instantly) or not (and thus must be ordered before download).

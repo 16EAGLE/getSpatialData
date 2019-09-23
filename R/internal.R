@@ -2475,3 +2475,84 @@ quiet <- function(expr){
   if(isTRUE(verbose)) pbapply(X, MARGIN, FUN, ...) else apply(X, MARGIN, FUN, ...)
 }
 
+#' get dataset urls
+#' 
+#' @param records records data.frame
+#' @return character vector
+#' 
+#' @importFrom xml2 xml_children xml_contents
+#' @importFrom httr content http_error
+#' @noRd 
+.get_ds_urls <- function(records){
+  .apply(records, MARGIN = 1, function(x){
+    
+    # Sentinel Copernicus Hub
+    if(x$product_group == "Sentinel"){
+      paste0(unlist(x$gSD.cred)[3], "odata/v1/Products('", x$entity_id, "')/$value")
+      
+      # Landsat 8 Level 1A AWS
+    } else if(x$product == "LANDSAT_8_C1" & x$level == "l1"){
+      
+      # assemble index url
+      hv <- strsplit(x$record_id, "_")[[1]][3]
+      index_url <- paste0(getOption("gSD.api")$aws.l8, substr(hv, 1, 3), "/", substr(hv, 4, 6), "/", x$record_id, "/index.html")
+      
+      # get file urls
+      list(paste0(gsub("index.html", "", index_url), .sapply(as.character(xml_children(xml_children(xml_contents(content(gSD.get(index_url), encoding = "UTF-8"))[2])[4])), function(y){
+        strsplit(y,  '\"')[[1]][2]
+      }, USE.NAMES = F)))
+      
+      # MODIS LAADS
+    } else if(x$product_group == "MODIS"){
+      
+      # assemble file url
+      fn <- gsub("Entity ID: ", "", strsplit(x$summary, ", ")[[1]][1]) #positional
+      ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
+      url <- paste0(getOption("gSD.api")$laads, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
+                    "/", substr(ydoy, 5, nchar(ydoy)), "/", fn)
+      
+      # test url
+      if(http_error(url)){
+        fn.names <- gSD.get(paste0(paste0(head(strsplit(url, "/")[[1]], n = -1), collapse = "/"), ".csv"))
+        fn.names <- .sapply(gsub("\r", "", strsplit(content(fn.names), "\n")[[1]][-1]), function(y) strsplit(y, ",")[[1]][1], USE.NAMES = F)
+        
+        # assign correct fn
+        fn <- grep(paste0(strsplit(tail(strsplit(url, "/")[[1]], n=1), "[.]")[[1]][1:4], collapse = "."), fn.names, value = T)
+        
+        # redefine URL and file
+        return(paste0(paste0(head(strsplit(url, "/")[[1]], n=-1), collapse = "/"), "/", fn))
+      } else return(url)
+      
+    } else NA
+  }, verbose = verbose)
+}
+
+
+#' get dataset filenames
+#' 
+#' @param records records data.frame
+#' @return character vector
+#' @importFrom pbapply pbapply
+#' @noRd 
+.get_ds_filenames <- function(records){
+  .apply(records, MARGIN = 1, function(x){
+    file <- paste0(x$gSD.dir, "/", x$record_id)
+    
+    if(x$product_group == "Sentinel"){
+      if(isTRUE(x$is_gnss)){
+        paste0(file, ".TGZ")
+      } else if(x$product == "Sentinel-5P"){
+        paste0(file, ".nc")
+      } else{
+        paste0(file, ".zip")
+      }
+      
+    } else if(x$product == "LANDSAT_8_C1" & x$level == "l1"){
+      if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
+      list(paste0(file, "/", .sapply(unlist(x$dataset_url, recursive = T), function(x) tail(strsplit(x, "/")[[1]], n = 1), USE.NAMES = F)))
+      
+    } else if(x$product_group == "MODIS"){
+      paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
+    } else NA
+  })
+}

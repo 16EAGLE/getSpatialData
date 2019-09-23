@@ -4,13 +4,15 @@
 \alias{getLandsat_data}
 \title{Download Landsat data}
 \usage{
-getLandsat_data(records, dir_out = NULL, md5_check = TRUE, ...,
-  verbose = TRUE)
+getLandsat_data(records, dir_out = NULL, md5_check = TRUE,
+  force = FALSE, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{getLandsat_records}.}
 
 \item{dir_out}{character, full path to download target directory. Optional. If not set, \code{getLandsat_data} uses the directory to the \code{getSpatialData} archive folder. Use \link{set_archive} to once define a getSpatialData  archive folder.}
+
+\item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{
@@ -36,8 +38,6 @@ getLandsat_data(records, dir_out = NULL, md5_check = TRUE, ...,
    \item "ESPA" to download on-demand products from USGS-EROS ESPA
    \item "AWS" to download from Amazon Webservices (Landsat-8 with \code{level="l1"} only)
 }}
-
-\item{force}{logical. If \code{TRUE}, download is forced even if file already exisits in the download directory. Default is \code{FALSE}.}
 
 \item{n.retry}{numeric, maximum number of download (re-)attempts. If downloads of datasets fail (e.g. MD5 checksums do not match), these downloads will be reattampted.}
 

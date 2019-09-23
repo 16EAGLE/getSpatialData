@@ -5,7 +5,7 @@
 #' @inheritParams get_previews
 #' 
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
-#' @return A data frame of records (as defined with argument \code{records}), extended by a column \code{available_instantly} (logical).
+#' @return A data frame of records (as defined with argument \code{records}), extended by a column \code{download_available} (logical).
 #' 
 #' @author Jakob Schwalb-Willmann
 #' 
@@ -19,7 +19,7 @@ check_availability <- function(records, verbose = TRUE){
   
   # create new colunm
   records.names <- colnames(records)
-  records$available_instantly <- NA
+  records$download_available <- NA
   
   # Sentinel
   if("Sentinel" %in% records$product_group){
@@ -28,7 +28,7 @@ check_availability <- function(records, verbose = TRUE){
     records.sentinel$cred <- .lapply(records.sentinel$product, function(x){
       .CopHub_select(x = "auto", p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
     })
-    records[records$product_group == "Sentinel",]$available_instantly <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
+    records[records$product_group == "Sentinel",]$download_available <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
       as.logical(toupper(unlist(.get_odata(x$entity_id, x$cred, field = "Online/$value"))))
     })
   }
@@ -36,13 +36,13 @@ check_availability <- function(records, verbose = TRUE){
   # Landsat
   if("Landsat" %in% records$product_group){
     out("Checking instant availability for Landsat records...")
-    records[records$product_group == "Landsat",]$available_instantly <- records[records$product_group == "Landsat",]$level == "l1"
+    records[records$product_group == "Landsat",]$download_available <- records[records$product_group == "Landsat",]$level == "l1"
   }
   
   # MODIS
   if("MODIS" %in% records$product_group){
     out("Checking instant availability for MODIS records...")
-    records[records$product_group == "MODIS",]$available_instantly <- TRUE
+    records[records$product_group == "MODIS",]$download_available <- TRUE
   }
   
   return(.column_summary(records, records.names))

@@ -286,11 +286,15 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
 #' @param username username
 #' @param password password
 #' @keywords internal
+#' @importFrom httr POST content stop_for_status warn_for_status content_type
+#' @importFrom utils URLencode
 #' @noRd
 .ERS_login <- function(username, password, n_retry = 3){
   
   .login <- function(username, password){
-    x <- POST(paste0(getOption("gSD.api")$ee, 'login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
+    x <- POST(url = paste0(getOption("gSD.api")$ee, "login"),
+              body = URLencode(paste0('jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}')),
+              content_type("application/x-www-form-urlencoded; charset=UTF-8"))
     stop_for_status(x, "connect to server.")
     warn_for_status(x)
     v <- content(x)$data

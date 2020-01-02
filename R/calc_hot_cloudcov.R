@@ -7,7 +7,7 @@
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
 #' @param maxDeviation numeric between 0 and 100. The maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
-#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 35}. 
+#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 25}. 
 #' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
 #' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.5.
 #' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10.
@@ -29,7 +29,7 @@
 #' @noRd
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
-                              cloudPrbThreshold = 35, slopeDefault = 1.5, 
+                              cloudPrbThreshold = 25, slopeDefault = 1.5, 
                               interceptDefault = -10, cols = NULL, dir_out = NULL, tmp_dir = NULL, verbose = TRUE) {
   
   identifier <- "record_id"
@@ -140,8 +140,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   slope <- as.numeric(regrVals[2])
 
   # get a sharper clear-sky-line
-  # if mean of blue in likely clear-sky areas is higher red multiply slope by 2 else divide by 2
-  slope <- ifelse(mean_blue_red[1] > mean_blue_red[2],slope*2,slope/2)
+  # if mean of blue in likely clear-sky areas is higher mean of red: multiply slope by 2 else divide by 2
+  slope <- ifelse(mean_blue_red[1] > mean_blue_red[2], slope*2, slope/2)
   
   # calculate HOT cloud probablity layer
   try(nominator <- abs(slope * rBand - bBand + intercept))

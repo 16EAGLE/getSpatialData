@@ -2,7 +2,7 @@
 #' 
 #' @description Selection is done according to aoi cloud cover (in case of optical data) 
 #' and temporal characteristics. Both optical and SAR records are supported as well as
-#' combined selection for different sensors across systems and data providers.#' 
+#' combined selection for different sensors across systems and data providers.
 #' 
 #' @details For running the selection you have to process \link{calc_cloudcov} first.
 #' 

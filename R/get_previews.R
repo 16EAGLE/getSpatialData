@@ -92,8 +92,13 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
       crs(prev) <- crs(as(footprint, "Spatial"))
       footprint <- st_coordinates(footprint)
       extent(prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
-      if(group == "MODIS") prev <- projectRaster(prev, crs = crs("+proj=longlat +datum=WGS84 +no_defs"))
-      
+      wgs84 <- "+proj=longlat +datum=WGS84 +no_defs"
+      if(group == "MODIS") {
+        prev <- projectRaster(prev, crs = crs(wgs84))
+      } else {
+        crs(prev) <- wgs84 # ensure preview has its crs
+      }
+
       # write
       writeRaster(prev, file.tif)
       return(file.tif)

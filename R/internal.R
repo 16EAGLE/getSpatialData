@@ -750,9 +750,9 @@ rbind.different <- function(x) {
   } else {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
-  sumDataDownload <- meanPreviewSize * stillToGoFor
-  out(paste0(sep(),"\n\n10 records are processed.\nProcessing time for all remaining records, in sum approx.: ",
-             sumProcessingTime,"\nData amount to be processed approx.: ",sumDataDownload," MB\n",sep(),"\n"))
+  sumDataDownload <- round(meanPreviewSize * stillToGoFor, 2)
+  out(paste0(sep(),"\n\n10 records are processed.\nTime for remaining records, approx.: ",
+             sumProcessingTime,"\nData amount approx.: ",sumDataDownload," MB\n",sep(),"\n"))
 }
 
 #' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given

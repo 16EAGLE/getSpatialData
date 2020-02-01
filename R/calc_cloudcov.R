@@ -8,18 +8,21 @@
 #' }
 #' 
 #' #' @details Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the red and blue information of the input RGB. HOT procedure is applied based on 
-#' Zhu & Helmer (2018), https://data.fs.usda.gov/research/pubs/iitf/ja_iitf_2018_Zhu.pdf. Orignally, the algorithm was introduced by Zhang et al., 2002.
-#' "An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images", Remote Sensing of Environment 82, 2-3.
+#' Zhu & Helmer (2018) [2]. Orignally, the base computation was introduced by Zhang et al. (2002) [1].
 #' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
+#' 
+#' @references 
+#' [1] Zhang, Y., Guindon, B., Cihlar, J., 2002. An image transform to characterize and compensate for spatial variations in thin cloud contamination of Landsat images.
+#' Remote Sensing of Environment 82 (2-3), 173-187.
+#'   
+#' [2] Zhu, X., Helmer, E.H., 2018. An automatic method for screening clouds and cloud shadows in opticalsatellite image time series in cloudy regions.
+#' Remote Sensing of Environment 214 (2018), 135-153.
 #' 
 #' @note if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
-#' @param cloudPrbThreshold numeric, the threshold of the HOT cloud probability layer (0-100 \%) below which pixels are considered as clear sky. Default is \code{cloudPrbThreshold = 35}. It will be dynamically adjusted according to the input in \code{maxDeviation}.
-#' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.5.
-#' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10.
 #' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
 #' @param username character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
@@ -97,29 +100,30 @@
 #' @export
 
 calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
-                          cloudPrbThreshold = 35, slopeDefault = 1.5, interceptDefault = -10, 
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
   ## Check input
   options("gSD.verbose"=verbose)
   dir_out <- .check_dir_out(dir_out,which="cloud_masks")
   classNumErr <- " has to be of class 'numeric'. But is: "
-  aoi <- .check_aoi(aoi,"sf",quiet=T)
+  aoi <- .check_aoi(aoi,"sp")
   records <- .check_records(records,as_df=T)
   params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
   check_num <- sapply(1:length(params),function(i) {
     if (!is.numeric(params[[i]]) && !is.integer(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
   })
+  rm(check_num)
   
   cols_initial <- colnames(records)
   numRecords <- NROW(records)
-  out(paste0(sep(),"\n\n",numRecords," records to be processed\nStarting HOT...\n",sep(),"\n"),verbose=verbose)
+  out(paste0(sep(),"\n\nProcessing ",numRecords," records\nStarting HOT\n",sep(),"\n"),verbose=verbose)
   processingTime <- c()
   previewSize <- c()
   
   # create temp dir
   tmp_dir_orig <-  base::tempdir() # in order to change it to default at the end of function
   tmp_dir <- .tmp_dir(dir_out,1,change_raster_tmp=TRUE)
+  rm(tmp_dir)
   v <- verbose
   identifier <- "record_id"
   

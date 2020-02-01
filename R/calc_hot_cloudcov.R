@@ -7,10 +7,6 @@
 #' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.
 #' @param aoi sp or sf, the aoi.
 #' @param maxDeviation numeric between 0 and 100. The maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
-#' @param cloudPrbThreshold numeric the threshold of the HOT cloud probability layer (0-100, 100 = highest prob.) below which pixels are denoted as clear sky. Default is \code{cloudPrbThreshold = 25}. 
-#' It will be dynamically adjusted according to the input in \code{maxDeviation} if \code{maxDeviation < 100}.
-#' @param slopeDefault numeric, value taken as slope ONLY if least-alternate deviation regression fails.  Default is 1.5.
-#' @param interceptDefault numeric, value taken as intercept ONLY if least-alternate deviation regression fails. Default is -10.
 #' @param cols character vector of column names.
 #' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
 #' @param tmp_dir character directory the temp dir.
@@ -29,16 +25,15 @@
 #' @noRd
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
-                              cloudPrbThreshold = 25, slopeDefault = 1.5, 
-                              interceptDefault = -10, cols = NULL, dir_out = NULL, tmp_dir = NULL, verbose = TRUE) {
+                              cols = NULL, dir_out = NULL, tmp_dir = NULL, verbose = TRUE) {
+  
+  ## Input checks
   
   identifier <- "record_id"
   dir_given <- !is.null(dir_out)
   sceneCloudCoverCol <- "cloudcov"
   error <- "try-error"
-  safe_cloud_thresh <- 230
   currTitle <- record[[identifier]]
-  aoi <- .check_aoi(aoi,"sp")
   mask_path <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
   
   if (file.exists(mask_path)) {
@@ -51,7 +46,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   }
   
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
-  maxTry <- 30 # how often HOT calculation should be repeated with adjusted threshold
+  maxTry <- 30 # how often threshold adjustment should be repeated with adjusted threshold
+  safe_cloud_thresh <- 210
   
   # Check if preview is broken (has no observations with DN >= 20)
   prev_vals <- as.integer(as.vector(values(preview)))
@@ -88,33 +84,46 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
+  
+  ## Calculation
+  
   # for dividing the blue DNs with values between these threshold values into equal interval bins
+  # to be generic over different land surface we calculate the thresholds from the given image
   mean_blue_red <- c(mean(preview[[3]][preview[[3]] < safe_cloud_thresh]),
                      mean(preview[[1]][preview[[1]] < safe_cloud_thresh]))
   bThreshHigh <- as.integer(mean(mean_blue_red))
   bThreshLow <- as.integer(bThreshHigh - 50)
-  bThreshHigh <- ifelse(bThreshHigh < 30,60,bThreshHigh)
+  bThreshHigh <- ifelse(bThreshHigh < 30,60,bThreshHigh) # values should not be extremely low
   bThreshLow <- ifelse(bThreshLow < 40,40,bThreshLow)
   
-  ## Calculate least-alternate deviation (LAD) regression
-  # this step computes first safe clear-sky pixels adpated from the bins method from Zhu & Helmer 2018
-  # the procedure was adapted slightly because here it is being computed with discontinuous DN values. Suitable values for
-  # r and b were investigated systemetically. For HOT slope values of more than 1.4 were investigated to be most
-  # suitable. The given r and b value are thus values that lead to slope and intercept that have the highest capability
-  # to safely discriminate clouds from non-cloud when calculating HOT. Low slope values close to 1 may lead for example to 
-  # a confusion of bright or reddish land surfaces with clouds
+  # set initial cloud probability threshold from mean of blue and red in clear-sky aresa
+  cloudPrbThreshold <- mean(mean_blue_red) - 100
+  
+  # this step computes first safe clear-sky pixels
   bins_seq <- bThreshLow:bThreshHigh
   valDf <- data.frame(na.omit(values(prvStck)))
-  bBins <- lapply(bins_seq,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
-  bBins <- lapply(bBins,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
+  
+  binIndices <- lapply(bins_seq,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
+  bBins <- lapply(binIndices,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
   bBins <- lapply(bBins,function(x) {
     nrow <- NROW(x)
     red_order <- order(x$red,decreasing=F)[1:2] # take the lowest 2 of red values
     df_subset <- x[red_order,]
   })
   
-  meanRed <- sapply(bBins,function(x){mean(x[["red"]])})
-  meanBlue <- sapply(bBins,function(x){x[["blue"]][1]})
+  # from the mean values of blue and red in clear-sky areas we calculate the mean ratio between
+  # the bands. As we don't do the regression on the whole supposed clear-sky areas, we conserve
+  # this information by applying it as coefficients to the samples fed into the regression. 
+  # Furthermore, we double the coefficient of the band with higher mean and divide the other
+  # coefficient by 2. This creates a more distinguished clear-sky line while the relationship
+  # between the two bands is maintained. This at the end simplifies the delineation of cloudy pixels.
+  coeffBlue <- (mean_blue_red[1] / mean_blue_red[2])
+  coeffRed <- (mean_blue_red[2] / mean_blue_red[1])
+  coeffBlue <- ifelse(coeffBlue > 1, coeffBlue * 2, coeffBlue / 2)
+  coeffRed <- ifelse(coeffRed > 1, coeffRed * 2, coeffRed / 2)
+  
+  meanRed <- sapply(bBins,function(x){mean(x[["red"]])}) * coeffRed
+  meanBlue <- sapply(bBins,function(x){x[["blue"]][1]}) * coeffBlue
 
   # run least-alternate deviation regression
   lad <- tryCatch({
@@ -126,7 +135,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   )
   if (inherits(lad,"simpleError")) {
     if (slopeDefault == 0) {
-      hotFailed <- TRUE # shit. Remember this and handle at the end
+      hotFailed <- TRUE # remember this and handle at the end
     } else {
       hotFailed <- FALSE
     }
@@ -139,9 +148,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
 
-  # get a sharper clear-sky-line
-  # if mean of blue in likely clear-sky areas is higher mean of red: multiply slope by 2 else divide by 2
-  slope <- ifelse(mean_blue_red[1] > mean_blue_red[2], slope*2, slope/2)
+  # handle problem of slope values close to 1 (in fact, this problem should rarely occur)
+  # if mean of blue in likely clear-sky areas is higher than mean of red: multiply slope by 2 else divide by 2
+  if (slope < 1.5 && slope > 0.5) {
+    slope <- ifelse(mean_blue_red[1] > mean_blue_red[2], slope*2, slope/2)
+  }
   
   # calculate HOT cloud probablity layer
   try(nominator <- abs(slope * rBand - bBand + intercept))
@@ -154,7 +165,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
 
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
-  ccDeviationFromProvider <- 101 # start with 101 to enter loop
+  ccDeviationFromProvider <- 101
   while (isFALSE(hotFailed)
          && numTry <= maxTry 
          && abs(ccDeviationFromProvider) > maxDeviation) { # tolerance 2

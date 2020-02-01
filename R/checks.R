@@ -97,8 +97,7 @@
   if(length(grep("WGS84", grep("longlat", st_crs(aoi)$proj4string, value = T), value = T)) != 1){
     aoi <- st_transform(aoi, 4326)
   }
-  
-  
+
   ## get coordinates
   aoi.m <- st_coordinates(aoi)[,c(1,2)]
   #aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)

@@ -98,9 +98,11 @@
     aoi <- st_transform(aoi, 4326)
   }
   
+  
   ## get coordinates
   aoi.m <- st_coordinates(aoi)[,c(1,2)]
-  aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
+  #aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
+  aoi.sf <- aoi
   aoi.sp <- as_Spatial(aoi.sf)
   
   if(type == "matrix") return(aoi.m)

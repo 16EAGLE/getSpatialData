@@ -1,3 +1,13 @@
+# ------------------------------------------------------------------------------
+# test directories
+testthat_home <- getwd()
+testthat_resources <- file.path(testthat_home, "resources")
+dir_error <- "Cannot run tests because directory not found: "
+if (!dir.exists(testthat_home)) stop(paste0(dir_error, testthat_home))
+if (!dir.exists(testthat_resources)) stop(paste0(dir_error, testthat_resources))
+# ------------------------------------------------------------------------------
+
+
 data("aoi_data")
 
 test.cred <- list(dhus.user = Sys.getenv("gSD_user"),
@@ -26,3 +36,11 @@ vars.sentinel <- data.frame(platforms = c("Sentinel-1", "Sentinel-2", "Sentinel-
                             user = c(test.cred$dhus.user, test.cred$dhus.user, test.cred$dhus.user, test.cred$s5p.user),
                             pass = c(test.cred$dhus.pass, test.cred$dhus.pass, test.cred$dhus.pass, test.cred$s5p.pass))
 if(isFALSE(test.run$authentify)) vars.sentinel <- vars.sentinel[-c(1:2),]
+
+
+# ---------------------------------------
+# Variables for calc_cloudcov
+
+
+
+

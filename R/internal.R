@@ -799,7 +799,7 @@ rbind.different <- function(x) {
     cMask[cMask==0] <- NA
   }
   if (dir_given) { # save cloud mask if desired
-    mask_path <- normalizePath(mask_path)
+    mask_path <- mask_path
     if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T,
                                              datatype="INT2S")
     record[cols$cloud_mask_path] <- mask_path
@@ -872,7 +872,7 @@ rbind.different <- function(x) {
 #' @noRd
 .tmp_dir <- function(dir_out, action = 2, change_raster_tmp = F, tmp_orig = NULL) {
   
-  tmp_dir <- normalizePath(file.path(dir_out,"tmp"))
+  tmp_dir <- file.path(dir_out,"tmp")
   if (dir.exists(tmp_dir) && action ==2) {unlink(tmp_dir,recursive=T)}
   if (action == 1) {dir.create(tmp_dir)}
   if (isTRUE(change_raster_tmp)) {

@@ -1,7 +1,9 @@
 #' Calculate the cloud cover of Sentinel, Landsat or MODIS in an aoi before large data download
 #' 
 #' \code{calc_cloudcov} calculates the aoi cloud cover and optionally saves raster cloud
-#' masks, all based on preview images. The previews are requested through \link{get_previews}.
+#' masks, all based on preview images. The previews are requested through \link{get_previews}. As the
+#' cloud masks, the previews are written to \code{dir_out}. You may call \link{get_previews} before
+#' \code{calc_cloudcov}, they will be reloaded.
 #' Cloud cover is computed currently using one of the following options:
 #' \itemize{
 #' \item Haze-Optimal-Transformation (HOT) (Zhu & Helmer, 2018).
@@ -105,15 +107,9 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
   ## Check input
   options("gSD.verbose"=verbose)
   dir_out <- .check_dir_out(dir_out,which="cloud_masks")
-  classNumErr <- " has to be of class 'numeric'. But is: "
   aoi <- .check_aoi(aoi,"sp")
   records <- .check_records(records,as_df=T)
-  params <- list("cloudPrbThreshold"=cloudPrbThreshold,"slopeDefault"=slopeDefault,"interceptDefault"=interceptDefault)
-  check_num <- sapply(1:length(params),function(i) {
-    if (!is.numeric(params[[i]]) && !is.integer(params[[i]])) {out(paste0(names(params)[[i]],classNumErr,class(params[[i]])),type=3)}
-  })
-  rm(check_num)
-  
+
   cols_initial <- colnames(records)
   numRecords <- NROW(records)
   out(paste0(sep(),"\n\nProcessing ",numRecords," records\nStarting HOT\n",sep(),"\n"),verbose=verbose)
@@ -161,7 +157,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
     }
     
     # if preview exists not yet get it, then run HOT
-    if (sensor == "Sentinel-1") {
+    if (is_SAR) {
       record_preview <- NULL
     } else {
       
@@ -218,20 +214,17 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
       # pass preview to HOT function
       record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
-      record_cc <- try(getSpatialData:::calc_hot_cloudcov(record=record_preview,
-                                         preview=preview,
-                                         aoi=aoi,
-                                         cloudPrbThreshold=cloudPrbThreshold,
-                                         maxDeviation=maxDeviation,
-                                         slopeDefault=slopeDefault,
-                                         interceptDefault=interceptDefault,
-                                         cols=.cloudcov_colnames(),
-                                         dir_out=dir_out,
-                                         verbose=verbose))
+      record_cc <- try(calc_hot_cloudcov(record=record_preview,
+                       preview=preview,
+                       aoi=aoi,
+                       maxDeviation=maxDeviation,
+                       cols=.cloudcov_colnames(),
+                       dir_out=dir_out,
+                       verbose=verbose))
     }
     
     if (isTRUE(get_preview_failed) || class(record_cc) != "data.frame" || is.na(record_cc)) {
-      record_cc <- getSpatialData:::.handle_cc_skip(record_preview,is_SAR,dir_out)
+      record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
     }
     
     previewSize <- c(previewSize,object.size(preview))

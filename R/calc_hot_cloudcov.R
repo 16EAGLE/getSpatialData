@@ -34,7 +34,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   sceneCloudCoverCol <- "cloudcov"
   error <- "try-error"
   currTitle <- record[[identifier]]
-  mask_path <- file.path(dir_out,paste0(record[[identifier]],"_cloud_mask.tif"))
+  mask_path <- file.path(dir_out, paste0(record[[identifier]],"_cloud_mask.tif"))
   
   if (file.exists(mask_path)) {
     cMask <- raster(mask_path)
@@ -81,7 +81,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     bBand <- preview[[2]]
     rBand <- preview[[1]]
   } else {
-    out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. The number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for record: ",currTitle),type=3)
+    out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. 
+               Number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for
+               record: ",currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
   
@@ -105,6 +107,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   
   binIndices <- lapply(bins_seq,function(x){which(valDf[[1]] == x)}) # these are the bins of interest for blue DNs
   bBins <- lapply(binIndices,function(x){data.frame(blue=valDf[x,1],red=valDf[x,2])}) # get the red and blue DNs where bins are valid
+  rm(binIndices, valDf)
   bBins <- lapply(bBins,function(x) {
     nrow <- NROW(x)
     red_order <- order(x$red,decreasing=F)[1:2] # take the lowest 2 of red values
@@ -133,13 +136,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
       return(err)
     }
   )
+  rm(meanRed, meanBlue)
   if (inherits(lad,"simpleError")) {
-    if (slopeDefault == 0) {
-      hotFailed <- TRUE # remember this and handle at the end
-    } else {
-      hotFailed <- FALSE
-    }
-    regrVals <- c(interceptDefault,slopeDefault) # if LAD did not work take default intercept and slope values
+    hotFailed <- TRUE # remember this and handle at the end
   } else {
     hotFailed <- FALSE
     regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope

@@ -27,14 +27,20 @@
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5, 
                               cols = NULL, dir_out = NULL, tmp_dir = NULL, verbose = TRUE) {
   
-  ## Input checks
-  
-  identifier <- "record_id"
+  ## Check input
+  .check_dataframe(record, "record")
+  .check_rasterStack(preview, "preview")
+  aoi <- .check_aoi(aoi, "sp")
+  .check_character(dir_out)
+  dir_out <- .check_dir_out(dir_out, which="cloud_masks")
+  .check_numeric(maxDeviation, "maxDeviation")
+  .check_character(cols, "cols")
+  .check_character(tmp_dir, "tmp_dir")
+  .check_verbose(verbose)
   dir_given <- !is.null(dir_out)
-  sceneCloudCoverCol <- "cloudcov"
-  error <- "try-error"
-  currTitle <- record[[identifier]]
+  identifier <- "record_id"
   mask_path <- file.path(dir_out, paste0(record[[identifier]],"_cloud_mask.tif"))
+  currTitle <- record[[identifier]]
   
   if (file.exists(mask_path)) {
     cMask <- raster(mask_path)
@@ -48,6 +54,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   hotFailWarning <- paste0("\nHOT could not be calculated for this record:\n",currTitle)
   maxTry <- 30 # how often threshold adjustment should be repeated with adjusted threshold
   safe_cloud_thresh <- 210
+  sceneCloudCoverCol <- "cloudcov"
+  error <- "try-error"
   
   # Check if preview is broken (has no observations with DN >= 20)
   prev_vals <- as.integer(as.vector(values(preview)))

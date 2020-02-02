@@ -1,13 +1,62 @@
-# ------------------------------------------------------------------------------
-# test directories
-testthat_home <- getwd()
-testthat_resources <- file.path(testthat_home, "resources")
+# TEST DIRECTORIES
+# -----------------
+tt <- list()
+tt$home <- getwd()
+tt$tmp <- file.path(tt$home, "tmp") # tmp dir that can be created for tests (and deleted!)
+tt$resources$home <- file.path(tt$home, "resources")
+tt$resources$records <- file.path(tt$resources$home, "records")
+tt$resources$previews <- file.path(tt$resources$home, "previews")
+tt$resources$cmasks <- file.path(tt$resources$home, "cloud_masks")
+tt$resources$aoi <- file.path(tt$resources$home, "tunisia_aoi")
 dir_error <- "Cannot run tests because directory not found: "
-if (!dir.exists(testthat_home)) stop(paste0(dir_error, testthat_home))
-if (!dir.exists(testthat_resources)) stop(paste0(dir_error, testthat_resources))
-# ------------------------------------------------------------------------------
+if (!dir.exists(tt$home)) stop(paste0(dir_error, tt$home))
+if (!dir.exists(tt$resources$home)) stop(paste0(dir_error, tt$resources))
+for (dir in tt$resources) if (!dir.exists(dir)) stop(paste0(dir_error, dir))
 
+# helpers for initializing and finishing tmp dir
+initialize_dir <- function(dir) {
+  if (dir.exists(dir)) unlink(dir, TRUE)
+  dir.create(dir)
+}
+finish_dir <- function(dir) {
+  if (dir.exists(dir)) unlink(dir, TRUE)
+}
 
+# TEST PARAMETERS
+# -----------------
+# classes
+DATAFRAME <- "data.frame"
+NUMERIC <- "numeric"
+INTEGER <- "integer"
+CHARACTER <- "character"
+
+# sensor names
+SENTINEL2 <- "Sentinel-2"
+SENTINEL3 <- "Sentinel-3"
+LANDSAT <- "Landsat"
+MODIS <- "MODIS"
+MIXED <- "mixed"
+
+# for file naming
+SUFFIX <- list()
+SUFFIX$records <- "records"
+SUFFIX$previews <- "records_previews"
+SUFFIX$cmasks <- "records_cmasks"
+construct_filepath <- function(sensor, suffix) {
+  return(paste(sensor, paste0(suffix, ".csv"), sep="_"))
+}
+
+# records data.frame column names
+COLS <- list()
+COLS$preview_jpg <- "preview_file_jpg"
+COLS$preview_tif <- "preview_file"
+COLS$HOT_scene <- "aoi_HOT_cloudcov_percent"
+COLS$HOT_aoi <- "scene_HOT_cloudcov_percent"
+COLS$cmask_tif <- "cloud_mask_file"
+
+# TEST VARIABLES
+# -----------------
+aoi_tunisia <- .read_shp(file.path(tt$resources$aoi, "tunisia_aoi.shp"))
 data("aoi_data")
 
 test.cred <- list(dhus.user = Sys.getenv("gSD_user"),
@@ -37,9 +86,6 @@ vars.sentinel <- data.frame(platforms = c("Sentinel-1", "Sentinel-2", "Sentinel-
                             pass = c(test.cred$dhus.pass, test.cred$dhus.pass, test.cred$dhus.pass, test.cred$s5p.pass))
 if(isFALSE(test.run$authentify)) vars.sentinel <- vars.sentinel[-c(1:2),]
 
-
-# ---------------------------------------
-# Variables for calc_cloudcov
 
 
 

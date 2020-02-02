@@ -2617,3 +2617,15 @@ quiet <- function(expr){
   }
 }
 
+#' wrapper for reading shapefile via sf::read_sf()
+#' @param Character absolute file_path to shp including extension (".shp")
+#' @return SpatialPolygons shp
+#' @importFrom sf read_sf as_Spatial
+#' @importFrom methods as
+#' @keywords internal
+#' @noRd
+.read_shp <- function(file_path) {
+  shp <- as(as_Spatial(read_sf(file_path)), "SpatialPolygons")
+  return(shp)
+}
+

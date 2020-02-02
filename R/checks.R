@@ -49,7 +49,12 @@
     if(is.null(dir_out)) dir_out <- getOption(paste0("gSD.archive", if(!is.null(which)) paste0("_", which)))
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
-  return(path.expand(dir_out))
+  dir_out <- path.expand(dir_out)
+  if (!dir.exists(dir_out)) {
+    out(paste0("Directory 'dir_out' does not exist: ", dir_out), 3)
+  } else {
+    return(path.expand(dir_out))
+  }
 }
 
 #' check if command can be executed on the system command line
@@ -71,6 +76,8 @@
 #' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
 #' @noRd
 .check_aoi <- function(aoi, type = "matrix", quiet = F){
+  
+  type <- tolower(type)
   
   if(is.null(aoi)){
     if(is.TRUE(getOption("gSD.aoi_set"))){
@@ -335,6 +342,100 @@
 #' @return nothing
 #' @keywords internal
 #' @noRd
-.check_verbose <- function(verbose){
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+.check_verbose <- function(verbose) {
+  if (!is.null(verbose) && !is.na(verbose)) {
+    .check_logical(verbose, "verbose")
+    options(gSD.verbose = verbose)
+  }
 }
+
+#' checks input, generates a type error message and throws it if invalid
+#' Does NOT check for NULL and NA. If any of these, test is skipped
+#' @param input variable of any type
+#' @param arg_name Character arg_name the name is it will appear in error message if raised
+#' @param type Character type name
+#' @return nothing, raises error
+#' @keywords internal
+#' @noRd
+.check_type <- function(input, arg_name, type) {
+  if (!is.null(input) && !is.na(input)) {
+    if (!inherits(input, type)) {
+      out(paste0("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'"), 3)
+    }
+  }
+}
+
+#' checks if input is numeric
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not numeric
+#' @keywords internal
+#' @noRd
+.check_numeric <- function(input, arg_name) {
+  .check_type(input, arg_name, "numeric")
+}
+
+#' checks if input is character
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not character
+#' @keywords internal
+#' @noRd
+.check_character <- function(input, arg_name) {
+  .check_type(input, arg_name, "character")
+}
+
+#' checks if input is data.frame
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not data.frame
+#' @keywords internal
+#' @noRd
+.check_dataframe <- function(input, arg_name) {
+  .check_type(input, arg_name, "data.frame")
+}
+
+#' checks if input is list
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not list
+#' @keywords internal
+#' @noRd
+.check_list <- function(input, arg_name) {
+  .check_type(input, arg_name, "list")
+}
+
+#' checks if input is RasterBrick or RasterStack
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not RasterBrick or RasterStack
+#' @keywords internal
+#' @noRd
+.check_rasterStack <- function(input, arg_name) {
+  .check_type(input, arg_name, "RasterStack' or 'RasterBrick")
+}
+
+#' checks if input is RasterLayer
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not RasterLayer
+#' @keywords internal
+#' @noRd
+.check_raster <- function(input, arg_name) {
+  .check_type(input, arg_name, "RasterLayer")
+}
+
+#' checks if input is logical
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not logical
+#' @keywords internal
+#' @noRd
+.check_logical <- function(input, arg_name) {
+  .check_type(input, arg_name, "logical")
+}
+
+
+
+
+

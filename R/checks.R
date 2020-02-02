@@ -44,6 +44,8 @@
 #' @noRd
 .check_dir_out <- function(dir_out, which = NULL){
   
+  if (!is.null(dir_out)) .check_character(dir_out)
+  
   ## Check output directory
   if(is.TRUE(getOption("gSD.archive_set"))){
     if(is.null(dir_out)) dir_out <- getOption(paste0("gSD.archive", if(!is.null(which)) paste0("_", which)))

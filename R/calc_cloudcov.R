@@ -105,10 +105,15 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
                           dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
   ## Check input
-  options("gSD.verbose"=verbose)
-  dir_out <- .check_dir_out(dir_out,which="cloud_masks")
+  .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sp")
-  records <- .check_records(records,as_df=T)
+  .check_numeric(maxDeviation, "maxDeviation")
+  .check_numeric(maxDeviation, "maxDeviation")
+  dir_out <- .check_dir_out(dir_out,which="cloud_masks")
+  .check_character(username, "username")
+  .check_character(password, "password")
+  .check_verbose(verbose)
+  records <- .check_records(records, as_df=T)
 
   cols_initial <- colnames(records)
   numRecords <- NROW(records)

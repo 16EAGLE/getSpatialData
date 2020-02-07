@@ -53,6 +53,7 @@
   }
   dir_out <- path.expand(dir_out)
   if (!dir.exists(dir_out)) {
+    # Be careful when changing message, it is checked on in unit tests
     out(paste0("Directory 'dir_out' does not exist: ", dir_out), 3)
   } else {
     return(path.expand(dir_out))

@@ -38,7 +38,7 @@ view_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nro
   map.list <- lapply(1:nrow(records), function(i) mapview(records$footprint[i], layer.name = records$record_id[i], label = records$record_id[i],
                                                           homebutton = FALSE, color = line_colours[i], col.regions = fill_colours[i], alpha.regions = fill_alpha))
   map <- map.list[[1]]
-  for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
+  if(length(map.list) > 1) for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
   
   # add aoi
   if(isTRUE(show_aoi)) map <- .add_aoi(map, aoi_colour)

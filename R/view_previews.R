@@ -40,7 +40,7 @@ view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   
   map.list <- mapply(x = prev, y = records$record_id, function(x, y) viewRGB(x, r=1, g=2, b=3, layer.name = y, homebutton = FALSE), SIMPLIFY = F)
   map <- map.list[[1]]
-  for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
+  if(length(map.list) > 1) for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
   
   if(isTRUE(show_aoi)) map <- .add_aoi(map, aoi_colour)
   
@@ -86,7 +86,7 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
     gg.list[[1]] <- cf(gg.list[[1]])
     gg <- gg.list[[1]]
     
-    for(i in 2:length(gg.list)) gg <- "+"(gg, gg.list[[i]])
+    if(length(map.list) > 1) for(i in 2:length(gg.list)) gg <- "+"(gg, gg.list[[i]])
     if(isTRUE(show_aoi)) gg <- aoi(gg)
     
   } else{

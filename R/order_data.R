@@ -45,10 +45,6 @@ order_data <- function(records, wait_for_order = TRUE, ..., verbose = TRUE){
   } else{
     sub <- which(!records$download_available)
     
-    out("Assembling dataset URLs...")
-    records$gSD.dataset_url <- NA
-    records[sub,]$gSD.dataset_url <- .get_ds_urls(records[sub,])
-  
     # get credendtial info
     records$gSD.cred <- NA
     records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
@@ -57,27 +53,38 @@ order_data <- function(records, wait_for_order = TRUE, ..., verbose = TRUE){
       } else NA
     })
     
+    # get URLs
+    out("Assembling dataset URLs...")
+    records$gSD.dataset_url <- NA
+    records[sub,]$gSD.dataset_url <- .get_ds_urls(records[sub,])
+    
     # items and head
     records$gSD.item <- 1:nrow(records)
     records$gSD.head <- .sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
     
     # order/restore items
     if(is.null(records$ordered)) records$ordered <- FALSE
+    dt_nextorder <- Sys.time()
+    
+    
+    
     records[sub,]$ordered <- .apply(records[sub,], MARGIN = 1, function(x){
       if(isFALSE(x$ordered)){
         
         if(x$product_group == "Sentinel"){
-          out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
+          if(dt_nextorder < Sys.time()){
+            out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
           
-          # get head first
-          request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
-          if(!inherits(request_head, "try-error")){
-            if(request_head$status_code == 200) return(TRUE)
-            if(request_head$status_code == 202) request <- try(gSD.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
-          }
-          if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
-            out(paste0(x$gSD.head, "Restoring of '", x$record_id, "' failed. You may have exceeded the quota of allowed LTA requests."), type = 2)
-            return(FALSE)
+            # get head first
+            request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
+            if(!inherits(request_head, "try-error")){
+              if(request_head$status_code == 200) return(TRUE)
+              if(request_head$status_code == 202) request <- try(gSD.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+            }
+            if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
+              out(paste0(x$gSD.head, "Restoring of '", x$record_id, "' failed. You may have exceeded the quota of allowed LTA requests."), type = 2)
+              return(FALSE)
+            } else dt_nextorder <- Sys.time()+(30*60)
           }
         }
         

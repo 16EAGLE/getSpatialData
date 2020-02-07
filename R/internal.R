@@ -1013,6 +1013,43 @@ rbind.different <- function(x) {
 
 #### CHECKS that are not input checks
 
+#' checks if a record is supported by calc_cloudcov() or not
+#' @param record with one row
+#' @return \code{is_supported} logical
+#' @keywords internal
+#' @noRd
+.cloudcov_supported <- function(record) {
+  record_id <- tolower(record$record_id)
+  product_id <- tolower(record$product)
+  supported_modis <- tolower(c("MCD18A1.006", "MCD18A2.006", "MCD19A1.006", "MOD09A1.006", "MOD09CMG.006", 
+                               "MOD09GA.006", "MOD09GQ.006", "MOD09Q1.006", "MODOCGA.006", "MYD09A1.006", 
+                               "MYD09CMG.006", "MYD09GA.006", "MYD09GQ.006", "MYD09Q1.006", "MYDOCGA.006"))
+  supported_modis <- paste0("MODIS_", supported_modis)
+  if (startsWith(product_id, "MODIS")){
+    return(any(startsWith(supported_modis, substr(product_id, 1, 13))))
+  } else if (startsWith(product_id, "landsat") || product_id == "sentinel-2") {
+    return(TRUE)
+  } else if (product_id == "sentinel-3") {
+    return(strsplit(record_id, "_")[[1]][2] == "ol")
+  } else {
+    return(FALSE)
+  }
+}
+
+#' checks if a record is supported by .select_*() or not
+#' @param record with one row
+#' @return \code{is_supported} logical
+#' @keywords internal
+#' @noRd
+.select_supported <- function(record) {
+  if (record$product == "Sentinel-1") {
+    return(TRUE)
+  } else {
+    is_supported <- .cloudcov_supported(record) # nearly the same unless: Sentinel-1 (supported in select_*())
+    return(is_supported)    
+  }
+}
+
 #' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
 #' @param sensor character vector of all sensors in records.
 #' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
@@ -1058,15 +1095,14 @@ rbind.different <- function(x) {
   TILEID <- "tile_id"
   RECORDID <- "record_id"
   SENTINEL1 <- "S1"
+  SENTINEL3 <- "S3"
   tileid_not_given <- is.na(records$tile_id)
   vertical_given <- !is.na(records$tile_number_vertical)
   horizontal_given <- !is.na(records$tile_number_horizontal)
-  use_tile_num <- tileid_not_given * vertical_given * horizontal_given
-  use_tile_num <- use_tile_num == 1
+  use_tile_num <- (tileid_not_given * vertical_given * horizontal_given) == 1
   horizontal <- records$tile_number_horizontal[use_tile_num]
   vertical <- records$tile_number_vertical[use_tile_num]
-  tileids <- paste0(horizontal, vertical)
-  records[use_tile_num, TILEID] <- tileids
+  records[use_tile_num, TILEID] <- paste0(vertical, horizontal)
   # create a tileid from the record_id in case of Sentinel-1
   is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
   tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
@@ -1074,6 +1110,11 @@ rbind.different <- function(x) {
     id <- paste0(splitted[8], splitted[9])
   })
   records[is_sentinel1, TILEID] <- tileids
+  is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
+  tileids <- sapply(records[is_sentinel3, RECORDID], function(x){
+    splitted <- strsplit(x, "_")[[1]]
+    
+  })
   return(records)
   
 }
@@ -1220,7 +1261,8 @@ rbind.different <- function(x) {
               preview_col="preview_file",
               cloud_mask_col="cloud_mask_file",
               date_col="date_acquisition",
-              identifier="record_id")
+              identifier="record_id",
+              sub_period_col="sub_period")
   params$product_group <- unique(na.omit(records$product_group))
   params$product <- unique(na.omit(records$product))
   params$tileids <- unique(na.omit(records[[params$tileid_col]]))
@@ -1250,6 +1292,9 @@ sep <- function() {
   period <- .identify_period(records[[params$date_col]])
   # calculates the sub_period column
   records <- .select_sub_periods(records,period,num_timestamps,params$date_col)
+  # check which records in records are supported by select and mark unsupported records with NA in 'sub_period'
+  supported <- sapply(1:NROW(records), function(i) .select_supported(records[i,]))
+  records[!supported, params$sub_period_col] <- NA
   
 }
 
@@ -1864,10 +1909,11 @@ sep <- function() {
       if (le_prio_is_one) .catch_empty_records(data.frame(),timestamp) else break
     } 
     
-    tstamp <- new.env()
+    tstamp <- list()
     tstamp$records <- records[sensor_match,]
+    tstamp$records <- records[which(!is.na(records[[params$sub_period_col]])),]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
-    .catch_empty_records(tstamp$records,timestamp)
+    .catch_empty_records(tstamp$records, timestamp)
     tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
     
     if (timestamp > 1) {
@@ -2418,7 +2464,7 @@ sep <- function() {
 #' @return \code{records} with one added numeric column 'sub_period' indicating in which sub-period the record is situated.
 #' @keywords internal
 #' @noRd
-.select_sub_periods <- function(records, period, num_timestamps, date_col) {
+.select_sub_periods <- function(records, period, num_timestamps, params) {
   
   period <- sapply(period,as.Date)
   days <- as.integer(diff(period))
@@ -2426,10 +2472,10 @@ sep <- function() {
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
   l <- length(dates)
   dates[l] <- dates[l] + 1
-  date_col_mirr <- sapply(records[[date_col]],as.Date) # mirror of the date column as days since 1970-01-01
+  date_col_mirr <- sapply(records[[params$date_col]],as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
     within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
-    records[within,"sub_period"] <- i
+    records[within, params$sub_period_col] <- i
   }
   return(records)
   

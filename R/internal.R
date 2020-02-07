@@ -599,6 +599,14 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
 }
 
+#' get column names needed in calc_hot_cloudcov
+#' @return character vector needed_cols
+#' @keywords internal
+#' @noRd
+.get_needed_cols_calc_cloudcov <- function() {
+  return(c("product", "product_group", "record_id", "sensor", "cloudcov", "preview_url"))
+}
+
 
 #' unlists all columns of a data.frame
 #' @param records data.frame.
@@ -1047,9 +1055,25 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid <- function(records) {
   
-  tileid_not_given <- which(is.na(records$tile_id))
-  tileids <- paste0(na.omit(records$tile_number_horizontal),na.omit(records$tile_number_vertical))
-  records[tileid_not_given,"tile_id"] <- tileids
+  TILEID <- "tile_id"
+  RECORDID <- "record_id"
+  SENTINEL1 <- "S1"
+  tileid_not_given <- is.na(records$tile_id)
+  vertical_given <- !is.na(records$tile_number_vertical)
+  horizontal_given <- !is.na(records$tile_number_horizontal)
+  use_tile_num <- tileid_not_given * vertical_given * horizontal_given
+  use_tile_num <- use_tile_num == 1
+  horizontal <- records$tile_number_horizontal[use_tile_num]
+  vertical <- records$tile_number_vertical[use_tile_num]
+  tileids <- paste0(horizontal, vertical)
+  records[use_tile_num, TILEID] <- tileids
+  # create a tileid from the record_id in case of Sentinel-1
+  is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
+  tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
+    splitted <- strsplit(x, "_")[[1]]
+    id <- paste0(splitted[8], splitted[9])
+  })
+  records[is_sentinel1, TILEID] <- tileids
   return(records)
   
 }
@@ -2617,7 +2641,7 @@ quiet <- function(expr){
   }
 }
 
-#' wrapper for reading shapefile via sf::read_sf()
+#' wrapper for reading shapefile via sf::read_sf(). Mainly for unit tests.
 #' @param Character absolute file_path to shp including extension (".shp")
 #' @return SpatialPolygons shp
 #' @importFrom sf read_sf as_Spatial
@@ -2629,3 +2653,22 @@ quiet <- function(expr){
   return(shp)
 }
 
+#' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
+#' @param character absolute file_path
+#' @return RasterBrick
+#' @importFrom raster brick
+#' @keywords internal
+#' @noRd
+.read_brick <- function(file_path) {
+  return(brick(file_path))
+}
+
+#' wrapper for subsetting a raster brick to band 1 and band 3. For unit test.
+#' @param RasterBrick or RasterStack b
+#' @return RasterBrick with band 1 and band 3
+#' @importFrom raster brick
+#' @keywords internal
+#' @noRd
+.subset_brick <- function(b) {
+  return(brick(b[[1]], b[[3]]))
+}

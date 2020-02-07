@@ -113,7 +113,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
   .check_character(username, "username")
   .check_character(password, "password")
   .check_verbose(verbose)
-  records <- .check_records(records, as_df=T)
+  records <- .check_records(records, .get_needed_cols_calc_cloudcov(), as_df=T)
 
   cols_initial <- colnames(records)
   numRecords <- NROW(records)
@@ -141,7 +141,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
       return(.handle_cc_skip(record,FALSE,dir_out))
     }
     
-    is_SAR <- sensor == "Sentinel-1"
+    cloudcov_supported <- .cloudcov_supported(record)
 
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
@@ -161,8 +161,8 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
       out(paste0(out_status,"Processing: ",id),msg=T,verbose=v)
     }
     
-    # if preview exists not yet get it, then run HOT
-    if (is_SAR) {
+    # if preview exists not yet: get it. Then run HOT
+    if (cloudcov_supported) {
       record_preview <- NULL
     } else {
       
@@ -170,7 +170,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
       if (prev_col_given) {
         
         pfile <- record$preview_file
-        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE",FALSE,file.exists(pfile))
+        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE" , FALSE, file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
         } else {
@@ -229,7 +229,7 @@ calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
     }
     
     if (isTRUE(get_preview_failed) || class(record_cc) != "data.frame" || is.na(record_cc)) {
-      record_cc <- .handle_cc_skip(record_preview,is_SAR,dir_out)
+      record_cc <- .handle_cc_skip(record_preview,cloudcov_supported,dir_out)
     }
     
     previewSize <- c(previewSize,object.size(preview))

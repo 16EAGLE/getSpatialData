@@ -31,7 +31,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   .check_dataframe(record, "record")
   .check_rasterStack(preview, "preview")
   aoi <- .check_aoi(aoi, "sp")
-  .check_character(dir_out)
   dir_out <- .check_dir_out(dir_out, which="cloud_masks")
   .check_numeric(maxDeviation, "maxDeviation")
   .check_character(cols, "cols")
@@ -91,7 +90,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   } else {
     out(paste0("RGB (3 layers) or RB (2 layers) image stack has to be provided as 'preview'. 
                Number of layers of the given stack is: ",nlyrs,".\nHOT could not be calculated for
-               record: ",currTitle),type=3)
+               record: ", currTitle),type=3)
   }
   prvStck <- stack(bBand,rBand)
   
@@ -135,6 +134,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   
   meanRed <- sapply(bBins,function(x){mean(x[["red"]])}) * coeffRed
   meanBlue <- sapply(bBins,function(x){x[["blue"]][1]}) * coeffBlue
+  rm(bBins)
 
   # run least-alternate deviation regression
   lad <- tryCatch({
@@ -194,14 +194,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     }
     numTry <- numTry + 1
   }
-  
+
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask,mode="custom",custom=c(0,1))
   
   ## Calculate aoi cloud cover percentage
   if (hotFailed) {
     record <- .handle_cc_skip(record,dir_out=dir_out)
-    out(hotFailWarning,type=2)
+    out(hotFailWarning, type=2)
     return(NA)
   } else {
     record <- .record_cloudcov_finish(record,aoi,cMask,HOT,

@@ -1024,8 +1024,8 @@ rbind.different <- function(x) {
   supported_modis <- tolower(c("MCD18A1.006", "MCD18A2.006", "MCD19A1.006", "MOD09A1.006", "MOD09CMG.006", 
                                "MOD09GA.006", "MOD09GQ.006", "MOD09Q1.006", "MODOCGA.006", "MYD09A1.006", 
                                "MYD09CMG.006", "MYD09GA.006", "MYD09GQ.006", "MYD09Q1.006", "MYDOCGA.006"))
-  supported_modis <- paste0("MODIS_", supported_modis)
-  if (startsWith(product_id, "MODIS")){
+  supported_modis <- tolower(paste0("MODIS_", supported_modis))
+  if (startsWith(product_id, "modis")){
     return(any(startsWith(supported_modis, substr(product_id, 1, 13))))
   } else if (startsWith(product_id, "landsat") || product_id == "sentinel-2") {
     return(TRUE)

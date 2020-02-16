@@ -1104,12 +1104,13 @@ rbind.different <- function(x) {
   vertical <- records$tile_number_vertical[use_tile_num]
   records[use_tile_num, TILEID] <- paste0(vertical, horizontal)
   # create a tileid from the record_id in case of Sentinel-1
-  is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
-  tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
-    splitted <- strsplit(x, "_")[[1]]
-    id <- paste0(splitted[8], splitted[9])
-  })
-  records[is_sentinel1, TILEID] <- tileids
+  
+  #is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
+  #tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
+  #  splitted <- strsplit(x, "_")[[1]]
+  #  id <- paste0(splitted[8], splitted[9])
+  #})
+  #records[is_sentinel1, TILEID] <- tileids
   is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
   tileids <- sapply(records[is_sentinel3, RECORDID], function(x){
     sep <- "______"

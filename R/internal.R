@@ -1099,7 +1099,7 @@ rbind.different <- function(x) {
   tileid_not_given <- is.na(records$tile_id)
   vertical_given <- !is.na(records$tile_number_vertical)
   horizontal_given <- !is.na(records$tile_number_horizontal)
-  use_tile_num <- (tileid_not_given * vertical_given * horizontal_given) == 1
+  use_tile_num <- which((tileid_not_given * vertical_given * horizontal_given) == 1) 
   horizontal <- records$tile_number_horizontal[use_tile_num]
   vertical <- records$tile_number_vertical[use_tile_num]
   records[use_tile_num, TILEID] <- paste0(vertical, horizontal)
@@ -1112,9 +1112,20 @@ rbind.different <- function(x) {
   records[is_sentinel1, TILEID] <- tileids
   is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
   tileids <- sapply(records[is_sentinel3, RECORDID], function(x){
-    splitted <- strsplit(x, "_")[[1]]
-    
+    sep <- "______"
+    if (grepl(sep, x)) {
+      splitted <- strsplit(x, sep)[[1]][1]
+      splitted1 <- strsplit(splitted, "_")[[1]]
+      len <- length(splitted1)
+      id <- paste0(splitted1[len-1], splitted1[len])
+    } else {
+      splitted <- strsplit(x, "_LN1")[[1]]
+      splitted1 <- strsplit(splitted, "_")[[1]]
+      len <- length(splitted1)
+      id <- paste(splitted1[len-2], splitted1[len-1])
+    }
   })
+  records[is_sentinel3, TILEID] <- tileids
   return(records)
   
 }

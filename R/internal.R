@@ -1122,7 +1122,7 @@ rbind.different <- function(x) {
       splitted <- strsplit(x, "_LN1")[[1]]
       splitted1 <- strsplit(splitted, "_")[[1]]
       len <- length(splitted1)
-      id <- paste(splitted1[len-2], splitted1[len-1])
+      id <- paste0(splitted1[len-2], splitted1[len-1])
     }
   })
   records[is_sentinel3, TILEID] <- tileids

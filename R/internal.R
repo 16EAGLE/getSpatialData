@@ -275,9 +275,13 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @param username username
 #' @param password password
 #' @keywords internal
+#' @importFrom httr POST content stop_for_status warn_for_status content_type
+#' @importFrom utils URLencode
 #' @noRd
-.ERS_login <- function(username, password){
-  x <- POST(paste0(getOption("gSD.api")$ee, 'login?jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}'))
+.ERS_login <- function(username, password, n_retry = 3){
+  x <- POST(url = paste0(getOption("gSD.api")$ee, "login"),
+            body = URLencode(paste0('jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}')),
+            content_type("application/x-www-form-urlencoded; charset=UTF-8"))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   v <- content(x)$data
@@ -595,6 +599,14 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
 }
 
+#' get column names needed in calc_hot_cloudcov
+#' @return character vector needed_cols
+#' @keywords internal
+#' @noRd
+.get_needed_cols_calc_cloudcov <- function() {
+  return(c("product", "product_group", "record_id", "sensor", "cloudcov", "preview_url"))
+}
+
 
 #' unlists all columns of a data.frame
 #' @param records data.frame.
@@ -746,9 +758,9 @@ rbind.different <- function(x) {
   } else {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
-  sumDataDownload <- meanPreviewSize * stillToGoFor
-  out(paste0(sep(),"\n\n10 records are processed.\nProcessing time for all remaining records, in sum approx.: ",
-             sumProcessingTime,"\nData amount to be processed approx.: ",sumDataDownload," MB\n",sep(),"\n"))
+  sumDataDownload <- round(meanPreviewSize * stillToGoFor, 2)
+  out(paste0(sep(),"\n\n10 records are processed.\nTime for remaining records, approx.: ",
+             sumProcessingTime,"\nData amount approx.: ",sumDataDownload," MB\n",sep(),"\n"))
 }
 
 #' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given
@@ -795,7 +807,7 @@ rbind.different <- function(x) {
     cMask[cMask==0] <- NA
   }
   if (dir_given) { # save cloud mask if desired
-    mask_path <- normalizePath(mask_path)
+    mask_path <- mask_path
     if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T,
                                              datatype="INT2S")
     record[cols$cloud_mask_path] <- mask_path
@@ -868,7 +880,7 @@ rbind.different <- function(x) {
 #' @noRd
 .tmp_dir <- function(dir_out, action = 2, change_raster_tmp = F, tmp_orig = NULL) {
   
-  tmp_dir <- normalizePath(file.path(dir_out,"tmp"))
+  tmp_dir <- file.path(dir_out,"tmp")
   if (dir.exists(tmp_dir) && action ==2) {unlink(tmp_dir,recursive=T)}
   if (action == 1) {dir.create(tmp_dir)}
   if (isTRUE(change_raster_tmp)) {
@@ -1001,6 +1013,43 @@ rbind.different <- function(x) {
 
 #### CHECKS that are not input checks
 
+#' checks if a record is supported by calc_cloudcov() or not
+#' @param record with one row
+#' @return \code{is_supported} logical
+#' @keywords internal
+#' @noRd
+.cloudcov_supported <- function(record) {
+  record_id <- tolower(record$record_id)
+  product_id <- tolower(record$product)
+  supported_modis <- tolower(c("MCD18A1.006", "MCD18A2.006", "MCD19A1.006", "MOD09A1.006", "MOD09CMG.006", 
+                               "MOD09GA.006", "MOD09GQ.006", "MOD09Q1.006", "MODOCGA.006", "MYD09A1.006", 
+                               "MYD09CMG.006", "MYD09GA.006", "MYD09GQ.006", "MYD09Q1.006", "MYDOCGA.006"))
+  supported_modis <- tolower(paste0("MODIS_", supported_modis))
+  if (startsWith(product_id, "modis")){
+    return(any(startsWith(supported_modis, substr(product_id, 1, 13))))
+  } else if (startsWith(product_id, "landsat") || product_id == "sentinel-2") {
+    return(TRUE)
+  } else if (product_id == "sentinel-3") {
+    return(strsplit(record_id, "_")[[1]][2] == "ol")
+  } else {
+    return(FALSE)
+  }
+}
+
+#' checks if a record is supported by .select_*() or not
+#' @param record with one row
+#' @return \code{is_supported} logical
+#' @keywords internal
+#' @noRd
+.select_supported <- function(record) {
+  if (record$product == "Sentinel-1") {
+    return(TRUE)
+  } else {
+    is_supported <- .cloudcov_supported(record) # nearly the same unless: Sentinel-1 (supported in select_*())
+    return(is_supported)    
+  }
+}
+
 #' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
 #' @param sensor character vector of all sensors in records.
 #' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
@@ -1043,9 +1092,40 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid <- function(records) {
   
-  tileid_not_given <- which(is.na(records$tile_id))
-  tileids <- paste0(na.omit(records$tile_number_horizontal),na.omit(records$tile_number_vertical))
-  records[tileid_not_given,"tile_id"] <- tileids
+  TILEID <- "tile_id"
+  RECORDID <- "record_id"
+  SENTINEL1 <- "S1"
+  SENTINEL3 <- "S3"
+  tileid_not_given <- is.na(records$tile_id)
+  vertical_given <- !is.na(records$tile_number_vertical)
+  horizontal_given <- !is.na(records$tile_number_horizontal)
+  use_tile_num <- which((tileid_not_given * vertical_given * horizontal_given) == 1) 
+  horizontal <- records$tile_number_horizontal[use_tile_num]
+  vertical <- records$tile_number_vertical[use_tile_num]
+  records[use_tile_num, TILEID] <- paste0(vertical, horizontal)
+  # create a tileid from the record_id in case of Sentinel-1
+  is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
+  tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
+    splitted <- strsplit(x, "_")[[1]]
+    id <- paste0(splitted[8], splitted[9])
+  })
+  records[is_sentinel1, TILEID] <- tileids
+  is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
+  tileids <- sapply(records[is_sentinel3, RECORDID], function(x){
+    sep <- "______"
+    if (grepl(sep, x)) {
+      splitted <- strsplit(x, sep)[[1]][1]
+      splitted1 <- strsplit(splitted, "_")[[1]]
+      len <- length(splitted1)
+      id <- paste0(splitted1[len-1], splitted1[len])
+    } else {
+      splitted <- strsplit(x, "_LN1")[[1]]
+      splitted1 <- strsplit(splitted, "_")[[1]]
+      len <- length(splitted1)
+      id <- paste(splitted1[len-2], splitted1[len-1])
+    }
+  })
+  records[is_sentinel3, TILEID] <- tileids
   return(records)
   
 }
@@ -1192,7 +1272,8 @@ rbind.different <- function(x) {
               preview_col="preview_file",
               cloud_mask_col="cloud_mask_file",
               date_col="date_acquisition",
-              identifier="record_id")
+              identifier="record_id",
+              sub_period_col="sub_period")
   params$product_group <- unique(na.omit(records$product_group))
   params$product <- unique(na.omit(records$product))
   params$tileids <- unique(na.omit(records[[params$tileid_col]]))
@@ -1222,6 +1303,9 @@ sep <- function() {
   period <- .identify_period(records[[params$date_col]])
   # calculates the sub_period column
   records <- .select_sub_periods(records,period,num_timestamps,params$date_col)
+  # check which records in records are supported by select and mark unsupported records with NA in 'sub_period'
+  supported <- sapply(1:NROW(records), function(i) .select_supported(records[i,]))
+  records[!supported, params$sub_period_col] <- NA
   
 }
 
@@ -1836,10 +1920,11 @@ sep <- function() {
       if (le_prio_is_one) .catch_empty_records(data.frame(),timestamp) else break
     } 
     
-    tstamp <- new.env()
+    tstamp <- list()
     tstamp$records <- records[sensor_match,]
+    tstamp$records <- records[which(!is.na(records[[params$sub_period_col]])),]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
-    .catch_empty_records(tstamp$records,timestamp)
+    .catch_empty_records(tstamp$records, timestamp)
     tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
     
     if (timestamp > 1) {
@@ -2390,7 +2475,7 @@ sep <- function() {
 #' @return \code{records} with one added numeric column 'sub_period' indicating in which sub-period the record is situated.
 #' @keywords internal
 #' @noRd
-.select_sub_periods <- function(records, period, num_timestamps, date_col) {
+.select_sub_periods <- function(records, period, num_timestamps, params) {
   
   period <- sapply(period,as.Date)
   days <- as.integer(diff(period))
@@ -2398,10 +2483,10 @@ sep <- function() {
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
   l <- length(dates)
   dates[l] <- dates[l] + 1
-  date_col_mirr <- sapply(records[[date_col]],as.Date) # mirror of the date column as days since 1970-01-01
+  date_col_mirr <- sapply(records[[params$date_col]],as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
     within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
-    records[within,"sub_period"] <- i
+    records[within, params$sub_period_col] <- i
   }
   return(records)
   
@@ -2613,3 +2698,34 @@ quiet <- function(expr){
   }
 }
 
+#' wrapper for reading shapefile via sf::read_sf(). Mainly for unit tests.
+#' @param Character absolute file_path to shp including extension (".shp")
+#' @return SpatialPolygons shp
+#' @importFrom sf read_sf as_Spatial
+#' @importFrom methods as
+#' @keywords internal
+#' @noRd
+.read_shp <- function(file_path) {
+  shp <- as(as_Spatial(read_sf(file_path)), "SpatialPolygons")
+  return(shp)
+}
+
+#' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
+#' @param character absolute file_path
+#' @return RasterBrick
+#' @importFrom raster brick
+#' @keywords internal
+#' @noRd
+.read_brick <- function(file_path) {
+  return(brick(file_path))
+}
+
+#' wrapper for subsetting a raster brick to band 1 and band 3. For unit test.
+#' @param RasterBrick or RasterStack b
+#' @return RasterBrick with band 1 and band 3
+#' @importFrom raster brick
+#' @keywords internal
+#' @noRd
+.subset_brick <- function(b) {
+  return(brick(b[[1]], b[[3]]))
+}

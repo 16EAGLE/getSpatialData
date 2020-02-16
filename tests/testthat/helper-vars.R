@@ -29,6 +29,7 @@ DATAFRAME <- "data.frame"
 NUMERIC <- "numeric"
 INTEGER <- "integer"
 CHARACTER <- "character"
+LOGICAL <- "logical"
 
 # sensor names
 SENTINEL2 <- "Sentinel-2"
@@ -42,9 +43,26 @@ SUFFIX <- list()
 SUFFIX$records <- "records"
 SUFFIX$previews <- "records_previews"
 SUFFIX$cmasks <- "records_cmasks"
-construct_filepath <- function(sensor, suffix) {
-  return(paste(sensor, paste0(suffix, ".csv"), sep="_"))
+construct_filepath <- function(dir, sensor, suffix) {
+  return(file.path(dir, paste(sensor, paste0(suffix, ".csv"), sep="_")))
 }
+
+# errors
+# generic type error from .check_type()
+type_error_msg <- function(input, arg_name, type) {
+  return("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'")
+}
+# dir_out does not exist error from .check_dir_out()
+dir_out_error_msg <- function(dir_out) {
+  DIR_OUT_NOT_EXIST <- "Directory 'dir_out' does not exist: "
+  return(paste0(DIR_OUT_NOT_EXIST, dir_out))
+}
+column_error_msg <- function(column) {
+  return("A column of 'records' named '", column, "' is required for this action, but is missing.")
+}
+AOI_TYPE_ERROR <- "Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object."
+RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'."
+
 
 # records data.frame column names
 COLS <- list()

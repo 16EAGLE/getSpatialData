@@ -1,9 +1,9 @@
 #' ---------------------------------------------------------------------
 #' @name internal_select
 #' @description This document is the backend of select functionalities. 
-#' @details It contains all select_ specific methods. Rather generic methods that
+#' @details It contains select_ specific methods. Rather generic methods that
 #' might be useful for other package-internal functionalities are situated
-#' in internal. The frontends of select_ are located in dedicated select_ functions.
+#' in internal. Checks are in checks. The frontends of select_ are located in dedicated select_ functions.
 #' @author Henrik Fisser, 2019
 #' @keywords internal
 #' ---------------------------------------------------------------------
@@ -630,6 +630,10 @@
     } else {
       # in case prio_sensors is given process sensors in this order
       s_match <- which(records$product==s)
+      # in case of MODIS as prio_sensor we get 'MODIS' from the user, which does not match any product name
+      if (length(s_match) == 0) {
+        s_match <- which(startsWith(records$product, s))
+      }
     }
     sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
     if (length(sensor_match) == 0) { # no records for sensors s at timestamp

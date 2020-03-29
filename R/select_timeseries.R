@@ -50,14 +50,15 @@
 #' 
 #' @export
 
-select_timeseries <- function(records, aoi,
+select_timeseries <- function(records, aoi = NULL,
                               num_timestamps, min_distance, max_sub_period, 
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(), 
                               dir_out = NULL, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records, .get_needed_cols_select(),as_df=T)
+  records <- .check_records(records, .get_needed_cols_select(), as_df=T)
+  aoi <- .check_aoi(aoi,"sp")
   cols_initial <- colnames(records)
   
   if (!is.numeric(num_timestamps)) out("Argument 'num_timestamps' has to be of class numeric")

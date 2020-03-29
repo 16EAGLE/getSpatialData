@@ -21,7 +21,7 @@
 #' @author Henrik Fisser
 #' 
 #' @export
-select_unitemporal <- function(records, aoi,
+select_unitemporal <- function(records, aoi = NULL,
                                max_sub_period,
                                min_improvement = 5, 
                                max_cloudcov_tile = 80, satisfaction_value = 98,
@@ -29,6 +29,7 @@ select_unitemporal <- function(records, aoi,
                                dir_out = NULL, verbose = TRUE) {
   #### Pre-checks
   records <- .check_records(records, .get_needed_cols_select(), as_df=T)
+  aoi <- .check_aoi(aoi,"sp")
   cols_initial <- colnames(records)
   
   #### Prep

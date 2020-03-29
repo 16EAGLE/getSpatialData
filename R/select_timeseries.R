@@ -57,7 +57,7 @@ select_timeseries <- function(records, aoi,
                               dir_out = NULL, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records,.cloudcov_colnames(),as_df=T)
+  records <- .check_records(records, .get_needed_cols_select(),as_df=T)
   cols_initial <- colnames(records)
   
   if (!is.numeric(num_timestamps)) out("Argument 'num_timestamps' has to be of class numeric")

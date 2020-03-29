@@ -29,7 +29,7 @@ select_bitemporal <- function(records, aoi,
                               dir_out = NULL, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records,.cloudcov_colnames(),as_df=T)
+  records <- .check_records(records, .get_needed_cols_select(), as_df=T)
   cols_initial <- colnames(records)
   
   #### Prep

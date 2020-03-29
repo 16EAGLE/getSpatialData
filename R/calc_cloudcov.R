@@ -101,8 +101,8 @@
 #' 
 #' @export
 
-calc_cloudcov <- function(records, aoi = NULL,  maxDeviation = 5,
-                          dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
+calc_cloudcov <- function(records, maxDeviation = 5,
+                          aoi = NULL, dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
   
   ## Check input
   .check_verbose(verbose)

@@ -22,11 +22,11 @@
 #' @author Henrik Fisser
 #' 
 #' @export
-select_bitemporal <- function(records, aoi = NULL, 
+select_bitemporal <- function(records,
                               min_distance, max_sub_period, 
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(),
-                              dir_out = NULL, verbose = TRUE) {
+                              aoi = NULL, dir_out = NULL, verbose = TRUE) {
   
   #### Pre-checks
   records <- .check_records(records, .get_needed_cols_select(), as_df=T)

@@ -11,12 +11,6 @@
 #' 
 #' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 #' Records will be selected from these records.
-#' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
-#' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
-#' and at least three rows (each row representing one corner coordinate). 
-#' If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
-#' Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
-#' If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 #' For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
@@ -33,6 +27,12 @@
 #' @param prio_sensors character vector optioal. Sensor names ordered by priority. Selection is done in the order
 #' of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
 #' selection was not fullfilled by previous sensor.
+#' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
+#' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
+#' and at least three rows (each row representing one corner coordinate). 
+#' If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
+#' Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
+#' If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param dir_out character directory where to save the cloud mask mosaics and the RGB preview mosaic.
 #' Note: Below this dir_out a tmp_dir will be created where temporary files will be saved during selection.This folder is
 #' deleted before returning \code{records}.
@@ -50,11 +50,11 @@
 #' 
 #' @export
 
-select_timeseries <- function(records, aoi = NULL,
+select_timeseries <- function(records,
                               num_timestamps, min_distance, max_sub_period, 
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(), 
-                              dir_out = NULL, verbose = TRUE) {
+                              aoi = NULL, dir_out = NULL, verbose = TRUE) {
   
   #### Pre-checks
   records <- .check_records(records, .get_needed_cols_select(), as_df=T)

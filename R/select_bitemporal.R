@@ -23,8 +23,8 @@
 #' 
 #' @export
 select_bitemporal <- function(records, aoi, 
-                              min_distance, min_improvement = 5, 
-                              max_sub_period, max_cloudcov_tile = 80, satisfaction_value = 98,
+                              min_distance, max_sub_period, 
+                              min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(),
                               dir_out = NULL, verbose = TRUE) {
   

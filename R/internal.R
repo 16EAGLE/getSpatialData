@@ -6,7 +6,7 @@
 #' @param sign character. Defines the prefix string.
 #'
 #' @importFrom utils flush.console
-#' @keywords internal internal
+#' @keywords internal
 #' @noRd
 
 out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALSE, verbose = getOption("gSD.verbose")){

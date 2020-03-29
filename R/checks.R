@@ -282,16 +282,6 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
-  # check if product is supported by select (matches the supported products of calc_cloudcov + 'Sentinel-1')
-  for (i in 1:NROW(records)) {
-    record <- records[i,]
-    if (record$product != "Sentinel-1") {
-      select_supported <- .cloudcov_supported(record)
-      if (isFALSE(select_supported)) {
-        out("One or more record(s) is/are not supported by select_*")    
-      }
-    }
-  }
   if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
   #dir_out <- .check_dir_out(dir_out,"preview_mosaics")
   options("gSD.verbose"=verbose)

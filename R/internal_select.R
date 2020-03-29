@@ -632,7 +632,7 @@
       s_match <- which(records$product==s)
       # in case of MODIS as prio_sensor we get 'MODIS' from the user, which does not match any product name
       if (length(s_match) == 0) {
-        s_match <- which(startsWith(records$product, s))
+        s_match <- which(startsWith(records$product, s)) # all MODIS products
       }
     }
     sensor_match <- intersect(which(records$sub_period==timestamp),s_match)

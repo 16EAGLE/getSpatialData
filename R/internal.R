@@ -763,7 +763,6 @@ rbind.different <- function(x) {
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
-  
   ## allocate gdal on load
   gdalUtils::gdal_setInstallation(rescan = T)
   
@@ -1259,6 +1258,8 @@ sep <- function() {
   
 }
 
+### MISCELLANEOUS
+
 #' removes NULLs and NAs from list.
 #' @param x list.
 #' @return x list without NULLs and NAs.
@@ -1271,7 +1272,6 @@ sep <- function() {
   return(x)
   
 }
-
 
 #' prints character vectors in console combined into one message in out()
 #' @param x list of character vectors.

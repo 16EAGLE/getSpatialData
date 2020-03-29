@@ -170,16 +170,19 @@
 
 #' checks the prio_sensors argument
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
-#' @return nothing. In case of problematic input in prio_sensors: error.
+#' @return nothing. In case of flawed input in prio_sensors: error.
 #' @keywords internal
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors) {
-  
-  if (class(prio_sensors) != "character") out("Argument 'prio_sensors' has to be of class character",3)
-  optical_sensors <- c("Sentinel-2","Sentinel-3","Landsat-5","Landsat-7","Landsat-8","MODIS")
-  some_wrong <- isFALSE(any(sapply(prio_sensors,function(x) check <- x %in% optical_sensors)))
+  .check_type(prio_sensors, "prio_sensors", "character")
+  optical_sensors <- c("LANDSAT_8_C1", "LANDSAT_ETM_C1", "LANDSAT_TM_C1", "LANDSAT_MSS_C1",
+                        "Sentinel-2", "Sentinel-3", "MODIS")
+  some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
+    check <- x %in% optical_sensors
+    check <- ifelse(isTRUE(check), check, startsWith(x, "MODIS"))
+  })))
   if (some_wrong) {
-    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names()",3)
+    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names() except MODIS products ('MODIS')",3)
   }
   
 }
@@ -214,7 +217,6 @@
 #' @keywords internal
 #' @noRd
 .select_handle_revisit <- function(sensor, period, num_timestamps) {
-  
   revisit_times <- list("LANDSAT_8_C1"=8,"LANDSAT_ETM_C1"=8,"LANDSAT_TM_C1"=16,"LANDSAT_MSS_C1"=16,
                         "MODIS_MOD09A1_V6"=8,"MODIS_MYD09A1_V6"=8,"MODIS_MOD09Q1_V6"=8,
                         "MODIS_MOD09Q1_V6"=8,"MODIS_MOD09GA_V6"=1,"MODIS_MYD09GA_V6"=1,
@@ -231,7 +233,6 @@
   } else if (sub_period == r) {
     out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this frequent"),1)
   }
-  
 }
 
 #' checks if columns are given in records and if they have values
@@ -281,6 +282,16 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
+  # check if product is supported by select (matches the supported products of calc_cloudcov + 'Sentinel-1')
+  for (i in 1:NROW(records)) {
+    record <- records[i,]
+    if (record$product != "Sentinel-1") {
+      select_supported <- .cloudcov_supported(record)
+      if (isFALSE(select_supported)) {
+        out("One or more record(s) is/are not supported by select_*")    
+      }
+    }
+  }
   if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
   #dir_out <- .check_dir_out(dir_out,"preview_mosaics")
   options("gSD.verbose"=verbose)

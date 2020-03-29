@@ -26,7 +26,17 @@
 #' @param satisfaction_value numeric percentage value at which mosaic is considered as cloud-free. Default is 98.
 #' @param prio_sensors character vector optioal. Sensor names ordered by priority. Selection is done in the order
 #' of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
-#' selection was not fullfilled by previous sensor.
+#' selection was not fullfilled by previous sensor. Sensor names must be provided as returned by \link{get_names}
+#' with one exception: MODIS products are summarized by 'MODIS'. These are the supported sensor names:
+#' \itemize{
+#' \item 'Sentinel-2'
+#' \item 'Sentinel-3'
+#' \item 'LANDSAT_8_C1'
+#' \item 'LANDSAT_ETM_C1'
+#' \item 'LANDSAT_TM_C1'
+#' \item 'LANDSAT_MSS_C1'
+#' \item 'MODIS'
+#' }
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
 #' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
 #' and at least three rows (each row representing one corner coordinate). 

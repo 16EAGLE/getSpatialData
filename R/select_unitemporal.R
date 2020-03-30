@@ -23,8 +23,7 @@
 #' @export
 select_unitemporal <- function(records,
                                max_sub_period,
-                               min_improvement = 5, 
-                               max_cloudcov_tile = 80, satisfaction_value = 98,
+                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                                prio_sensors = c(),
                                aoi = NULL, dir_out = NULL, verbose = TRUE) {
   #### Pre-checks

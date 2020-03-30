@@ -12,12 +12,12 @@
 #' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 #' Records will be selected from these records.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
-#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
-#' This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 #' For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
 #' then the next timestamp will not include scenes in <= 10 days after 20th May 2019. 
 #' The first scene the next timestamp could include would be the 31st May 2019 thus.
+#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
+#' This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).
 #' @param min_improvement numeric the minimum increase of valid pixels percentage in a tile when adding record.
 #' This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
@@ -61,7 +61,7 @@
 #' @export
 
 select_timeseries <- function(records,
-                              num_timestamps, max_sub_period, min_distance, 
+                              num_timestamps, min_distance, max_sub_period,
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_sensors = c(), 
                               aoi = NULL, dir_out = NULL, verbose = TRUE) {

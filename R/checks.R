@@ -119,6 +119,16 @@
   if(type == "sp") return(aoi.sp)
 }
 
+#' checks if object has a crs
+#' @param raster, sp or sf object
+#' @return nothing. In case of flawed preview: error
+#' @importFrom sf st_crs
+#' @keywords internal
+#' @noRd
+.check_crs <- function(preview) {
+  .check_rasterStack(preview, "preview")
+}
+
 #' checks if an error of a http request is likely to be related to an expired login
 #' and tries to login with saved or given credentials.
 #' @param response a caught error message.
@@ -438,6 +448,21 @@
   .check_type(input, arg_name, "logical")
 }
 
+#' checks if spatial object has a crs and assigns EPSG 4326 if not
+#' @param sf, sp or raster (stack) object
+#' @return input with crs. No assignment if it already has one
+#' @keywords internal
+#' @noRd
+.check_crs <- function(x) {
+  if (is.na(crs(x))) {
+    if (is.na(st_crs(x))) {
+      st_crs(x) <- st_crs(4326)
+    } else {
+      crs(x) <- st_crs(4326)$proj4string
+    }
+  }
+  return(x)
+}
 
 
 

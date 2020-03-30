@@ -40,7 +40,6 @@
 #' @author Henrik Fisser
 #' 
 #' @importFrom utils object.size
-#' @importFrom sf st_as_sf
 #' @importFrom readr read_csv write_csv cols
 #' @importFrom raster stack
 #' 
@@ -107,7 +106,6 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   ## Check input
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sp")
-  .check_numeric(maxDeviation, "maxDeviation")
   .check_numeric(maxDeviation, "maxDeviation")
   dir_out <- .check_dir_out(dir_out,which="cloud_masks")
   .check_character(username, "username")

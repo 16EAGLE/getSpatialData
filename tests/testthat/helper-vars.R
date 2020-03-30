@@ -13,15 +13,6 @@ if (!dir.exists(tt$home)) stop(paste0(dir_error, tt$home))
 if (!dir.exists(tt$resources$home)) stop(paste0(dir_error, tt$resources))
 for (dir in tt$resources) if (!dir.exists(dir)) stop(paste0(dir_error, dir))
 
-# helpers for initializing and finishing tmp dir
-initialize_dir <- function(dir) {
-  if (dir.exists(dir)) unlink(dir, TRUE)
-  dir.create(dir)
-}
-finish_dir <- function(dir) {
-  if (dir.exists(dir)) unlink(dir, TRUE)
-}
-
 # TEST PARAMETERS
 # -----------------
 # classes
@@ -32,6 +23,7 @@ CHARACTER <- "character"
 LOGICAL <- "logical"
 
 # sensor names
+SENTINEL1 <- "Sentinel-1"
 SENTINEL2 <- "Sentinel-2"
 SENTINEL3 <- "Sentinel-3"
 LANDSAT <- "Landsat"
@@ -59,7 +51,28 @@ construct_filepath <- function(dir, sensor, suffix) {
   return(file.path(dir, paste(sensor, paste0(suffix, ".csv"), sep="_")))
 }
 
-# errors
+# HELPERS
+# -----------------
+# for initializing and finishing tmp dir
+initialize_dir <- function(dir) {
+  if (dir.exists(dir)) unlink(dir, TRUE)
+  dir.create(dir)
+}
+finish_dir <- function(dir) {
+  if (dir.exists(dir)) unlink(dir, TRUE)
+}
+
+# for reading a raster expecting NO error
+test_raster_read <- function(file) {
+  return(expect_error(expect_error(raster(file)))) # double expect_error() == expect NO error
+}
+
+# for reading a raster stack expecting NO error
+test_stack_read <- function(file) {
+  return(expect_error(expect_error(stack(file))))
+}
+
+# for testing errors
 # generic type error from .check_type()
 type_error_msg <- function(input, arg_name, type) {
   return("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'")
@@ -78,7 +91,7 @@ RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 
 
 # TEST VARIABLES
 # -----------------
-aoi_tunisia <- .read_shp(file.path(tt$resources$aoi, "tunisia_aoi.shp"))
+aoi_test <- .read_shp(file.path(tt$resources$aoi, "aoi_test.shp"))
 data("aoi_data")
 
 test.cred <- list(dhus.user = Sys.getenv("gSD_user"),

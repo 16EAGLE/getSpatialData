@@ -662,7 +662,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   return(append(needed_cols_cloudcov, c("preview_file")))
 }
 
-
 #' unlists all columns of a data.frame
 #' @param records data.frame.
 #' @param records data.frame with all columns unlisted
@@ -900,25 +899,6 @@ rbind.different <- function(x) {
   slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
   preview_masked <- mask(preview,poly)
   return(preview_masked)
-  
-}
-
-#' handles the aoi input and converts it to sf object if needed
-#' @param aoi aoi.
-#' @param crs crs.
-#' @return \code{aoi}
-#' @keywords internal
-#' @importFrom sf st_as_sf st_transform
-#' @noRd
-.handle_aoi <- function(aoi, crs) {
-  
-  aoi_class <- class(aoi)
-  error <- "try-error"
-  if (class(aoi)[1] != "sf") aoi <- try(st_as_sf(aoi))
-  if (inherits(aoi,error)) out(paste0("Aoi of class '",aoi_class,"' could not be converted to 'sf' object"),3)
-  if (as.character(crs(aoi)) != as.character(crs)) aoi <- try(st_transform(aoi,crs))
-  if (inherits(aoi,error)) out("Aoi reprojection failed",3)
-  return(aoi)
   
 }
 

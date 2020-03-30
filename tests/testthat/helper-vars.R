@@ -38,6 +38,18 @@ LANDSAT <- "Landsat"
 MODIS <- "MODIS"
 MIXED <- "mixed"
 
+# records data.frame column names
+COLS <- list()
+COLS$preview_jpg <- "preview_file_jpg"
+COLS$preview_tif <- "preview_file"
+COLS$HOT_scene <- "aoi_HOT_cloudcov_percent"
+COLS$HOT_aoi <- "scene_HOT_cloudcov_percent"
+COLS$cmask_tif <- "cloud_mask_file"
+COLS$pmos_col <- "rgb_mosaic_file"
+COLS$cmos_col <- "cmaks_mosaic_file"
+COLS$timestamp_col <- "selected_for_timestamp"
+COLS$sub_period_col <- "sub_period"
+
 # for file naming
 SUFFIX <- list()
 SUFFIX$records <- "records"
@@ -61,16 +73,8 @@ column_error_msg <- function(column) {
   return("A column of 'records' named '", column, "' is required for this action, but is missing.")
 }
 AOI_TYPE_ERROR <- "Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object."
+AOI_UNDEFINED_ERROR <- "Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI."
 RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'."
-
-
-# records data.frame column names
-COLS <- list()
-COLS$preview_jpg <- "preview_file_jpg"
-COLS$preview_tif <- "preview_file"
-COLS$HOT_scene <- "aoi_HOT_cloudcov_percent"
-COLS$HOT_aoi <- "scene_HOT_cloudcov_percent"
-COLS$cmask_tif <- "cloud_mask_file"
 
 # TEST VARIABLES
 # -----------------

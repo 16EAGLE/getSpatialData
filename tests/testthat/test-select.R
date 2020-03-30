@@ -116,7 +116,7 @@ error_test_select <- function(records, aoi, tt) {
   # max_cloudcov_tile
   max_cloudcov_tile_name <- "max_cloudcov_tile"
   input1_max_cloudcov_tile <- "Umbridge"
-  error1_max_cloudcov_tile <- type_error_msg(input1_max_cloudcov_tile, "max_cloudcov_tile", NUMERIC)
+  error1_max_cloudcov_tile <- type_error_msg(input1_max_cloudcov_tile, max_cloudcov_tile_name, NUMERIC)
   expect_error(select_unitemporal(records, max_sub_period = max_sub,
                                   max_cloudcov_tile = input1_max_cloudcov_tile,
                                   aoi = aoi, dir_out = tt$tmp), error1_max_cloudcov_tile) # UT
@@ -130,7 +130,7 @@ error_test_select <- function(records, aoi, tt) {
   # satisfaction_value
   satisfaction_value_name <- "satisfaction_value"
   input1_satisfaction_value <- "Wormtail"
-  error1_satisfaction_value <- type_error_msg(input1_satisfaction_value, "satisfaction_value", NUMERIC)
+  error1_satisfaction_value <- type_error_msg(input1_satisfaction_value, satisfaction_value_name, NUMERIC)
   expect_error(select_unitemporal(records, max_sub_period = max_sub,
                                   satisfaction_value = input1_satisfaction_value,
                                   aoi = aoi, dir_out = tt$tmp), error1_satisfaction_value) # UT
@@ -210,8 +210,107 @@ error_test_select <- function(records, aoi, tt) {
   expect_error(select_timeseries(records, min_distance = min_dist, max_sub_period = max_sub,
                                  aoi = aoi, dir_out = tt$tmp, verbose = input1_verbose), error1_verbose)
 }
-  
 
-#' - test select_bitemporal
-#' - test select_unitemporal
-#' - test select_multitemporal
+# -----------------------------------------------------------------------------------------
+# RUN TESTS
+# -----------------------------------------------------------------------------------------
+
+# errors
+# ------------------------------------
+# TEST 1
+# -------
+# Target: Test errors
+records <- read.csv(construct_filepath(dir_records, SENTINEL2, SUFFIX$records))
+# with false input
+error_test_select(records, aoi = aoi_tunisia, tt)
+
+# select_unitemporal()
+# ------------------------------------
+# TEST 2
+# -------
+# Target: test unitemporal with Sentinel-1
+
+# TEST 3
+# -------
+# Target: test unitemporal with Sentinel-2
+
+# TEST 4
+# -------
+# Target: test unitemporal with Sentinel-3
+
+# TEST 5
+# -------
+# Target: test unitemporal with Landsat
+
+# TEST 6
+# -------
+# Target: test unitemporal with MODIS
+
+# TEST 7
+# -------
+# Target: test unitemporal with mixed sensors without prio_sensors
+
+# TEST 8
+# -------
+# Target: test unitemporal with mixed sensors with prio_sensors
+
+# select_bitemporal()
+# ------------------------------------
+# TEST 9
+# -------
+# Target: test bitemporal with Sentinel-1
+
+# TEST 10
+# -------
+# Target: test bitemporal with Sentinel-2
+
+# TEST 11
+# -------
+# Target: test bitemporal with Sentinel-3
+
+# TEST 12
+# -------
+# Target: test bitemporal with Landsat
+
+# TEST 13
+# -------
+# Target: test bitemporal with MODIS
+
+# TEST 14
+# -------
+# Target: test bitemporal with mixed sensors without prio_sensors
+
+# TEST 15
+# -------
+# Target: test bitemporal with mixed sensors with prio_sensors 
+
+# select_timeseries()
+# ------------------------------------
+# TEST 16
+# -------
+# Target: test timeseries with Sentinel-1
+
+# TEST 17
+# -------
+# Target: test timeseries with Sentinel-2
+
+# TEST 18
+# -------
+# Target: test timeseries with Sentinel-3
+
+# TEST 19
+# -------
+# Target: test timeseries with Landsat
+
+# TEST 20
+# -------
+# Target: test timeseries with MODIS
+
+# TEST 21
+# -------
+# Target: test timeseries with mixed sensors without prio_sensors
+
+# TEST 22
+# -------
+# Target: test timeseries with mixed sensors with prio_sensors
+

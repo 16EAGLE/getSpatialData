@@ -179,7 +179,7 @@ for (records_cc in list(records_cc1, records_cc2)) {
 
 # TEST 6
 # -------
-# Target: Test sensors mixed sensors including SAR
+# Target: Test mixed sensors including SAR
 records <- read.csv(construct_filepath(dir_records, MIXED, SUFFIX$records))
 records_previews <- read.csv(construct_filepath(dir_records, MIXED, SUFFIX$previews))
 records_cc1 <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)

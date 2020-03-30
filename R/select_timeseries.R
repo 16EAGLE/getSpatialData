@@ -68,7 +68,7 @@ select_timeseries <- function(records,
   
   #### Pre-checks
   records <- .check_records(records, .get_needed_cols_select(), as_df=T)
-  aoi <- .check_aoi(aoi,"sp")
+  aoi <- .check_aoi(aoi, "sp")
   cols_initial <- colnames(records)
   
   if (!is.numeric(num_timestamps)) out("Argument 'num_timestamps' has to be of class numeric")

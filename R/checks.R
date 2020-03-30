@@ -282,8 +282,8 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
+  if (is.null(dir_out)) dir_out <- .check_dir_out(dir_out)
   if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
-  #dir_out <- .check_dir_out(dir_out,"preview_mosaics")
   options("gSD.verbose"=verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   # check if all columns are provided
@@ -347,10 +347,8 @@
 #' @keywords internal
 #' @noRd
 .check_verbose <- function(verbose) {
-  if (!is.null(verbose) && !is.na(verbose)) {
-    .check_logical(verbose, "verbose")
-    options(gSD.verbose = verbose)
-  }
+  .check_logical(verbose, "verbose")
+  options(gSD.verbose = verbose)
 }
 
 #' checks input, generates a type error message and throws it if invalid

@@ -284,7 +284,7 @@
   
   if (is.null(dir_out)) dir_out <- .check_dir_out(dir_out)
   if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
-  options("gSD.verbose"=verbose)
+  .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   # check if all columns are provided
   has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
@@ -348,6 +348,7 @@
 #' @noRd
 .check_verbose <- function(verbose) {
   .check_logical(verbose, "verbose")
+  if (any(c(is.null(verbose), is.na(verbose)))) verbose <- TRUE # default value
   options(gSD.verbose = verbose)
 }
 

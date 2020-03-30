@@ -12,9 +12,8 @@ ADDED_COLS_WITHOUT_PREVIEWS <- 3
 
 # tests on the output with clean input
 # ------------------------------------
-clean_test_calc_cloudcov <- function(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER) {
+clean_test_calc_cloudcov <- function(records_cc, COLS, NUMERIC, CHARACTER) {
   
-  expect_is(records_cc, DATAFRAME)
   cols_given <- names(records_cc)
   # check if column exists
   expect_true(COLS$HOT_aoi %in% cols_given)
@@ -36,13 +35,17 @@ clean_test_calc_cloudcov <- function(records_cc, COLS, DATAFRAME, NUMERIC, CHARA
   expect_is(preview_tifs, CHARACTER)
   expect_true(all(aoi_cc) > 0)
   expect_true(all(scene_cc) > 0)
-  # check if all files exist
-  for (files in list(cmask_tifs, preview_jpgs, preview_tifs)) {
-    for (file in files) {
-      expect_true(file.exists(file))
-    }
+  # check cloud mask rasters
+  for (file in cmask_tifs) {
+    expect_true(file.exists(file))
+    # can be loaded
+    loaded_cmask <- test_raster_read(cmask_tifs[1])
+    # has crs
+    expect_false(is.na(crs(loaded_cmask) && is.na(st_crs(loaded_cmask))))
+    # raster values make sense
+    expect_equal(maxValue(loaded_cmask), 1)
+    expect_equal(minValue(loaded_cmask), 0)
   }
-
 }
 
 # tests errors
@@ -128,7 +131,7 @@ expect_length(names(records_cc1), length(records) + ADDED_COLS_PREVIEWS)
 expect_length(names(records_cc2), length(records) + ADDED_COLS_WITHOUT_PREVIEWS)
 for (records_cc in list(records_cc1, records_cc2)) {
   initialize_dir(tt$tmp)
-  clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+  clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
   finish_dir(tt$tmp)
 }
 
@@ -144,7 +147,7 @@ expect_length(names(records_cc2), length(records) + ADDED_COLS_WITHOUT_PREVIEWS)
 
 for (records_cc in list(records_cc1, records_cc2)) {
   initialize_dir(tt$tmp)
-  clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+  clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
   finish_dir(tt$tmp)
 }
 
@@ -159,7 +162,7 @@ expect_length(names(records_cc1), length(records) + ADDED_COLS_PREVIEWS)
 expect_length(names(records_cc2), length(records) + ADDED_COLS_WITHOUT_PREVIEWS)
 for (records_cc in list(records_cc1, records_cc2)) {
   initialize_dir(tt$tmp)
-  clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+  clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
   finish_dir(tt$tmp)
 }
 
@@ -174,7 +177,7 @@ expect_length(names(records_cc1), length(records) + ADDED_COLS_PREVIEWS)
 expect_length(names(records_cc2), length(records) + ADDED_COLS_WITHOUT_PREVIEWS)
 for (records_cc in list(records_cc1, records_cc2)) {
   initialize_dir(tt$tmp)
-  clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+  clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
   finish_dir(tt$tmp)
 }
 
@@ -189,7 +192,7 @@ expect_length(names(records_cc1), length(records) + ADDED_COLS_PREVIEWS)
 expect_length(names(records_cc2), length(records) + ADDED_COLS_WITHOUT_PREVIEWS)
 for (records_cc in list(records_cc1, records_cc2)) {
   initialize_dir(tt$tmp)
-  clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+  clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
   finish_dir(tt$tmp)
 }
 
@@ -214,11 +217,11 @@ records <- read.csv(construct_filepath(dir_records, SENTINEL2, SUFFIX$records))
 record_row <- expect_is(calc_cloudcov(records[1,], aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
 # process all rows, now including reload of one record (row csv and cloud mask)
 records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 # delete cloud mask and re-run with existing csv row but non-existing cloud mask
 unlink(record_row[[COLS$cmask_tif]])
 records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 finish_dir(tt$tmp)
 
 # TEST 8
@@ -230,11 +233,11 @@ records <- read.csv(construct_filepath(dir_records, LANDSAT, SUFFIX$records))
 record_row <- expect_is(calc_cloudcov(records[1,], aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
 # process all rows, now including reload of one record (row csv and cloud mask)
 records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 # delete cloud mask and re-run with existing csv row but non-existing cloud mask
 unlink(record_row[[COLS$cmask_tif]])
 records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 finish_dir(tt$tmp)
 
 # TEST 9
@@ -246,11 +249,11 @@ records <- read.csv(construct_filepath(dir_records, MODIS, SUFFIX$records))
 record_row <- expect_is(calc_cloudcov(records[1,], aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
 # process all rows, now including reload of one record (row csv and cloud mask)
 records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 # delete cloud mask and re-run with existing csv row but non-existing cloud mask
 unlink(record_row[[COLS$cmask_tif]])
 records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 finish_dir(tt$tmp)
 
 # TEST 10
@@ -259,14 +262,14 @@ finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 records <- read.csv(construct_filepath(dir_records, SENTINEL3, SUFFIX$records))
 # process single row
-record_row <- expect_is(calc_cloudcov(records[1,], aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
+record_row <- expect_is(calc_cloudcov(records[1,], aoi = aoi_test, dir_out = tt$tmp), DATAFRAME)
 # process all rows, now including reload of one record (row csv and cloud mask)
-records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_test, dir_out = tt$tmp), DATAFRAME)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 # delete cloud mask and re-run with existing csv row but non-existing cloud mask
 unlink(record_row[[COLS$cmask_tif]])
-records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_test, dir_out = tt$tmp), DATAFRAME)
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 finish_dir(tt$tmp)
 
 # TEST 11
@@ -275,8 +278,17 @@ finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 records <- read.csv(construct_filepath(dir_records, MIXED, SUFFIX$records))
 # process single row
-expect_is(calc_cloudcov(records[1,], aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME)
+expect_is(calc_cloudcov(records[1,], aoi = aoi_test, dir_out = tt$tmp), DATAFRAME)
 # process all rows, now including reload of one record (row csv and cloud mask)
-records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_tunisia, dir_out = tt$tmp), DATAFRAME) 
-clean_test_calc_cloudcov(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER)
+records_cc <- expect_is(calc_cloudcov(records, aoi = aoi_test, dir_out = tt$tmp), DATAFRAME) 
+clean_test_calc_cloudcov(records_cc, COLS, NUMERIC, CHARACTER)
 finish_dir(tt$tmp)
+
+# TEST 12
+# -------
+# für jeden Sensor eine cloud mask laden, getValues() und Werte, Abmessungen, crs checken
+
+
+
+
+

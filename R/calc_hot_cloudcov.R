@@ -16,10 +16,9 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom raster NAvalue crs projectRaster nlayers stack values mask maxValue minValue as.matrix cellStats raster
+#' @importFrom raster nlayers stack values mask maxValue minValue raster
 #' @importFrom L1pack lad
 #' @importFrom stats na.omit qexp
-#' @importFrom sp proj4string
 #' 
 #' @keywords internal
 #' @noRd
@@ -155,14 +154,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
 
-<<<<<<< HEAD
   # handle problem of slope values close to 1 (in fact, this problem should rarely occur)
   # if mean of blue in likely clear-sky areas is higher than mean of red: multiply slope by 2 else divide by 2
   if (slope < 1.5 && slope > 0.5) {
     slope <- ifelse(mean_blue_red[1] > mean_blue_red[2], slope*2, slope/2)
   }
   
-=======
   # get a sharp clear-sky-line where slope is close to 1
   # if mean of blue in likely clear-sky areas is higher red multiply slope by 2 else divide by 2
   # needed because slope values close to 1 lead to weak cloud seggregation

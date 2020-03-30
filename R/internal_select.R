@@ -184,18 +184,11 @@
   tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
   
   r <- "RasterLayer"
-  wgs_crs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
   vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","")
   save_str <- paste0(sample(vec,10),"_",collapse = "")
   save_pmos <- file.path(tmp_dir,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
   layers <- c("red","green","blue")
-  
-  # disaggregation adjustment parameters
-  #sensors_ref <- c("Sentinel-2","Sentinel-3")
-  #sensors_adj <- c("Landsat","MODIS")
-  #disaggr_needed <- any(sensors_given %in% sensors_ref) && any(sensors_given %in% sensors_adj)
-  #if (disaggr_needed) y_sensor <- sensors_ref[which(sensors_given %in% sensors_ref)[1]]
   
   # cloud mask previews band-wise
   # this returns a list of paths to each of the three cloud-masked bands per record
@@ -205,16 +198,9 @@
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
     cMask <- raster(records[id_index,cloud_mask_col]) # cloud mask
     preview <- stack(p_path)
-    if (is.na(crs(cMask))) crs(cMask) <- wgs_crs
-    if (is.na(crs(preview))) crs(preview) <- wgs_crs
-    
-    #product_group_given <- records[id_index,"product_group"]
-    #do_disaggregation <- product_group_given %in% sensors_adj && disaggr_needed
-    #if (do_disaggregation) {
-    # disaggregate preview to the resolution of other sensor in records that has higher resolution
-    #  preview <- try(.disaggr_raster(preview,x_sensor=product_group_given,y_sensor=y_sensor))
-    #}
-    
+    cMask <- .check_crs(cMask)
+    preview <- .check_crs(preview)
+
     preview_cloud_masked <- preview * cMask
     preview_save <- file.path(tmp_dir,paste0(records[id_index,identifier],"_cmasked"))
     
@@ -360,9 +346,10 @@
     x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
+    next_record <- .check_crs(next_record)
     curr_base_mos_crop <- crop(base_mos,next_record) # crop base mosaic to tile area of next
     aoi_subset <- as(extent(next_record),"SpatialPolygons")
-    crs(aoi_subset) <- crs(next_record)
+    aoi_subset <- .check_crs(aoi_subset)
     aoi_subset <- intersect(aoi_subset,aoi)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,n_pixel_aoi)
     
@@ -1224,13 +1211,58 @@
   
   if (dfirst_date >= dperiod_initial[1] || dfirst_date < dperiod_initial[1]) {
     period <- as.character(c(dfirst_date,dperiod_initial[2]))
+    return(period)
   } else if (dfirst_date >= dperiod_initial[2]) {
     out(paste0("Argument 'min_distance' between acquisitions used for dinstinguished timestamps is: ",min_distance," days.
                The 'max_period' of covered acquisitions for one timestamp is: ",max_sub_period,". With the given 'num_timestamps'
                these values disable the creation of a temporally consistent selection. Modify the values (most likely decrease (some of) them."),3)  
   }
   
-  }
+}
+
+#' checks if an new coverage percentage exceeds the min_improvement argument
+#' @param min_improvement numeric.
+#' @param cov_init numeric.
+#' @param cov_aft numeric.
+#' @param proportion numeric the proportion of the aoi covered by the current tile.
+#' Has to be between 0 and 1.
+#' @return exceeds logical.
+#' @keywords internal
+#' @noRd
+.select_exceeds_improvement <- function(min_improvement, cov_init, cov_aft) {
+  
+  add_it <- min_improvement < (((cov_aft - cov_init) / cov_init) * 100)
+  return(add_it)
+  
+}
+
+#' checks which records are within a period of time
+#' @param records data.frame.
+#' @param period character vector of dates. Last is the end date.
+#' @param date_col character name of the date column.
+#' @return \code{records} data.frame reduced to matching records.
+#' @keywords internal
+#' @noRd
+.select_within_period <- function(records, period, date_col) {
+  
+  dates <- as.Date(records[[date_col]])
+  cond <- intersect(which(dates >= period[1]),which(dates <= period[2]))
+  records <- records[cond,]
+  
+}
+
+#' bridge function to the period identifier \link{.identify_period}. Enables to calculate from
+#' a given period with added dates a new period.
+#' @param dates_tmp character vector of character dates.
+#' @return period_new character holding a period of dates.
+#' @keywords internal
+#' @noRd
+.select_bridge_period <- function(dates_tmp,period_new) {
+  
+  period_curr <- .identify_period(dates_tmp)
+  period_new <- .identify_period(c(period_new,period_curr))
+  
+}
 
 #### SELECT OUT
 
@@ -1360,49 +1392,5 @@
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
   i <- ifelse(i==0,1,i)
   out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," available records of sensor ",sensor,"  "), flush = T)
-  
-}
-
-#' checks if an new coverage percentage exceeds the min_improvement argument
-#' @param min_improvement numeric.
-#' @param cov_init numeric.
-#' @param cov_aft numeric.
-#' @param proportion numeric the proportion of the aoi covered by the current tile.
-#' Has to be between 0 and 1.
-#' @return exceeds logical.
-#' @keywords internal
-#' @noRd
-.select_exceeds_improvement <- function(min_improvement, cov_init, cov_aft) {
-  
-  add_it <- min_improvement < (((cov_aft - cov_init) / cov_init) * 100)
-  return(add_it)
-  
-}
-
-#' checks which records are within a period of time
-#' @param records data.frame.
-#' @param period character vector of dates. Last is the end date.
-#' @param date_col character name of the date column.
-#' @return \code{records} data.frame reduced to matching records.
-#' @keywords internal
-#' @noRd
-.select_within_period <- function(records, period, date_col) {
-  
-  dates <- as.Date(records[[date_col]])
-  cond <- intersect(which(dates >= period[1]),which(dates <= period[2]))
-  records <- records[cond,]
-  
-}
-
-#' bridge function to the period identifier \link{.identify_period}. Enables to calculate from
-#' a given period with added dates a new period.
-#' @param dates_tmp character vector of character dates.
-#' @return period_new character holding a period of dates.
-#' @keywords internal
-#' @noRd
-.select_bridge_period <- function(dates_tmp,period_new) {
-  
-  period_curr <- .identify_period(dates_tmp)
-  period_new <- .identify_period(c(period_new,period_curr))
   
 }

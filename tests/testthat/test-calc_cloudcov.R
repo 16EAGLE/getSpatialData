@@ -14,6 +14,7 @@ ADDED_COLS_WITHOUT_PREVIEWS <- 3
 # ------------------------------------
 clean_test_calc_cloudcov <- function(records_cc, COLS, DATAFRAME, NUMERIC, CHARACTER) {
   
+  expect_is(records_cc, DATAFRAME)
   cols_given <- names(records_cc)
   # check if column exists
   expect_true(COLS$HOT_aoi %in% cols_given)

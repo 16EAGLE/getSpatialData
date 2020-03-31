@@ -7,7 +7,7 @@
 #' @details For running the selection you have to process \link{calc_cloudcov} first.
 #' 
 #' @note This functionality creates a 'tmp' folder below \code{dir_out} where
-#' temporary files are saved. This folder is being deleted at the end of the function call.
+#' temporary files are saved. This folder will be deleted at the end of the function call.
 #' 
 #' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 #' Records will be selected from these records.

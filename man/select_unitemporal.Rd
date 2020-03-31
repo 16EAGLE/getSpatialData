@@ -4,26 +4,19 @@
 \alias{select_unitemporal}
 \title{Selects remote sensing records uni-temporally}
 \usage{
-select_unitemporal(records, aoi, min_improvement = 100, max_sub_period,
+select_unitemporal(records, max_sub_period, min_improvement = 5,
   max_cloudcov_tile = 80, satisfaction_value = 98,
-  prio_sensors = c(), dir_out = NULL, verbose = TRUE)
+  prio_sensors = c(), aoi = NULL, dir_out = NULL, verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 Records will be selected from these records.}
 
-\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
-polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
-and at least three rows (each row representing one corner coordinate). 
-If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
-Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
-If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
+\item{max_sub_period}{numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
+This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).}
 
 \item{min_improvement}{numeric the minimum increase of valid pixels percentage in a tile when adding record.
 This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.}
-
-\item{max_sub_period}{numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
-This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).}
 
 \item{max_cloudcov_tile}{numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
 The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
@@ -33,7 +26,24 @@ or shadows. Default is 80.}
 
 \item{prio_sensors}{character vector optioal. Sensor names ordered by priority. Selection is done in the order
 of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
-selection was not fullfilled by previous sensor.}
+selection was not fullfilled by previous sensor. Sensor names must be provided as returned by \link{get_names}
+with one exception: MODIS products are summarized by 'MODIS'. These are the supported sensor names:
+\itemize{
+\item 'Sentinel-2'
+\item 'Sentinel-3'
+\item 'LANDSAT_8_C1'
+\item 'LANDSAT_ETM_C1'
+\item 'LANDSAT_TM_C1'
+\item 'LANDSAT_MSS_C1'
+\item 'MODIS'
+}}
+
+\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
+polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
+and at least three rows (each row representing one corner coordinate). 
+If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
+Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
+If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
 \item{dir_out}{character directory where to save the cloud mask mosaics and the RGB preview mosaic.
 Note: Below this dir_out a tmp_dir will be created where temporary files will be saved during selection.This folder is
@@ -59,7 +69,7 @@ For running the selection you have to process \link{calc_cloudcov} first.
 }
 \note{
 This functionality creates a 'tmp' folder below \code{dir_out} where
-temporary files are saved. This folder is being deleted at the end of the function call.
+temporary files are saved. This folder will be deleted at the end of the function call.
 }
 \author{
 Henrik Fisser

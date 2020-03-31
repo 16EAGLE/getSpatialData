@@ -55,7 +55,7 @@ error_test_calc_cloudcov <- function(records, aoi, tt) {
   # records type
   expect_error(calc_cloudcov(records = "Dumbledore", aoi = aoi, dir_out = tt$tmp), RECORDS_TYPE_ERROR)
   # records column missing
-  needed_cols <- getSpatialData:::.get_needed_cols_calc_cloudcov()
+  needed_cols <- getSpatialData:::.cloudcov_get_needed_cols()
   for (col_remove in needed_cols) {
     input1_records <- records
     input1_records[[col_remove]] <- NULL

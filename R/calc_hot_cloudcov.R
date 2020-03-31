@@ -173,7 +173,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     }
   }
 
->>>>>>> f26ef5335e110984b51584d6beb841636b80ebbb
   # calculate HOT cloud probablity layer
   try(nominator <- abs(slope * rBand - bBand + intercept))
   try(denominator <- sqrt(1 + (slope^2)))

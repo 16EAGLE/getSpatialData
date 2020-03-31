@@ -1,15 +1,15 @@
-#' Calculate the cloud cover of Sentinel, Landsat or MODIS in an aoi before large data download
+#' Calculate the cloud cover of optical Sentinel, Landsat or MODIS data in an aoi based on small previews
 #' 
 #' \code{calc_cloudcov} calculates the aoi cloud cover and optionally saves raster cloud
 #' masks, all based on preview images. The previews are requested through \link{get_previews}. As the
 #' cloud masks, the previews are written to \code{dir_out}. You may call \link{get_previews} before
 #' \code{calc_cloudcov}, they will be reloaded.
-#' Cloud cover is computed currently using one of the following options:
+#' Cloud cover is currently computed based on the following option:
 #' \itemize{
 #' \item Haze-Optimal-Transformation (HOT) (Zhu & Helmer, 2018).
 #' }
 #' 
-#' #' @details Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the red and blue information of the input RGB. HOT procedure is applied based on 
+#' @details Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the red and blue information of the input RGB. HOT procedure is applied based on 
 #' Zhu & Helmer (2018) [2]. Orignally, the base computation was introduced by Zhang et al. (2002) [1].
 #' HOT seperates clear-sky pixels first from a threshold, calculates a least alternate deviation (LAD) regression from these pixels and exposes cloud pixels by the deviation of all pixels from this clear-sky line.
 #' 
@@ -20,17 +20,15 @@
 #' [2] Zhu, X., Helmer, E.H., 2018. An automatic method for screening clouds and cloud shadows in opticalsatellite image time series in cloudy regions.
 #' Remote Sensing of Environment 214 (2018), 135-153.
 #' 
-#' @note if a \code{dir_out} is given cloud mask rasters and a record csv for each record is saved in \code{dir_out}.
-#' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
-#' @param dir_out character, optional. Full path to target directory where to save the cloud masks. If \code{NULL}, cloud masks are not saved.
+#' @param dir_out character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and a record csv for each record will be saved in \code{dir_out}.
 #' @param username character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
 #' 
-#' @return \code{records} data.frame holding three added columns:
+#' @return \code{records} data.frame with three added columns:
 #' \enumerate{
 #' \item cloud_mask_file: character path to the cloud mask file of the record
 #' \item aoi_HOT_cloudcov_percent: numeric percentage of the calculated aoi cloud cover.

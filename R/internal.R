@@ -1,23 +1,3 @@
-#' Outputs errors, warnings and messages
-#'
-#' @param input character
-#' @param type numeric, 1 = message/cat, 2 = warning, 3 = error and stop
-#' @param msg logical. If \code{TRUE}, \code{message} is used instead of \code{cat}. Default is \code{FALSE}.
-#' @param sign character. Defines the prefix string.
-#'
-#' @importFrom utils flush.console
-#' @keywords internal
-#' @noRd
-
-out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALSE, verbose = getOption("gSD.verbose")){
-  if(isTRUE(flush)) flush.console()
-  if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
-  if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
-  else{if(type == 3){stop(input, call. = FALSE)}else{if(ll == 1){
-    if(msg == FALSE){ cat(paste0(sign,input), sep = ifelse(isTRUE(flush), " ", "\n"))
-    } else{message(paste0(sign,input))}}}}
-}
-
 #' creates a temp dir (tmp_dir) and/or deletes it
 #' @param dir_out character directory as parent dir.
 #' @param action numeric, 1 for create.
@@ -313,7 +293,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 .get_odata <- function(uuid, cred, field = ""){
   lapply(uuid, function(x) content(gSD.get(paste0(cred[3], "/odata/v1/Products('", x, "')/", field),  cred[1], cred[2])))
 }
-
 
 #' get ERS API key from user input
 #'
@@ -644,62 +623,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
 }
 
-#' get column names needed for running calc_hot_cloudcov
-#' @return character vector needed_cols
-#' @keywords internal
-#' @noRd
-.get_needed_cols_calc_cloudcov <- function() {
-  return(c("product", "product_group", "record_id", "sensor", "cloudcov", "preview_url"))
-}
-
-#' get column names needed for running select_*
-#' @return character vector needed_cols
-#' @keywords internal
-#' @noRd
-.get_needed_cols_select <- function() {
-  needed_cols_cloudcov <- .get_needed_cols_calc_cloudcov()
-  needed_cols_cloudcov <- append(needed_cols_cloudcov, .cloudcov_colnames())
-  return(append(needed_cols_cloudcov, c("preview_file")))
-}
-
-#' unlists all columns of a data.frame
-#' @param records data.frame.
-#' @param records data.frame with all columns unlisted
-#' @keywords internal
-#' @noRd
-.unlist_df <- function(records) {
-  
-  is_list <- which(sapply(1:NCOL(records),function(i) {
-    return(class(records[,i]))
-  }) == "list")
-  if (length(is_list) > 0) {
-    for (i in is_list) {
-      records[,i] <- unlist(records[,i])
-    }
-  }
-  return(records)
-  
-}
-
-#' rbind different dfs
-#' @param x list of dfs
-#' @keywords internal
-#' @noRd
-rbind.different <- function(x) {
-  
-  x.bind <- x[[1]]
-  for(i in 2:length(x)){
-    x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
-    y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
-    
-    x.bind[, c(as.character(y.diff))] <- NA
-    x[[i]][, c(as.character(x.diff))] <- NA
-    
-    x.bind <- rbind(x.bind, x[[i]])
-  }
-  return(x.bind)
-}
-
 #' converts everything in a data.frame that is not of class c("character","numeric","integer","logical")
 #' to character
 #' @param x data.frame.
@@ -777,162 +700,51 @@ rbind.different <- function(x) {
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }
 
-#' get column names added in calc_hot_cloudcov
-#' @return list of character column names.
+# -------------------------------------------------------------
+# data.frame utils
+# -------------------------------------------------------------
+
+#' unlists all columns of a data.frame
+#' @param records data.frame.
+#' @param records data.frame with all columns unlisted
 #' @keywords internal
 #' @noRd
-.cloudcov_colnames <- function() {
+.unlist_df <- function(records) {
   
-  cols <- list(cloud_mask_path="cloud_mask_file",
-               aoi_hot_cc_percent="aoi_HOT_cloudcov_percent",
-               scene_hot_cc_percent="scene_HOT_cloudcov_percent")
-
-}
-
-
-#' calc processing time
-#' 
-#' @param numRecords numRecords
-#' @param i record number in the loop
-#' @param processingTime processingTime
-#' @param previewSize previewSize
-#' @keywords internal
-#' @importFrom utils object.size
-#' @noRd
-.calcHOTProcTime <- function(numRecords,i,processingTime,previewSize) {
-  meanProcessingTime <- mean(processingTime)
-  meanPreviewSize <- mean(previewSize) / 1000000
-  stillToGoFor <- numRecords - 5
-  sumProcessingTime <- meanProcessingTime * stillToGoFor
-  if (sumProcessingTime < 1) {
-    sumProcessingTime <- "less than 1 minute"
-  } else if (round(sumProcessingTime) == 1) {
-    sumProcessingTime <- "1 minute"
-  } else {
-    sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
+  is_list <- which(sapply(1:NCOL(records),function(i) {
+    return(class(records[,i]))
+  }) == "list")
+  if (length(is_list) > 0) {
+    for (i in is_list) {
+      records[,i] <- unlist(records[,i])
+    }
   }
-  sumDataDownload <- round(meanPreviewSize * stillToGoFor, 2)
-  out(paste0(sep(),"\n\n10 records are processed.\nTime for remaining records, approx.: ",
-             sumProcessingTime,"\nData amount approx.: ",sumDataDownload," MB\n",sep(),"\n"))
+  return(records)
+  
 }
 
-#' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given
-#' @param record data.frame with one row.
-#' @param is_SAR logical if the record is a SAR acquisition. Default is FALSE.
-#' @return record data.frame with one row but added columns.
+#' rbind different dfs
+#' @param x list of dfs
 #' @keywords internal
 #' @noRd
-.handle_cc_skip <- function(record, is_SAR = FALSE, dir_out = NULL) {
+rbind.different <- function(x) {
   
-  if (!is.null(dir_out)) record["cloud_mask_file"] <- "NONE"
-  record["aoi_HOT_cloudcov_percent"] <- ifelse(is_SAR,NA,100)
-  record["scene_HOT_cloudcov_percent"] <- ifelse(is_SAR,NA,9999)
-  return(record)
-  
+  x.bind <- x[[1]]
+  for(i in 2:length(x)){
+    x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
+    y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
+    
+    x.bind[, c(as.character(y.diff))] <- NA
+    x[[i]][, c(as.character(x.diff))] <- NA
+    
+    x.bind <- rbind(x.bind, x[[i]])
+  }
+  return(x.bind)
 }
 
-#' creates new columns and fills a one line records data.frame with calc_hot_cloudcov results
-#' finalizes the cloud mask and saves it
-#' @param record data.frame.
-#' @param aoi aoi.
-#' @param cMask raster cloud mask.
-#' @param HOT raster HOT cloud probabilitiy layer.
-#' @param scene_cPercent numeric calculated HOT scene cloud cover.
-#' @param maskFilename character file path where to save the cloud mask.
-#' @param cols list of character column names.
-#' @param dir_given logical if a dir_out is given as argument.
-#' @return record data.frame with additional columns.
-#' @importFrom raster cellStats writeRaster mask
-#' @keywords internal
-#' @noRd
-.record_cloudcov_finish <- function(record, aoi, cMask, HOT, scene_cPercent,
-                                    mask_path, cols, dir_given, reload=F) {
-  
-  aoi_cPercent <- .raster_percent(cMask,aoi=aoi) # calculate the absolute HOT cloud cover in aoi
-  if (is.null(HOT)) {
-    aoi_cProb <- 9999
-  } else {
-    HOT_masked <- mask(HOT,aoi)
-    aoi_cProb <- cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
-  }
-  if (isFALSE(reload)) {
-    cMask <- mask(cMask,aoi)
-    cMask[cMask==0] <- NA
-  }
-  if (dir_given) { # save cloud mask if desired
-    mask_path <- mask_path
-    if (!file.exists(mask_path)) writeRaster(cMask,mask_path,overwrite=T,
-                                             datatype="INT2S")
-    record[cols$cloud_mask_path] <- mask_path
-  }
-  
-  ##### Add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
-  record[cols$aoi_hot_cc_percent] <- as.numeric(aoi_cPercent)
-  record[cols$scene_hot_cc_percent] <- as.numeric(scene_cPercent)
-  return(record)
-  
-}
-
-#' mask the edges of Landsat preview raster
-#' @param preview raster.
-#' @return \code{preview_masked} masked preview
-#' @importFrom methods as slot slot<-
-#' @importFrom raster mask crs extent crs<-
-.preview_mask_edges <- function(preview) {
-  
-  ext <- try(extent(preview))
-  if (inherits(ext,"try-error")) return (preview)
-  poly <- as(ext,"SpatialPolygons")
-  crs(poly) <- crs(preview)
-  # get the vertices of the extent and modify them
-  coords <- slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords")
-  coords[1,1] <- coords[1,1] + 0.08
-  coords[2,1] <- coords[2,1] + 0.42
-  coords[3,1] <- coords[3,1] - 0.08
-  coords[4,1] <- coords[4,1] - 0.42
-  coords[5,1] <- coords[5,1] + 0.08
-  coords[1,2] <- coords[1,2] + 0.38
-  coords[2,2] <- coords[2,2] - 0.06
-  coords[3,2] <- coords[3,2] - 0.38
-  coords[4,2] <- coords[4,2] + 0.05
-  coords[5,2] <- coords[5,2] + 0.38
-  slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
-  preview_masked <- mask(preview,poly)
-  return(preview_masked)
-  
-}
-
-#' calculates percentage of a value in a raster or polygon with different modes.
-#' @param x raster.
-#' @param mode character specifies the mode of calculation.
-#' @param custom numeric vector with two values: [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
-#' @param aoi aoi.
-#' @param aoi_ncell integer number of cells in aoi.
-#' @return \code{percent} numeric percentage
-#' @keywords internal
-#' @importFrom raster as.matrix extent res crs
-#' @noRd
-.raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL, aoi_ncell = NULL) {
-  
-  if (mode == "na") {
-    na_mask <- is.na(x)
-    x <- mask(na_mask,aoi)
-    x_mat <- as.integer(as.matrix(x))
-    # clouds = 1 and clear = 0 now
-    percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
-  } else if (mode == "custom") {
-    x_mat <- as.integer(as.matrix(x))
-    val1 <- length(which(x_mat == custom[[1]]))
-    val2 <- length(which(x_mat == custom[[2]]))
-    percent <- (val1 / sum(val1,val2)) * 100
-  } else if (mode == "aoi") {
-    percent <- .calc_aoi_coverage(x,aoi,aoi_ncell)
-  }
-  # due to the calculation based on pixel values it might happen that percent 
-  # exceeds 100 slightly. In these cases use 100
-  percent <- ifelse(percent > 100,100,percent)
-
-}
+# -------------------------------------------------------------
+# aoi area and coverage
+# -------------------------------------------------------------
 
 #' calculates area in aoi in km2
 #' @param aoi aoi.
@@ -953,7 +765,7 @@ rbind.different <- function(x) {
 #' calculates the number of cells of value 1 covering the aoi
 #' @param x raster for which the percentage of value 1 in aoi shall be calculated.
 #' @param aoi aoi.
-#' @param aoi_ncell list of numerics if the needed values have been calculated already they can
+#' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
 #' @importFrom raster ncell area getValues
@@ -977,7 +789,7 @@ rbind.different <- function(x) {
 #' @param aoi aoi.
 #' @param x raster with the resolution.
 #' @return integer number of pixels in aoi.
-#' @importFrom raster extent raster res crs values<- extract mask
+#' @importFrom raster extent raster res crs values<- mask
 #' @keywords internal
 #' @noRd
 .calc_aoi_corr_vals <- function(aoi,x) {
@@ -994,55 +806,6 @@ rbind.different <- function(x) {
   
 }
 
-#' disaggregates a Landsat or MODIS preview or preview cloud mask to the resolution of Landsat or Sentinel-2
-#' @param x raster layer to be disaggregated
-#' @param x_sensor character name of sensor to be disaggregated. Can be "Landsat" or "MODIS" or "Sentinel-3".
-#' @param y_sensor character name of sensor to which x shall be disaggregated.
-#' @return \code{x_dis} raster layer disaggregated.
-#' @importFrom raster disaggregate res
-#' @keywords internal
-#' @noRd
-.disaggr_raster <- function(x, x_sensor, y_sensor, aoi) {
-  
-  x_sensor <- tolower(x_sensor)
-  
-  # disaggregation parameters
-  res <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
-  target_res <- 0.0019 # the Sentinel-2 preview resolution
-  # do not reduce the resolution to the equivalent of more than double the Sentinel-2 preview resolution
-  adj <- res / target_res
-  adj <- ifelse(adj < 1,1,adj)
-  x_dis <- try(disaggregate(x,adj))
-  
-  if (inherits(x_dis,"try-error")) return(x) else return(x_dis)
-  
-}
-
-#### CHECKS that are not input checks
-
-#' checks if a record is supported by calc_cloudcov() or not
-#' @param record with one row
-#' @return \code{is_supported} logical
-#' @keywords internal
-#' @noRd
-.cloudcov_supported <- function(record) {
-  record_id <- tolower(record$record_id)
-  product_id <- tolower(record$product)
-  supported_modis <- tolower(c("MCD18A1.006", "MCD18A2.006", "MCD19A1.006", "MOD09A1.006", "MOD09CMG.006", 
-                               "MOD09GA.006", "MOD09GQ.006", "MOD09Q1.006", "MODOCGA.006", "MYD09A1.006", 
-                               "MYD09CMG.006", "MYD09GA.006", "MYD09GQ.006", "MYD09Q1.006", "MYDOCGA.006"))
-  supported_modis <- tolower(paste0("MODIS_", supported_modis))
-  if (startsWith(product_id, "modis")){
-    return(any(startsWith(supported_modis, substr(product_id, 1, 13))))
-  } else if (startsWith(product_id, "landsat") || product_id == "sentinel-2") {
-    return(TRUE)
-  } else if (product_id == "sentinel-3") {
-    return(strsplit(record_id, "_")[[1]][2] == "ol")
-  } else {
-    return(FALSE)
-  }
-}
-
 #' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
 #' @param sensor character vector of all sensors in records.
 #' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
@@ -1057,26 +820,6 @@ rbind.different <- function(x) {
   }
   
 }
-
-#' catches the case where the records data.frame of a sub-period is empty.
-#' @param records data.frame.
-#' @param ts numeric which timestamp.
-#' @return nothing. Console communication.
-#' @keywords internal
-#' @noRd
-.catch_empty_records <- function(records, ts) {
-  
-  if (NROW(records) == 0) {
-    out(paste0("No records at timestamp: ",ts,". You could e.g.:\n
-               - decrease 'num_timestamps',
-               - decrease 'min_distance',
-               - increase 'max_period',
-               - add another sensor.\n"),2)
-  }
-  
-}
-
-#### HELPERS
 
 #' creates a tileid from row/path
 #' @param records data.frame.
@@ -1142,16 +885,18 @@ rbind.different <- function(x) {
   
 }
 
+# -------------------------------------------------------------
+# date utils
+# -------------------------------------------------------------
+
 #' returns the smallest and largest date of a character vector of dates.
 #' @param dates character vector of dates ("2019-01-01").
 #' @return \code{period} character vector of two dates
 #' @keywords internal
 #' @noRd
 .identify_period <- function(dates) {
-  
   dates_sorted <- sort(dates)
   period <- c(dates_sorted[1],tail(dates_sorted,1))
-  
 }
 
 #' calculates the number of days between two dates
@@ -1163,7 +908,70 @@ rbind.different <- function(x) {
   days <- as.integer(as.Date(period[2]) - as.Date(period[1]))
 }
 
-#### RASTER HANDLING
+# -------------------------------------------------------------
+# raster utils
+# -------------------------------------------------------------
+
+#' mask the edges of Landsat preview raster
+#' @param preview raster.
+#' @return \code{preview_masked} masked preview
+#' @importFrom methods as slot slot<-
+#' @importFrom raster mask crs extent crs<-
+.preview_mask_edges <- function(preview) {
+  
+  ext <- try(extent(preview))
+  if (inherits(ext,"try-error")) return (preview)
+  poly <- as(ext,"SpatialPolygons")
+  crs(poly) <- crs(preview)
+  # get the vertices of the extent and modify them
+  coords <- slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords")
+  coords[1,1] <- coords[1,1] + 0.08
+  coords[2,1] <- coords[2,1] + 0.42
+  coords[3,1] <- coords[3,1] - 0.08
+  coords[4,1] <- coords[4,1] - 0.42
+  coords[5,1] <- coords[5,1] + 0.08
+  coords[1,2] <- coords[1,2] + 0.38
+  coords[2,2] <- coords[2,2] - 0.06
+  coords[3,2] <- coords[3,2] - 0.38
+  coords[4,2] <- coords[4,2] + 0.05
+  coords[5,2] <- coords[5,2] + 0.38
+  slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
+  preview_masked <- mask(preview,poly)
+  return(preview_masked)
+  
+}
+
+#' calculates percentage of a value in a raster or polygon with different modes.
+#' @param x raster.
+#' @param mode character specifies the mode of calculation.
+#' @param custom numeric vector with two values: [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
+#' @param aoi aoi.
+#' @param aoi_ncell integer number of cells in aoi.
+#' @return \code{percent} numeric percentage
+#' @keywords internal
+#' @importFrom raster as.matrix extent res crs
+#' @noRd
+.raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL, aoi_ncell = NULL) {
+  
+  if (mode == "na") {
+    na_mask <- is.na(x)
+    x <- mask(na_mask,aoi)
+    x_mat <- as.integer(as.matrix(x))
+    # clouds = 1 and clear = 0 now
+    percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
+  } else if (mode == "custom") {
+    x_mat <- as.integer(as.matrix(x))
+    val1 <- length(which(x_mat == custom[[1]]))
+    val2 <- length(which(x_mat == custom[[2]]))
+    percent <- (val1 / sum(val1,val2)) * 100
+  } else if (mode == "aoi") {
+    percent <- .calc_aoi_coverage(x,aoi,aoi_ncell)
+  }
+  # due to the calculation based on pixel values it might happen that percent 
+  # exceeds 100 slightly. In these cases use 100
+  percent <- ifelse(percent > 100,100,percent)
+  
+}
 
 #' aggregates rasters according to the aoi area size.
 #' @param x character vector of paths to rasters to check on. All have to have
@@ -1202,14 +1010,6 @@ rbind.different <- function(x) {
   
 }
 
-#' seperator
-#' @return character
-#' @keywords internal
-#' @noRd
-sep <- function() {
-  sep <- "\n----------------------------------------------------------------"
-}
-
 #' create mosaic
 #' @description The rasters from \code{x} will be mosaicked in a stupid way: everything is mosaicked that is in this list.
 #' @param x list of paths to raster files.
@@ -1238,75 +1038,6 @@ sep <- function() {
   
 }
 
-### MISCELLANEOUS
-
-#' removes NULLs and NAs from list.
-#' @param x list.
-#' @return x list without NULLs and NAs.
-#' @keywords internal
-#' @noRd
-.gsd_compact <- function(x) {
-  
-  not_na <- sapply(x,function(y) {return((!is.na(y) && !is.null(y)))})
-  x <- x[not_na]
-  return(x)
-  
-}
-
-#' prints character vectors in console combined into one message in out()
-#' @param x list of character vectors.
-#' @param type numeric as in out().
-#' @param msg logical as in out().
-#' @return nothing. Console print
-#' @keywords internal
-#' @noRd
-.out_vector <- function(x,type=1,msg=FALSE) {
-  
-  shout_out <- sapply(x,function(vec) {
-    print_out <- sapply(vec,function(v) out(v,type=type,msg=msg))
-  })
-  
-}
-
-#' run silent
-#' @param expr an expression
-#' @return nothing. runs expression
-#' @keywords internal
-#' @noRd
-quiet <- function(expr){
-  return(suppressWarnings(suppressMessages(expr)))
-}
-
-
-#' add aoi to a mapview map
-#' @param map a mapview object
-#' @param aoi_colour colour of aoi
-#' @param homebutton whether to show layer home buttons or not
-#' @return nothing. runs expression
-#' @keywords internal
-#' @noRd
-.add_aoi <- function(map = NULL, aoi_colour, homebutton = F){
-  if(isFALSE(getOption("gSD.aoi_set"))){
-    out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-  } else{
-    aoi.sf <- getOption("gSD.aoi")
-    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
-    if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
-  }
-}
-
-#' wrapper for reading shapefile via sf::read_sf(). Mainly for unit tests.
-#' @param Character absolute file_path to shp including extension (".shp")
-#' @return SpatialPolygons shp
-#' @importFrom sf read_sf as_Spatial
-#' @importFrom methods as
-#' @keywords internal
-#' @noRd
-.read_shp <- function(file_path) {
-  shp <- as(as_Spatial(read_sf(file_path)), "SpatialPolygons")
-  return(shp)
-}
-
 #' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
 #' @param character absolute file_path
 #' @return RasterBrick
@@ -1325,4 +1056,54 @@ quiet <- function(expr){
 #' @noRd
 .subset_brick <- function(b) {
   return(brick(b[[1]], b[[3]]))
+}
+
+# -------------------------------------------------------------
+# vector utils
+# -------------------------------------------------------------
+
+#' wrapper for reading shapefile via sf::read_sf(). Mainly for unit tests.
+#' @param Character absolute file_path to shp including extension (".shp")
+#' @return SpatialPolygons shp
+#' @importFrom sf read_sf as_Spatial
+#' @importFrom methods as
+#' @keywords internal
+#' @noRd
+.read_shp <- function(file_path) {
+  shp <- as(as_Spatial(read_sf(file_path)), "SpatialPolygons")
+  return(shp)
+}
+
+# -------------------------------------------------------------
+# miscellaneous
+# -------------------------------------------------------------
+
+#' add aoi to a mapview map
+#' @param map a mapview object
+#' @param aoi_colour colour of aoi
+#' @param homebutton whether to show layer home buttons or not
+#' @return nothing. runs expression
+#' @keywords internal
+#' @noRd
+.add_aoi <- function(map = NULL, aoi_colour, homebutton = F){
+  if(isFALSE(getOption("gSD.aoi_set"))){
+    out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+  } else{
+    aoi.sf <- getOption("gSD.aoi")
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
+    if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
+  }
+}
+
+#' removes NULLs and NAs from list.
+#' @param x list.
+#' @return x list without NULLs and NAs.
+#' @keywords internal
+#' @noRd
+.gsd_compact <- function(x) {
+  
+  not_na <- sapply(x,function(y) {return((!is.na(y) && !is.null(y)))})
+  x <- x[not_na]
+  return(x)
+  
 }

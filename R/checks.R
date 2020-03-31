@@ -226,7 +226,7 @@
 #' @return nothing. Console communication
 #' @keywords internal
 #' @noRd
-.select_handle_revisit <- function(sensor, period, num_timestamps) {
+.select_check_revisit <- function(sensor, period, num_timestamps) {
   revisit_times <- list("LANDSAT_8_C1"=8,"LANDSAT_ETM_C1"=8,"LANDSAT_TM_C1"=16,"LANDSAT_MSS_C1"=16,
                         "MODIS_MOD09A1_V6"=8,"MODIS_MYD09A1_V6"=8,"MODIS_MOD09Q1_V6"=8,
                         "MODIS_MOD09Q1_V6"=8,"MODIS_MOD09GA_V6"=1,"MODIS_MYD09GA_V6"=1,
@@ -251,7 +251,7 @@
 #' @return nothing. Console error if column is not given.
 #' @keywords internal
 #' @noRd
-.catch_missing_columns <- function(records, cols) {
+.check_missing_columns <- function(records, cols) {
   
   missing <- c()
   empty <- c()
@@ -297,11 +297,11 @@
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   # check if all columns are provided
-  has_error <- .catch_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
+  has_error <- .check_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
                                                      par$preview_col,par$cloud_mask_col))
   if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
-  .select_handle_revisit(unique(unlist(records$product)),period,num_timestamps)
+  .select_check_revisit(unique(unlist(records$product)),period,num_timestamps)
   # check if needed files exist
   out("Checking if all needed clouds mask and preview rasters exist..",msg=T)
   check <- sapply(list(preview_file=records$preview_file,

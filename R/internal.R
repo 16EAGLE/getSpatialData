@@ -821,7 +821,7 @@ rbind.different <- function(x) {
   
 }
 
-#' creates a tileid from row/path
+#' creates a tileid where not given
 #' @param records data.frame.
 #' @return \code{records} data.frame with a completely filled tile_id column.
 #' @keywords internal
@@ -829,53 +829,121 @@ rbind.different <- function(x) {
 .make_tileid <- function(records) {
   
   TILEID <- "tile_id"
+  FOOTPRINT <- "footprint"
   RECORDID <- "record_id"
   SENTINEL1 <- "S1"
+  SENTINEL2 <- "S2"
   SENTINEL3 <- "S3"
+  MODIS <- "MODIS"
+  LANDSAT <- "Landsat"
+  point_sep <- "\\."
+  
+  # first, try using the horizontal / vertical columns
   tileid_not_given <- is.na(records$tile_id)
   vertical_given <- !is.na(records$tile_number_vertical)
   horizontal_given <- !is.na(records$tile_number_horizontal)
   use_tile_num <- which((tileid_not_given * vertical_given * horizontal_given) == 1) 
   horizontal <- records$tile_number_horizontal[use_tile_num]
   vertical <- records$tile_number_vertical[use_tile_num]
-  records[use_tile_num, TILEID] <- paste0(vertical, horizontal)
+  records[use_tile_num, TILEID] <- paste0(horizontal, vertical)
+  tileid_not_given <- is.na(records$tile_id) # recheck
   
-  # create a tileid from the record_id in case of Sentinel-1
+  # in many cases now value is given in horizontal / vertical
+  # ensure that this is given in all cases, sensor-specifically
+  
+  # Sentinel-1
   is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
-  tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
-    splitted <- strsplit(x, "_")[[1]]
-    id <- paste0(splitted[8], splitted[9])
-  })
-  records[is_sentinel1, TILEID] <- tileids
+  if (!.is_empty_array(is_sentinel1)) no_tileid <- is_sentinel1[is.na(records[is_sentinel1, TILEID])]
+  footprints <- records[is_sentinel1, FOOTPRINT]
+  if (!is.na(no_tileid) && !.is_empty_array(no_tileid) && !.is_empty_array(footprints)) {
+    tileids <- sapply(footprints, function(footprint) {
+      tryCatch({
+        footprint <- footprint[[1]][[1]]
+        horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), point_sep)[[1]]
+        vertical <- strsplit(as.character(mean(footprint[,2][1:4])), point_sep)[[1]]
+        id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),
+                     "v", vertical[1], ".", substr(vertical[2], 1, 1))
+      }, error = function(err) {
+        return(NA)
+      }) 
+    })
+    records[no_tileid, TILEID] <- tileids
+  }
+  
+  # Sentinel-2
+  is_sentinel2 <- which(startsWith(records$record_id, SENTINEL2))
+  if (!.is_empty_array(is_sentinel2)) no_tileid <- is_sentinel2[is.na(records[is_sentinel2, TILEID])]
+  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+    tileids <- sapply(records[no_tileid, RECORDID], function(x) {
+      id <- strsplit(x, "_")[[1]][6]
+    })
+    records[no_tileid, TILEID] <- tileids
+  }
   
   # Sentinel-3
   is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
-  tileids <- sapply(records[is_sentinel3, RECORDID], function(x){
-    sep <- "______"
-    if (grepl(sep, x)) { # does it contain the "_" separator at the end 
-      splitted <- strsplit(x, sep)[[1]][1]
-      splitted1 <- strsplit(splitted, "_")[[1]]
-      len <- length(splitted1)
-      last <- tail(splitted1, 1)
-      if (grepl("[^0-9]", last)) { # should be chars
-        id <- last
-      } else { # only contains integers
-        id <- paste0(splitted1[len-1], splitted1[len])
-      }
-  } else {
-      splitted <- strsplit(x, "_LN1")[[1]]
-      splitted1 <- strsplit(splitted, "_")[[1]]
-      len <- length(splitted1)
-      if (len == 18) {
-        id <- paste0(splitted1[len-6], splitted1[len-5])
-      } else {
-        id <- paste0(splitted1[len-2], splitted1[len-1])
-      }
-    }
-  })
-  records[is_sentinel3, TILEID] <- tileids
-  return(records)
+  if (!.is_empty_array(is_sentinel3)) no_tileid <- is_sentinel3[is.na(records[is_sentinel3, TILEID])]
+  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+    tileids <- sapply(records[no_tileid, RECORDID], function(x){
+      tryCatch({
+        sep <- "______"
+        if (grepl(sep, x)) { # does it contain the "_" separator at the end 
+          splitted <- strsplit(x, sep)[[1]][1]
+          splitted1 <- strsplit(splitted, "_")[[1]]
+          len <- length(splitted1)
+          last <- tail(splitted1, 1)
+          if (grepl("[^0-9]", last)) { # should be chars
+            id <- last
+          } else { # only contains integers
+            id <- paste0(splitted1[len-1], splitted1[len])
+          }
+        } else {
+          splitted <- strsplit(x, "_LN1")[[1]]
+          splitted1 <- strsplit(splitted, "_")[[1]]
+          len <- length(splitted1)
+          if (len == 18) {
+            id <- paste0(splitted1[len-6], splitted1[len-5])
+          } else {
+            id <- paste0(splitted1[len-2], splitted1[len-1])
+          }
+        }
+      }, error = function(err) {
+        return(NA)
+      })
+    })
+    records[no_tileid, TILEID] <- tileids
+  }
   
+  # Landsat
+  is_landsat <- which(records$product_group == LANDSAT)
+  if (!.is_empty_array(is_landsat)) no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
+  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+    tileids <- sapply(records[no_tileid, RECORDID], function(x) {
+      splitted <- strsplit(x, "_")[[1]][3]
+      id <- paste0(substr(splitted, 1, 3), substr(splitted, 4, 7))
+    })
+    records[no_tileid, TILEID] <- tileids
+  }
+  
+  # MODIS
+  is_modis <- which(records$product_group == MODIS)
+  if (!.is_empty_array(is_modis)) no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
+  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+    tileids <- sapply(records[no_tileid, RECORDID], function(x) {
+      tryCatch({
+        splitted <- strsplit(x, point_sep)[[1]]
+        splitted1 <- splitted[which(grepl("v", splitted) * grepl("h", splitted) == 1)]
+        splitted2 <- strsplit(splitted1, "v")[[1]]
+        is_horizontal <- grepl("h", splitted2)
+        id <- paste0(strsplit(splitted2[is_horizontal], "h")[[1]][2], splitted2[!is_horizontal])
+      }, error = function(err) {
+        return(NA)
+      })
+    })
+    records[no_tileid, TILEID] <- tileids
+  }
+  
+  return(records)
 }
 
 #' creates a character date column in the format "YYYY-MM-DD" for Sentinel records
@@ -1117,4 +1185,13 @@ rbind.different <- function(x) {
   x <- x[not_na]
   return(x)
   
+}
+
+#' returns TRUE if a vector has length 0
+#' @param x vector of any type
+#' @return logical
+#' @keywords internal
+#' @noRd
+.is_empty_array <- function(x) {
+  return(length(x) == 0)
 }

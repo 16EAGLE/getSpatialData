@@ -6,6 +6,7 @@
 #' in internal. Checks are in checks. The frontends of select_ are located in dedicated select_ functions.
 #' @author Henrik Fisser, 2019
 #' @keywords internal
+#' @noRd
 #' ---------------------------------------------------------------------
 
 #' select main process

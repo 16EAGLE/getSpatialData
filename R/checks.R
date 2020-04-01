@@ -70,7 +70,6 @@
   if(inherits(sc, "try-error")){return(FALSE)}else{return(TRUE)}
 }
 
-
 #' check and create aoi from aoi argument
 #'
 #' @param aoi aoi

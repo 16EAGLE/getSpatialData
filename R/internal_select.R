@@ -1,6 +1,6 @@
 #' ---------------------------------------------------------------------
 #' @name internal_select
-#' @description This document is the backend of select functionalities. 
+#' @description This document is the main backend of select functionalities. 
 #' @details It contains select_ specific methods. Rather generic methods that
 #' might be useful for other package-internal functionalities are situated
 #' in internal. Checks are in checks. The frontends of select_ are located in dedicated select_ functions.
@@ -104,10 +104,9 @@
   w <- w[which(w!="NULL")]
   summary <- .out_vector(csw[[1]])
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
-  
   records <- subset(records,select=-sub_period) # remove sub-period column
-  
   records <- .column_summary(records,cols_initial)
+  rm(summary, to_console)
   
   return(records)
   

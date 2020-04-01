@@ -839,27 +839,38 @@ rbind.different <- function(x) {
   horizontal <- records$tile_number_horizontal[use_tile_num]
   vertical <- records$tile_number_vertical[use_tile_num]
   records[use_tile_num, TILEID] <- paste0(vertical, horizontal)
-  # create a tileid from the record_id in case of Sentinel-1
   
-  #is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
-  #tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
-  #  splitted <- strsplit(x, "_")[[1]]
-  #  id <- paste0(splitted[8], splitted[9])
-  #})
-  #records[is_sentinel1, TILEID] <- tileids
+  # create a tileid from the record_id in case of Sentinel-1
+  is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
+  tileids <- sapply(records[is_sentinel1, RECORDID], function(x) {
+    splitted <- strsplit(x, "_")[[1]]
+    id <- paste0(splitted[8], splitted[9])
+  })
+  records[is_sentinel1, TILEID] <- tileids
+  
+  # Sentinel-3
   is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
   tileids <- sapply(records[is_sentinel3, RECORDID], function(x){
     sep <- "______"
-    if (grepl(sep, x)) {
+    if (grepl(sep, x)) { # does it contain the "_" separator at the end 
       splitted <- strsplit(x, sep)[[1]][1]
       splitted1 <- strsplit(splitted, "_")[[1]]
       len <- length(splitted1)
-      id <- paste0(splitted1[len-1], splitted1[len])
-    } else {
+      last <- tail(splitted1, 1)
+      if (grepl("[^0-9]", last)) { # should be chars
+        id <- last
+      } else { # only contains integers
+        id <- paste0(splitted1[len-1], splitted1[len])
+      }
+  } else {
       splitted <- strsplit(x, "_LN1")[[1]]
       splitted1 <- strsplit(splitted, "_")[[1]]
       len <- length(splitted1)
-      id <- paste0(splitted1[len-2], splitted1[len-1])
+      if (len == 18) {
+        id <- paste0(splitted1[len-6], splitted1[len-5])
+      } else {
+        id <- paste0(splitted1[len-2], splitted1[len-1])
+      }
     }
   })
   records[is_sentinel3, TILEID] <- tileids

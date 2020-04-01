@@ -162,7 +162,7 @@
     # this way for each order those tiles will be checked first that had the highest cloud cover in previous order
     # it shall result in handling large gaps first and small gaps late
     tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,"tile_id"]))))
-    cc_col <- "aoi_HOT_cloudcov_percent"
+    cc_col <- name_aoi_hot_cloudcov_percent()
     sub_within_sorted <- append(sub_within[1],lapply(2:length(sub_within),function(i) {
       curr_tiles <- tile_mirror[[i]]
       prev_tiles <- tile_mirror[[i-1]]

@@ -105,12 +105,16 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sp")
   .check_numeric(maxDeviation, "maxDeviation")
-  dir_out <- .check_dir_out(dir_out,which="cloud_masks")
+  dir_out <- .check_dir_out(dir_out)
   .check_character(username, "username")
   .check_character(password, "password")
   .check_verbose(verbose)
-  records <- .check_records(records, .get_needed_cols_calc_cloudcov(), as_df=T)
-
+  records <- .check_records(records, .cloudcov_get_needed_cols(), as_df=T)
+  
+  preview_file <- name_preview_file()
+  preview_file_jpg <- name_preview_file_jpg()
+  cloud_mask_file <- name_cloud_mask_file()
+  footprint <- name_footprint()
   cols_initial <- colnames(records)
   numRecords <- NROW(records)
   out(paste0(sep(),"\n\nProcessing ",numRecords," records\nStarting HOT\n",sep(),"\n"),verbose=verbose)
@@ -122,7 +126,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   tmp_dir <- .tmp_dir(dir_out,1,change_raster_tmp=TRUE)
   rm(tmp_dir)
   v <- verbose
-  identifier <- "record_id"
+  identifier <- name_record_id()
   
   ## Do HOT cloud cover assessment consecutively
   records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
@@ -147,9 +151,9 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       record <- as.data.frame(read_csv(csv_path,col_types=cols()))
       record <- .df_dates_to_chars(record)
       nms <- names(record)
-      if ("cloud_mask_file" %in% nms && "preview_file" %in% nms &&
+      if (cloud_mask_file %in% nms && preview_file %in% nms &&
           NROW(record) > 0) {
-        if (file.exists(record$cloud_mask_file)) {
+        if (file.exists(record[[cloud_mask_file]])) {
           return(record)
         }
       }
@@ -162,7 +166,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       record_preview <- NULL
     } else {
       
-      prev_col_given <- "preview_file" %in% names(record)
+      prev_col_given <- preview_file %in% names(record)
       if (prev_col_given) {
         
         pfile <- record$preview_file
@@ -203,13 +207,13 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     verbose <- v
     
     preview_exists <- ifelse(inherits(record_preview,"data.frame"),
-                             ifelse("preview_file" %in% names(record_preview),
+                             ifelse(preview_file %in% names(record_preview),
                                     file.exists(record_preview$preview_file),FALSE),FALSE)
     
     get_preview_failed <- is.null(record_preview) || class(record_preview) %in% c("error","try-error") || isFALSE(preview_exists)
     if (get_preview_failed) {
-      record[["preview_file_jpg"]] <- "NONE"
-      record[["preview_file"]] <- "NONE"
+      record[[preview_file_jpg]] <- "NONE"
+      record[[preview_file]] <- "NONE"
       record_preview <- record
     } else {
       # pass preview to HOT function
@@ -240,9 +244,9 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     
     # write csv if desired
     if (!is.null(dir_out)) {
-      if ("footprint" %in% names(record_cc)) {
+      if (footprint %in% names(record_cc)) {
         # remove footprint list column for writing csv
-        cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == "footprint")))
+        cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == footprint)))
         # unlist columns for writing csv
         record_cc <- record_cc[,cols_remain]
         record_cc <- .unlist_df(record_cc)

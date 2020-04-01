@@ -183,12 +183,14 @@
 #' @keywords internal
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors) {
+  MODIS <- name_product_group_modis()
   .check_type(prio_sensors, "prio_sensors", "character")
-  optical_sensors <- c("LANDSAT_8_C1", "LANDSAT_ETM_C1", "LANDSAT_TM_C1", "LANDSAT_MSS_C1",
-                        "Sentinel-2", "Sentinel-3", "MODIS")
+  optical_sensors <- c(name_product_landsat8(), name_product_landsat7(), 
+                       name_product_landsat5(), name_product_landsatmss(),
+                        name_product_sentinel2(), name_product_sentinel3(), MODIS)
   some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
     check <- x %in% optical_sensors
-    check <- ifelse(isTRUE(check), check, startsWith(x, "MODIS"))
+    check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
   })))
   if (some_wrong) {
     out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names() except MODIS products ('MODIS')",3)
@@ -226,12 +228,14 @@
 #' @keywords internal
 #' @noRd
 .select_check_revisit <- function(sensor, period, num_timestamps) {
-  revisit_times <- list("LANDSAT_8_C1"=8,"LANDSAT_ETM_C1"=8,"LANDSAT_TM_C1"=16,"LANDSAT_MSS_C1"=16,
+  revisit_times <- list(name_product_landsat8()=8,name_product_landsat7()=8,
+                        name_product_landsat5()=16,name_product_landsatmss()=16,
                         "MODIS_MOD09A1_V6"=8,"MODIS_MYD09A1_V6"=8,"MODIS_MOD09Q1_V6"=8,
                         "MODIS_MOD09Q1_V6"=8,"MODIS_MOD09GA_V6"=1,"MODIS_MYD09GA_V6"=1,
                         "MODIS_MOD09GQ_V6"=1,"MODIS_MYD09GQ_V6"=1,
                         "MODIS_MOD09CMG_V6"=1,"MODIS_MYD09CMG_V6"=1,
-                        "Sentinel-2"=5,"Sentinel-3"=2,"MODIS"=2)
+                        name_product_sentinel2()=5, name_product_sentinel3()=2,
+                        name_product_group_modis()=2)
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)

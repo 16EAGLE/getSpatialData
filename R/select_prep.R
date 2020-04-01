@@ -3,9 +3,9 @@
 #' @keywords internal
 #' @noRd
 .get_needed_cols_select <- function() {
-  needed_cols_cloudcov <- .get_needed_cols_calc_cloudcov()
+  needed_cols_cloudcov <- .cloudcov_get_needed_cols()
   needed_cols_cloudcov <- append(needed_cols_cloudcov, .cloudcov_colnames())
-  return(append(needed_cols_cloudcov, c("preview_file")))
+  return(append(needed_cols_cloudcov, c(name_preview_file())))
 }
 
 #' checks if a record is supported by .select_*() or not
@@ -26,22 +26,23 @@
 #' @param records data.frame.
 #' @param mode character which mode is used: "TS", "BT" or "UT".
 #' @return \code{params} list of characters.
+#' @importFrom stats na.omit
 #' @keywords internal
 #' @noRd
 .select_params <- function(records, mode) {
   
   modes <- list("TS"="timeseries","BT"="bitemporal","UT"="unitemporal")
   params <- list(selected_col=paste0("selected_for_",modes[[mode]]), # logical column if a record is selected at all
-                 pmos_col="rgb_mosaic_file", # path to the RGB mosaic tif where record is included
-                 cmos_col="cmask_mosaic_file", # path to the cloud mask mosaic tif where record is included
-                 timestamp_col="selected_for_timestamp", # for the timestamp number for which the record is selected
-                 aoi_cc_col="aoi_HOT_cloudcov_percent",
-                 tileid_col="tile_id",
-                 preview_col="preview_file",
-                 cloud_mask_col="cloud_mask_file",
-                 date_col="date_acquisition",
-                 identifier="record_id",
-                 sub_period_col="sub_period")
+                 pmos_col=name_rgb_mosaic_file(), # path to the RGB mosaic tif where record is included
+                 cmos_col=name_cmask_mosaic_file(), # path to the cloud mask mosaic tif where record is included
+                 timestamp_col=name_selected_for_timestamp(), # for the timestamp number for which the record is selected
+                 aoi_cc_col=name_aoi_hot_cloudcov_percent(),
+                 tileid_col=name_tile_id(),
+                 preview_col=name_preview_file(),
+                 cloud_mask_col=name_cloud_mask_file(),
+                 date_col=name_date_acquisition(),
+                 identifier=name_record_id(),
+                 sub_period_col=name_sub_period())
   params$product_group <- unique(na.omit(records$product_group))
   params$product <- unique(na.omit(records$product))
   params$tileids <- unique(na.omit(records[[params$tileid_col]]))

@@ -74,7 +74,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   # Mask NA values in preview (represented as RGB DN < 5 here)
   NA_mask <- (preview[[1]] > 5) * (preview[[2]] > 5) * (preview[[3]] > 5)
   preview <- mask(preview,NA_mask,maskvalue=0)
-
+  
   # in case of Landsat the tiles have bad edges not represented as zeros that have to be masked as well
   if (record$product_group %in% c("Landsat")) preview <- .preview_mask_edges(preview)
   
@@ -134,14 +134,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   meanRed <- sapply(bBins,function(x){mean(x[["red"]])}) * coeffRed
   meanBlue <- sapply(bBins,function(x){x[["blue"]][1]}) * coeffBlue
   rm(bBins)
-
+  
   # run least-alternate deviation regression
   lad <- tryCatch({
     L1pack::lad(meanBlue~meanRed,method="BR")
-    },
-    error=function(err) {
-      return(err)
-    }
+  },
+  error=function(err) {
+    return(err)
+  }
   )
   rm(meanRed, meanBlue)
   if (inherits(lad,"simpleError")) {
@@ -150,10 +150,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     hotFailed <- FALSE
     regrVals <- c(lad$coefficients[1],lad$coefficients[2]) # intercept and slope
   }
-
+  
   intercept <- as.numeric(regrVals[1])
   slope <- as.numeric(regrVals[2])
-
+  
   # handle problem of slope values close to 1 (in fact, this problem should rarely occur)
   # if mean of blue in likely clear-sky areas is higher than mean of red: multiply slope by 2 else divide by 2
   if (slope < 1.5 && slope > 0.5) {
@@ -172,7 +172,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
       slope <- ifelse(slope < 1,slope/2,slope*2)
     }
   }
-
+  
   # calculate HOT cloud probablity layer
   try(nominator <- abs(slope * rBand - bBand + intercept))
   try(denominator <- sqrt(1 + (slope^2)))
@@ -181,7 +181,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     hotFailed <- TRUE
   }
   HOT <- (HOT - minValue(HOT)) / (maxValue(HOT) - minValue(HOT)) * 100 # rescale to 0-100
-
+  
   # calculate scene cc \% while deviation between HOT cc \% and provided cc \% larger maximum deviation from provider (positive or negative)
   numTry <- 1
   ccDeviationFromProvider <- 101
@@ -206,7 +206,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
     }
     numTry <- numTry + 1
   }
-
+  
   # calc scene cc percentage 
   scene_cPercent <- .raster_percent(cMask,mode="custom",custom=c(0,1))
   

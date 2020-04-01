@@ -1,3 +1,12 @@
+#' ---------------------------------------------------------------------
+#' @name internal
+#' @description These are internal functions that rather work as utils.
+#' This internal file should only contain generic functions that can be
+#' used multiple times within the package.
+#' @keywords internal
+#' @noRd
+#' ---------------------------------------------------------------------
+
 #' creates a temp dir (tmp_dir) and/or deletes it
 #' @param dir_out character directory as parent dir.
 #' @param action numeric, 1 for create.
@@ -755,10 +764,12 @@ rbind.different <- function(x) {
 #' @noRd
 .calc_aoi_area <- function(aoi) {
   
-  if (class(aoi)[1] != "SpatialPolygons") {
-    aoi_sp <- as(aoi,"SpatialPolygons")
+  spoly <- "SpatialPolygons"
+  if (class(aoi)[1] != spoly) {
+    aoi_sp <- as(aoi, spoly)
   } else {aoi_sp <- aoi}
   aoi_area <- raster::area(aoi_sp) / 1000000
+  return(aoi_area)
   
 }
 
@@ -813,30 +824,23 @@ rbind.different <- function(x) {
 #' @noRd
 .has_SAR <- function(sensor) {
   
-  if ("Sentinel-1" %in% sensor) {
-    has_SAR <- ifelse(all(sensor == "Sentinel-1"),100,1)
+  sentinel1 <- name_product_sentinel1()
+  if (sentinel1 %in% sensor) {
+    has_SAR <- ifelse(all(sensor == sentinel1),100,1)
   } else {
     has_SAR <- 0
   }
   
 }
 
-#' creates a tileid where not given
+#' creates a tileid where not given, except Sentinel-1
 #' @param records data.frame.
 #' @return \code{records} data.frame with a completely filled tile_id column.
 #' @keywords internal
 #' @noRd
 .make_tileid <- function(records) {
-  
-  TILEID <- "tile_id"
-  FOOTPRINT <- "footprint"
-  RECORDID <- "record_id"
-  SENTINEL1 <- "S1"
-  SENTINEL2 <- "S2"
-  SENTINEL3 <- "S3"
-  MODIS <- "MODIS"
-  LANDSAT <- "Landsat"
-  point_sep <- "\\."
+    
+  TILEID <- name_tile_id()
   
   # first, try using the horizontal / vertical columns
   tileid_not_given <- is.na(records$tile_id)
@@ -850,8 +854,26 @@ rbind.different <- function(x) {
   
   # in many cases now value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
+  records <- .make_tileid_sentinel2(records)
+  records <- .make_tileid_sentinel3(records)
+  records <- .make_tileid_landsat(records)
+  records <- .make_tileid_modis(records)
   
-  # Sentinel-1
+  return(records)
+}
+
+#' creates tile ids for Sentinel-1 records from its footprints
+#' @param records data.frame
+#' @return records data.frame with added tile id of Sentinel-1 records
+#' @keywords internal
+#' @noRd
+.make_tileid_sentinel1 <- function(records) {
+  
+  TILEID <- name_tile_id()
+  FOOTPRINT <- name_footprint()
+  SENTINEL1 <- "S1"
+  POINT_SEP <- "\\."
+  
   is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
   if (!.is_empty_array(is_sentinel1)) no_tileid <- is_sentinel1[is.na(records[is_sentinel1, TILEID])]
   footprints <- records[is_sentinel1, FOOTPRINT]
@@ -859,8 +881,8 @@ rbind.different <- function(x) {
     tileids <- sapply(footprints, function(footprint) {
       tryCatch({
         footprint <- footprint[[1]][[1]]
-        horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), point_sep)[[1]]
-        vertical <- strsplit(as.character(mean(footprint[,2][1:4])), point_sep)[[1]]
+        horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), POINT_SEP)[[1]]
+        vertical <- strsplit(as.character(mean(footprint[,2][1:4])), POINT_SEP)[[1]]
         id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),
                      "v", vertical[1], ".", substr(vertical[2], 1, 1))
       }, error = function(err) {
@@ -869,6 +891,19 @@ rbind.different <- function(x) {
     })
     records[no_tileid, TILEID] <- tileids
   }
+  return(records)
+}
+
+#' creates tile ids for Sentinel-2 records
+#' @param records data.frame
+#' @return records data.frame with added tile id of Sentinel-2 records
+#' @keywords internal
+#' @noRd
+.make_tileid_sentinel2 <- function(records) {
+  
+  RECORDID <- name_record_id()
+  TILEID <- name_tile_id()
+  SENTINEL2 <- "s2"
   
   # Sentinel-2
   is_sentinel2 <- which(startsWith(records$record_id, SENTINEL2))
@@ -879,6 +914,20 @@ rbind.different <- function(x) {
     })
     records[no_tileid, TILEID] <- tileids
   }
+  return(records)
+  
+}
+
+#' creates tile ids for Sentinel-3 records
+#' @param records data.frame
+#' @return records data.frame with added tile id of Sentinel-3 records
+#' @keywords internal
+#' @noRd
+.make_tileid_sentinel3 <- function(records) {
+  
+  RECORDID <- name_record_id()
+  TILEID <- name_tile_id()
+  SENTINEL3 <- "s3"
   
   # Sentinel-3
   is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
@@ -913,8 +962,21 @@ rbind.different <- function(x) {
     })
     records[no_tileid, TILEID] <- tileids
   }
+  return(records)
   
-  # Landsat
+}
+
+#' creates tile ids for Landsat records
+#' @param records data.frame
+#' @return records data.frame with added tile id of Landsat records
+#' @keywords internal
+#' @noRd
+.make_tileid_landsat <- function(records) {
+  
+  RECORDID <- name_record_id()
+  TILEID <- name_tile_id()
+  LANDSAT <- name_product_group_landsat()
+  
   is_landsat <- which(records$product_group == LANDSAT)
   if (!.is_empty_array(is_landsat)) no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
   if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
@@ -924,14 +986,28 @@ rbind.different <- function(x) {
     })
     records[no_tileid, TILEID] <- tileids
   }
+  return(records)
   
-  # MODIS
+}
+
+#' creates tile ids for MODIS records
+#' @param records data.frame
+#' @return records data.frame with added tile id of MODIS records
+#' @keywords internal
+#' @noRd
+.make_tileid_modis <- function(records) {
+  
+  RECORDID <- name_record_id()
+  TILEID <- name_tile_id()
+  MODIS <- name_product_group_modis()
+  POINT_SEP <- "\\."
+  
   is_modis <- which(records$product_group == MODIS)
   if (!.is_empty_array(is_modis)) no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
   if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
     tileids <- sapply(records[no_tileid, RECORDID], function(x) {
       tryCatch({
-        splitted <- strsplit(x, point_sep)[[1]]
+        splitted <- strsplit(x, POINT_SEP)[[1]]
         splitted1 <- splitted[which(grepl("v", splitted) * grepl("h", splitted) == 1)]
         splitted2 <- strsplit(splitted1, "v")[[1]]
         is_horizontal <- grepl("h", splitted2)
@@ -942,8 +1018,8 @@ rbind.different <- function(x) {
     })
     records[no_tileid, TILEID] <- tileids
   }
-  
   return(records)
+  
 }
 
 #' creates a character date column in the format "YYYY-MM-DD" for Sentinel records
@@ -956,7 +1032,7 @@ rbind.different <- function(x) {
 .extract_clear_date <- function(records, date_col_orig, date_col_name) {
   
   records[[date_col_name]] <- records[[date_col_orig]]
-  sent_recs <- which(records$product_group=="Sentinel")
+  sent_recs <- which(records$product_group==name_product_group_sentinel())
   for (i in sent_recs) {
     records[i,date_col_name] <- as.character(substr(records[i,date_col_name],1,10))
   }
@@ -976,6 +1052,7 @@ rbind.different <- function(x) {
 .identify_period <- function(dates) {
   dates_sorted <- sort(dates)
   period <- c(dates_sorted[1],tail(dates_sorted,1))
+  return(period)
 }
 
 #' calculates the number of days between two dates
@@ -985,6 +1062,7 @@ rbind.different <- function(x) {
 #' @noRd
 .period_days <- function(period) {
   days <- as.integer(as.Date(period[2]) - as.Date(period[1]))
+  return(days)
 }
 
 # -------------------------------------------------------------
@@ -998,12 +1076,14 @@ rbind.different <- function(x) {
 #' @importFrom raster mask crs extent crs<-
 .preview_mask_edges <- function(preview) {
   
+  polygons <- "polygons"
+  coords <- "coords"
   ext <- try(extent(preview))
   if (inherits(ext,"try-error")) return (preview)
   poly <- as(ext,"SpatialPolygons")
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
-  coords <- slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords")
+  coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], coords)
   coords[1,1] <- coords[1,1] + 0.08
   coords[2,1] <- coords[2,1] + 0.42
   coords[3,1] <- coords[3,1] - 0.08
@@ -1014,7 +1094,7 @@ rbind.different <- function(x) {
   coords[3,2] <- coords[3,2] - 0.38
   coords[4,2] <- coords[4,2] + 0.05
   coords[5,2] <- coords[5,2] + 0.38
-  slot(slot(slot(poly, "polygons")[[1]], "Polygons")[[1]], "coords") <- coords
+  slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], coords) <- coords
   preview_masked <- mask(preview,poly)
   return(preview_masked)
   

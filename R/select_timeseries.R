@@ -2,7 +2,7 @@
 #' 
 #' @description Selection is done according to aoi cloud cover (in case of optical data) 
 #' and temporal characteristics. Both optical and SAR records are supported as well as
-#' combined selection for different sensors across systems and data providers.
+#' combined selection for different products across systems and data providers.
 #'  
 #' @details For running the selection you have to process \link{calc_cloudcov} first.
 #' 
@@ -24,10 +24,10 @@
 #' The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 #' or shadows. Default is 80.
 #' @param satisfaction_value numeric percentage value at which mosaic is considered as cloud-free. Default is 98.
-#' @param prio_sensors character vector optioal. Sensor names ordered by priority. Selection is done in the order
-#' of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
-#' selection was not fullfilled by previous sensor. Sensor names must be provided as returned by \link{get_names}
-#' with one exception: MODIS products are summarized by 'MODIS'. These are the supported sensor names:
+#' @param prio_products character vector optioal. Product names ordered by priority. Selection is done in the order
+#' of prio_products starting with the first product Following products are included consecutively in case
+#' selection was not fullfilled by previous product. Product names must be provided as returned by \link{get_names}
+#' with one exception: MODIS products are summarized by 'MODIS'. These are the supported product names:
 #' \itemize{
 #' \item 'Sentinel-2'
 #' \item 'Sentinel-3'
@@ -37,7 +37,7 @@
 #' \item 'LANDSAT_MSS_C1'
 #' \item 'MODIS'
 #' }
-#' If prio_sensors is empty, given products in \code{records} will be selected in random order in case several are given.
+#' If prio_products is empty, given products in \code{records} will be selected in random order in case several are given.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
 #' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
 #' and at least three rows (each row representing one corner coordinate). 
@@ -64,7 +64,7 @@
 select_timeseries <- function(records,
                               num_timestamps, min_distance, max_sub_period,
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
-                              prio_sensors = c(), 
+                              prio_products = c(), 
                               aoi = NULL, dir_out = NULL, verbose = TRUE) {
   
   #### Pre-checks
@@ -84,7 +84,7 @@ The minimum number for select_timeseries is: 3"),3)
   params <- prep$params
 
   #### Main checks
-  .select_checks(records,aoi,params$period,num_timestamps,prio_sensors,params,dir_out,verbose)
+  .select_checks(records,aoi,params$period,num_timestamps,prio_products,params,dir_out,verbose)
   
   #### Main Process
   .select_start_info(mode="Time Series",params$sep)
@@ -97,7 +97,7 @@ The minimum number for select_timeseries is: 3"),3)
                           max_sub_period,
                           max_cloudcov_tile,
                           satisfaction_value,
-                          prio_sensors,
+                          prio_products,
                           dir_out,
                           params,
                           cols_initial)

@@ -37,6 +37,7 @@
 #' \item 'LANDSAT_MSS_C1'
 #' \item 'MODIS'
 #' }
+#' If prio_sensors is empty, given products in \code{records} will be selected in random order in case several are given.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
 #' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
 #' and at least three rows (each row representing one corner coordinate). 

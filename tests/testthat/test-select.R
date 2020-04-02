@@ -260,7 +260,7 @@ error_test_select <- function(records, aoi, tt) {
 # Target: Test errors
 records <- read.csv(construct_filepath(dir_records, SENTINEL2, SUFFIX$records))
 # with false input
-error_test_select(records, aoi = aoi_tunisia, tt)
+error_test_select(records, aoi = aoi_test, tt)
 
 # clean input
 # ------------------------------------
@@ -332,19 +332,19 @@ initialize_dir(tt$tmp)
 records <- read.csv(construct_filepath(dir_records, LANDSAT, SUFFIX$records))
 # Target: test unitemporal with Landsat
 clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_tunisia, dir_out = tt$tmp)
+                          aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test bitemporal with Landsat
 clean_bitemporal_wrapper(COLS, records, 
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp)
+                         aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test timeseries with Landsat
 clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp)
+                         aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 
 # TEST 6
@@ -353,19 +353,19 @@ initialize_dir(tt$tmp)
 records <- read.csv(construct_filepath(dir_records, MODIS, SUFFIX$records))
 # Target: test unitemporal with MODIS
 clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_tunisia, dir_out = tt$tmp)
+                          aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test bitemporal with MODIS
 clean_bitemporal_wrapper(COLS, records, 
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp)
+                         aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test timeseries with MODIS
 clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp)
+                         aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 
 # TEST 7
@@ -374,34 +374,34 @@ initialize_dir(tt$tmp)
 records <- read.csv(construct_filepath(dir_records, MIXED, SUFFIX$records))
 # Target: test unitemporal with mixed sensors without prio_sensors
 clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_tunisia, dir_out = tt$tmp)
+                          aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test bitemporal with mixed sensors without prio_sensors
 clean_bitemporal_wrapper(COLS, records, 
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp)
+                         aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test timeseries with mixed sensors without prio_sensors
 clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp)
+                         aoi = aoi_test, dir_out = tt$tmp)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test unitemporal with mixed sensors with prio_sensors
 clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_tunisia, dir_out = tt$tmp, prio_sensors = prio_sensors)
+                          aoi = aoi_test, dir_out = tt$tmp, prio_sensors = prio_sensors)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test bitemporal with mixed sensors with prio_sensors
 clean_bitemporal_wrapper(COLS, records, 
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp, prio_sensors = prio_sensors)
+                         aoi = aoi_test, dir_out = tt$tmp, prio_sensors = prio_sensors)
 finish_dir(tt$tmp)
 initialize_dir(tt$tmp)
 # Target: test timeseries with mixed sensors with prio_sensors
 clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
                          min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_tunisia, dir_out = tt$tmp, prio_sensors = prio_sensors)
+                         aoi = aoi_test, dir_out = tt$tmp, prio_sensors = prio_sensors)
 finish_dir(tt$tmp)

@@ -52,7 +52,7 @@
         records_in_s <- .select_within_period(records_in_s,period_s,params$date_col) # subset to records within period_s
       }
       
-      dates_s <- sapply(records_in_s[[params$date_col]],as.Date)
+      dates_s <- sapply(records_in_s[[params$date_col]], as.Date)
       
       if (!is.null(period_new)) {
         period_new_dates <- sapply(period_new,as.Date)

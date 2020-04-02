@@ -1145,17 +1145,17 @@ rbind.different <- function(x) {
 #' @noRd
 .aggr_rasters <- function(x, x_names, aoi, factor = 750000, dir_out) {
   
-  aoi_area <- .calc_aoi_area(aoi)
+  aoi_area <- .calc_aoi_area(aoi) # km2
   adj <- aoi_area / factor
   res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
   target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
   # do not reduce the resolution to the equivalent of double the Sentinel-2 preview resolution
   if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref
-  adj <- ifelse(adj < 2 && adj > 1,2,adj)
+  adj <- ifelse(adj < 2 && adj > 1, 2, adj)
   if (adj > 1) {
     x_adj <- sapply(1:length(x),function(i) {
-      r_save_path <- normalizePath(file.path(dir_out,paste0(x_names[i],"_aggr.tif")))
+      r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
       if (file.exists(r_save_path)) return(r_save_path)
       r_load <- stack(x[[i]])
       r_aggr <- aggregate(r_load,adj)

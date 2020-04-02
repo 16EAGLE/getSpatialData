@@ -37,10 +37,10 @@
 #' @noRd
 .select_cmask_mos <- function(s, aoi, dir_out) {
   
-  vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n")
-  save_str <- paste0(sample(vec,10),collapse = "")
+  save_str <- paste0(sample(LETTERS[1:20], 10),collapse = "")
   save_path_cmos <- file.path(dir_out,paste0(save_str,"cloud_mask_mosaic_timestamp",s$timestamp,".tif"))
   cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths,aoi,save_path_cmos)
+  rm(cMask_mosaic)
   .delete_tmp_files(raster::tmpDir())
   return(save_path_cmos)
   
@@ -69,8 +69,7 @@
   
   r <- "RasterLayer"
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
-  vec <- c("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","")
-  save_str <- paste0(sample(vec,10),"_",collapse = "")
+  save_str <- paste0(sample(LETTERS[1:20], 10),"_",collapse = "")
   save_pmos <- file.path(tmp_dir,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
   layers <- c("red","green","blue")
   
@@ -329,18 +328,25 @@
   for (i in 1:length(selected)) {
     
     s <- selected[[i]]
-    id_sel <- s$ids
-    #A cloud mask mosaic
-    save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
-    #B preview mosaic
-    save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
-                                          cloud_mask_col=params$cloud_mask_col,
-                                          preview_col=params$preview_col,
-                                          sensors_given=params$product_group)
+    ids_selected <- s$ids
+    
+    if (isFALSE(.is_empty_array(ids_selected))) {
+      #A cloud mask mosaic
+      save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
+      #B preview mosaic
+      save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
+                                            cloud_mask_col=params$cloud_mask_col,
+                                            preview_col=params$preview_col,
+                                            sensors_given=params$product_group)
+    } else {
+      save_path_cmos <- NA
+      save_path_pmos <- NA
+    }
+    
     #C add columns to records
     insert <- c(TRUE,s$timestamp,save_path_pmos,save_path_cmos)
     for (j in 1:length(cols)) {
-      records[which(records[[params$identifier]] %in% id_sel),cols[j]] <- insert[j]      
+      records[which(records[[params$identifier]] %in% ids_selected),cols[j]] <- insert[j]      
     }
     # get print info
     console_info[[i]] <- .select_final_info(s)

@@ -11,19 +11,21 @@
 #' @keywords internal
 #' @noRd
 .cloudcov_supported <- function(record) {
-  record_id <- tolower(record[[name_record_id()]])
-  product_id <- tolower(record[[name_product()]])
-  supported_modis <- .cloudcov_get_supported_modis()
-  supported_modis <- tolower(paste0(name_product_group_modis(), "_", supported_modis))
-  if (startsWith(product_id, tolower(name_product_group_modis()))){
-    return(any(startsWith(supported_modis, substr(product_id, 1, 13))))
-  } else if (startsWith(product_id, tolower(name_product_group_landsat())) || product_id == tolower(name_product_sentinel2())) {
-    return(TRUE)
-  } else if (product_id == tolower(name_product_sentinel3())) {
-    return(strsplit(record_id, "_")[[1]][2] == "ol")
-  } else {
-    return(FALSE)
+  MODIS <- name_product_group_modis()
+  given_product <- record[[name_product()]]
+  is_modis <- startsWith(given_product, MODIS)
+  is_sentinel3 <- startsWith(given_product, "S3")
+  given_product <- ifelse(startsWith(given_product, MODIS), MODIS, given_product)
+  cloudcov_products <- .cloudcov_products()
+  if (is_modis) {
+    modis_id <- substr(given_product, 1, 13)
+    is_supported <- .record_is_refl_modis(record)
+  } else if (is_sentinel3) {
+    is_supported <- .record_is_olci(record) # only OLCI
+  } else { # Sentinel-2, Landsat
+    is_supported <- given_product %in% cloudcov_products
   }
+  return(is_supported)
 }
 
 #' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given

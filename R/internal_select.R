@@ -138,44 +138,42 @@
                             params, dir_out) {
   
   name_product <- name_product()
+  name_product_group <- name_product_group()
   completed_info <- paste0("\nCompleted selection process for timestamp: ",timestamp)
   period_new <- c() # for selection of multiple sensors
   base_records <- c() # same 
   ids <- c() # same
   valid_pixels <- 0 # same
   
-  # generate prio_sensors randomly from given supported products
-  # check if select supported
-  
-  
-  if (is.null(prio_sensors) || length(prio_sensors) == 1) {
-    le_prio_is_one <- TRUE
-    prio_sensors <- "unspecified"
-  } else {
-    le_prio_is_one <- FALSE
+  if (is.null(prio_sensors)) {
+    prio_sensors <- .generate_random_prio_prods(records)
   }
+  single_prio_product <- length(prio_sensors) == 1 # single product given
   
-  for (s in prio_sensors){
+  for (s in prio_sensors) {
     
-    if (le_prio_is_one) {
+    if (single_prio_product) {
       # in case prio_sensors is not given process all sensors together
       s_match <- which(!is.na(records[[name_product]]))  
     } else {
       # in case prio_sensors is given process sensors in this order
-      s_match <- which(records[[name_product]]==s)
-      # in case of MODIS as prio_sensor we get 'MODIS' from the user, which does not match any product name
+      s_match <- which(records[[name_product]]==s) # check for the product name
+      # the prio product can also be a product group in case of Landsat and MODIS
       if (length(s_match) == 0) {
-        s_match <- which(startsWith(records[[name_product]], s)) # all MODIS products
+        s_match <- which(startsWith(records[[name_product_group]], s))
       }
     }
     sensor_match <- intersect(which(records$sub_period==timestamp), s_match)
     if (length(sensor_match) == 0) { # no records for sensor s at timestamp
       .select_catch_empty_records(data.frame(), timestamp, s)
-      if (le_prio_is_one) break else next
+      if (single_prio_product) break else next
     } 
     
     tstamp <- list()
     tstamp$records <- records[sensor_match,]
+    # in case of Sentinel-3 and MODIS we might have non-supported products
+    # since the supported products cannot be identified through the product but the record_id
+    tstamp$records <- .select_filter_supported(tstamp$records)
     tstamp$records <- records[which(!is.na(records[[params$sub_period_col]])),]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
     .select_catch_empty_records(tstamp$records, timestamp, s)
@@ -190,7 +188,7 @@
       tstamp$records <- .select_within_period(records,tstamp$period,params$date_col) # subset to records in period
     }
     
-    delete_files <- ifelse(le_prio_is_one,FALSE,ifelse(s == tail(prio_sensors,1),TRUE,FALSE))
+    delete_files <- ifelse(single_prio_product,FALSE,ifelse(s == tail(prio_sensors,1),TRUE,FALSE))
     
     # run the selection process
     selected <- .select_process_sub(tstamp$records,
@@ -210,9 +208,9 @@
     if (class(selected) != "list") {
       .select_catch_empty_records(data.frame(),timestamp, s)
     } else {
-      if (isFALSE(le_prio_is_one)) {
+      if (isFALSE(single_prio_product)) {
         # if combined selection of multiple optical sensors
-        if (selected$valid_pixels < satisfaction_value) out("\nSelecting records for next sensor in 'prio_sensors'")
+        if (selected$valid_pixels < satisfaction_value) out("\nSelecting records for next product in 'prio_products'")
         base_records <- c(base_records,selected$cMask_paths) # for base mosaic for selection from next sensor
         ids <- unique(c(ids,selected$ids)) # ids of selected records
         names(base_records) <- ids
@@ -251,9 +249,26 @@
   } else if (startsWith(product, name_product_group_modis())) {
     is_supported <- .record_is_refl_modis(record)
   } else {
-    is_supported <- product %in% select_supported()
+    is_supported <- product %in% get_select_supported()
   }
   return(is_supported)
+}
+
+#' filters out products unsupported by select_* from a records data.frame
+#' according to the record_id in case of Sentinel-3 and through a more specific
+#' product name check in case of MODIS
+#' @param records data.frame
+#' @return records data.frame without unsupported products
+#' @keywords internal
+#' @noRd
+.select_filter_supported <- function(records) {
+  for (i in 1:NROW(records)) {
+    is_supported <- .is_select_supported(records[i,])
+    if (!is_supported) {
+      records <- records[-c(i),]
+    }
+  }
+  return(records)
 }
 
 #' generates a random order of prio_products for cases
@@ -263,16 +278,18 @@
 #' @keywords internal
 #' @noRd
 .generate_random_prio_prods <- function(records) {
-  # for MODIS use product_group, not product
-  MODIS <- name_product_group_modis()
+  LANDSAT_GROUP <- name_product_group_landsat()
+  MODIS_GROUP <- name_product_group_modis()
   given_products <- unique(records[[name_product()]])
-  given_products[which(startsWith(given_products, MODIS))] <- MODIS
   clean_products <- c()
   for (product in unique(given_products)) {
-    if (product %in% get_select_supported() || product == MODIS) {
+    is_supported_modis <- .record_is_refl_modis(data.frame(name_product() = product))
+    if (product %in% get_select_supported() || is_supported_modis) {
       clean_products <- append(clean_products, product)
     }
   }
-  prio_products <- sample(clean_products, length(products))
-  return(prio_products)
+  prio_products <- sample(clean_products, length(clean_products))
+  prio_products[which(grepl(LANDSAT_GROUP, prio_products))] <- LANDSAT_GROUP
+  prio_products[which(grepl(MODIS_GROUP, prio_products))] <- MODIS_GROUP
+  return(unique(prio_products))
 }

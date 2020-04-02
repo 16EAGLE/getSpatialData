@@ -31,6 +31,7 @@
   if(!isTRUE(inherits(records, "data.frame"))) out("Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'.", type = 3)
   if(!is.null(col.names)){
     catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
+    rm(catch)
   }
   if(as_df) records <- as.data.frame(records) else records <- st_sf(records, sfc_last = F)
   return(records)

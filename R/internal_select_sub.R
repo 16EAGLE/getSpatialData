@@ -1,3 +1,20 @@
+#' ---------------------------------------------------------------------
+#' @name internal_select_sub
+#' @description The selection process is distinguished into a main selection
+#' and a sub selection process. These are functions that conduct the process of a
+#' sub selection. A sub refers to one timestamp. The sub selection consists
+#' of a temporal and a spatial selection. 
+#' The process receives a collection of possible records for a specific timestamp and
+#' its sub-period. This sub-period can still contradict the user parameter
+#' 'max_sub_period' (maximum number of records accepeted to compose one timestamp).
+#' In this case the sub selection process choses records that have to be dumped.
+#' This results in a new temporal sub-period covering fewer dates and agreeing
+#' with 'max_sub_period'. This temporal sub selection process is followed by
+#' the spatial sub selection process, which is done through internal_select_mosaicking.
+#' @keywords internal
+#' @noRd
+#' ---------------------------------------------------------------------
+
 #' calls the different steps of selection for a sub-period
 #' this includes enforcement of max_cloudcov_tile and max_sub_period
 #' @param records data.frame subsetted to a sub-period.
@@ -25,7 +42,7 @@
                                 delete_files, params, dir_out, ts) {
   
   # the sub is an ordering of all available records per tile according to aoi cloud cover
-  # this is also the step where max_cloudcov_tile is ensured
+  # this is the step where max_cloudcov_tile is ensured
   sub <- .select_sub(records=records,
                      tiles=params$tileids,
                      max_cloudcov_tile=max_cloudcov_tile,
@@ -350,9 +367,8 @@
     period <- as.character(c(dfirst_date,dperiod_initial[2]))
     return(period)
   } else if (dfirst_date >= dperiod_initial[2]) {
-    out(paste0("Argument 'min_distance' between acquisitions used for dinstinguished timestamps is: ",min_distance," days.
-               The 'max_period' of covered acquisitions for one timestamp is: ",max_sub_period,". With the given 'num_timestamps'
-               these values disable the creation of a temporally consistent selection. Modify the values (most likely decrease (some of) them."),3)  
+    # theoretical first date of next sub is larger than the last date of period available in records
+    .select_temporally_incosistent_error(min_distance, max_sub_period)
   }
   
   }
@@ -367,10 +383,8 @@
 #' @keywords internal
 #' @noRd
 .select_exceeds_improvement <- function(min_improvement, cov_init, cov_aft) {
-  
   add_it <- min_improvement < (((cov_aft - cov_init) / cov_init) * 100)
   return(add_it)
-  
 }
 
 #' checks which records are within a period of time

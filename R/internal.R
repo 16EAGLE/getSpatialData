@@ -849,8 +849,7 @@ rbind.different <- function(x) {
   horizontal <- records$tile_number_horizontal[use_tile_num]
   vertical <- records$tile_number_vertical[use_tile_num]
   records[use_tile_num, TILEID] <- paste0(horizontal, vertical)
-  tileid_not_given <- is.na(records$tile_id) # recheck
-  
+
   # in many cases now value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
   records <- .make_tileid_sentinel2(records)
@@ -902,7 +901,7 @@ rbind.different <- function(x) {
   
   RECORDID <- name_record_id()
   TILEID <- name_tile_id()
-  SENTINEL2 <- "s2"
+  SENTINEL2 <- "S2"
   
   # Sentinel-2
   is_sentinel2 <- which(startsWith(records$record_id, SENTINEL2))
@@ -926,7 +925,7 @@ rbind.different <- function(x) {
   
   RECORDID <- name_record_id()
   TILEID <- name_tile_id()
-  SENTINEL3 <- "s3"
+  SENTINEL3 <- "S3"
   
   # Sentinel-3
   is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))

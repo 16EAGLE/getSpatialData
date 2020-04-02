@@ -98,6 +98,20 @@ quiet <- function(expr){
   out(paste0(sep,"\n           Starting ",mode," Selection Process           ",sep))
 }
 
+#' Throws error because temporal arguments disable a consistent selection
+#' @param min_distance numeric
+#' @param max_sub_period numeric
+#' @return nothing. Throws error
+#' @keywords internal
+#' @noRd
+.select_temporally_incosistent_error <- function(min_distance, max_sub_period) {
+  msg <- paste0("Argument 'min_distance' between acquisitions used for dinstinguished timestamps is: ",
+min_distance," days. The 'max_period' of covered acquisitions for one timestamp is: ",max_sub_period,". 
+With the given 'num_timestamps' these values disable creating a temporally consistent selection. 
+You could modify these values (most likely decrease (some of) them.")
+  out(msg, 3)
+}
+
 #' constructs a console message to be given at the end of a selection process
 #' @param selected_i list 'selected' holding for one timestamp: 'ids', 'cMask_paths', 'valid_pixels', 'timestamp'.
 #' @return \code{console_info} character vector holding the message
@@ -220,13 +234,14 @@ quiet <- function(expr){
 #' catches and communicates the case where the records data.frame of a sub-period is empty.
 #' @param records data.frame.
 #' @param ts numeric which timestamp.
+#' @param sensor character name of sensors
 #' @return nothing. Console communication.
 #' @keywords internal
 #' @noRd
-.select_catch_empty_records <- function(records, ts) {
+.select_catch_empty_records <- function(records, ts, sensor = "unspecified") {
   
   if (NROW(records) == 0) {
-    out(paste0("No records at timestamp: ",ts,". You could e.g.:\n
+    out(paste0("No records at timestamp: ",ts," for sensor: '", sensor,'". You could e.g.:\n
                - decrease 'num_timestamps',
                - decrease 'min_distance',
                - increase 'max_period',

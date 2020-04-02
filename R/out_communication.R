@@ -235,16 +235,16 @@ You could modify these values (most likely decrease (some of) them.")
 #' @param records data.frame.
 #' @param ts numeric which timestamp.
 #' @param sensor character name of sensors
-#' @return nothing. Console communication.
+#' @return nothing. Optionally console warning.
 #' @keywords internal
 #' @noRd
 .select_catch_empty_records <- function(records, ts, sensor = "unspecified") {
   
   if (NROW(records) == 0) {
-    out(paste0("No records at timestamp: ",ts," for sensor: '", sensor, "'. You could e.g.:\n- decrease 'num_timestamps',
+    out(paste0("No records at timestamp: ",ts," for product: '", sensor, "'. You could e.g.:\n- decrease 'num_timestamps',
                - decrease 'min_distance',
                - increase 'max_period',
-               - add another sensor.\n"),2)
+               - add another product.\n"),2)
   }
   
 }
@@ -265,6 +265,7 @@ You could modify these values (most likely decrease (some of) them.")
   out(paste0(sep,"\nSelection Process Overall Summary",sep))
   out(paste0("- Number of timestamps: ",num_timestamps,"\n"))
   summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
+  rm(summary)
   w <- csw_SAR[[2]]
   if (!is.na(w)) out(w,type=2) # warning
   ids <- lapply(selected_SAR,function(x) {return(x[["ids"]])})

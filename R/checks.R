@@ -177,25 +177,25 @@
   
 }
 
-
 #' checks the prio_sensors argument
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
 #' @return nothing. In case of flawed input in prio_sensors: error.
 #' @keywords internal
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors) {
-  .check_type(prio_sensors, "prio_sensors", "character")
-  MODIS <- name_product_group_modis()
-  optical_sensors <- .cloudcov_products()
-  some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
-    check <- x %in% optical_sensors
-    check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
-  })))
-  if (some_wrong) {
-    out("Argument 'prio_sensors' has to be provided with sensor names in the 
-        same format as returned by get_select_supported() except MODIS products ('MODIS')",3)
+  if (!.is_empty_array(prio_sensors)) {
+    .check_type(prio_sensors, "prio_sensors", "character")
+    MODIS <- name_product_group_modis()
+    optical_sensors <- get_cloudcov_supported() # because Sentinel-1 is not allowed for prio_products
+    some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
+      check <- x %in% optical_sensors || x %in% c("Landsat", "MODIS")
+      check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
+    })))
+    if (some_wrong) {
+      out("Argument 'prio_products' has to be provided with sensor names in the 
+        same format as returned by get_select_supported()",3)
+    }
   }
-  
 }
 
 #' checks if all files in a vector of paths are on disk

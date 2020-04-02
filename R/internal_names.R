@@ -234,6 +234,34 @@ name_product_group_sentinel <- function() {
   return("Sentinel")
 }
 
+#' returns optical product names supported by calc_cloudcov
+#' @return character vector of product names
+#' @keywords internal
+#' @noRd
+.cloudcov_products <- function() {
+  MODIS <- name_product_group_modis()
+  optical_sensors <- c(name_product_landsat8(), 
+                       name_product_landsat7(), 
+                       name_product_landsat5(), 
+                       name_product_landsatmss(),
+                       name_product_sentinel2(), 
+                       name_product_sentinel3())
+  optical_sensors <- append(optical_sensors, .cloudcov_select_get_supported_modis())
+  return(optical_sensors)
+}
+
+#' get the cloudcov-supported MODIS names
+#' @return character vector of MODIS names
+#' @keywords internal
+#' @noRd
+.cloudcov_select_get_supported_modis <- function() {
+  return(c("MODIS_MCD18A1", "MODIS_MCD18A2", "MODIS_MCD19A1", 
+           "MODIS_MOD09A1", "MODIS_MOD09CMG", "MODIS_MOD09GA", 
+           "MODIS_MOD09GQ", "MODIS_MOD09Q1", "MODIS_MODOCGA", 
+           "MODIS_MYD09A1", "MODIS_MYD09CMG", "MODIS_MYD09GA", 
+           "MODIS_MYD09GQ", "MODIS_MYD09Q1", "MODIS_MYDOCGA"))
+}
+
 # cloudcov column names wrappers
 #' get column names added in calc_hot_cloudcov
 #' @return list of character column names.
@@ -255,14 +283,4 @@ name_product_group_sentinel <- function() {
 .cloudcov_get_needed_cols <- function() {
   return(c(name_product(), name_product_group(), name_record_id(), name_sensor(), 
            name_cloudcov(), name_preview_url()))
-}
-
-#' get the cloudcov-supported MODIS names
-#' @return character vector of MODIS names
-#' @keywords internal
-#' @noRd
-.cloudcov_get_supported_modis <- function() {
-  return(tolower(c("MCD18A1.006", "MCD18A2.006", "MCD19A1.006", "MOD09A1.006", "MOD09CMG.006", 
-                   "MOD09GA.006", "MOD09GQ.006", "MOD09Q1.006", "MODOCGA.006", "MYD09A1.006", 
-                   "MYD09CMG.006", "MYD09GA.006", "MYD09GQ.006", "MYD09Q1.006", "MYDOCGA.006")))
 }

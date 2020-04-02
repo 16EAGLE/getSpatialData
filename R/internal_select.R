@@ -41,6 +41,9 @@
                          params,
                          cols_initial) {
   
+  # if any SAR records given create a tileid for these
+  
+  
   # if all are SAR records
   if (has_SAR == 100) {
     records <- .select_all_SAR(records, max_sub_period,
@@ -104,7 +107,7 @@
   w <- w[which(w!="NULL")]
   summary <- .out_vector(csw[[1]])
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
-  records <- subset(records,select=-sub_period) # remove sub-period column
+  records[["sub_period"]] <- NULL # remove sub-period column
   records <- .column_summary(records,cols_initial)
   rm(summary, to_console)
   
@@ -135,15 +138,16 @@
                             satisfaction_value, prio_sensors = NULL,
                             params, dir_out) {
   
+  name_product <- name_product()
   completed_info <- paste0("\nCompleted selection process for timestamp: ",timestamp)
-  period_new <- c() # for selection from multiple sensors
+  period_new <- c() # for selection of multiple sensors
   base_records <- c() # same 
   ids <- c() # same
   valid_pixels <- 0 # same
   
   if (is.null(prio_sensors) || length(prio_sensors) == 1) {
     le_prio_is_one <- TRUE
-    prio_sensors <- "none"
+    prio_sensors <- "unspecified"
   } else {
     le_prio_is_one <- FALSE
   }
@@ -152,25 +156,26 @@
     
     if (le_prio_is_one) {
       # in case prio_sensors is not given process all sensors together
-      s_match <- which(!is.na(records$product))  
+      s_match <- which(!is.na(records[[name_product]]))  
     } else {
       # in case prio_sensors is given process sensors in this order
-      s_match <- which(records$product==s)
+      s_match <- which(records[[name_product]]==s)
       # in case of MODIS as prio_sensor we get 'MODIS' from the user, which does not match any product name
       if (length(s_match) == 0) {
-        s_match <- which(startsWith(records$product, s)) # all MODIS products
+        s_match <- which(startsWith(records[[name_product]], s)) # all MODIS products
       }
     }
-    sensor_match <- intersect(which(records$sub_period==timestamp),s_match)
-    if (length(sensor_match) == 0) { # no records for sensors s at timestamp
-      if (le_prio_is_one) .select_catch_empty_records(data.frame(),timestamp) else break
+    sensor_match <- intersect(which(records$sub_period==timestamp), s_match)
+    if (length(sensor_match) == 0) { # no records for sensor s at timestamp
+      .select_catch_empty_records(data.frame(), timestamp, s)
+      if (le_prio_is_one) break else next
     } 
     
     tstamp <- list()
     tstamp$records <- records[sensor_match,]
     tstamp$records <- records[which(!is.na(records[[params$sub_period_col]])),]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
-    .select_catch_empty_records(tstamp$records, timestamp)
+    .select_catch_empty_records(tstamp$records, timestamp, s)
     tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
     
     if (timestamp > 1) {
@@ -200,7 +205,7 @@
                                     ts=timestamp)
     
     if (class(selected) != "list") {
-      .select_catch_empty_records(data.frame(),timestamp)
+      .select_catch_empty_records(data.frame(),timestamp, s)
     } else {
       if (isFALSE(le_prio_is_one)) {
         # if combined selection of multiple optical sensors
@@ -218,7 +223,7 @@
     }  
   }
   
-  if (length(ids) == 0) .select_catch_empty_records(data.frame(),timestamp)
+  if (length(ids) == 0) .select_catch_empty_records(data.frame(), timestamp, s)
   
   selected <- list(ids=ids,
                    cMask_paths=base_records,

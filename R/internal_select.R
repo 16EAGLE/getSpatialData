@@ -147,6 +147,7 @@
   # generate prio_sensors randomly from given supported products
   # check if select supported
   
+  
   if (is.null(prio_sensors) || length(prio_sensors) == 1) {
     le_prio_is_one <- TRUE
     prio_sensors <- "unspecified"
@@ -238,3 +239,40 @@
   
 }
 
+#' checks if a record is supported by select
+#' @param record data.frame single record line
+#' @return logical
+#' @keywords internal
+#' @noRd
+.is_select_supported <- function(record) {
+  product <- record[[name_product()]]
+  if (product == name_product_sentinel3()) {
+    is_supported <- .record_is_olci(record)
+  } else if (startsWith(product, name_product_group_modis())) {
+    is_supported <- .record_is_refl_modis(record)
+  } else {
+    is_supported <- product %in% select_supported()
+  }
+  return(is_supported)
+}
+
+#' generates a random order of prio_products for cases
+#' where user has not provided it
+#' @param records data.frame
+#' @return prio_products character vector randomly generated prio_products
+#' @keywords internal
+#' @noRd
+.generate_random_prio_prods <- function(records) {
+  # for MODIS use product_group, not product
+  MODIS <- name_product_group_modis()
+  given_products <- unique(records[[name_product()]])
+  given_products[which(startsWith(given_products, MODIS))] <- MODIS
+  clean_products <- c()
+  for (product in unique(given_products)) {
+    if (product %in% select_supported() || product == MODIS) {
+      clean_products <- append(clean_products, product)
+    }
+  }
+  prio_products <- sample(clean_products, length(products))
+  return(prio_products)
+}

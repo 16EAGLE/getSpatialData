@@ -13,70 +13,89 @@
 .select_SAR <- function(records, period_new_all = NULL,
                         max_sub_period, min_distance, num_timestamps, params) {
   
+  ids <- c()
+  period <- c()
+  
+  sensor_name <- name_product_sentinel1()
   subperiods <- unique(records$sub_period)
+  s_match <- which(records[[name_product()]] == sensor_name)
   # if the length of the current sub-period is longer than max_sub_period grade all dates in sub_period
   # according to the number of the given records for each date and calculate the distance of each record
   # from this date. Exclude records consecutively until max_sub_period is reached
   selected_SAR <- list() # to be filled with the selected lists of selected ids and sub-periods
   
-  for (s in 1:length(subperiods)) {
+  for (timestamp in 1:length(subperiods)) {
     
-    records_in_s <- records[which(records$sub_period==s),]
-    period_new <- period_new_all[[s]]
-    previous <- s-1
+    # sensor_match are all Sentinel-1 records of this sub-period
+    sensor_match <- intersect(which(s_match), which(records$sub_period==timestamp))
+    records_in_s <- records[sensor_match,]
     
-    if (s > 1) {
-      # enforce min_distance
-      # combined period of period_new from optical records (if not NULL because has_SAR == 100) and previous SAR period
-      previous_period <- .identify_period(c(period_new_all[[previous]],selected_SAR[[previous]]$period))
-      period_initial <- .identify_period(records_in_s[[params$date_col]])
-      # earliest date of next sub-period adjusted
-      first_date <- .select_force_distance(previous_period,min_distance)
-      period_s <- .select_handle_next_sub(first_date,period_initial,
-                                          min_distance,max_sub_period)
-      records_in_s <- .select_within_period(records_in_s,period_s,params$date_col) # subset to records within period_s
-    }
-    
-    dates_s <- sapply(records_in_s[[params$date_col]],as.Date)
-    
-    if (!is.null(period_new)) {
-      period_new_dates <- sapply(period_new,as.Date)
-      dates_combined <- c(dates_s,period_new_dates)
-      dates_s <- min(dates_combined,max(dates_combined))
-    }
-    
-    min_dates_s <- min(dates_s)
-    max_dates_s <- max(dates_s)
-    sub_period_le <- max_dates_s-min_dates_s
-    # grade dates and exclude consecutively
-    
-    if (sub_period_le > max_sub_period) {
-      dates_seq <- min_dates_s:max_dates_s
-      date_grade <- sapply(dates_seq,function(date) {
-        records_match <- which(dates_s==date)
-        # include one record per tile for the grading as for SAR several records on one date = no benefit
-        grade <- length(unique(records[records_match,params$tileid_col]))
-      })
-      
-      # calculate best_period based on date_grade, in combination with period_new
-      # and while ensuring max_sub_period
-      best_period <- .select_best_period(date_grade=date_grade, 
-                                         dates_seq=dates_seq, 
-                                         min_date=min(dates_seq), 
-                                         max_date=max(dates_seq),
-                                         period_new=period_new,
-                                         max_sub_period=max_sub_period)
-      
-      if (!is.na(best_period)) {
-        incl <- .select_subset_to_best_period(dates_s, best_period)
-        ids <- records_in_s[incl,params$identifier] # ids of selected records in upated sub-period
-      }
+    if (NROW(records_in_s) == 0) {
+      .select_catch_empty_records(records_in_s, timestamp, sensor_name)
     } else {
-      ids <- records_in_s[[params$identifier]] # all ids of records in sub-period
+      # Sentinel-1 records do not come with tile ids as known from other sensors
+      # thus, we create a temporary tile id from averaging footprints
+      records_in_s <- .make_tileid_sentinel1(records_in_s)
+      
+      period_new <- period_new_all[[timestamp]]
+      previous <- timestamp-1
+      
+      if (timestamp > 1) {
+        # enforce min_distance
+        # combined period of period_new from optical records (if not NULL because has_SAR == 100) and previous SAR period
+        previous_period <- .identify_period(c(period_new_all[[previous]],selected_SAR[[previous]]$period))
+        period_initial <- .identify_period(records_in_s[[params$date_col]])
+        # earliest date of next sub-period adjusted
+        first_date <- .select_force_distance(previous_period,min_distance)
+        period_s <- .select_handle_next_sub(first_date,period_initial,
+                                            min_distance,max_sub_period)
+        records_in_s <- .select_within_period(records_in_s,period_s,params$date_col) # subset to records within period_s
+      }
+      
+      dates_s <- sapply(records_in_s[[params$date_col]],as.Date)
+      
+      if (!is.null(period_new)) {
+        period_new_dates <- sapply(period_new,as.Date)
+        dates_combined <- c(dates_s,period_new_dates)
+        dates_s <- min(dates_combined,max(dates_combined))
+      }
+      
+      min_dates_s <- min(dates_s)
+      max_dates_s <- max(dates_s)
+      sub_period_le <- max_dates_s-min_dates_s
+      # grade dates and exclude consecutively
+      
+      if (sub_period_le > max_sub_period) {
+        dates_seq <- min_dates_s:max_dates_s
+        date_grade <- sapply(dates_seq,function(date) {
+          records_match <- which(dates_s==date)
+          # include one record per tile for the grading as for SAR several records on one date = no benefit
+          grade <- length(unique(records[records_match,params$tileid_col]))
+        })
+        
+        # calculate best_period based on date_grade, in combination with period_new
+        # and while ensuring max_sub_period
+        best_period <- .select_best_period(date_grade=date_grade, 
+                                           dates_seq=dates_seq, 
+                                           min_date=min(dates_seq), 
+                                           max_date=max(dates_seq),
+                                           period_new=period_new,
+                                           max_sub_period=max_sub_period)
+        
+        if (!is.na(best_period)) {
+          incl <- .select_subset_to_best_period(dates_s, best_period)
+          ids <- records_in_s[incl,params$identifier] # ids of selected records in upated sub-period
+        }
+      } else {
+        ids <- records_in_s[[params$identifier]] # all ids of records in sub-period
+      }
+      dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]),params$date_col]
+      period <- .identify_period(dates_sel)
     }
-    dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]),params$date_col]
-    period <- .identify_period(dates_sel)
-    selected_SAR[[s]] <- list("ids"=ids,"period"=period,"timestamp"=s)
+    
+    selected_SAR[[timestamp]] <- list("ids"=ids,
+                                      "period"=period,
+                                      "timestamp"=timestamp)
   }
   
   return(selected_SAR)
@@ -96,7 +115,7 @@
                             min_distance, num_timestamps,
                             params) {
   
-  selected_SAR <- .select_SAR(records,period_new = NULL,
+  selected_SAR <- .select_SAR(records, period_new_all = NULL,
                               max_sub_period,min_distance,
                               num_timestamps,params)
   records <- .select_finish_SAR(records, selected_SAR, num_timestamps, params)
@@ -117,18 +136,20 @@
 .select_some_SAR <- function(records, selected, max_sub_period,
                              min_distance, num_timestamps, params) {
   
+  period <- "period"
+  ids <- "ids"
   # SAR records shall be searched within max_sub_period combined
   # with the periods selected for optical 
-  period_new_all <- lapply(selected,function(x) return(x[["period"]]))
+  period_new_all <- lapply(selected,function(x) return(x[[period]]))
   selected_SAR <- .select_SAR(records,period_new_all,max_sub_period,min_distance,
                               num_timestamps,params)
   
   # add selected ids to selected list of optical records
   for (ts in 1:length(selected_SAR)) {
     ts_SAR <- selected_SAR[[ts]]
-    optical_ids <- selected[[ts]][["ids"]]
-    selected[[ts]][["ids"]] <- append(optical_ids,ts_SAR[["ids"]])
-    selected[[ts]][["period"]] <- .identify_period(c(selected[[ts]]$period,ts_SAR[["period"]]))
+    optical_ids <- selected[[ts]][[ids]]
+    selected[[ts]][[ids]] <- append(optical_ids,ts_SAR[[ids]])
+    selected[[ts]][[period]] <- .identify_period(c(selected[[ts]]$period,ts_SAR[[period]]))
   }
   return(selected)
   

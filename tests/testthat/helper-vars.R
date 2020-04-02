@@ -7,7 +7,7 @@ tt$resources$home <- file.path(tt$home, "resources")
 tt$resources$records <- file.path(tt$resources$home, "records")
 tt$resources$previews <- file.path(tt$resources$home, "previews")
 tt$resources$cmasks <- file.path(tt$resources$home, "cloud_masks")
-tt$resources$aoi <- file.path(tt$resources$home, "tunisia_aoi")
+tt$resources$aoi <- file.path(tt$resources$home, "aoi_test")
 dir_error <- "Cannot run tests because directory not found: "
 if (!dir.exists(tt$home)) stop(paste0(dir_error, tt$home))
 if (!dir.exists(tt$resources$home)) stop(paste0(dir_error, tt$resources))

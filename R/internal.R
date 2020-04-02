@@ -1265,11 +1265,11 @@ rbind.different <- function(x) {
   
 }
 
-#' returns TRUE if a vector has length 0
+#' returns TRUE if a vector or list has length 0/is.null() or is.na()
 #' @param x vector of any type
 #' @return logical
 #' @keywords internal
 #' @noRd
 .is_empty_array <- function(x) {
-  return(length(x) == 0)
+  return(length(x) == 0 || is.null(x) || is.na(x))
 }

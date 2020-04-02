@@ -228,14 +228,25 @@
 #' @keywords internal
 #' @noRd
 .select_check_revisit <- function(sensor, period, num_timestamps) {
-  revisit_times <- list(name_product_landsat8()=8,name_product_landsat7()=8,
-                        name_product_landsat5()=16,name_product_landsatmss()=16,
-                        "MODIS_MOD09A1_V6"=8,"MODIS_MYD09A1_V6"=8,"MODIS_MOD09Q1_V6"=8,
-                        "MODIS_MOD09Q1_V6"=8,"MODIS_MOD09GA_V6"=1,"MODIS_MYD09GA_V6"=1,
-                        "MODIS_MOD09GQ_V6"=1,"MODIS_MYD09GQ_V6"=1,
-                        "MODIS_MOD09CMG_V6"=1,"MODIS_MYD09CMG_V6"=1,
-                        name_product_sentinel2()=5, name_product_sentinel3()=2,
-                        name_product_group_modis()=2)
+  revisit_times <- list()
+  revisit_times[[name_product_sentinel1()]] <- 4
+  revisit_times[[name_product_sentinel2()]] <- 5
+  revisit_times[[name_product_sentinel3()]] <- 2
+  revisit_times[[name_product_landsatmss()]] <- 16
+  revisit_times[[name_product_landsat5()]] <- 16
+  revisit_times[[name_product_landsat7()]] <- 8
+  revisit_times[[name_product_landsat8()]] <- 8
+  revisit_times[[name_product_group_modis()]] <- 2
+  revisit_times[["MODIS_MOD09A1_V6"]] <- 8
+  revisit_times[["MODIS_MYD09A1_V6"]] <- 8
+  revisit_times[["MODIS_MOD09Q1_V6"]] <- 8
+  revisit_times[["MODIS_MOD09Q1_V6"]] <- 8
+  revisit_times[["MODIS_MOD09GA_V6"]] <- 1
+  revisit_times[["MODIS_MYD09GA_V6"]] <- 1
+  revisit_times[["MODIS_MOD09GQ_V6"]] <- 1
+  revisit_times[["MODIS_MYD09GQ_V6"]] <- 1
+  revisit_times[["MODIS_MOD09CMG_V6"]] <- 1
+  revisit_times[["MODIS_MYD09CMG_V6"]] <- 1
   r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)

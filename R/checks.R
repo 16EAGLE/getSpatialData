@@ -186,13 +186,14 @@
 .select_check_prio_sensors <- function(prio_sensors) {
   .check_type(prio_sensors, "prio_sensors", "character")
   MODIS <- name_product_group_modis()
-  optical_sensors <- .cloudcov_select_products()
+  optical_sensors <- .cloudcov_products()
   some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
     check <- x %in% optical_sensors
     check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
   })))
   if (some_wrong) {
-    out("Argument 'prio_sensors' has to be provided with sensor names in the same format as returned by get_names() except MODIS products ('MODIS')",3)
+    out("Argument 'prio_sensors' has to be provided with sensor names in the 
+        same format as returned by get_select_supported() except MODIS products ('MODIS')",3)
   }
   
 }

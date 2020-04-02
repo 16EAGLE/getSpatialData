@@ -4,7 +4,6 @@
 #' The purpose is generic naming and simple maintenance. A name can for example
 #' be a column name of the records data.frame.
 #' @keywords internal
-#' @noRd
 #' ---------------------------------------------------------------------
 
 #' Column names as determined by getSpatialData

@@ -4,7 +4,6 @@
 #' This internal file should only contain generic functions that can be
 #' used multiple times within the package.
 #' @keywords internal
-#' @noRd
 #' ---------------------------------------------------------------------
 
 #' creates a temp dir (tmp_dir) and/or deletes it

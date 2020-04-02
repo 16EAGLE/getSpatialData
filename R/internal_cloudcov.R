@@ -3,7 +3,6 @@
 #' @description This is the main backend of the cloudcov functionality.
 #' Frontend and processing (incl. reload actions) are located in calc_cloudcov.
 #' @keywords internal
-#' @noRd
 #' ---------------------------------------------------------------------
 
 #' checks if a record is supported by calc_cloudcov() or not

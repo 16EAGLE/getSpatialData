@@ -269,7 +269,7 @@
   given_products[which(startsWith(given_products, MODIS))] <- MODIS
   clean_products <- c()
   for (product in unique(given_products)) {
-    if (product %in% select_supported() || product == MODIS) {
+    if (product %in% get_select_supported() || product == MODIS) {
       clean_products <- append(clean_products, product)
     }
   }

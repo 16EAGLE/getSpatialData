@@ -144,6 +144,9 @@
   ids <- c() # same
   valid_pixels <- 0 # same
   
+  # generate prio_sensors randomly from given supported products
+  # check if select supported
+  
   if (is.null(prio_sensors) || length(prio_sensors) == 1) {
     le_prio_is_one <- TRUE
     prio_sensors <- "unspecified"

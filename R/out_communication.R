@@ -241,8 +241,7 @@ You could modify these values (most likely decrease (some of) them.")
 .select_catch_empty_records <- function(records, ts, sensor = "unspecified") {
   
   if (NROW(records) == 0) {
-    out(paste0("No records at timestamp: ",ts," for sensor: '", sensor,'". You could e.g.:\n
-               - decrease 'num_timestamps',
+    out(paste0("No records at timestamp: ",ts," for sensor: '", sensor, "'. You could e.g.:\n- decrease 'num_timestamps',
                - decrease 'min_distance',
                - increase 'max_period',
                - add another sensor.\n"),2)

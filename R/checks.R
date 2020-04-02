@@ -184,11 +184,9 @@
 #' @keywords internal
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors) {
-  MODIS <- name_product_group_modis()
   .check_type(prio_sensors, "prio_sensors", "character")
-  optical_sensors <- c(name_product_landsat8(), name_product_landsat7(), 
-                       name_product_landsat5(), name_product_landsatmss(),
-                        name_product_sentinel2(), name_product_sentinel3(), MODIS)
+  MODIS <- name_product_group_modis()
+  optical_sensors <- .cloudcov_select_products()
   some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
     check <- x %in% optical_sensors
     check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
@@ -307,8 +305,7 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            par, dir_out, verbose) {
   
-  if (is.null(dir_out)) dir_out <- .check_dir_out(dir_out)
-  if (!dir.exists(dir_out)) out("Argument 'dir_out' does not exists",type=3)
+  dir_out <- .check_dir_out(dir_out)
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   # check if all columns are provided
@@ -477,6 +474,25 @@
     }
   }
   return(x)
+}
+
+#' checks if a record is a Sentinel-3 OLCI record
+#' @param record data.frame one line
+#' @return logical
+#' @keywords internal
+#' @noRd
+.record_is_olci <- function(record) {
+  return(strsplit(record[[name_record_id()]], "_")[[1]][2] == "OL")
+}
+
+#' checks if a record is a MODIS reflectance/radiance product
+#' @param record data.frame one line
+#' @return logical
+#' @keywords internal
+#' @noRd
+.record_is_refl_modis <- function(record) {
+  # e.g. 'MODIS_MCD19A1'
+  return(any(startsWith(.cloudcov_products(), substr(record[[name_product()]], 1, 13)))) 
 }
 
 

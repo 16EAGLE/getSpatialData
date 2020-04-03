@@ -283,7 +283,8 @@
   given_products <- unique(records[[name_product()]])
   clean_products <- c()
   for (product in unique(given_products)) {
-    is_supported_modis <- .record_is_refl_modis(data.frame(name_product() = product))
+    name_product <- name_product()
+    is_supported_modis <- .record_is_refl_modis(data.frame(name_product = product))
     if (product %in% get_select_supported() || is_supported_modis) {
       clean_products <- append(clean_products, product)
     }

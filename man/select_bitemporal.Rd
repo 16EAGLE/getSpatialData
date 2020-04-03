@@ -6,48 +6,39 @@
 \usage{
 select_bitemporal(records, min_distance, max_sub_period,
   min_improvement = 5, max_cloudcov_tile = 80,
-  satisfaction_value = 98, prio_sensors = c(), aoi = NULL,
+  satisfaction_value = 98, prio_products = c(), aoi = NULL,
   dir_out = NULL, verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
-Records will be selected from these records.}
+Records will be selected from these records. If \code{prio_products} is provided only these products will be handled.}
 
 \item{min_distance}{numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
 then the next timestamp will not include scenes in <= 10 days after 20th May 2019. 
-The first scene the next timestamp could include would be the 31st May 2019 thus.}
+The first scene that the next timestamp could include would be the 31st May 2019, thus.}
 
-\item{max_sub_period}{numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
+\item{max_sub_period}{numeric maximum number of days to be used for creating a mosaic per timestamp if mosaicking is needed. 
 This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).}
 
-\item{min_improvement}{numeric the minimum increase of valid pixels percentage in a tile when adding record.
-This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.}
+\item{min_improvement}{numeric the minimum increase of valid pixels percentage in a tile when adding a record.
+This protects from adding large amounts of records that improve coverage by only a few pixels. Default is 100.}
 
 \item{max_cloudcov_tile}{numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
-The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
+The assumption is that a high cloud cover in a scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 or shadows. Default is 80.}
 
 \item{satisfaction_value}{numeric percentage value at which mosaic is considered as cloud-free. Default is 98.}
 
-\item{prio_sensors}{character vector optioal. Sensor names ordered by priority. Selection is done in the order
-of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
-selection was not fullfilled by previous sensor. Sensor names must be provided as returned by \link{get_names}
-with one exception: MODIS products are summarized by 'MODIS'. These are the supported sensor names:
-\itemize{
-\item 'Sentinel-2'
-\item 'Sentinel-3'
-\item 'LANDSAT_8_C1'
-\item 'LANDSAT_ETM_C1'
-\item 'LANDSAT_TM_C1'
-\item 'LANDSAT_MSS_C1'
-\item 'MODIS'
-}}
+\item{prio_products}{character vector optional. Product names ordered by priority. Selection is done in the order
+of prio_products starting with the first product. Following products are included consecutively in case
+selection was not fullfilled by previous product. Product names must be provided as returned by \link{get_select_supported}.
+Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
+If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
 polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
 and at least three rows (each row representing one corner coordinate). 
-If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
 Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
 If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
 
@@ -69,7 +60,7 @@ deleted before returning \code{records}.}
 \description{
 Selection is done according to aoi cloud cover (in case of optical data) 
 and temporal characteristics. Both optical and SAR records are supported as well as
-combined selection for different sensors across systems and data providers.
+combined selection for different products across systems and data providers.
 }
 \details{
 For running the selection you have to process \link{calc_cloudcov} first.

@@ -387,10 +387,13 @@
   raster_classes <- c("RasterLayer", "RasterStack", "RasterBrick")
   is_raster <- class(input) %in% raster_classes
   check_possible <- !is.null(input)
-  check_possible <- ifelse(inherits(check_possible, "list"), check_possible[[1]], check_possible[1])
+  is_list <- inherits(check_possible, "list")
+  check_possible <- ifelse(is_list, check_possible[[1]], check_possible[1])
+  print(check_possible)
   if (check_possible) {
     if (!is_raster) {
       check_possible <- !is.na(input)
+      check_possible <- ifelse(is_list, check_possible[[1]], check_possible[1])
     }
     if (check_possible) {
       if (!inherits(input, type)) {

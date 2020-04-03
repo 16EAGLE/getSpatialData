@@ -172,7 +172,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
         } else {
           .check_login(records=record)
           record_preview <- tryCatch({
-            get_previews(record,dir_out=dir_out,verbose=F, as_df = F)
+            get_previews(record,dir_out=dir_out,verbose=F)
           },
           error=function(err) {
             return(err)
@@ -181,7 +181,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       } else {
         .check_login(records=record)
         record_preview <- tryCatch({
-          get_previews(record,dir_out=dir_out,verbose=F, as_df = F)
+          get_previews(record,dir_out=dir_out,verbose=F)
         },
         error=function(err) {
           return(err)

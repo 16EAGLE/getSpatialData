@@ -135,7 +135,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     startTime <- Sys.time()
     record <- as.data.frame(records[i,])
     id <- record[[identifier]]
-    sensor <- record$product
+    sensor <- record[[name_product()]]
     
     if (any(is.na(c(id,sensor)))) {
       return(.handle_cc_skip(record,FALSE,dir_out))
@@ -163,13 +163,9 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     
     # if preview exists not yet: get it. Then run HOT
     if (cloudcov_supported) {
-      record_preview <- NULL
-    } else {
-      
       prev_col_given <- preview_file %in% names(record)
       if (prev_col_given) {
-        
-        pfile <- record$preview_file
+        pfile <- record[[preview_file]]
         preview_exists <- ifelse(is.na(pfile) || pfile == "NONE" , FALSE, file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
@@ -201,6 +197,8 @@ calc_cloudcov <- function(records, maxDeviation = 5,
           return(NULL)
         })
       }
+    } else {
+      record_preview <- NULL
     }
     
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
@@ -208,7 +206,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     
     preview_exists <- ifelse(inherits(record_preview,"data.frame"),
                              ifelse(preview_file %in% names(record_preview),
-                                    file.exists(record_preview$preview_file),FALSE),FALSE)
+                                    file.exists(record_preview[[preview_file]]),FALSE),FALSE)
     
     get_preview_failed <- is.null(record_preview) || class(record_preview) %in% c("error","try-error") || isFALSE(preview_exists)
     if (get_preview_failed) {

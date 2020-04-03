@@ -172,7 +172,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
         } else {
           .check_login(records=record)
           record_preview <- tryCatch({
-            get_previews(record,dir_out=dir_out,verbose=F)
+            get_previews(record,dir_out=dir_out,verbose=F, as_df = F)
           },
           error=function(err) {
             return(err)
@@ -181,7 +181,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       } else {
         .check_login(records=record)
         record_preview <- tryCatch({
-          get_previews(record,dir_out=dir_out,verbose=F)
+          get_previews(record,dir_out=dir_out,verbose=F, as_df = F)
         },
         error=function(err) {
           return(err)
@@ -204,9 +204,15 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
-    preview_exists <- ifelse(inherits(record_preview,"data.frame"),
-                             ifelse(preview_file %in% names(record_preview),
-                                    file.exists(record_preview[[preview_file]]),FALSE),FALSE)
+    if (inherits(record_preview, "data.frame")) {
+      preview_exists <- preview_file %in% names(record_preview)
+      if (preview_exists) {
+        preview_exists <- !is.na(record_preview[[preview_file]])
+        if (preview_exists) {
+          preview_exists <- file.exists(record_preview[[preview_file]])
+        }
+      }
+    }
     
     get_preview_failed <- is.null(record_preview) || class(record_preview) %in% c("error","try-error") || isFALSE(preview_exists)
     if (get_preview_failed) {

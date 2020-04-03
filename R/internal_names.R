@@ -255,10 +255,10 @@ name_product_group_sentinel <- function() {
 #' @keywords internal
 #' @noRd
 .cloudcov_select_get_supported_modis <- function() {
-  return(c("MODIS_MCD19A1", "MODIS_MOD09A1", "MODIS_MOD09CMG", "MODIS_MOD09GA", 
-           "MODIS_MOD09GQ", "MODIS_MOD09Q1", "MODIS_MODOCGA", 
-           "MODIS_MYD09A1", "MODIS_MYD09CMG", "MODIS_MYD09GA", 
-           "MODIS_MYD09GQ", "MODIS_MYD09Q1", "MODIS_MYDOCGA"))
+  return(c("MODIS_MCD19A1_V6", "MODIS_MOD09A1_V6", "MODIS_MOD09GA_V6", 
+           "MODIS_MOD09GQ_V6", "MODIS_MOD09Q1_V6", "MODIS_MODOCGA_V6", 
+           "MODIS_MYD09A1_V6", "MODIS_MYD09GA_V6", "MODIS_MYD09GQ_V6", 
+           "MODIS_MYD09Q1_V6", "MODIS_MYDOCGA_V6")
 }
 
 # cloudcov column names wrappers

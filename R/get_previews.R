@@ -15,7 +15,7 @@
 #' @importFrom sf st_transform st_coordinates st_sfc
 #' @export
 
-get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
+get_previews <- function(records, dir_out = NULL, ..., as_sf = TRUE, verbose = TRUE){
   
   records <- .check_records(records, as_df = F) # ensure, it's sf
   
@@ -113,6 +113,6 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
     })
   }, USE.NAMES = F, SIMPLIFY = F))
   
-  records <- .check_records(records)
+  records <- .check_records(records, as_df = !as_sf)
   return(.column_summary(records, records.names))
 }

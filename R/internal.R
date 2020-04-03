@@ -737,17 +737,21 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @noRd
 rbind.different <- function(x) {
   
-  x.bind <- x[[1]]
-  for(i in 2:length(x)){
-    x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
-    y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
-    
-    x.bind[, c(as.character(y.diff))] <- NA
-    x[[i]][, c(as.character(x.diff))] <- NA
-    
-    x.bind <- rbind(x.bind, x[[i]])
+  if (.is_empty_array(x)) {
+    return(x)
+  } else {
+    x.bind <- x[[1]]
+    for(i in 2:length(x)){
+      x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
+      y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
+      
+      x.bind[, c(as.character(y.diff))] <- NA
+      x[[i]][, c(as.character(x.diff))] <- NA
+      
+      x.bind <- rbind(x.bind, x[[i]])
+    }
+    return(x.bind)
   }
-  return(x.bind)
 }
 
 # -------------------------------------------------------------
@@ -1268,15 +1272,17 @@ rbind.different <- function(x) {
   }
 }
 
-#' removes NULLs and NAs from list.
-#' @param x list.
+#' removes NULLs and NAs from list or data.frame.
+#' @param x list data.frame.
 #' @return x list without NULLs and NAs.
 #' @keywords internal
 #' @noRd
 .gsd_compact <- function(x) {
   
-  not_na <- sapply(x,function(y) {return((!is.na(y) && !is.null(y)))})
-  x <- x[not_na]
+  if (inherits(x, "list")) {
+    not_na <- sapply(x,function(y) {return((!is.na(y) && !is.null(y)))})
+    x <- x[not_na]
+  }
   return(x)
   
 }

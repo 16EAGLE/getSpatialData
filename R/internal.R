@@ -1008,12 +1008,13 @@ rbind.different <- function(x) {
 .make_tileid_modis <- function(records) {
   
   RECORD_ID <- name_record_id()
+  PRODUCT <- name_product()
   TILEID <- name_tile_id()
   MODIS <- name_product_group_modis()
   POINT_SEP <- "\\."
   
-  record_ids <- records[[RECORD_ID]]
-  is_modis <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, MODIS)))
+  product_names <- records[[PRODUCT]]
+  is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, MODIS)))
   if (!.is_empty_array(is_modis)) {
     no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {

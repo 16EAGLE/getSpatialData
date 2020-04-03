@@ -13,7 +13,7 @@
 #' \item Landsat 5-8
 #' \item MODIS
 #' }
-#' For the supported product names call \link{get_select_supported}.
+#' For the precise supported product names call \link{get_select_supported}.
 #' When aiming at mixing two or more optical products you may order them by priority
 #' through \code{prio_products}.
 #' Coupled selection of optical and SAR sensors is possible. Optical records will always
@@ -24,24 +24,24 @@
 #' temporary files are saved. This folder will be deleted at the end of the function call.
 #' 
 #' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
-#' Records will be selected from these records.
+#' Records will be selected from these records. If \code{prio_products} is provided only these products will be handled.
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 #' For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
 #' then the next timestamp will not include scenes in <= 10 days after 20th May 2019. 
-#' The first scene the next timestamp could include would be the 31st May 2019 thus.
-#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
+#' The first scene that the next timestamp could include would be the 31st May 2019, thus.
+#' @param max_sub_period numeric maximum number of days to be used for creating a mosaic per timestamp if mosaicking is needed. 
 #' This determines how temporally close together the selected records for one timestamp are (if mosaicking is needed).
-#' @param min_improvement numeric the minimum increase of valid pixels percentage in a tile when adding record.
-#' This protects from adding masses of records that improve coverage by only a few pixels. Default is 100.
+#' @param min_improvement numeric the minimum increase of valid pixels percentage in a tile when adding a record.
+#' This protects from adding large amounts of records that improve coverage by only a few pixels. Default is 100.
 #' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
-#' The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
+#' The assumption is that a high cloud cover in a scene makes it unlikely that theoretically non-cloudy pixels are free from haze
 #' or shadows. Default is 80.
 #' @param satisfaction_value numeric percentage value at which mosaic is considered as cloud-free. Default is 98.
 #' @param prio_products character vector optional. Product names ordered by priority. Selection is done in the order
 #' of prio_products starting with the first product. Following products are included consecutively in case
 #' selection was not fullfilled by previous product. Product names must be provided as returned by \link{get_select_supported}.
-#' Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation needed.
+#' Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
 #' If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
 #' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 

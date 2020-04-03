@@ -17,7 +17,7 @@
 
 get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   
-  records <- .check_records(records) # ensure, it's sf
+  records <- .check_records(records, as_df = F) # ensure, it's sf
   
   # check hidden arguments
   extras <- list(...)
@@ -113,5 +113,6 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
     })
   }, USE.NAMES = F, SIMPLIFY = F))
   
+  records <- .check_records(records)
   return(.column_summary(records, records.names))
 }

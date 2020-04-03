@@ -239,14 +239,13 @@ name_product_group_sentinel <- function() {
 #' @keywords internal
 #' @noRd
 .cloudcov_products <- function() {
-  MODIS <- name_product_group_modis()
   optical_sensors <- c(name_product_landsat8(), 
                        name_product_landsat7(), 
                        name_product_landsat5(), 
                        name_product_landsatmss(),
                        name_product_sentinel2(), 
                        name_product_sentinel3())
-  optical_sensors <- append(optical_sensors, .cloudcov_select_get_supported_modis())
+  optical_sensors <- append(optical_sensors, .get_cloudcov_supported_modis())
   return(optical_sensors)
 }
 
@@ -254,11 +253,22 @@ name_product_group_sentinel <- function() {
 #' @return character vector of MODIS names
 #' @keywords internal
 #' @noRd
-.cloudcov_select_get_supported_modis <- function() {
-  return(c("MODIS_MCD19A1_V6", "MODIS_MOD09A1_V6", "MODIS_MOD09GA_V6", 
-           "MODIS_MOD09GQ_V6", "MODIS_MOD09Q1_V6", "MODIS_MODOCGA_V6", 
-           "MODIS_MYD09A1_V6", "MODIS_MYD09GA_V6", "MODIS_MYD09GQ_V6", 
-           "MODIS_MYD09Q1_V6", "MODIS_MYDOCGA_V6")
+.get_cloudcov_supported_modis <- function() {
+  return(c("MODIS_MCD19A1", "MODIS_MOD09A1", "MODIS_MOD09GA", 
+           "MODIS_MOD09GQ", "MODIS_MOD09Q1", "MODIS_MODOCGA", 
+           "MODIS_MYD09A1", "MODIS_MYD09GA", 
+           "MODIS_MYD09GQ", "MODIS_MYD09Q1", "MODIS_MYDOCGA", 
+           "MODIS_MOD09CMG", "MODIS_MYD09CMG"))
+}
+
+#' get the select-supported MODIS names. CMG not supported due to different gridding
+#' @return character vector of MODIS names
+#' @keywords internal
+#' @noRd
+.get_select_supported_modis <- function() {
+  supported <- .get_cloudcov_supported_modis()
+  supported[which(supported %in% c("MODIS_MYD09CMG", "MODIS_MOD09CMG"))] <- NA
+  return(.gsd_compact(supported))
 }
 
 # cloudcov column names wrappers

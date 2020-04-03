@@ -384,7 +384,7 @@
 #' @keywords internal
 #' @noRd
 .check_type <- function(input, arg_name, type) {
-  check_possible <- !is.null(input)
+  check_possible <- !is.null(input[1])
   if (check_possible) {
     if (!class(input) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
       check_possible <- !is.na(input)

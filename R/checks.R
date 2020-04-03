@@ -384,9 +384,15 @@
 #' @keywords internal
 #' @noRd
 .check_type <- function(input, arg_name, type) {
-  if (!is.null(input) && !is.na(input)) {
-    if (!inherits(input, type)) {
-      out(paste0("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'"), 3)
+  check_possible <- !is.null(input)
+  if (check_possible) {
+    if (!class(input) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
+      check_possible <- !is.na(input)
+    }
+    if (check_possible) {
+      if (!inherits(input, type)) {
+        out(paste0("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'"), 3)
+      }
     }
   }
 }

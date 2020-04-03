@@ -17,6 +17,8 @@
 
 get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   
+  records <- .check_records(records) # ensure, it's sf
+  
   # check hidden arguments
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
@@ -44,6 +46,7 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
   # file 
   records$gSD.dir <- paste0(dir_out, "/", records$product_group, "/")
   catch <- sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
+  rm(catch)
   
   # download preview jpg files
   out("Downloading previews...")
@@ -79,7 +82,7 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
       v <- values(prev)
       rm.prev <- apply((v == 0), MARGIN = 1, function(x) all(x))
       cc.keep <- xyFromCell(prev, which(rm.prev == F))
-      # check if has non-zeros DNs
+      # check if has non-zeros DNs, it should!
       has_non_zeros <- any(v > 0)
       if (has_non_zeros) {
         prev <- crop(prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
@@ -90,11 +93,13 @@ get_previews <- function(records, dir_out = NULL, ..., verbose = TRUE){
       footprint <- st_sfc(footprint, crs = records.crs)
       if(group == "MODIS") footprint <- st_transform(x = footprint, crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
       crs(prev) <- crs(as(footprint, "Spatial"))
-      footprint <- st_coordinates(footprint)
+      #footprint <- st_coordinates(footprint) # does not work
+      footprint <- footprint[[1]][[1]] # instead
       extent(prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
       wgs84 <- "+proj=longlat +datum=WGS84 +no_defs"
       if(group == "MODIS") {
         prev <- projectRaster(prev, crs = crs(wgs84))
+        prev[prev<0] <- 0
       } else {
         crs(prev) <- wgs84 # ensure preview has its crs
       }

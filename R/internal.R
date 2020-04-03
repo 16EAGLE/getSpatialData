@@ -868,27 +868,31 @@ rbind.different <- function(x) {
 .make_tileid_sentinel1 <- function(records) {
   
   TILEID <- name_tile_id()
+  RECORD_ID <- name_record_id()
   FOOTPRINT <- name_footprint()
   SENTINEL1 <- "S1"
   POINT_SEP <- "\\."
-  
-  is_sentinel1 <- which(startsWith(records$record_id, SENTINEL1))
-  if (!.is_empty_array(is_sentinel1)) no_tileid <- is_sentinel1[is.na(records[is_sentinel1, TILEID])]
-  footprints <- records[is_sentinel1, FOOTPRINT]
-  if (!is.na(no_tileid) && !.is_empty_array(no_tileid) && !.is_empty_array(footprints)) {
-    tileids <- sapply(footprints, function(footprint) {
-      tryCatch({
-        footprint <- footprint[[1]][[1]]
-        horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), POINT_SEP)[[1]]
-        vertical <- strsplit(as.character(mean(footprint[,2][1:4])), POINT_SEP)[[1]]
-        id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),
-                     "v", vertical[1], ".", substr(vertical[2], 1, 1))
-      }, error = function(err) {
-        return(NA)
-      }) 
-    })
-    records[no_tileid, TILEID] <- tileids
-  }
+
+  record_ids <- records[[RECORD_ID]]
+  is_sentinel1 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL1)))
+  if (!.is_empty_array(is_sentinel1)) {
+    no_tileid <- is_sentinel1[is.na(records[is_sentinel1, TILEID])]
+    footprints <- records[is_sentinel1, FOOTPRINT]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid) && !.is_empty_array(footprints)) {
+      tileids <- sapply(footprints, function(footprint) {
+        tryCatch({
+          footprint <- footprint[[1]][[1]]
+          horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), POINT_SEP)[[1]]
+          vertical <- strsplit(as.character(mean(footprint[,2][1:4])), POINT_SEP)[[1]]
+          id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),
+                       "v", vertical[1], ".", substr(vertical[2], 1, 1))
+        }, error = function(err) {
+          return(NA)
+        }) 
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
+  } 
   return(records)
 }
 
@@ -899,18 +903,21 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid_sentinel2 <- function(records) {
   
-  RECORDID <- name_record_id()
+  RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   SENTINEL2 <- "S2"
   
   # Sentinel-2
-  is_sentinel2 <- which(startsWith(records$record_id, SENTINEL2))
-  if (!.is_empty_array(is_sentinel2)) no_tileid <- is_sentinel2[is.na(records[is_sentinel2, TILEID])]
-  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
-    tileids <- sapply(records[no_tileid, RECORDID], function(x) {
-      id <- strsplit(x, "_")[[1]][6]
-    })
-    records[no_tileid, TILEID] <- tileids
+  record_ids <- records[[RECORD_ID]]
+  is_sentinel2 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL2)))
+  if (!.is_empty_array(is_sentinel2)) {
+    no_tileid <- is_sentinel2[is.na(records[is_sentinel2, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
+        id <- strsplit(x, "_")[[1]][6]
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
   }
   return(records)
   
@@ -923,45 +930,47 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid_sentinel3 <- function(records) {
   
-  RECORDID <- name_record_id()
+  RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   SENTINEL3 <- "S3"
   
   # Sentinel-3
-  is_sentinel3 <- which(startsWith(records$record_id, SENTINEL3))
-  if (!.is_empty_array(is_sentinel3)) no_tileid <- is_sentinel3[is.na(records[is_sentinel3, TILEID])]
-  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
-    tileids <- sapply(records[no_tileid, RECORDID], function(x){
-      tryCatch({
-        sep <- "______"
-        if (grepl(sep, x)) { # does it contain the "_" separator at the end 
-          splitted <- strsplit(x, sep)[[1]][1]
-          splitted1 <- strsplit(splitted, "_")[[1]]
-          len <- length(splitted1)
-          last <- tail(splitted1, 1)
-          if (grepl("[^0-9]", last)) { # should be chars
-            id <- last
-          } else { # only contains integers
-            id <- paste0(splitted1[len-1], splitted1[len])
-          }
-        } else {
-          splitted <- strsplit(x, "_LN1")[[1]]
-          splitted1 <- strsplit(splitted, "_")[[1]]
-          len <- length(splitted1)
-          if (len == 18) {
-            id <- paste0(splitted1[len-6], splitted1[len-5])
+  record_ids <- records[[RECORD_ID]]
+  is_sentinel3 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL3)))
+  if (!.is_empty_array(is_sentinel3)) {
+    no_tileid <- is_sentinel3[is.na(records[is_sentinel3, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x){
+        tryCatch({
+          sep <- "______"
+          if (grepl(sep, x)) { # does it contain the "_" separator at the end 
+            splitted <- strsplit(x, sep)[[1]][1]
+            splitted1 <- strsplit(splitted, "_")[[1]]
+            len <- length(splitted1)
+            last <- tail(splitted1, 1)
+            if (grepl("[^0-9]", last)) { # should be chars
+              id <- last
+            } else { # only contains integers
+              id <- paste0(splitted1[len-1], splitted1[len])
+            }
           } else {
-            id <- paste0(splitted1[len-2], splitted1[len-1])
+            splitted <- strsplit(x, "_LN1")[[1]]
+            splitted1 <- strsplit(splitted, "_")[[1]]
+            len <- length(splitted1)
+            if (len == 18) {
+              id <- paste0(splitted1[len-6], splitted1[len-5])
+            } else {
+              id <- paste0(splitted1[len-2], splitted1[len-1])
+            }
           }
-        }
-      }, error = function(err) {
-        return(NA)
+        }, error = function(err) {
+          return(NA)
+        })
       })
-    })
-    records[no_tileid, TILEID] <- tileids
+      records[no_tileid, TILEID] <- tileids
+    }
   }
   return(records)
-  
 }
 
 #' creates tile ids for Landsat records
@@ -971,18 +980,21 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid_landsat <- function(records) {
   
-  RECORDID <- name_record_id()
+  RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   LANDSAT <- name_product_group_landsat()
   
-  is_landsat <- which(records$product_group == LANDSAT)
-  if (!.is_empty_array(is_landsat)) no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
-  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
-    tileids <- sapply(records[no_tileid, RECORDID], function(x) {
-      splitted <- strsplit(x, "_")[[1]][3]
-      id <- paste0(substr(splitted, 1, 3), substr(splitted, 4, 7))
-    })
-    records[no_tileid, TILEID] <- tileids
+  record_ids <- records[[RECORD_ID]]
+  is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, LANDSAT)))
+  if (!.is_empty_array(is_landsat)) {
+    no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
+        splitted <- strsplit(x, "_")[[1]][3]
+        id <- paste0(substr(splitted, 1, 3), substr(splitted, 4, 7))
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
   }
   return(records)
   
@@ -995,26 +1007,29 @@ rbind.different <- function(x) {
 #' @noRd
 .make_tileid_modis <- function(records) {
   
-  RECORDID <- name_record_id()
+  RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   MODIS <- name_product_group_modis()
   POINT_SEP <- "\\."
   
-  is_modis <- which(records$product_group == MODIS)
-  if (!.is_empty_array(is_modis)) no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
-  if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
-    tileids <- sapply(records[no_tileid, RECORDID], function(x) {
-      tryCatch({
-        splitted <- strsplit(x, POINT_SEP)[[1]]
-        splitted1 <- splitted[which(grepl("v", splitted) * grepl("h", splitted) == 1)]
-        splitted2 <- strsplit(splitted1, "v")[[1]]
-        is_horizontal <- grepl("h", splitted2)
-        id <- paste0(strsplit(splitted2[is_horizontal], "h")[[1]][2], splitted2[!is_horizontal])
-      }, error = function(err) {
-        return(NA)
+  record_ids <- records[[RECORD_ID]]
+  is_modis <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, MODIS)))
+  if (!.is_empty_array(is_modis)) {
+    no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
+        tryCatch({
+          splitted <- strsplit(x, POINT_SEP)[[1]]
+          splitted1 <- splitted[which(grepl("v", splitted) * grepl("h", splitted) == 1)]
+          splitted2 <- strsplit(splitted1, "v")[[1]]
+          is_horizontal <- grepl("h", splitted2)
+          id <- paste0(strsplit(splitted2[is_horizontal], "h")[[1]][2], splitted2[!is_horizontal])
+        }, error = function(err) {
+          return(NA)
+        })
       })
-    })
-    records[no_tileid, TILEID] <- tileids
+      records[no_tileid, TILEID] <- tileids
+    }
   }
   return(records)
   

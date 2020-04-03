@@ -384,14 +384,17 @@
 #' @keywords internal
 #' @noRd
 .check_type <- function(input, arg_name, type) {
+  raster_classes <- c("RasterLayer", "RasterStack", "RasterBrick")
+  is_raster <- class(input) %in% raster_classes
   check_possible <- !is.null(input)
-  check_possible <- ifelse(inherits(input, "list"), check_possible[[1]], check_possible[1])
+  check_possible <- ifelse(inherits(check_possible, "list"), check_possible[[1]], check_possible[1])
   if (check_possible) {
-    if (!class(input) %in% c("RasterLayer", "RasterStack", "RasterBrick")) {
+    if (!is_raster) {
       check_possible <- !is.na(input)
     }
     if (check_possible) {
       if (!inherits(input, type)) {
+        if (is_raster) type <- paste0(raster_classes[1], "' or '")
         out(paste0("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'"), 3)
       }
     }
@@ -445,7 +448,7 @@
 #' @keywords internal
 #' @noRd
 .check_rasterStack <- function(input, arg_name) {
-  .check_type(input, arg_name, "RasterStack' or 'RasterBrick")
+  .check_type(input, arg_name, "RasterStack")
 }
 
 #' checks if input is RasterLayer

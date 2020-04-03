@@ -389,7 +389,6 @@
   check_possible <- !is.null(input)
   is_list <- inherits(check_possible, "list")
   check_possible <- ifelse(is_list, check_possible[[1]], check_possible[1])
-  print(check_possible)
   if (check_possible) {
     if (!is_raster) {
       check_possible <- !is.na(input)

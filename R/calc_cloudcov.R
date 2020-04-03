@@ -224,12 +224,12 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
-                       preview=preview,
-                       aoi=aoi,
-                       maxDeviation=maxDeviation,
-                       cols=.cloudcov_colnames(),
-                       dir_out=dir_out,
-                       verbose=verbose))
+                                         preview=preview,
+                                         aoi=aoi,
+                                         maxDeviation=maxDeviation,
+                                         cols=.cloudcov_colnames(),
+                                         dir_out=dir_out,
+                                         verbose=verbose))
     }
     
     if (isTRUE(get_preview_failed) || class(record_cc) != "data.frame" || is.na(record_cc)) {

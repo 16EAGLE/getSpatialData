@@ -14,6 +14,7 @@
 #' @export
 get_select_supported <- function() {
   optical_sensors <- .cloudcov_products()
-  supported_products <- c(optical_sensors, "Sentinel-1")
+  optical_sensors[which(optical_sensors %in% .get_select_supported_modis())] <- NA
+  supported_products <- c(.gsd_compact(optical_sensors), "Sentinel-1")
   return(supported_products)
 }

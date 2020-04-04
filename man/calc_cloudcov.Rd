@@ -5,7 +5,7 @@
 \title{Calculate the cloud cover of optical Sentinel, Landsat or MODIS data in an aoi based on small previews}
 \usage{
 calc_cloudcov(records, maxDeviation = 5, aoi = NULL, dir_out = NULL,
-  username = NULL, password = NULL, verbose = TRUE)
+  username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.}
@@ -19,6 +19,8 @@ calc_cloudcov(records, maxDeviation = 5, aoi = NULL, dir_out = NULL,
 \item{username}{character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).}
 
 \item{password}{character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).}
+
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.}
 }

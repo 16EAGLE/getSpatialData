@@ -4,7 +4,8 @@
 \alias{get_previews}
 \title{Get previews of records}
 \usage{
-get_previews(records, dir_out = NULL, ..., verbose = TRUE)
+get_previews(records, dir_out = NULL, ..., as_sf = TRUE,
+  verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
@@ -24,6 +25,8 @@ get_previews(records, dir_out = NULL, ..., verbose = TRUE)
    \item or a valid API URL.
 }
 }}
+
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }

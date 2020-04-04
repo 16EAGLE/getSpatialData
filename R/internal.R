@@ -638,15 +638,13 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @keywords internal
 #' @noRd
 .df_dates_to_chars <- function(x) {
-  
-  classes <- sapply(x,class)
-  to_char <- which(!classes %in% c("character","numeric","integer","logical"))
-  for (i in to_char) {
+  to_char <- sapply(names(x), function(name) {
+    return(isFALSE(inherits(x[[name]], c("character", "numeric", "integer", "logical", "sfc"))))
+  })
+  for (!to_char) {
     x[,i] <- as.character(x[,i])
   }
-  
   return(x)
-  
 }
 
 #' On package startup

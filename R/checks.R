@@ -522,6 +522,7 @@
     return(exists)
   } else {
     out(paste0("File does not exists: ", file), out_type)
+    return(exists)
   }
 }
 
@@ -535,6 +536,9 @@
   exists <- .check_file_exists(file)
   is_csv <- any(endsWith(file, c(".csv", ".CSV")))
   check <- exists && is_csv
+  print(check)
+  print(exists)
+  print(is_csv)
   if (check) {
     return(check)
   } else {

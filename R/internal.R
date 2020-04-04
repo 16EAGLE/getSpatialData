@@ -1008,6 +1008,8 @@ rbind.different <- function(x) {
   TILEID <- name_tile_id()
   MODIS <- name_product_group_modis()
   POINT_SEP <- "\\."
+  h <- "h"
+  v <- "v"
   
   product_names <- records[[PRODUCT]]
   is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, MODIS)))
@@ -1017,10 +1019,10 @@ rbind.different <- function(x) {
       tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
         tryCatch({
           splitted <- strsplit(x, POINT_SEP)[[1]]
-          splitted1 <- splitted[which(grepl("v", splitted) * grepl("h", splitted) == 1)]
-          splitted2 <- strsplit(splitted1, "v")[[1]]
-          is_horizontal <- grepl("h", splitted2)
-          id <- paste0(strsplit(splitted2[is_horizontal], "h")[[1]][2], splitted2[!is_horizontal])
+          splitted1 <- splitted[which(grepl(v, splitted) * grepl(h, splitted) == 1)]
+          splitted2 <- strsplit(splitted1, v)[[1]]
+          is_horizontal <- grepl(h, splitted2)
+          id <- paste0(h, strsplit(splitted2[is_horizontal], h)[[1]][2], v, splitted2[!is_horizontal])
         }, error = function(err) {
           return(NA)
         })

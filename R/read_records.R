@@ -21,7 +21,7 @@ read_records <- function(file, as_sf = TRUE) {
   rm(exists)
   # it is important to write read through readr::read_csv() for correct representation
   # of the records, especially of its footprints
-  records <- try(read_csv(file, col_types = cols()))
+  records <- try(as.data.frame(read_csv(file, col_types = cols())))
   is_dataframe <- inherits(records, "data.frame")
   if (is_dataframe) {
     records <- .eval_records_footprints(records, as_sf = as_sf)

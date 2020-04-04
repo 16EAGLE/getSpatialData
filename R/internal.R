@@ -1300,24 +1300,29 @@ rbind.different <- function(x) {
 #' @param records data.frame read from csv
 #' @param as_sf logical if records shall be returned as sf
 #' @return records data.frame sf or data.frame
-#' @importFrom sf st_multipolygon st_sfc
+#' @importFrom sf st_multipolygon st_sfc st_geometry
 #' @keywords internal
 #' @noRd
 .eval_records_footprints <- function(records, as_sf = TRUE) {
   name_footprint <- name_footprint()
+  footprints <- list()
   for (i in 1:NROW(records)) {
-    record <- records[i,]
+    record <- records_archive[i,]
     footprint <- record[[name_footprint]]
-    if (!inherits(footprint, "sfc")) {
-      footprint_eval <- eval(parse(text = footprint))
+    is_sfc <- !inherits(footprint, "sfc")
+    is_sfc <- TRUE
+    if (is_sfc) {
+      footprint_eval <- unlist(eval(parse(text = footprint)))
       ncol <- 2
       nrow <- length(footprint_eval) / ncol
       m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
-      multipolygon <- st_multipolygon(list(list(m)))
-      footprint_sfc <- st_sfc(multipolygon, crs = 4326)
-      records[i, name_footprint] <- footprint_sfc
+      footprints[[i]] <- st_multipolygon(list(list(m)))
+    } else {
+      footprints[[i]] <- footprint
     }
   }
+  # assign footprints
+  records[[name_footprint]] <- st_sfc(footprints, crs = 4326)
   return(.check_records(records, as_sf = TRUE))
 }
 

@@ -62,7 +62,7 @@
   archive_set <- is.TRUE(getOption("gSD.archive_set"))
   argument_set <- !is.null(dir_out)
   
-  if (!archive_set && !argument_set) out(msg1)
+  if (!archive_set && !argument_set) out(msg1, 3)
   if (argument_set) .check_character(dir_out)
   
   ## Check output directory

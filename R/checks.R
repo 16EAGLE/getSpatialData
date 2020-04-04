@@ -545,8 +545,6 @@
   }
 }
 
-
-
 #' checks if a record is a Sentinel-3 OLCI record
 #' @param record data.frame one line
 #' @return logical

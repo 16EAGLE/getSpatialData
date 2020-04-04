@@ -639,11 +639,10 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @noRd
 .df_dates_to_chars <- function(x) {
   to_char <- sapply(names(x), function(name) {
-    return(isFALSE(inherits(x[[name]], c("character", "numeric", "integer", "logical", "sfc"))))
+    if(isFALSE(inherits(x[[name]], c("character", "numeric", "integer", "logical", "sfc")))) {
+      x[name] <- as.character(x[,name])
+    }
   })
-  for (!to_char) {
-    x[,i] <- as.character(x[,i])
-  }
   return(x)
 }
 

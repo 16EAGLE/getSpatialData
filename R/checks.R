@@ -536,9 +536,6 @@
   exists <- .check_file_exists(file)
   is_csv <- any(endsWith(file, c(".csv", ".CSV")))
   check <- exists && is_csv
-  print(check)
-  print(exists)
-  print(is_csv)
   if (check) {
     return(check)
   } else {

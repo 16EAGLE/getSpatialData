@@ -5,11 +5,14 @@
 #' 
 #' @inheritParams get_records
 #' 
-#' @param dir_out directory where to write the records csv. Default is NULL.
+#' @param dir_out directory where to write the records csv. A file name will be automatically
+#' generated from date and time in case \code{dir_out} is set through \link{set_archive} or provided. 
+#' Default is NULL.
 #' @param file character complete file path where to write the records csv. Default is NULL.
-#' If a \code{dir_out} is not NULL because it is set or provided, \code{file} will be ignored.
+#' If a \code{dir_out} is not NULL because it is set through \link{set_archive} or provided, 
+#' \code{file} will be ignored.
 #'  
-#' @return sf object or data.frame depending on \code{as_sf}.
+#' @return character file path to the saved records csv.
 #' 
 #' @importFrom readr read_csv cols
 #' 
@@ -18,10 +21,20 @@
 #' @export
 write_records <- function(records, dir_out = NULL, file = NULL) {
   
-  .check_dir_out(dir_out)
+  dir_out_given <- !is.null(dir_out)
+  file_given <- !is.null(file)
+  
   .check_records_type(records)
+  # if no file given we have to check dir_out
+  if (!file_given) {
+    dir_out <- .check_dir_out(dir_out) # can throw error
+    file_name <- .generate_datetime_filename("records", extension = ".csv", sep = "_")
+    file <- file.path(dir_out, file_name)
+  } 
+  
   # it is important to write read through readr::read_csv() for correct representation
   # of the records, especially of its footprints
   write_csv(records, file)
+  return(file)
   
 }

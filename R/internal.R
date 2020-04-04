@@ -1320,3 +1320,14 @@ rbind.different <- function(x) {
   }
   return(.check_records(records, as_sf = TRUE))
 }
+
+#' generate file name according to date time
+#' @param name character suffix to be used after date time, e.g. 'records'.
+#' @param extension character file format extension, e.g. '.tif'.
+#' @param sep character separator between date, time and name. Default is '_'.
+#' @return file_name character file name
+#' @keywords internal
+#' @noRd
+.generate_datetime_filename <- function(name, extension = "", sep = "_") {
+  return(paste(Sys.Date(), format(Sys.time(), "%Hh%Mm%Ss"), paste0(name, extension), sep = "_"))
+} 

@@ -246,12 +246,13 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
     }
     
+    record_cc <- .unlist_df(record_cc)
+
     # write csv if desired
     if (!is.null(dir_out)) {
       write_records(record_cc, file = csv_path)
     }
     
-    record_cc <- .unlist_df(record_cc)
     return(record_cc)
     
   })),stringsAsFactors=F)

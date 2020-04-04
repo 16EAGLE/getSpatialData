@@ -39,7 +39,6 @@
 #' @author Henrik Fisser
 #' 
 #' @importFrom utils object.size
-#' @importFrom readr read_csv write_csv cols
 #' @importFrom raster stack
 #' 
 #' @examples
@@ -116,7 +115,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   preview_file <- name_preview_file()
   preview_file_jpg <- name_preview_file_jpg()
   cloud_mask_file <- name_cloud_mask_file()
-  footprint <- name_footprint()
+  #footprint <- name_footprint()
   cols_initial <- colnames(records)
   numRecords <- NROW(records)
   out(paste0(sep(),"\n\nProcessing ",numRecords," records\nStarting HOT\n",sep(),"\n"),verbose=verbose)
@@ -148,14 +147,13 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
-    if (file.exists(csv_path)) {
+    if (.is_existing_csv_file(csv_path)) {
       out(paste0(out_status,"Loading (yet processed): ",id),msg=T,verbose=v)
-      record <- as.data.frame(read_csv(csv_path,col_types=cols()))
-      record <- .df_dates_to_chars(record)
+      record <- read_records(csv_path, as_sf = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
           NROW(record) > 0) {
-        if (file.exists(record[[cloud_mask_file]])) {
+        if (.check_file_exists(record[[cloud_mask_file]])) {
           return(record)
         }
       }
@@ -165,8 +163,8 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     
     # if preview exists not yet: get it. Then run HOT
     if (cloudcov_supported) {
-      prev_col_given <- preview_file %in% names(record)
-      if (prev_col_given) {
+      preview_col_given <- preview_file %in% names(record)
+      if (preview_col_given) {
         pfile <- record[[preview_file]]
         preview_exists <- ifelse(is.na(pfile) || pfile == "NONE" , FALSE, file.exists(pfile))
         if (preview_exists) {
@@ -211,7 +209,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       if (preview_exists) {
         preview_exists <- !is.na(record_preview[[preview_file]])
         if (preview_exists) {
-          preview_exists <- file.exists(record_preview[[preview_file]])
+          preview_exists <- .check_file_exists(record_preview[[preview_file]])
         }
       }
     }
@@ -250,14 +248,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     
     # write csv if desired
     if (!is.null(dir_out)) {
-      if (footprint %in% names(record_cc)) {
-        # remove footprint list column for writing csv
-        cols_remain <- setdiff(1:NCOL(record_cc),c(which(names(record_cc) == footprint)))
-        # unlist columns for writing csv
-        record_cc <- record_cc[,cols_remain]
-        record_cc <- .unlist_df(record_cc)
-      }
-      write_csv(record_cc,csv_path)
+      write_records(record_cc, file = csv_path)
     }
     
     record_cc <- .unlist_df(record_cc)

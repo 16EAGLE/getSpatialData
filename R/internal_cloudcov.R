@@ -127,7 +127,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, maxDeviation = 5,
   mask_path <- file.path(dir_out, paste0(record[[identifier]],"_cloud_mask.tif"))
   currTitle <- record[[identifier]]
   
-  if (file.exists(mask_path)) {
+  if (.check_file_exists(mask_path)) {
     cMask <- raster(mask_path)
     # when re-loading the existing cMask the HOT scene_cPercent cannot be calculated because already aoi masked
     out("Loading existing HOT aoi cloud mask but no HOT scene cloud cover can be calculated from it, only for aoi",msg=T)

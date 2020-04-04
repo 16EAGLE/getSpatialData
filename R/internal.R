@@ -1296,3 +1296,27 @@ rbind.different <- function(x) {
   return(length(x) == 0 || is.null(x) || is.na(x))
 }
 
+#' evaluate records footprints after csv read (they get wasted when writing to csv)
+#' @param records data.frame read from csv
+#' @param as_sf logical if records shall be returned as sf
+#' @return records data.frame sf or data.frame
+#' @importFrom sf st_multipolygon st_sfc
+#' @keywords internal
+#' @noRd
+.eval_records_footprints <- function(records, as_sf = TRUE) {
+  name_footprint <- name_footprint()
+  for (i in 1:NROW(records)) {
+    record <- records[i,]
+    footprint <- record[[name_footprint]]
+    if (!inherits(footprint, "sfc")) {
+      footprint_eval <- eval(parse(text = footprint))
+      ncol <- 2
+      nrow <- length(footprint_eval) / ncol
+      m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
+      multipolygon <- st_multipolygon(list(list(m)))
+      footprint_sfc <- st_sfc(multipolygon, crs = 4326)
+      records[i, name_footprint] <- footprint_sfc
+    }
+  }
+  return(.check_records(records, as_sf = TRUE))
+}

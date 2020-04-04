@@ -27,6 +27,7 @@
 #' @param username character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile on the console. Default is TRUE.
+#' @inheritParams get_records
 #' 
 #' @return \code{records} data.frame with three added columns:
 #' \enumerate{
@@ -99,7 +100,8 @@
 #' @export
 
 calc_cloudcov <- function(records, maxDeviation = 5,
-                          aoi = NULL, dir_out = NULL, username = NULL, password = NULL, verbose = TRUE) {
+                          aoi = NULL, dir_out = NULL, 
+                          username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE) {
   
   ## Check input
   .check_verbose(verbose)
@@ -265,7 +267,9 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
-  records <- .column_summary(records,cols_initial)
+  records <- .check_records(records, as_df = !as_sf)
+  records <- .eval_records_footprints(records, as_sf = as_sf)
+  records <- .column_summary(records, cols_initial)
   return(records)
 
 }

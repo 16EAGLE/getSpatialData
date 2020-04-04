@@ -38,7 +38,7 @@
 }
 
 #' checks the records type (special case: 'data.frame' or 'sf')
-#' @param records
+#' @param records data.frame or sf
 #' @keywords internal
 #' @noRd
 .check_records_type <- function(records) {

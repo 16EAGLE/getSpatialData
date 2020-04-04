@@ -28,13 +28,24 @@
 #' @keywords internal
 #' @noRd
 .check_records <- function(records, col.names = NULL, as_df = FALSE){
-  if(!isTRUE(inherits(records, "data.frame"))) out("Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'.", type = 3)
+  .check_records_type(records)
   if(!is.null(col.names)){
     catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
     rm(catch)
   }
   if(as_df) records <- as.data.frame(records) else records <- st_sf(records, sfc_last = F)
   return(records)
+}
+
+#' checks the records type (special case: 'data.frame' or 'sf')
+#' @param records
+#' @keywords internal
+#' @noRd
+.check_records_type <- function(records) {
+  correct <- inherits(records, "data.frame")
+  if (!correct) {
+    out("Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'.", type = 3)
+  }
 }
 
 #' check dir_out
@@ -45,17 +56,25 @@
 #' @noRd
 .check_dir_out <- function(dir_out, which = NULL){
   
-  if (!is.null(dir_out)) .check_character(dir_out)
+  msg1 <- "Directory 'dir_out' is neither set through 'set_archive' nor provided as argument"
+  msg2 <- "Directory 'dir_out' does not exist: "
+  
+  archive_set <- is.TRUE(getOption("gSD.archive_set"))
+  argument_set <- !is.null(dir_out)
+  
+  if (!archive_set && !argument_set) out(msg1)
+  if (argument_set) .check_character(dir_out)
   
   ## Check output directory
-  if(is.TRUE(getOption("gSD.archive_set"))){
+  if(archive_set){
     if(is.null(dir_out)) dir_out <- getOption(paste0("gSD.archive", if(!is.null(which)) paste0("_", which)))
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
+  
   dir_out <- path.expand(dir_out)
   if (!dir.exists(dir_out)) {
     # Be careful when changing message, it is checked on in unit tests
-    out(paste0("Directory 'dir_out' does not exist: ", dir_out), 3)
+    out(paste0(msg2, dir_out), 3)
   } else {
     return(path.expand(dir_out))
   }
@@ -488,6 +507,45 @@
   }
   return(x)
 }
+
+#' checks if a file exists on disk
+#' @param file character file path
+#' @param out_type integer in case of FALSE: what type of out to be thrown?
+#' @return logical TRUE if file exists
+#' @importFrom utils file_test
+#' @keywords internal
+#' @noRd
+.check_file_exists <- function(file, out_type = 2) {
+  .check_character(file, "internal file")
+  exists <- file_test("-f", file)
+  if (exists) {
+    return(exists)
+  } else {
+    out(paste0("File does not exists: ", file), out_type)
+  }
+}
+
+#' checks if a file is a csv file and exists
+#' @param file character file path
+#' @param out_type integer in case of FALSE: what type of out to be thrown?
+#' @return logical TRUE if file is a csv file
+#' @keywords internal
+#' @noRd
+.is_existing_csv_file <- function(file, out_type = 2) {
+  exists <- .check_file_exists(file)
+  is_csv <- any(endsWith(file, c(".csv", ".CSV")))
+  check <- exists && is_csv
+  if (check) {
+    return(check)
+  } else {
+    if (exists && !is_csv) out(paste0("File is not a .csv file: ", file), out_type)
+    if (!exists && is_csv) out(paste0("csv file does not exist: ", file), out_type)
+    if (!exists && !is_csv) out(paste0("File is not a .csv file and does not exist: ", file),
+                                out_type)
+  }
+}
+
+
 
 #' checks if a record is a Sentinel-3 OLCI record
 #' @param record data.frame one line

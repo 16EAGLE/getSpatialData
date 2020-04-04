@@ -25,7 +25,8 @@ read_records <- function(file, as_sf = TRUE) {
   is_dataframe <- inherits(records, "data.frame")
   if (is_dataframe) {
     records <- .eval_records_footprints(records, as_sf = as_sf)
-    record <- .df_dates_to_chars(records)
+    records <- .df_dates_to_chars(records)
+    records <- .unlist_df(records)
     return(records)
   } else {
     out("Reading records csv was unsuccessful", 3)

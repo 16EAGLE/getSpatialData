@@ -21,10 +21,10 @@
 #' @export
 write_records <- function(records, dir_out = NULL, file = NULL) {
   
-  dir_out_given <- !is.null(dir_out)
   file_given <- !is.null(file)
   
   .check_records_type(records)
+  records <- .unlist_df(records)
   # if no file given we have to check dir_out
   if (!file_given) {
     dir_out <- .check_dir_out(dir_out) # can throw error

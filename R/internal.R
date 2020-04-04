@@ -1300,17 +1300,16 @@ rbind.different <- function(x) {
 #' @param records data.frame read from csv
 #' @param as_sf logical if records shall be returned as sf
 #' @return records data.frame sf or data.frame
-#' @importFrom sf st_multipolygon st_sfc st_geometry
+#' @importFrom sf st_multipolygon st_sfc
 #' @keywords internal
 #' @noRd
 .eval_records_footprints <- function(records, as_sf = TRUE) {
   name_footprint <- name_footprint()
   footprints <- list()
   for (i in 1:NROW(records)) {
-    record <- records_archive[i,]
+    record <- records[i,]
     footprint <- record[[name_footprint]]
     is_sfc <- !inherits(footprint, "sfc")
-    is_sfc <- TRUE
     if (is_sfc) {
       footprint_eval <- unlist(eval(parse(text = footprint)))
       ncol <- 2
@@ -1323,7 +1322,7 @@ rbind.different <- function(x) {
   }
   # assign footprints
   records[[name_footprint]] <- st_sfc(footprints, crs = 4326)
-  return(.check_records(records, as_sf = TRUE))
+  return(.check_records(records, as_df = !as_sf))
 }
 
 #' generate file name according to date time

@@ -510,39 +510,44 @@
 
 #' checks if a file exists on disk
 #' @param file character file path
-#' @param out_type integer in case of FALSE: what type of out to be thrown?
+#' @param out_type integer in case of FALSE: what type of out to be thrown? NA for nothing.
 #' @return logical TRUE if file exists
 #' @importFrom utils file_test
 #' @keywords internal
 #' @noRd
-.check_file_exists <- function(file, out_type = 2) {
+.check_file_exists <- function(file, out_type = NA) {
   .check_character(file, "internal file")
   exists <- file_test("-f", file)
   if (exists) {
     return(exists)
   } else {
-    out(paste0("File does not exists: ", file), out_type)
+    if (!is.na(out_type)) out(paste0("File does not exists: ", file), out_type)
     return(exists)
   }
 }
 
 #' checks if a file is a csv file and exists
 #' @param file character file path
-#' @param out_type integer in case of FALSE: what type of out to be thrown?
+#' @param out_type integer in case of FALSE: what type of out to be thrown? NA for not out at all.
 #' @return logical TRUE if file is a csv file
 #' @keywords internal
 #' @noRd
-.is_existing_csv_file <- function(file, out_type = 2) {
+.is_existing_csv_file <- function(file, out_type = NA) {
   exists <- .check_file_exists(file)
   is_csv <- any(endsWith(file, c(".csv", ".CSV")))
   check <- exists && is_csv
   if (check) {
     return(check)
   } else {
-    if (exists && !is_csv) out(paste0("File is not a .csv file: ", file), out_type)
-    if (!exists && is_csv) out(paste0("csv file does not exist: ", file), out_type)
-    if (!exists && !is_csv) out(paste0("File is not a .csv file and does not exist: ", file),
-                                out_type)
+    if (is.na(out_type)) {
+      return(check)
+    } else {
+      if (exists && !is_csv) out(paste0("File is not a .csv file: ", file), out_type)
+      if (!exists && is_csv) out(paste0("csv file does not exist: ", file), out_type)
+      if (!exists && !is_csv) out(paste0("File is not a .csv file and does not exist: ", file),
+                                  out_type)
+      return(check)
+    }
   }
 }
 

@@ -148,7 +148,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     # otherwise run HOT afterwards
     csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (.is_existing_csv_file(csv_path)) {
-      out(paste0(out_status,"Loading (yet processed): ",id),msg=T,verbose=v)
+      out(paste0(out_status,"Loading yet processed csv: ",id),msg=T,verbose=v)
       record <- read_records(csv_path, as_sf = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&

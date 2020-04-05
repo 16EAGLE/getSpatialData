@@ -14,6 +14,7 @@
 #' @noRd
 
 out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALSE, verbose = getOption("gSD.verbose")){
+  if(!is.na(type) && !type %in% c(1, 2, 3)) type <- 1
   if(isTRUE(flush)) flush.console()
   if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
   if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}

@@ -1086,16 +1086,16 @@ rbind.different <- function(x) {
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
 #' @importFrom raster mask crs extent crs<-
-.preview_mask_edges <- function(preview) {
+.landsat_preview_mask_edges <- function(preview) {
   
   polygons <- "polygons"
-  coords <- "coords"
+  COORDS_SLOT <- "coords"
   ext <- try(extent(preview))
   if (inherits(ext,"try-error")) return (preview)
   poly <- as(ext,"SpatialPolygons")
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
-  coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], coords)
+  coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
   coords[1,1] <- coords[1,1] + 0.08
   coords[2,1] <- coords[2,1] + 0.42
   coords[3,1] <- coords[3,1] - 0.08
@@ -1106,10 +1106,36 @@ rbind.different <- function(x) {
   coords[3,2] <- coords[3,2] - 0.38
   coords[4,2] <- coords[4,2] + 0.05
   coords[5,2] <- coords[5,2] + 0.38
-  slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], coords) <- coords
+  slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
   preview_masked <- mask(preview,poly)
   return(preview_masked)
   
+}
+
+#' ensures min/max values of raster, stack or brick are between 0 and 255
+#' @param x raster, stack or brick.
+#' @return raster, stack or brick with all its values between 0 and 255.
+#' @importFrom raster minValue maxValue
+#' @keywords internal
+#' @noRd
+.ensure_minmax <- function(x) {
+  max <- 255
+  min_below_zero <- which(minValue(x) < 0)
+  max_above_255 <- which(maxValue(x) > max)
+  if (!.is_empty_array(min_below_zero)) {
+    
+  }
+  if (!.is_empty_array(min_below_zero)) {
+    for (i in min_below_zero) {
+        x[[i]][x[[i]] < min] <- min
+    }
+  }
+  if (!.is_empty_array(max_above_255)) {
+    for (i in max_above_255) {
+        x[[i]][x[[i]] > max] <- max
+    }
+  }
+  return(x)
 }
 
 #' calculates percentage of a value in a raster or polygon with different modes.
@@ -1328,4 +1354,15 @@ rbind.different <- function(x) {
 #' @noRd
 .generate_datetime_filename <- function(name, extension = "", sep = "_") {
   return(paste(Sys.Date(), format(Sys.time(), "%Hh%Mm%Ss"), paste0(name, extension), sep = "_"))
-} 
+}
+
+#' calculates a preview water mask. It may happen that clouds get
+#' classified as water, which is not a problem in this case. Though good to know..
+#' @param preview raster stack RGB
+#' @return water mask raster layer (0=water, 1=other)
+#' @keywords internal
+#' @noRd
+.calculate_preview_watermask <- function(preview) {
+  water_mask <- (preview[[3]] - preview[[1]]) < 2 # higher blue minus lower red (water)
+  return(water_mask)
+}

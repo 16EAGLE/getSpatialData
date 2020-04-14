@@ -394,6 +394,16 @@
   options(gSD.verbose = verbose)
 }
 
+#' checks preview and returns if it is broken (no values above DN 20)
+#' @param RasterStack preview
+#' @return logical if preview is spoiled
+#' @keywords internal
+#' @noRd
+.check_preview <- function(preview) {
+  prev_vals <- as.integer(as.vector(values(preview)))
+  return(all(prev_vals < 20))
+}
+
 #' checks input, generates a type error message and throws it if invalid
 #' Does NOT check for NULL and NA. If any of these, test is skipped
 #' @param input variable of any type

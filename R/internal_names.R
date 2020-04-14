@@ -290,6 +290,6 @@ name_product_group_sentinel <- function() {
 #' @keywords internal
 #' @noRd
 .cloudcov_get_needed_cols <- function() {
-  return(c(name_product(), name_product_group(), name_record_id(), name_sensor(), 
+  return(c(name_product(), name_product_group(), name_record_id(), name_product(), 
            name_cloudcov(), name_preview_url()))
 }

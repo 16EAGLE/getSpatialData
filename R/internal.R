@@ -717,8 +717,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 .unlist_df <- function(records) {
   for (i in 1:NCOL(records)) {
     if (inherits(records[,i], "list")) {
-      print(class(records[,i]))
-      print(class(records))
       records[,i] <- unlist(records[,i])
     }
   }
@@ -1413,17 +1411,16 @@ rbind.different <- function(x) {
   footprints <- list()
   for (i in 1:NROW(records)) {
     record <- records[i,]
-    footprint <- record[[name_footprint]]
-    is_sfc <- !inherits(footprint, "sfc")
+    f <- record[[name_footprint]][[1]]
+    is_sfc <- inherits(f, "sfc")
     if (is_sfc) {
+      footprints[[i]] <- f[[1]]
+    } else {
       footprint_eval <- unlist(eval(parse(text = footprint)))
       ncol <- 2
       nrow <- length(footprint_eval) / ncol
       m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
-      footprints[[i]] <- st_multipolygon(list(list(m)))[[1]]
-    } else {
-      print(class(footprint))
-      footprints[[i]] <- footprint
+      footprints[[i]] <- st_multipolygon(list(list(m)))
     }
   }
   # assign footprints

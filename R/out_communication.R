@@ -64,15 +64,12 @@ quiet <- function(expr){
 #' @param numRecords numRecords
 #' @param i record number in the loop
 #' @param processingTime processingTime
-#' @param previewSize previewSize
 #' @keywords internal
-#' @importFrom utils object.size
 #' @noRd
-.calcHOTProcTime <- function(numRecords,i,processingTime,previewSize) {
+.calcHOTProcTime <- function(numRecords,i,processingTime) {
   meanProcessingTime <- mean(processingTime)
-  meanPreviewSize <- mean(previewSize) / 1000000
-  stillToGoFor <- numRecords - 5
-  sumProcessingTime <- meanProcessingTime * stillToGoFor
+  queue <- numRecords - 5
+  sumProcessingTime <- meanProcessingTime * queue
   if (sumProcessingTime < 1) {
     sumProcessingTime <- "less than 1 minute"
   } else if (round(sumProcessingTime) == 1) {
@@ -80,9 +77,8 @@ quiet <- function(expr){
   } else {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
-  sumDataDownload <- round(meanPreviewSize * stillToGoFor, 2)
   out(paste0(sep(),"\n\n10 records are processed.\nTime for remaining records, approx.: ",
-             sumProcessingTime,"\nData amount approx.: ",sumDataDownload," MB\n",sep(),"\n"))
+             sumProcessingTime, sep(), "\n"))
 }
 
 # -------------------------------------------------------------

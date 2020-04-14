@@ -27,7 +27,6 @@ Imports:
   RStoolbox,
   ggplot2,
   cowplot,
-  L1pack,
   processx,
   stats,
   methods,

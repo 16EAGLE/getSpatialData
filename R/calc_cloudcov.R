@@ -38,7 +38,6 @@
 #' 
 #' @author Henrik Fisser
 #' 
-#' @importFrom utils object.size
 #' @importFrom raster stack
 #' 
 #' @examples
@@ -122,9 +121,9 @@ calc_cloudcov <- function(records, max_deviation = 5,
   df <- "data.frame"
   NONE <- "NONE"
   
-  out(paste0(sep(),"\n\nProcessing ",
+  out(paste0(sep(),"\nProcessing ",
              n_records,
-             " records\nStarting HOT\n", 
+             " records", 
              sep(), "\n"), verbose=verbose)
   processingTime <- c()
   previewSize <- c()
@@ -235,7 +234,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
       record_cc <- try(calc_hot_cloudcov(record=record_preview,
                                          preview=preview,
                                          aoi=aoi,
-                                         maxDeviation=maxDeviation,
+                                         max_deviation=max_deviation,
                                          cols=.cloudcov_colnames(),
                                          dir_out=dir_out,
                                          verbose=verbose))
@@ -245,7 +244,6 @@ calc_cloudcov <- function(records, max_deviation = 5,
       record_cc <- .handle_cc_skip(record_preview,cloudcov_supported,dir_out)
     }
     
-    previewSize <- c(previewSize,object.size(preview))
     endTime <- Sys.time()
     if (i <= 10) {
       elapsed <- as.numeric(difftime(endTime, startTime, units="mins"))
@@ -254,8 +252,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     if (n_records >= 15 && i == 10) {
       .calcHOTProcTime(numRecords = n_records,
                        i = i,
-                       processingTime = processingTime,
-                       previewSize = previewSize)
+                       processingTime = processingTime)
     }
     
     record_cc <- .unlist_df(record_cc)

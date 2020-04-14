@@ -22,7 +22,7 @@
 #' 
 #' @param records data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param maxDeviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
+#' @param max_deviation numeric, the maximum allowed deviation of calculated scene cloud cover from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover \% given by the data distributor. Default is \code{maxDeviation = 5}.
 #' @param dir_out character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and a record csv for each record will be saved in \code{dir_out}.
 #' @param username character, a valid user name to the ESA Copernicus Open Access Hub. If \code{NULL} (default), the session-wide login credentials are used (see \link{login_CopHub} for details on registration).
 #' @param password character, the password to the specified user account. If \code{NULL} (default) and no seesion-wide password is defined, it is asked interactively ((see \link{login_CopHub} for details on registration).
@@ -98,14 +98,14 @@
 #' 
 #' @export
 
-calc_cloudcov <- function(records, maxDeviation = 5,
+calc_cloudcov <- function(records, max_deviation = 5,
                           aoi = NULL, dir_out = NULL, 
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE) {
   
   ## Check input
   .check_verbose(verbose)
-  aoi <- .check_aoi(aoi,"sp")
-  .check_numeric(maxDeviation, "maxDeviation")
+  aoi <- .check_aoi(aoi, "sp")
+  .check_numeric(max_deviation, "max_deviation")
   dir_out <- .check_dir_out(dir_out)
   .check_character(username, "username")
   .check_character(password, "password")
@@ -115,10 +115,17 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   preview_file <- name_preview_file()
   preview_file_jpg <- name_preview_file_jpg()
   cloud_mask_file <- name_cloud_mask_file()
-  #footprint <- name_footprint()
   cols_initial <- colnames(records)
-  numRecords <- NROW(records)
-  out(paste0(sep(),"\n\nProcessing ",numRecords," records\nStarting HOT\n",sep(),"\n"),verbose=verbose)
+  n_records <- NROW(records)
+  
+  error <- "try-error"
+  df <- "data.frame"
+  NONE <- "NONE"
+  
+  out(paste0(sep(),"\n\nProcessing ",
+             n_records,
+             " records\nStarting HOT\n", 
+             sep(), "\n"), verbose=verbose)
   processingTime <- c()
   previewSize <- c()
   
@@ -130,9 +137,9 @@ calc_cloudcov <- function(records, maxDeviation = 5,
   identifier <- name_record_id()
   
   ## Do HOT cloud cover assessment consecutively
-  records <- as.data.frame(do.call(rbind,lapply(1:numRecords,function(i) {
+  records <- as.data.frame(do.call(rbind,lapply(1:n_records,function(i) {
     
-    out_status <- paste0("[Aoi cloudcov calc ",i,"/",numRecords,"] ")
+    out_status <- paste0("[Aoi cloudcov calc ",i,"/",n_records,"] ")
     startTime <- Sys.time()
     record <- as.data.frame(records[i,])
     id <- record[[identifier]]
@@ -146,10 +153,10 @@ calc_cloudcov <- function(records, maxDeviation = 5,
 
     # check if record csv exists already and if TRUE check if cloud mask exists. If both TRUE return
     # otherwise run HOT afterwards
-    csv_path <- file.path(dir_out,paste0(id,".csv"))[1]
-    if (.is_existing_csv_file(csv_path)) {
-      out(paste0(out_status,"Loading yet processed csv: ",id),msg=T,verbose=v)
-      record <- read_records(csv_path, as_sf = FALSE)
+    record_path <- file.path(dir_out,paste0(id,".csv"))[1]
+    if (.is_existing_csv_file(record_path)) {
+      out(paste0(out_status,"Loading yet processed csv: ",id), msg=T, verbose=v)
+      record <- read_records(record_path, as_sf = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
           NROW(record) > 0) {
@@ -166,7 +173,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       preview_col_given <- preview_file %in% names(record)
       if (preview_col_given) {
         pfile <- record[[preview_file]]
-        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE" , FALSE, file.exists(pfile))
+        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE", FALSE, file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
         } else {
@@ -204,7 +211,7 @@ calc_cloudcov <- function(records, maxDeviation = 5,
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
-    if (inherits(record_preview, "data.frame")) {
+    if (inherits(record_preview, df)) {
       preview_exists <- preview_file %in% names(record_preview)
       if (preview_exists) {
         preview_exists <- !is.na(record_preview[[preview_file]])
@@ -214,10 +221,12 @@ calc_cloudcov <- function(records, maxDeviation = 5,
       }
     }
     
-    get_preview_failed <- is.null(record_preview) || class(record_preview) %in% c("error","try-error") || isFALSE(preview_exists)
+    no_preview <- is.null(record_preview) || !preview_exists
+    preview_error <- inherits(record_preview, error)
+    get_preview_failed <- any(no_preview, preview_error)
     if (get_preview_failed) {
-      record[[preview_file_jpg]] <- "NONE"
-      record[[preview_file]] <- "NONE"
+      record[[preview_file_jpg]] <- NONE
+      record[[preview_file]] <- NONE
       record_preview <- record
     } else {
       # pass preview to HOT function
@@ -232,30 +241,31 @@ calc_cloudcov <- function(records, maxDeviation = 5,
                                          verbose=verbose))
     }
     
-    if (isTRUE(get_preview_failed) || class(record_cc) != "data.frame" || is.na(record_cc)) {
+    if (isTRUE(get_preview_failed) || class(record_cc) != df || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,cloudcov_supported,dir_out)
     }
     
     previewSize <- c(previewSize,object.size(preview))
     endTime <- Sys.time()
     if (i <= 10) {
-      elapsed <- as.numeric(difftime(endTime,startTime,units="mins"))
+      elapsed <- as.numeric(difftime(endTime, startTime, units="mins"))
       processingTime <- c(processingTime,elapsed)
     }
-    if (numRecords >= 15 && i == 10) {
-      .calcHOTProcTime(numRecords=numRecords,i=i,processingTime=processingTime,previewSize=previewSize)
+    if (n_records >= 15 && i == 10) {
+      .calcHOTProcTime(numRecords = n_records,
+                       i = i,
+                       processingTime = processingTime,
+                       previewSize = previewSize)
     }
     
     record_cc <- .unlist_df(record_cc)
 
     # write csv if desired
-    if (!is.null(dir_out)) {
-      write_records(record_cc, file = csv_path)
-    }
+    write_records(record_cc, file = record_path)
     
     return(record_cc)
     
-  })),stringsAsFactors=F)
+  })), stringsAsFactors=F)
   
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)

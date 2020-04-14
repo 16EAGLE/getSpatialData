@@ -1255,6 +1255,89 @@ rbind.different <- function(x) {
   return(brick(b[[1]], b[[3]]))
 }
 
+#' calculates the variance along z dimension
+#' @param RasterBrick or RasterStack
+#' @return RasterLayer variance along z dimension
+#' @keywords internal
+#' @noRd
+.calc_ndim_var <- function(array) {
+  ndim <- nlayers(array)
+  squared_sum <- array[[1]]^2
+  for (i in 2:ndim) {
+    squared_sum <- squared_sum + array[[i]]^2
+  }
+  sum <- array[[1]]
+  for (i in 2:ndim) {
+    sum <- sum + array[[i]]
+  }
+  var <- (squared_sum / (sum / ndim))^2
+  return(var)
+}
+
+#' calculates the standard deviation of an RGB raster stack at z dimension
+#' @param x RasterStack
+#' @return sd RasterLayer
+#' @keywords internal
+#' @noRd
+.ndim_sd <- function(x) {
+  xmean <- (x[[1]] + x[[2]] + x[[3]]) / 3
+  stdev <- sqrt(((preview[[1]] - xmean)^2 + (preview[[2]] - xmean)^2 + (preview[[3]] - xmean)^2) / 3)
+  return(stdev)
+}
+
+#' calculates the normalized difference of two rasters
+#' @param x raster layer
+#' @param y raster layer
+#' @return raster layer normalized difference of x and y
+#' @keywords internal
+#' @noRd
+.normalized_difference <- function(x, y) {
+  return((x - y) / (x + y))
+}
+
+#' rescales raster to 0-100
+#' @param x raster layer
+#' @return raster layer rescaled
+#' @importFrom raster minValue maxValue
+#' @keywords internal
+#' @noRd
+.rescale_raster <- function(x) {
+  return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
+}
+
+#' creates NA mask of preview including checks if observations given
+#' @param preview raster stack
+#' @return preview raster stack
+#' @keywords internal
+#' @noRd
+.mask_preview_na <- function(preview, aoi) {
+  
+  MIN_DN <- 5 # for NA masking
+  MIN_BROKEN <- 20 # for checks if no observations with DN >= 20
+  
+  # Check if preview is broken
+  is_broken <- .check_preview(preview)
+  
+  # Check for valid observations in aoi
+  if (!is_broken) {
+    prevMasked <- mask(preview,aoi)
+    maxValPrevMasked <- maxValue(prevMasked)
+    # if max value smaller 20: no valid observations
+    not_valid_in_aoi <- maxValPrevMasked[1] < MIN_BROKEN || is.na(maxValPrevMasked[1])
+  }
+  
+  # if preview is broken or nor valid observations in aoi return NA
+  if (isTRUE(any(c(is_broken,not_valid_in_aoi)))) {
+    return(NA)
+  } else {
+    # mask NA values in preview (considered as RGB DN < 5 here)
+    NA_mask <- (preview[[1]] > MIN_DN) * (preview[[2]] > MIN_DN) * (preview[[3]] > MIN_DN)
+    preview <- mask(preview, NA_mask, maskvalue=0)
+    return(preview)
+  }
+  
+}
+
 # -------------------------------------------------------------
 # vector utils
 # -------------------------------------------------------------
@@ -1356,13 +1439,4 @@ rbind.different <- function(x) {
   return(paste(Sys.Date(), format(Sys.time(), "%Hh%Mm%Ss"), paste0(name, extension), sep = "_"))
 }
 
-#' calculates a preview water mask. It may happen that clouds get
-#' classified as water, which is not a problem in this case. Though good to know..
-#' @param preview raster stack RGB
-#' @return water mask raster layer (0=water, 1=other)
-#' @keywords internal
-#' @noRd
-.calculate_preview_watermask <- function(preview) {
-  water_mask <- (preview[[3]] - preview[[1]]) < 2 # higher blue minus lower red (water)
-  return(water_mask)
-}
+

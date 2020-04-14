@@ -133,7 +133,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   }
   
   # check preview for valid values and crs
-  preview <- .mask_preview_na(preview)
+  preview <- .mask_preview_na(preview, aoi)
   preview <- .check_crs(preview)
   # mask NA values in preview (considered as RGB DN < 5 here)
   NA_mask <- (preview[[1]] > 5) * (preview[[2]] > 5) * (preview[[3]] > 5)
@@ -155,11 +155,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   hot_fail <- inherits(hot, error)
   
   if (!hot_fail) {
-    mask_list <- .cloudcov_calc_cmask(record = record, preview = preview, hot = hot,
+    mask_list <- .cloudcov_calc_cmask(record = record, 
+                                      preview = preview, 
+                                      hot = hot,
                                       water_mask = water_mask,
                                       max_deviation = max_deviation,
-                                      max_try = max_try, dir_out = dir_out, 
-                                      aoi = aoi, mask_path = mask_path)
+                                      max_try = max_try)
     cloud_mask <- mask_list[[1]]
     hot_fail <- mask_list[[2]]
     if (!hot_fail) {

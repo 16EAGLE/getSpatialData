@@ -717,6 +717,8 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 .unlist_df <- function(records) {
   for (i in 1:NCOL(records)) {
     if (inherits(records[,i], "list")) {
+      print(class(records[,i]))
+      print(class(records))
       records[,i] <- unlist(records[,i])
     }
   }
@@ -1305,7 +1307,7 @@ rbind.different <- function(x) {
   return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
 }
 
-#' creates NA mask of preview including checks if observations given
+#' creates NA mask of preview including checks if observations (in aoi) given
 #' @param preview raster stack
 #' @return preview raster stack
 #' @keywords internal
@@ -1418,8 +1420,9 @@ rbind.different <- function(x) {
       ncol <- 2
       nrow <- length(footprint_eval) / ncol
       m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
-      footprints[[i]] <- st_multipolygon(list(list(m)))
+      footprints[[i]] <- st_multipolygon(list(list(m)))[[1]]
     } else {
+      print(class(footprint))
       footprints[[i]] <- footprint
     }
   }

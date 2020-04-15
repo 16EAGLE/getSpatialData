@@ -293,3 +293,19 @@ name_product_group_sentinel <- function() {
   return(c(name_product(), name_product_group(), name_record_id(), name_product(), 
            name_cloudcov(), name_preview_url()))
 }
+
+#' IO drivers for st_write()
+#' @return named list of character drivers whose support is ensured and their extensions
+#' @keywords internal
+#' @noRd
+.get_records_drivers <- function() {
+  drivers <- list("netCDF" = ".nc", 
+                  "JP2OpenJPEG" = ".jp2", 
+                  "JPEG2000" = ".jp2", 
+                  "ESRI Shapefile" = ".shp", 
+                  "MapInfo File" = ".tab",
+                  "GML" = ".gml", 
+                  "GeoJSON" = ".geojson", 
+                  "GPKG" = ".gpkg")
+  return(drivers)
+}

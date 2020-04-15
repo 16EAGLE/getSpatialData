@@ -344,18 +344,27 @@
   
 }
 
+#' checks if a driver name is available in st_drivers() (GDAL)
+#' @param driver character driver name.
+#' @return nothing. Throws error in case driver cannot be found.
+#' @importFrom sf st_drivers
+#' @keywords internal
+#' @noRd
+.check_gdal_driver <- function(driver) {
+  drivers <- tolower(as.vector(st_drivers()))
+  if (!tolower(driver) %in% drivers$name) out(paste0("Driver: '", driver, "' cannot be found
+                                                       . Use a driver given in sf::st_drivers()"), 3)
+}
+
 #' call .gsd_compact and return NA if list is empty afterwards
 #' @param x list.
 #' @return x without NAs and NULLs
 #' @keywords internal
 #' @noRd
-.check_list <- function(x) {
-  
+.check_compact_list <- function(x) {
   x <- .gsd_compact(x)
   if (length(x) == 0) return(NA) else return(x)
-  
 }
-
 
 #' checks time_range argument
 #' @param time_range char vector

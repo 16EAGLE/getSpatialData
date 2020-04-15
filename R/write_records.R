@@ -14,12 +14,12 @@
 #'  
 #' @return character file path to the saved records csv.
 #' 
-#' @importFrom readr read_csv cols
+#' @importFrom readr write_csv
 #' 
 #' @author Henrik Fisser, 2020
 #' 
 #' @export
-write_records <- function(records, dir_out = NULL, file = NULL) {
+write_records <- function(records, dir_out = NULL, file = NULL, as_sf = TRUE) {
   
   file_given <- !is.null(file)
   

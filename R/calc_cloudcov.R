@@ -306,5 +306,3 @@ calc_cloudcov <- function(records, max_deviation = 5,
   return(records)
 
 }
-
-

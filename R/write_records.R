@@ -49,6 +49,3 @@ write_records <- function(records, file_name = NULL, driver = "GPKG", dir_out = 
   return(file)
   
 }
-
-
-

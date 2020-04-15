@@ -95,8 +95,7 @@
 #' @author Henrik Fisser
 #' 
 #' @importFrom raster nlayers stack values mask maxValue minValue raster
-#' @importFrom L1pack lad
-#' @importFrom stats na.omit qexp
+#' @importFrom stats na.omit
 #' 
 #' @keywords internal
 #' @noRd
@@ -321,7 +320,3 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   clear <- ((clear_prob > 55) + medium + dark) >= 1
   return(clear)
 }
-
-
-
-

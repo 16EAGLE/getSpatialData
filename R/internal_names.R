@@ -306,6 +306,7 @@ name_product_group_sentinel <- function() {
                   "MapInfo File" = ".tab",
                   "GML" = ".gml", 
                   "GeoJSON" = ".geojson", 
-                  "GPKG" = ".gpkg")
+                  "GPKG" = ".gpkg",
+                  "csv" = "csv")
   return(drivers)
 }

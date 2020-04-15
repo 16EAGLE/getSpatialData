@@ -1290,7 +1290,7 @@ rbind.different <- function(x) {
 #' calculates the normalized difference of two rasters
 #' @param x RasterLayer
 #' @param y RasterLayer
-#' @return raster layer normalized difference of x and y
+#' @return RasterLayer normalized difference of x and y
 #' @keywords internal
 #' @noRd
 .normalized_difference <- function(x, y) {
@@ -1300,8 +1300,8 @@ rbind.different <- function(x) {
 }
 
 #' rescales raster to 0-100
-#' @param x raster layer
-#' @return raster layer rescaled
+#' @param x RasterLayer
+#' @return RasterLayer rescaled
 #' @importFrom raster minValue maxValue
 #' @keywords internal
 #' @noRd

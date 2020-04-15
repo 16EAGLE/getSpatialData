@@ -1086,6 +1086,8 @@ rbind.different <- function(x) {
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
 #' @importFrom raster mask crs extent crs<-
+#' @keywords internal
+#' @noRd
 .landsat_preview_mask_edges <- function(preview) {
   
   polygons <- "polygons"

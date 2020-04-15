@@ -66,7 +66,6 @@
     aoi_cProb <- cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
   }
   if (isFALSE(reload)) {
-    cMask <- mask(cMask,aoi)
     cMask[cMask==0] <- NA
   }
   if (!file.exists(mask_path)) {

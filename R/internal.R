@@ -1296,7 +1296,8 @@ rbind.different <- function(x) {
 .normalized_difference <- function(x, y) {
   a <- x - y
   b <- x + y
-  return(a / b)
+  norm_diff <- a / b
+  return(norm_diff)
 }
 
 #' rescales raster to 0-100

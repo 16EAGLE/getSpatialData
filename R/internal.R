@@ -1444,6 +1444,20 @@ rbind.different <- function(x) {
   return(paste(Sys.Date(), format(Sys.time(), "%Hh%Mm%Ss"), paste0(name, extension), sep = "_"))
 }
 
+#' generate records filename
+#' @param file_name character file basename
+#' @param dir_out character directory
+#' @param driver character driver name as returned by st_drivers() plus "csv"
+#' @keywords internal
+#' @noRd
+.generate_records_filename <- function(file_name = NULL, dir_out = NULL, driver = NULL) {
+  if (is.null(driver)) driver <- "GPKG" # be able to provide a NULL driver through ... on higher level
+  ext <- .get_driver_extension(driver)
+  if (is.null(file_name)) file_name <- .generate_datetime_filename("records", extension = ext)
+  file <- file.path(dir_out, file_name)
+  return(file)
+}
+
 #' returns the extension of a (GDAL) driver
 #' @param driver character name of the driver
 #' @return ext character the corresponding extension
@@ -1454,5 +1468,4 @@ rbind.different <- function(x) {
   ext <- ifelse(driver %in% names(drivers), drivers[[driver]], "")
   return(ext)
 }
-
 

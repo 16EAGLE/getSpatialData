@@ -14,7 +14,7 @@
 #' @keywords internal
 #' ---------------------------------------------------------------------
 
-#' calls the different steps of selection for a sub-period
+#' calls the steps of a selection for a sub-period
 #' this includes enforcement of max_cloudcov_tile and max_sub_period
 #' @param records data.frame subsetted to a sub-period.
 #' @param aoi aoi.
@@ -39,6 +39,7 @@
                                 period, period_new = NULL, base_records = NULL,
                                 max_sub_period, max_cloudcov_tile, min_improvement, satisfaction_value,
                                 delete_files, params, dir_out, ts) {
+  LIST <- "list"
   
   # the sub is an ordering of all available records per tile according to aoi cloud cover
   # this is the step where max_cloudcov_tile is ensured
@@ -50,21 +51,21 @@
                      date_col=params$date_col,
                      identifier=params$identifier)
   
-  sub <- .check_list(sub)
-  if (class(sub) != "list") return(NA)
+  sub <- .check_compact_list(sub)
+  if (class(sub) != LIST) return(NA)
   
   # this step enforces max_sub_period. It returns a list of vectors of indices 
   # pointing to records in records. The list is ordererd according to aoi cloud cover
   sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
                                      date_col=params$date_col,aoi_cc_col=params$aoi_cc_col)
   
-  sub_within <- .check_list(sub_within)
-  if (class(sub_within) != "list") return(NA)
+  sub_within <- .check_compact_list(sub_within)
+  if (!inherits(sub_within, LIST)) return(NA)
   
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
     out(params$sep)
-    out(paste0("Calculating mosaic for timestamp: ",ts))
+    out(paste0("Calculating mosaic for timestamp: ", ts))
   }
   
   selected <- try(.select_calc_mosaic(records,
@@ -226,7 +227,7 @@
                                          min_date = min_date, max_date = max_date,
                                          period_new = period_new,
                                          max_sub_period = max_sub_period))
-  if (inherits(best_period,"try-error")) {
+  if (inherits(best_period, "try-error")) {
     return(NA)
   } else {
     incl <- .select_subset_to_best_period(dates,best_period)
@@ -239,11 +240,12 @@
 #' helper for subsetting records to the best_period
 #' @param dates numeric vector of dates as days since 1970-01-01.
 #' @param best_period numeric vector of two dates in the same format as dates.
-#' @return \code{order} 
+#' @return incl integer vector
 #' @keywords internal
 #' @noRd
 .select_subset_to_best_period <- function(dates, best_period) {
-  incl <- intersect(which(dates > best_period[1]),which(dates < best_period[2]))
+  incl <- intersect(which(dates > best_period[1]), which(dates < best_period[2]))
+  return(incl)
 }
 
 #' selects best period from graded dates of a timestamp, optionally combined
@@ -346,7 +348,8 @@
 #' @keywords internal
 #' @noRd
 .select_force_distance <- function(period, min_distance) {
-  next_date <- as.Date(period[2]) + min_distance 
+  next_date <- as.Date(period[2]) + min_distance
+  return(next_date)
 }
 
 #' handles the determined earliest start date for next sub-period calculated from min_distance
@@ -358,7 +361,6 @@
 #' @keywords internal
 #' @noRd
 .select_handle_next_sub <- function(first_date, period_initial, min_distance, max_sub_period) {
-  
   dfirst_date <- as.Date(first_date)
   dperiod_initial <- as.Date(period_initial)
   
@@ -369,8 +371,7 @@
     # theoretical first date of next sub is larger than the last date of period available in records
     .select_temporally_incosistent_error(min_distance, max_sub_period)
   }
-  
-  }
+}
 
 #' checks if an new coverage percentage exceeds the min_improvement argument
 #' @param min_improvement numeric.
@@ -394,11 +395,9 @@
 #' @keywords internal
 #' @noRd
 .select_within_period <- function(records, period, date_col) {
-  
   dates <- as.Date(records[[date_col]])
   cond <- intersect(which(dates >= period[1]),which(dates <= period[2]))
   records <- records[cond,]
-  
 }
 
 #' bridge function to the period identifier \link{.identify_period}. Enables to calculate from

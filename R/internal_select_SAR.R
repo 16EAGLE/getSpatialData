@@ -10,6 +10,7 @@
 #' guided by the optical selection in case there is one. Otherwise, SAR selection is
 #' conducted independently.
 #' @keywords internal
+#' @author Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' select timestamps for SAR data according to num_timestamps, min_distance and max_sub_period.

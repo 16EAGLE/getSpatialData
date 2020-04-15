@@ -12,6 +12,7 @@
 #' with 'max_sub_period'. This temporal sub selection process is followed by
 #' the spatial sub selection process, which is done through internal_select_mosaicking.
 #' @keywords internal
+#' @author Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' calls the steps of a selection for a sub-period

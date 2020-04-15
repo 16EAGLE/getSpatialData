@@ -4,8 +4,8 @@
 #' @details It contains select_ specific methods. Rather generic methods that
 #' might be useful for other package-internal functionalities are situated
 #' in internal. Checks are in checks. The frontends of select_ are located in dedicated select_ functions.
-#' @author Henrik Fisser, 2019
 #' @keywords internal
+#' @author Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' select main process

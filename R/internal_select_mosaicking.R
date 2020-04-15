@@ -3,6 +3,7 @@
 #' @description These are the functions that conduct the spatial selection
 #' process and everything related to cloud mask and preview mosaicking within select.
 #' @keywords internal
+#' @author Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' bridge to .make_mosaic
@@ -19,7 +20,8 @@
   tmp_load <- raster(paths[1])
   src_datatype <- dataType(tmp_load)
   srcnodata <- ifelse(src_datatype == "INT2S","-32768","-3.3999999521443642e+38")
-  mos_base <- .make_mosaic(paths,save_path,mode=mode,srcnodata=srcnodata,datatype=src_datatype)
+  mos_base <- .make_mosaic(paths,save_path, mode=mode, srcnodata=srcnodata,
+                           datatype=src_datatype)
   if (class(mos_base) != "RasterLayer") {
     return(NA)
   } else {

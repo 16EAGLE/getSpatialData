@@ -351,9 +351,9 @@
 #' @keywords internal
 #' @noRd
 .check_gdal_driver <- function(driver) {
-  drivers <- tolower(as.vector(st_drivers()))
-  append(drivers, "csv")
-  if (!tolower(driver) %in% drivers$name) out(paste0("Driver: '", driver, "' cannot be found
+  drivers <- tolower(as.vector(st_drivers()$name))
+  drivers <- append(drivers, "csv")
+  if (!tolower(driver) %in% drivers) out(paste0("Driver: '", driver, "' cannot be found
                                                        . Use a driver given in sf::st_drivers()"), 3)
 }
 

@@ -233,12 +233,13 @@
     name_x <- names(x)
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
-    x <- .aggr_rasters(x,name_x,aoi=aoi,dir_out=tmp_dir)
+    x <- .aggr_rasters(x,name_x, aoi=aoi, dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
+    next_record <- mask(x, aoi) # mask to aoi because saved cloud mask is not aoi cloud mask
     next_record <- .check_crs(next_record)
-    curr_base_mos_crop <- crop(base_mos,next_record) # crop base mosaic to tile area of next
-    aoi_subset <- as(extent(next_record),"SpatialPolygons")
+    curr_base_mos_crop <- crop(base_mos, next_record) # crop base mosaic to tile area of next
+    aoi_subset <- as(extent(next_record), "SpatialPolygons")
     aoi_subset <- .check_crs(aoi_subset)
     aoi_subset <- intersect(aoi_subset,aoi)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,n_pixel_aoi)
@@ -246,8 +247,8 @@
     if (round(cov_init) == 99) {
       add_it <- FALSE
     } else {
-      crop_p <- file.path(tmp_dir,"crop_tmp.tif")
-      curr_mos_tmp_p <- normalizePath(file.path(tmp_dir,"curr_crop_mos_tmp.tif"))
+      crop_p <- file.path(tmp_dir, "crop_tmp.tif")
+      curr_mos_tmp_p <- normalizePath(file.path(tmp_dir, "curr_crop_mos_tmp.tif"))
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
       

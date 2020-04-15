@@ -134,6 +134,10 @@ calc_cloudcov <- function(records, max_deviation = 5,
                           aoi = NULL, dir_out = NULL, 
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE) {
   
+  TRYERROR <- "try-error"
+  DF <- "data.frame"
+  NONE <- "NONE"
+  
   ## Check input
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi, "sp")
@@ -149,10 +153,6 @@ calc_cloudcov <- function(records, max_deviation = 5,
   cloud_mask_file <- name_cloud_mask_file()
   cols_initial <- colnames(records)
   n_records <- NROW(records)
-  
-  error <- "try-error"
-  df <- "data.frame"
-  NONE <- "NONE"
   
   out(paste0(sep(),"\nProcessing ",
              n_records,
@@ -205,7 +205,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
       preview_col_given <- preview_file %in% names(record)
       if (preview_col_given) {
         pfile <- record[[preview_file]]
-        preview_exists <- ifelse(is.na(pfile) || pfile == "NONE", FALSE, file.exists(pfile))
+        preview_exists <- ifelse(is.na(pfile) || pfile == NONE, FALSE, file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
         } else {
@@ -243,7 +243,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
-    if (inherits(record_preview, df)) {
+    if (inherits(record_preview, DF)) {
       preview_exists <- preview_file %in% names(record_preview)
       if (preview_exists) {
         preview_exists <- !is.na(record_preview[[preview_file]])
@@ -254,7 +254,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     }
     
     no_preview <- is.null(record_preview) || !preview_exists
-    preview_error <- inherits(record_preview, error)
+    preview_error <- inherits(record_preview, TRYERROR)
     get_preview_failed <- any(no_preview, preview_error)
     if (get_preview_failed) {
       record[[preview_file_jpg]] <- NONE
@@ -273,7 +273,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
                                          verbose=verbose))
     }
     
-    if (isTRUE(get_preview_failed) || class(record_cc) != df || is.na(record_cc)) {
+    if (isTRUE(get_preview_failed) || class(record_cc) != DF || is.na(record_cc)) {
       record_cc <- .handle_cc_skip(record_preview,cloudcov_supported,dir_out)
     }
     

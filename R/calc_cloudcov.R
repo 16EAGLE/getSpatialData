@@ -187,7 +187,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     # otherwise run HOT afterwards
     record_path <- file.path(dir_out,paste0(id,".csv"))[1]
     if (.is_existing_csv_file(record_path)) {
-      out(paste0(out_status,"Loading yet processed csv: ",id), msg=T, verbose=v)
+      out(paste0(out_status,"Loading yet processed record: ",id), msg=T, verbose=v)
       record <- read_records(record_path, as_sf = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
@@ -297,7 +297,8 @@ calc_cloudcov <- function(records, max_deviation = 5,
     
   })), stringsAsFactors=F)
   
-  out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",sep(),"\n"))
+  out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",
+             sep(),"\n"))
   .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
   records <- .check_records(records, as_df = !as_sf)
   records <- .eval_records_footprints(records, as_sf = as_sf)

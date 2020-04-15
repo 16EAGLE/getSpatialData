@@ -2,27 +2,32 @@
 % Please edit documentation in R/write_records.R
 \name{write_records}
 \alias{write_records}
-\title{Writes records to a csv file}
+\title{Writes records to a file}
 \usage{
-write_records(records, dir_out = NULL, file = NULL, as_sf = TRUE)
+write_records(records, file_name = NULL, driver = "GPKG",
+  dir_out = NULL, file = NULL, append = FALSE, verbose = TRUE)
 }
 \arguments{
-\item{dir_out}{directory where to write the records csv. A file name will be automatically
-generated from date and time in case \code{dir_out} is set through \link{set_archive} or provided. 
-Default is NULL.}
+\item{file_name}{character name of the file to be saved. If it is NULL a file name will be 
+automatically generated from date and time.}
 
-\item{file}{character complete file path where to write the records csv. Default is NULL.
-If a \code{dir_out} is not NULL because it is set through \link{set_archive} or provided, 
-\code{file} will be ignored.}
+\item{driver}{character specifies the writer. Options are all returned by
+sf::st_drivers() and "csv". Will be ignored in case a fully qualified
+\code{file} path is provided. Default is "GPKG"}
 
-\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
+\item{file}{character complete file path where to write the records. Must be a full file path
+including file basename and extension matching a supported driver. Default is NULL.}
+
+\item{append}{logical, if TRUE and a file path is given through \code{file}, the record(s)
+will be appended to \code{file} if possible.}
+
+\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 }
 \value{
-character file path to the saved records csv.
+character file path to the saved records.
 }
 \description{
-\code{write_records} write records to a csv file
-that has been previously written through \link{write_records}.
+\code{write_records} write records to a file.
 }
 \author{
 Henrik Fisser, 2020

@@ -4,12 +4,12 @@
 \alias{read_records}
 \title{read records from a csv file}
 \usage{
-read_records(file, as_sf = TRUE)
+read_records(file, as_sf = TRUE, verbose = TRUE)
 }
 \arguments{
-\item{file}{character complete file path from where to read the records csv.}
+\item{file}{character complete file path from where to read the records file.}
 
-\item{as_sf}{logical specify if the records shall be returned as sf object.
+\item{as_sf}{logical specifies if the records shall be returned as sf object.
 Otherwise a data.frame will be returned.}
 }
 \value{

@@ -4,7 +4,7 @@
 \alias{write_records}
 \title{Writes records to a csv file}
 \usage{
-write_records(records, dir_out = NULL, file = NULL)
+write_records(records, dir_out = NULL, file = NULL, as_sf = TRUE)
 }
 \arguments{
 \item{dir_out}{directory where to write the records csv. A file name will be automatically
@@ -14,6 +14,8 @@ Default is NULL.}
 \item{file}{character complete file path where to write the records csv. Default is NULL.
 If a \code{dir_out} is not NULL because it is set through \link{set_archive} or provided, 
 \code{file} will be ignored.}
+
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 }
 \value{
 character file path to the saved records csv.

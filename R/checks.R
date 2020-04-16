@@ -415,7 +415,7 @@
 #' @noRd
 .check_type <- function(input, arg_name, type) {
   raster_classes <- c("RasterLayer", "RasterStack", "RasterBrick")
-  is_raster <- class(input) %in% raster_classes
+  is_raster <- any(class(input) %in% raster_classes)
   check_possible <- !is.null(input)
   is_list <- inherits(check_possible, "list")
   check_possible <- ifelse(is_list, check_possible[[1]], check_possible[1])

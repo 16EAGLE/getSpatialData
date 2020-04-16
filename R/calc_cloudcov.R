@@ -243,7 +243,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
       record_preview <- NULL
     }
     
-    options("gSD.verbose"=v) # reset verbose to original value after supressing verbose in get_previews
+    options(name_verbose_option()=v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
     if (inherits(record_preview, DF)) {
@@ -295,6 +295,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
 
     # write record if desired
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
+    options(name_verbose_option()=v)
     return(record_cc)
     
   })), stringsAsFactors=F)

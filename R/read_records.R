@@ -29,6 +29,7 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
       records[[FOOTPRINT]] <- NULL
       names(records)[which(names(records) == GEOM)] <- FOOTPRINT
     }
+    st_geometry(records) <- FOOTPRINT
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

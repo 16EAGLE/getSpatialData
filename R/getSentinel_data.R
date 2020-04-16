@@ -91,7 +91,7 @@ getSentinel_data <- function(records, dir_out = NULL, force = FALSE, username = 
   }
   
   ## Intercept false inputs and get inputs
-  char_args <- list("records$uuid" = records$uuid, "records$url" = records$url, "records$identifier" = records$identifier, dir_out = dir_out)
+  char_args <- list("records$uuid" = records$entity_id, "records$url" = records$dataset_url, "records$identifier" = records$identifier, dir_out = dir_out)
   for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("'", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
   if(!dir.exists(dir_out)) out("The defined output directory does not exist.", type=3)
   

@@ -401,7 +401,7 @@
 .check_verbose <- function(verbose) {
   .check_logical(verbose, "verbose")
   if (any(c(is.null(verbose), is.na(verbose)))) verbose <- TRUE # default value
-  options(name_verbose_option() = verbose)
+  .set_verbose(verbose)
 }
 
 #' checks preview and returns if it is broken (no values above DN 20)

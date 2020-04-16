@@ -148,7 +148,6 @@ calc_cloudcov <- function(records, max_deviation = 5,
   dir_out <- .check_dir_out(dir_out, which="cloud_masks")
   .check_character(username, "username")
   .check_character(password, "password")
-  .check_verbose(verbose)
   records <- .check_records(records, .cloudcov_get_needed_cols(), as_df=T)
   # additional args to be passed to write_records
   dots <- list(...)
@@ -243,7 +242,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
       record_preview <- NULL
     }
     
-    options(name_verbose_option()=v) # reset verbose to original value after supressing verbose in get_previews
+    .set_verbose(v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
     if (inherits(record_preview, DF)) {
@@ -295,7 +294,8 @@ calc_cloudcov <- function(records, max_deviation = 5,
 
     # write record if desired
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
-    options(name_verbose_option()=v)
+    verbose <- v
+    .set_verbose(verbose)
     return(record_cc)
     
   })), stringsAsFactors=F)

@@ -1473,3 +1473,11 @@ rbind.different <- function(x) {
   return(ext)
 }
 
+#' sets the verbose option
+#' @param verbose logical
+#' @keywords internal
+#' @noRd
+.set_verbose <- function(verbose) {
+  options("gSD.verbose" = verbose)
+}
+

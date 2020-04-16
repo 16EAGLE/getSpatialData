@@ -33,7 +33,8 @@
     catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
     rm(catch)
   }
-  if(as_df) records <- as.data.frame(records) else records <- st_sf(records, sfc_last = F)
+  records <- st_sf(records, sfc_last = F)
+  if(as_df) records <- as.data.frame(records) 
   return(records)
 }
 

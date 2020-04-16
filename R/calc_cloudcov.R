@@ -188,7 +188,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     # otherwise run HOT afterwards
     record_path <- .generate_records_filename(file_name = id, dir_out = dir_out, driver = driver)
     if (.check_file_exists(record_path)) {
-      out(paste0(out_status,"Loading yet processed record: ",id), msg=T, verbose=v)
+      out(paste0(out_status,"Loading yet processed record: ", id), msg=T, verbose=v)
       record <- read_records(record_path, as_sf = F, verbose = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
@@ -290,7 +290,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     
     record_cc <- .unlist_df(record_cc)
 
-    # write record if desired
+    # write record
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
     verbose <- v
     .set_verbose(verbose)
@@ -298,12 +298,14 @@ calc_cloudcov <- function(records, max_deviation = 5,
     
   }))
   
-  return(records)
-
+  # when we get a matrix from do.call rbind convert to data.frame
+  # otherwise it is already sf data.frame
+  if (class(records) == "matrix") records <- as.data.frame(records)
+  # ensure spatial footprints
+  records <- .eval_records_footprints(records, as_sf = as_sf)
+  records <- .check_records(records, as_df = !as_sf)
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",
              sep(),"\n"))
-  records <- .check_records(records, as_df = !as_sf)
-  records <- .eval_records_footprints(records, as_sf = as_sf)
   records <- .column_summary(records, cols_initial)
   return(records)
 

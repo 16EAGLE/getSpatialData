@@ -139,16 +139,6 @@
   if(type == "sp") return(aoi.sp)
 }
 
-#' checks if object has a crs
-#' @param raster, sp or sf object
-#' @return nothing. In case of flawed preview: error
-#' @importFrom sf st_crs
-#' @keywords internal
-#' @noRd
-.check_crs <- function(preview) {
-  .check_rasterStack(preview, "preview")
-}
-
 #' checks if an error of a http request is likely to be related to an expired login
 #' and tries to login with saved or given credentials.
 #' @param response a caught error message.

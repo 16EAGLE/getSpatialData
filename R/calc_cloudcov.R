@@ -10,12 +10,12 @@
 #' Orignally, the base computation was introduced by Zhang et al. (2002) [2]. 
 #' The computation done in \code{calc_cloudcov} includes the following steps:
 #' \enumerate{
-#' \enum Binning: extract low red values and their highest blue values
-#' \enum Regression: calculate linear regression of these values
-#' \enum HOT layer: compute haze-optimal transformation cloud likelihood layer
-#' \enum Iterative thresholding: Find a HOT threshold by iterative comparison with
+#' \item Binning: extract low red values and their highest blue values
+#' \item Regression: calculate linear regression of these values
+#' \item HOT layer: compute haze-optimal transformation cloud likelihood layer
+#' \item Iterative thresholding: Find a HOT threshold by iterative comparison with
 #' the provider scene cloud cover.
-#' \enum Aoi cloud cover calculation: Calculate the aoi cloud cover from the binary
+#' \item Aoi cloud cover calculation: Calculate the aoi cloud cover from the binary
 #' cloud mask.
 #' }
 #' 
@@ -171,7 +171,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
   identifier <- name_record_id()
 
   ## Do HOT cloud cover assessment consecutively
-  records <- as.data.frame(do.call(rbind,lapply(1:n_records,function(i) {
+  records <- as.data.frame(do.call(rbind, lapply(1:n_records,function(i) {
     
     out_status <- paste0("[Aoi cloudcov calc ",i,"/",n_records,"] ")
     startTime <- Sys.time()
@@ -179,8 +179,8 @@ calc_cloudcov <- function(records, max_deviation = 5,
     id <- record[[identifier]]
     sensor <- record[[name_product()]]
     
-    if (any(is.na(c(id,sensor)))) {
-      return(.handle_cc_skip(record,FALSE,dir_out))
+    if (any(is.na(c(id, sensor)))) {
+      return(.cloudcov_handle_skip(record,FALSE,dir_out))
     }
     
     cloudcov_supported <- .cloudcov_supported(record)
@@ -190,16 +190,16 @@ calc_cloudcov <- function(records, max_deviation = 5,
     record_path <- .generate_records_filename(file_name = id, dir_out = dir_out, driver = driver)
     if (.check_file_exists(record_path)) {
       out(paste0(out_status,"Loading yet processed record: ",id), msg=T, verbose=v)
-      record <- read_records(record_path, as_sf = FALSE, verbose = FALSE)
+      record <- read_records(record_path, as_sf = F, verbose = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
           NROW(record) > 0) {
         if (.check_file_exists(record[[cloud_mask_file]])) {
-          return(record)
+          return(as.data.frame(record))
         }
       }
     } else {
-      out(paste0(out_status,"Processing: ",id),msg=T,verbose=v)
+      out(paste0(out_status,"Processing: ",id), msg=T, verbose=v)
     }
     
     # if preview exists not yet: get it. Then run HOT
@@ -270,13 +270,13 @@ calc_cloudcov <- function(records, max_deviation = 5,
                                          preview = preview,
                                          aoi = aoi,
                                          max_deviation = max_deviation,
-                                         cols =.cloudcov_colnames(),
+                                         cols = .cloudcov_colnames(),
                                          dir_out = dir_out,
                                          verbose = verbose))
     }
     
-    if (isTRUE(get_preview_failed) || class(record_cc) != DF || is.na(record_cc)) {
-      record_cc <- .cloudcov_handle_skip(record_preview,cloudcov_supported,dir_out)
+    if (isTRUE(get_preview_failed) || !inherits(record_cc, DF) || is.na(record_cc)) {
+      record_cc <- .cloudcov_handle_skip(record_preview, cloudcov_supported, dir_out)
     }
     
     endTime <- Sys.time()
@@ -296,7 +296,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
     verbose <- v
     .set_verbose(verbose)
-    return(record_cc)
+    return(as.data.frame(record_cc))
     
   })), stringsAsFactors=F)
   

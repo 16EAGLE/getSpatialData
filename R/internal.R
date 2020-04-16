@@ -1417,8 +1417,8 @@ rbind.different <- function(x) {
   for (i in 1:NROW(records)) {
     record <- records[i,]
     f <- record[[name_footprint]][[1]]
-    is_sfc <- inherits(f, "sfc")
-    if (is_sfc) {
+    is_sfg <- inherits(f, "sfg")
+    if (is_sfg) {
       footprints[[i]] <- f[[1]]
     } else {
       footprint_eval <- unlist(eval(parse(text = footprint)))

@@ -75,7 +75,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   # check preview for valid values and crs
   preview <- .mask_preview_na(preview, aoi)
-  if (is.na(preview)) {
+  if (!(class(preview) %in% c("RasterStack", "RasterBrick")) && is.na(preview)) {
     record <- .cloudcov_handle_skip(record, dir_out = dir_out)
     return(record)
   }

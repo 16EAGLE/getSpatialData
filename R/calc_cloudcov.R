@@ -212,7 +212,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
         } else {
           .check_login(records=record)
           record_preview <- tryCatch({
-            get_previews(record,dir_out=dir_out,verbose=F)
+            get_previews(record, dir_out = dir_out, verbose = F)
           },
           error=function(err) {
             return(err)
@@ -221,17 +221,17 @@ calc_cloudcov <- function(records, max_deviation = 5,
       } else {
         .check_login(records=record)
         record_preview <- tryCatch({
-          get_previews(record,dir_out=dir_out,verbose=F)
+          get_previews(record, dir_out = dir_out, verbose = F)
         },
         error=function(err) {
           return(err)
         })
       }
       
-      if (inherits(record_preview,"error")) {
+      if (inherits(record_preview, "error")) {
         .check_http_error(record_preview,record,username,password,verbose=v)
         record_preview <- tryCatch({
-          get_previews(record,dir_out=dir_out,verbose=F)
+          get_previews(record, dir_out = dir_out, verbose = F)
         },
         error=function(err) {
           return(NULL)
@@ -288,7 +288,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
                        processingTime = processingTime)
     }
     
-    record_cc <- .unlist_df(record_cc)
+    record_cc <- .unlist_df(record_cc) # ensure no column as a whole is a list before writing
 
     # write record
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
@@ -300,7 +300,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
   
   # when we get a matrix from do.call rbind convert to data.frame
   # otherwise it is already sf data.frame
-  if (class(records) == "matrix") records <- as.data.frame(records)
+  if (inherits(records, "matrix")) records <- as.data.frame(records)
   # ensure spatial footprints
   records <- .eval_records_footprints(records, as_sf = as_sf)
   records <- .check_records(records, as_df = !as_sf)

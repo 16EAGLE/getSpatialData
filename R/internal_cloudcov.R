@@ -259,9 +259,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 #' @keywords internal
 #' @noRd
 .cloudcov_record_finalize <- function(record, aoi, cMask, HOT, scene_cPercent,
-                                    mask_path, cols, reload=F) {
+                                      mask_path, cols, reload=F) {
   
-  dir_out_exists <- file.exists(dirname(file))
+  dir_out_exists <- file.exists(dirname(mask_path))
   aoi_cPercent <- .raster_percent(cMask,aoi=aoi) # calculate the absolute HOT cloud cover in aoi
   if (is.null(HOT)) {
     aoi_cProb <- 9999

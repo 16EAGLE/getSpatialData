@@ -1453,7 +1453,11 @@ rbind.different <- function(x) {
 .generate_records_filename <- function(file_name = NULL, dir_out = NULL, driver = NULL) {
   if (is.null(driver)) driver <- "GPKG" # be able to provide a NULL driver through ... on higher level
   ext <- .get_driver_extension(driver)
-  if (is.null(file_name)) file_name <- .generate_datetime_filename("records", extension = ext)
+  if (is.null(file_name)) {
+    file_name <- .generate_datetime_filename("records", extension = ext)
+  } else {
+    file_name <- paste0(file_name, ext)
+  }
   file <- file.path(dir_out, file_name)
   return(file)
 }

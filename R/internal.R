@@ -1405,7 +1405,7 @@ rbind.different <- function(x) {
 }
 
 #' evaluate records footprints after csv read (they get wasted when writing to csv)
-#' @param records data.frame read from csv
+#' @param records sf data.frame
 #' @param as_sf logical if records shall be returned as sf
 #' @return records data.frame sf or data.frame
 #' @importFrom sf st_multipolygon st_sfc
@@ -1481,3 +1481,33 @@ rbind.different <- function(x) {
   options("gSD.verbose" = verbose)
 }
 
+#' convert data.frame characters to their actual class (character, numeric, integer)
+#' @param df (sf) data.frame
+#' @keywords internal
+#' @noRd
+.uncharacter_dataframe <- function(df) {
+  if (inherits(df, "data.frame")) {
+    for (i in 1:NCOL(df)) {
+      column <- df[[i]]
+      column_new <- c()
+      if (inherits(column, "character")) {
+        for (j in 1:length(column)) {
+          element <- column[j]
+          if (is.null(element)) {
+            column_new[j] <- element
+          } else if (is.na(element)) {
+            column_new[j] <- element
+          } else if (is.na(suppressWarnings(try(as.numeric(element))))) {
+            char <- as.character(element)
+            if (char == "NA") char <- NA
+            column_new[j] <- char
+          } else {
+            column_new[j] <- as.numeric(element)
+          }
+        }
+        df[[i]] <- column_new
+      }
+    }
+  }
+  return(df)
+}

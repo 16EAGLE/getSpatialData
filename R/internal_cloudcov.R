@@ -75,10 +75,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   # check preview for valid values and crs
   preview <- .mask_preview_na(preview, aoi)
+  if (is.na(preview)) {
+    .cloudcov_handle_skip(record, dir_out = dir_out)
+  }
+  
   preview <- .check_crs(preview)
   # mask NA values in preview (considered as RGB DN < 5 here)
   NA_mask <- (preview[[1]] > 5) * (preview[[2]] > 5) * (preview[[3]] > 5)
-  preview <- mask(preview,NA_mask,maskvalue=0)
+  preview <- mask(preview, NA_mask, maskvalue=0)
   # in case of Landsat the tiles have invalid edges not represented 
   # as zeros that have to be masked as well
   if (record[[name_product_group()]] %in% c(name_product_group_landsat())) {
@@ -90,12 +94,19 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   water_mask <- try(.safe_water(preview))
   hot_fail <- inherits(water_mask, error)
   
+  print("0")
+  print(hot_fail)
+  
   if (!hot_fail) {
+    print("1")
+    print(hot_fail)
     hot <- try(.cloudcov_calc_hot(preview, water_mask))
     hot_fail <- inherits(hot, error)
   }
   
   if (!hot_fail) {
+    print("2")
+    print(hot_fail)
     mask_list <- .cloudcov_calc_cmask(record = record, 
                                       preview = preview, 
                                       hot = hot,
@@ -105,7 +116,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     cloud_mask <- mask_list[[1]]
     hot_fail <- mask_list[[2]]
     if (!hot_fail) {
-      # calc scene cc percentage 
+      # calc scene cc percentage
       scene_cPercent <- .raster_percent(cloud_mask,mode="custom",custom=c(0,1))
     }
   }
@@ -212,9 +223,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     hot_fail <- inherits(cloud_mask, error)
     cPercent <- .raster_percent(cloud_mask, mode="custom", custom=c(0,1))
     # if provider cloudcov is NA get out at this point
-    if (is.na(provider_cloudcov) || provider_cloudcov == "NA") deviation <- 0
+    if (is.na(provider_cloudcov)) provider_cloudcov <- cPercent
     # difference between scene cloud cover from HOT and from data provider
-    try(deviation <- provider_cloudcov - as.numeric(cPercent))
+    deviation <- try(provider_cloudcov - cPercent)
     hot_fail <- inherits(deviation, error) || is.na(deviation) || is.null(deviation)
     if (!hot_fail) {
       # if deviation is larger positive maxDeviation

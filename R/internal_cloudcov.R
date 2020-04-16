@@ -195,7 +195,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
                                  max_deviation, max_try) {
   
   error <- "try-error"
-  provider_cloudcov <- as.numeric(record[[name_cloudcov()]][1])
+  provider_cloudcov <- record[[name_cloudcov()]][1]
   
   hot_threshold <- 40
   num_try <- 1
@@ -212,7 +212,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     hot_fail <- inherits(cloud_mask, error)
     cPercent <- .raster_percent(cloud_mask, mode="custom", custom=c(0,1))
     # if provider cloudcov is NA get out at this point
-    if (is.na(provider_cloudcov)) deviation <- 0
+    if (is.na(provider_cloudcov) || provider_cloudcov == "NA") deviation <- 0
     # difference between scene cloud cover from HOT and from data provider
     try(deviation <- provider_cloudcov - as.numeric(cPercent))
     hot_fail <- inherits(deviation, error) || is.na(deviation) || is.null(deviation)

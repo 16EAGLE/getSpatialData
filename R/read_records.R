@@ -18,8 +18,7 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
   .check_character(file, "file")
   .check_file_exists(file, 3)
   records <- try(st_read(file, stringsAsFactors = FALSE, quiet = !verbose))
-  has_dataframe <- inherits(records, "data.frame") # sf dataframe
-  if (has_dataframe) {
+  if (inherits(records, "data.frame")) { # sf dataframe
     records <- .eval_records_footprints(records, as_sf = as_sf)
     records <- .df_dates_to_chars(records)
     records <- .unlist_df(records)

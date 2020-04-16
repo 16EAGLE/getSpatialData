@@ -24,7 +24,8 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
     records <- .uncharacter_dataframe(records)
     records <- .eval_records_footprints(records, as_sf = as_sf)
     records <- .unlist_df(records)
-    View(records)
+    records[["footprint"]] <- NULL
+    names(records)[which(names(records) == "geom")] <- "footprint"
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

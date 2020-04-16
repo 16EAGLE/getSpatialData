@@ -6,6 +6,13 @@
 #' @keywords internal
 #' ---------------------------------------------------------------------
 
+#' name of the gsd verbose option
+#' @keywords internal
+#' @noRd
+name_verbose_option <- function() {
+  return("gSD.verbose")
+}
+
 #' Column names as determined by getSpatialData
 #' @keywords internal
 #' @noRd

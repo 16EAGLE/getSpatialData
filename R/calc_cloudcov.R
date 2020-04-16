@@ -304,7 +304,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
   # ensure spatial footprints
   records <- .eval_records_footprints(records, as_sf = as_sf)
   records <- .check_records(records, as_df = !as_sf)
-  out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",
+  out(paste0(sep(),"\nFinished aoi cloud cover calculation",
              sep(),"\n"))
   records <- .column_summary(records, cols_initial)
   return(records)

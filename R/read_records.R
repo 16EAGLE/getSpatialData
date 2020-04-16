@@ -21,16 +21,18 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
   out(paste0("Reading records from ", file), msg=T, type=1)
   records <- try(suppressWarnings(st_read(file, stringsAsFactors = FALSE, quiet = TRUE)))
   if (inherits(records, "data.frame")) { # sf dataframe
-    out(paste0("Successfully read ", NROW(records), " records"), msg=F, type=1)
     if (as_sf && endsWith(tolower(file), ".csv")) out("Converting to sf data.frame", msg = T, type = 1)
-    records <- .uncharacter_dataframe(records)
-    records <- .eval_records_footprints(records, as_sf = as_sf)
-    records <- .unlist_df(records)
     if (GEOM %in% names(records)) {
       records[[FOOTPRINT]] <- NULL
       names(records)[which(names(records) == GEOM)] <- FOOTPRINT
     }
     st_geometry(records) <- FOOTPRINT
+    records <- .uncharacter_dataframe(records)
+    records <- .eval_records_footprints(records, as_sf = as_sf)
+    records <- .unlist_df(records)
+    n_records <- NROW(records)
+    out(paste0("Successfully read ", 
+               n_records, ifelse(n_records > 1, " records", " record")), msg=F, type=1)
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

@@ -19,9 +19,10 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
   .check_character(file, "file")
   .check_file_exists(file, 3)
   out(paste0("Reading records from ", file), msg=T, type=1)
-  records <- try(st_read(file, stringsAsFactors = FALSE, quiet = TRUE))
+  records <- try(suppressWarnings(st_read(file, stringsAsFactors = FALSE, quiet = TRUE)))
   if (inherits(records, "data.frame")) { # sf dataframe
-    out(paste0("Read ", NROW(records), " records"), msg=F, type=1)
+    out(paste0("Successfully read ", NROW(records), " records"), msg=F, type=1)
+    if (as_sf && endsWith(tolower(file), ".csv")) out("Converting to sf data.frame", msg = T, type = 1)
     records <- .uncharacter_dataframe(records)
     records <- .eval_records_footprints(records, as_sf = as_sf)
     records <- .unlist_df(records)

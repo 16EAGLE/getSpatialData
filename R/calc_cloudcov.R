@@ -61,7 +61,7 @@
 #' @param verbose logical, if \code{TRUE}, details on the function's progress will be visibile 
 #' on the console. Default is TRUE.
 #' @param ... further arguments that can be passed to \link{write_records} for writing record files.
-#' Can be: file_name, driver, append.
+#' Can be: driver, append.
 #' 
 #' @inheritParams get_records
 #' 
@@ -151,7 +151,6 @@ calc_cloudcov <- function(records, max_deviation = 5,
   records <- .check_records(records, .cloudcov_get_needed_cols(), as_df=T)
   # additional args to be passed to write_records
   dots <- list(...)
-  file_name <- dots$file_name
   driver <- dots$driver
   append <- dots$append
   
@@ -170,12 +169,12 @@ calc_cloudcov <- function(records, max_deviation = 5,
   v <- verbose
   identifier <- name_record_id()
 
-  ## Do HOT cloud cover assessment consecutively
-  records <- as.data.frame(do.call(rbind, lapply(1:n_records,function(i) {
+  ## Do HOT cloud cover assessment
+  records <- do.call(rbind, lapply(1:n_records, function(i) {
     
     out_status <- paste0("[Aoi cloudcov calc ",i,"/",n_records,"] ")
     startTime <- Sys.time()
-    record <- as.data.frame(records[i,])
+    record <- records[i,]
     id <- record[[identifier]]
     sensor <- record[[name_product()]]
     
@@ -195,7 +194,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
           NROW(record) > 0) {
         if (.check_file_exists(record[[cloud_mask_file]])) {
-          return(as.data.frame(record))
+          return(record)
         }
       }
     } else {
@@ -254,7 +253,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
         }
       }
     }
-    
+
     no_preview <- is.null(record_preview) || !preview_exists
     preview_error <- inherits(record_preview, TRYERROR)
     get_preview_failed <- any(no_preview, preview_error)
@@ -264,8 +263,8 @@ calc_cloudcov <- function(records, max_deviation = 5,
       record_preview <- record
     } else {
       # pass preview to HOT function
-      record_preview <- as.data.frame(record_preview)
       preview <- stack(record_preview$preview_file)
+      print(preview)
       record_cc <- try(calc_hot_cloudcov(record = record_preview,
                                          preview = preview,
                                          aoi = aoi,
@@ -296,10 +295,10 @@ calc_cloudcov <- function(records, max_deviation = 5,
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
     verbose <- v
     .set_verbose(verbose)
-    return(as.data.frame(record_cc))
+    return(record_cc)
     
-  })), stringsAsFactors=F)
-  
+  }))
+
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",
              sep(),"\n"))
   records <- .check_records(records, as_df = !as_sf)

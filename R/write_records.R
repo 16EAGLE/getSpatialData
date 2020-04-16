@@ -38,12 +38,17 @@ write_records <- function(records, file_name = NULL, driver = "GPKG", dir_out = 
     file <- .generate_records_filename(file_name = file_name, dir_out = dir_out, driver = driver)
   } 
   records <- .check_records(records) # ensure it's sf
+  out(paste0("Writing records to ", file), msg=T, type=1)
   if (is.na(driver)) {
     write <- try(st_write(records, dsn = file, append = append, quiet = !verbose))
   } else {
     write <- try(st_write(records, dsn = file, driver = driver, append = append, quiet = !verbose))
   }
-  if (inherits(write, "try-error")) out(paste0("Failed to write file: ", file), 3)
+  if (inherits(write, "try-error")) {
+    out(paste0("Failed to write file: ", file), 3)
+  } else {
+    out(paste0("Wrote ", NROW(records), " records"), msg=F, type=1)
+  }
   return(file)
   
 }

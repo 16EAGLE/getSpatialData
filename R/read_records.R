@@ -13,7 +13,8 @@
 #' 
 #' @export
 read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
-  
+  GEOM <- "geom"
+  FOOTPRINT <- name_footprint()
   .check_verbose(verbose)
   .check_character(file, "file")
   .check_file_exists(file, 3)
@@ -24,8 +25,10 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
     records <- .uncharacter_dataframe(records)
     records <- .eval_records_footprints(records, as_sf = as_sf)
     records <- .unlist_df(records)
-    records[["footprint"]] <- NULL
-    names(records)[which(names(records) == "geom")] <- "footprint"
+    if (GEOM %in% names(records)) {
+      records[[FOOTPRINT]] <- NULL
+      names(records)[which(names(records) == GEOM)] <- FOOTPRINT
+    }
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

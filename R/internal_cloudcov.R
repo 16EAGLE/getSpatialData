@@ -49,7 +49,7 @@
 
 calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5, 
                               cols = NULL, dir_out = NULL, verbose = TRUE) {
-  
+
   max_try <- 30 # how often threshold adjustment should be repeated with adjusted threshold
   error <- "try-error"
   reload_msg = "Loading existing HOT aoi cloud mask"
@@ -67,7 +67,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   if (.check_file_exists(mask_path)) {
     cloud_mask <- raster(mask_path)
-    out(reload_msg ,msg=T)
+    out(reload_msg, msg=T)
     record <- .cloudcov_record_finalize(record, aoi, cloud_mask, HOT=NULL,
                                       scene_cPercent=9999, mask_path, cols, reload=T)
     return(record)
@@ -125,6 +125,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
                                       scene_cPercent, mask_path, cols)
   }
   
+  print(class(record))
+  View(record)
   return(record)
   
 }

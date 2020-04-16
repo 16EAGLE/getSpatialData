@@ -17,16 +17,17 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
   .check_verbose(verbose)
   .check_character(file, "file")
   .check_file_exists(file, 3)
-  records <- try(st_read(file, stringsAsFactors = FALSE, quiet = !verbose))
+  out(paste0("Reading records from ", file), msg=T, type=1)
+  records <- try(st_read(file, stringsAsFactors = FALSE, quiet = TRUE))
   if (inherits(records, "data.frame")) { # sf dataframe
+    out(paste0("Read ", NROW(records), " records"), msg=F, type=1)
+    records <- .uncharacter_dataframe(records)
     records <- .eval_records_footprints(records, as_sf = as_sf)
-    records <- .df_dates_to_chars(records)
     records <- .unlist_df(records)
+    View(records)
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)
   }
   
-  names(records)[which(names(records) == "geom")] <- name_footprint()
-
 }

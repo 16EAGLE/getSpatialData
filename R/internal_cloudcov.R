@@ -125,8 +125,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
                                       scene_cPercent, mask_path, cols)
   }
   
-  print(class(record))
-  View(record)
   return(record)
   
 }

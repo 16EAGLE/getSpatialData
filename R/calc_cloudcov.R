@@ -191,7 +191,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     record_path <- .generate_records_filename(file_name = id, dir_out = dir_out, driver = driver)
     if (.check_file_exists(record_path)) {
       out(paste0(out_status,"Loading yet processed record: ",id), msg=T, verbose=v)
-      record <- read_records(record_path, as_sf = FALSE)
+      record <- read_records(record_path, as_sf = FALSE, verbose = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
           NROW(record) > 0) {
@@ -294,7 +294,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     record_cc <- .unlist_df(record_cc)
 
     # write record if desired
-    write_records(record_cc, file = record_path, append = append)
+    write_records(record_cc, file = record_path, append = append, verbose = FALSE)
     return(record_cc)
     
   })), stringsAsFactors=F)

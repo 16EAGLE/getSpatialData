@@ -211,6 +211,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     cloud_mask[clear_mask == 1] <- 1
     hot_fail <- inherits(cloud_mask, error)
     cPercent <- .raster_percent(cloud_mask, mode="custom", custom=c(0,1))
+    # if provider cloudcov is NA get out at this point
+    if (is.na(provider_cloudcov)) deviation <- 0
     # difference between scene cloud cover from HOT and from data provider
     try(deviation <- provider_cloudcov - as.numeric(cPercent))
     hot_fail <- inherits(deviation, error) || is.na(deviation) || is.null(deviation)

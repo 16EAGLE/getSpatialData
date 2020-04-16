@@ -264,7 +264,6 @@ calc_cloudcov <- function(records, max_deviation = 5,
     } else {
       # pass preview to HOT function
       preview <- stack(record_preview$preview_file)
-      print(preview)
       record_cc <- try(calc_hot_cloudcov(record = record_preview,
                                          preview = preview,
                                          aoi = aoi,
@@ -298,6 +297,8 @@ calc_cloudcov <- function(records, max_deviation = 5,
     return(record_cc)
     
   }))
+  
+  return(records)
 
   out(paste0("\n",sep(),"\nFinished aoi cloud cover calculation\n",
              sep(),"\n"))

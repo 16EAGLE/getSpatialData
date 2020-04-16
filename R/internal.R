@@ -1418,7 +1418,10 @@ rbind.different <- function(x) {
     record <- records[i,]
     f <- record[[name_footprint]][[1]]
     is_sfg <- inherits(f, "sfg")
+    is_sfc <- inherits(f, "sfc")
     if (is_sfg) {
+      footprints[[i]] <- f
+    } else if (is_sfc) {
       footprints[[i]] <- f[[1]]
     } else {
       footprint_eval <- unlist(eval(parse(text = footprint)))

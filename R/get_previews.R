@@ -93,9 +93,11 @@ get_previews <- function(records, dir_out = NULL, ..., as_sf = TRUE, verbose = T
       footprint <- st_sfc(footprint, crs = records.crs)
       if(group == "MODIS") footprint <- st_transform(x = footprint, crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
       crs(prev) <- crs(as(footprint, "Spatial"))
-      #footprint <- st_coordinates(footprint) # does not work
-      footprint <- footprint[[1]][[1]] # instead
-      extent(prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
+      footprint <- st_coordinates(footprint)
+      x_dim <- footprint[, "X"]
+      y_dim <- footprint[, "Y"]
+      extent(prev) <- extent(min(x_dim), max(x_dim), 
+                             min(y_dim), max(y_dim))
       wgs84 <- "+proj=longlat +datum=WGS84 +no_defs"
       if(group == "MODIS") {
         prev <- projectRaster(prev, crs = crs(wgs84))

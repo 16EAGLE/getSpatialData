@@ -202,7 +202,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   error <- "try-error"
   provider_cloudcov <- record[[name_cloudcov()]][1]
   
-  hot_threshold <- 40
+  # S3 SLSTR needs different handling due to sea surface temperature measurement
+  hot_threshold <- ifelse(.record_is_slstr(), 80, 40)
   num_try <- 1
   deviation <- 101
   
@@ -299,8 +300,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 .safe_water <- function(preview) {
   red <- preview[[1]]
   blue <- preview[[3]]
-  norm_diff <- .normalized_difference(blue, red)
-  wprob <- .rescale_raster(norm_diff)
+  norm_diff <- getSpatialData:::.normalized_difference(blue, red)
+  wprob <- getSpatialData:::.rescale_raster(norm_diff)
   wmask <- wprob > 65
   return(wmask)
 }

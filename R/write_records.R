@@ -40,9 +40,9 @@ write_records <- function(records, file_name = NULL, driver = "GPKG", dir_out = 
   records <- .check_records(records) # ensure it's sf
   out(paste0("Writing records to ", file), msg=T, type=1)
   if (is.na(driver)) {
-    write <- try(st_write(records, dsn = file, append = append, quiet = !verbose))
+    write <- try(st_write(records, dsn = file, append = append, quiet = TRUE))
   } else {
-    write <- try(st_write(records, dsn = file, driver = driver, append = append, quiet = !verbose))
+    write <- try(st_write(records, dsn = file, driver = driver, append = append, quiet = TRUE))
   }
   if (inherits(write, "try-error")) {
     out(paste0("Failed to write file: ", file), 3)

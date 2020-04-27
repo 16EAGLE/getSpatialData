@@ -31,7 +31,7 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
     records <- .eval_records_footprints(records, as_sf = as_sf)
     records <- .unlist_df(records)
     n_records <- NROW(records)
-    out(paste0("Successfully read ", 
+    out(paste0("Read ", 
                n_records, ifelse(n_records > 1, " records", " record")), msg=F, type=1)
     return(records)
   } else {

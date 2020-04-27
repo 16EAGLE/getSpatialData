@@ -154,6 +154,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
   driver <- dots$driver
   append <- dots$append
   
+  name_footprint <- name_footprint()
   preview_file <- name_preview_file()
   preview_file_jpg <- name_preview_file_jpg()
   cloud_mask_file <- name_cloud_mask_file()
@@ -289,7 +290,13 @@ calc_cloudcov <- function(records, max_deviation = 5,
     }
     
     record_cc <- .unlist_df(record_cc) # ensure no column as a whole is a list before writing
-
+    
+    col_names <- names(record_cc)
+    footprint_tmp <- "footprint_tmp"
+    names(record_cc)[which(col_names == name_footprint)] <- footprint_tmp
+    record_cc[[name_footprint]] <- record_cc[[footprint_tmp]]
+    record_cc[[footprint_tmp]] <- NULL
+    
     # write record
     write_records(record_cc, file = record_path, append = append, verbose = FALSE)
     verbose <- v
@@ -297,6 +304,8 @@ calc_cloudcov <- function(records, max_deviation = 5,
     return(record_cc)
     
   }))
+  
+  return(records)
   
   # when we get a matrix from do.call rbind convert to data.frame
   # otherwise it is already sf data.frame

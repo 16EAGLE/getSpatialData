@@ -77,7 +77,7 @@ quiet <- function(expr){
   } else {
     sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
   }
-  out(paste0(sep(),"\n\n10 records are processed.\nTime for remaining records, approx.: ",
+  out(paste0(sep(),"\n10 records are processed.\nTime for remaining records approx.: ",
              sumProcessingTime, sep(), "\n"))
 }
 

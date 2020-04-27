@@ -716,7 +716,9 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 #' @noRd
 .unlist_df <- function(records) {
   for (i in 1:NCOL(records)) {
-    if (inherits(records[,i], "list")) {
+    column <- records[,i]
+    is_not_sfc <- !inherits(column, "sfc")
+    if (is_not_sfc && (inherits(column, "list") || inherits(column[[1]], "list"))) {
       records[,i] <- unlist(records[,i])
     }
   }

@@ -203,7 +203,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   provider_cloudcov <- record[[name_cloudcov()]][1]
   
   # S3 SLSTR needs different handling due to sea surface temperature measurement
-  hot_threshold <- ifelse(.record_is_slstr(), 80, 40)
+  hot_threshold <- ifelse(.record_is_slstr(record), 80, 40)
   num_try <- 1
   deviation <- 101
   

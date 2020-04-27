@@ -68,8 +68,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   if (.check_file_exists(mask_path)) {
     cloud_mask <- raster(mask_path)
     out(reload_msg, msg=T)
-    record <- .cloudcov_record_finalize(record, aoi, cloud_mask, HOT=NULL,
-                                      scene_cPercent=9999, mask_path, cols, reload=T)
+    record <- .cloudcov_record_finalize(record, aoi, cloud_mask, HOT = NULL,
+                                        scene_cPercent = 9999, mask_path, cols, reload = T)
     return(record)
   }
   
@@ -81,9 +81,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   }
   
   preview <- .check_crs(preview)
-  # mask NA values in preview (considered as RGB DN < 5 here)
-  NA_mask <- (preview[[1]] > 5) * (preview[[2]] > 5) * (preview[[3]] > 5)
-  preview <- mask(preview, NA_mask, maskvalue=0)
+  # mask NA-like values (values with all bands == 0) in preview
+  NA_mask <- ((preview[[1]] > 0) + (preview[[2]] > 0) + (preview[[3]] > 0) >= 1)
+  preview <- mask(preview, NA_mask, maskvalue = 0)
   # in case of Landsat the tiles have invalid edges not represented 
   # as zeros that have to be masked as well
   if (record[[name_product_group()]] %in% c(name_product_group_landsat())) {
@@ -111,7 +111,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     hot_fail <- mask_list[[2]]
     if (!hot_fail) {
       # calc scene cc percentage
-      scene_cPercent <- .raster_percent(cloud_mask,mode="custom",custom=c(0,1))
+      scene_cPercent <- .raster_percent(cloud_mask, mode="custom", custom = c(0,1))
     }
   }
   
@@ -122,7 +122,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     return(NA)
   } else {
     record <- .cloudcov_record_finalize(record, aoi, cloud_mask, hot,
-                                      scene_cPercent, mask_path, cols)
+                                        scene_cPercent, mask_path, cols)
   }
   
   return(record)
@@ -144,11 +144,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   blue <- preview[[3]]
   
   # apply water mask to preview before clear-sky value extraction
-  preview <- mask(preview, water_mask, maskvalue=1)
+  preview_masked <- mask(preview, water_mask, maskvalue=1)
   
   # extract values from preview bands without water and likely clouds
-  blue_vals <- as.integer(as.vector(na.omit(values(preview[[3]]))))
-  red_vals <- as.integer(as.vector(na.omit(values(preview[[1]]))))
+  blue_vals <- as.integer(as.vector(na.omit(values(preview_masked[[3]]))))
+  red_vals <- as.integer(as.vector(na.omit(values(preview_masked[[1]]))))
   
   # define the range of red values (DN 20 to 200) considered in binning
   include <- (red_vals > LOW_RED) & (red_vals < HIGH_RED)
@@ -235,7 +235,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     }
     num_try <- num_try + 1
   }
-  
+
   return(list(cloud_mask, hot_fail))
   
 }
@@ -278,13 +278,17 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     aoi_cProb <- cellStats(HOT_masked,mean) # calculate the mean HOT cloud probability in aoi
   }
   if (isFALSE(reload)) {
-    cMask[cMask==0] <- NA
-  }
-  if (!file.exists(mask_path) && dir_out_exists) {
-    writeRaster(cMask, mask_path, overwrite=T, datatype="INT2S")
-    record[[cols$cloud_mask_path]] <- mask_path
+    cMask[cMask == 0] <- NA
   }
   
+  if (file.exists(mask_path)) {
+    record[[cols$cloud_mask_path]] <- mask_path
+  } else if (!file.exists(mask_path) && dir_out_exists) {
+    writeRaster(cMask, mask_path, overwrite=T, datatype="INT2S")
+  } else {
+    record[[cols$cloud_mask_path]] <- "NONE"
+  }
+
   # add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
   record[[cols$aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
   record[[cols$scene_hot_cc_percent]] <- as.numeric(scene_cPercent)
@@ -300,8 +304,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 .safe_water <- function(preview) {
   red <- preview[[1]]
   blue <- preview[[3]]
-  norm_diff <- getSpatialData:::.normalized_difference(blue, red)
-  wprob <- getSpatialData:::.rescale_raster(norm_diff)
+  norm_diff <- .normalized_difference(blue, red)
+  wprob <- .rescale_raster(norm_diff)
   wmask <- wprob > 65
   return(wmask)
 }

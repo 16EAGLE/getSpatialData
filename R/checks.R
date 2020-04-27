@@ -563,12 +563,21 @@
 }
 
 #' checks if a record is a Sentinel-3 OLCI record
-#' @param record data.frame one line
+#' @param record sf data.frame one line
 #' @return logical
 #' @keywords internal
 #' @noRd
 .record_is_olci <- function(record) {
   return(strsplit(record[[name_record_id()]], "_")[[1]][2] == "OL")
+}
+
+#' checks if a record is a Sentinel-3 SLSTR record
+#' @param record sf data.frame one line
+#' @return logical
+#' @keywords internal
+#' @noRd
+.record_is_slstr <- function(record) {
+  return(strsplit(record[[name_record_id()]], "_")[[1]][2] == "SL")
 }
 
 #' checks if a record is a MODIS reflectance/radiance product

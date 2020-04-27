@@ -781,7 +781,7 @@ rbind.different <- function(x) {
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
   
-  if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi,x)
+  if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi, x)
   
   x_vals <- getValues(x)
   # calc number of pixels with value 1
@@ -1164,13 +1164,13 @@ rbind.different <- function(x) {
     x_mat <- as.integer(as.matrix(x))
     val1 <- length(which(x_mat == custom[[1]]))
     val2 <- length(which(x_mat == custom[[2]]))
-    percent <- (val1 / sum(val1,val2)) * 100
+    percent <- (val1 / sum(val1, val2)) * 100
   } else if (mode == "aoi") {
-    percent <- .calc_aoi_coverage(x,aoi,aoi_ncell)
+    percent <- .calc_aoi_coverage(x, aoi, aoi_ncell)
   }
   # due to the calculation based on pixel values it might happen that percent 
   # exceeds 100 slightly. In these cases use 100
-  percent <- ifelse(percent > 100,100,percent)
+  percent <- ifelse(percent > 100, 100, percent)
   
 }
 
@@ -1426,7 +1426,10 @@ rbind.different <- function(x) {
     } else if (is_sfc) {
       footprints[[i]] <- f[[1]]
     } else {
-      footprint_eval <- unlist(eval(parse(text = footprint)))
+      footprint_eval <- try(unlist(eval(parse(text = f))))
+      if (inherits(footprint_eval, "try-error")) {
+        out("Could not create footprint", type = 2)
+      }
       ncol <- 2
       nrow <- length(footprint_eval) / ncol
       m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)

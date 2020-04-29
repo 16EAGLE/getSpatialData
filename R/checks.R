@@ -425,7 +425,7 @@
     # if max value smaller 20: no valid observations
     not_valid_in_aoi <- maxValPrevMasked[1] < MIN_BROKEN || is.na(maxValPrevMasked[1])
   }
-  return(any(c(is_broken, not_valid_in_aoi)))
+  return(all(c(!is_broken, !not_valid_in_aoi)))
 }
 
 #' checks input, generates a type error message and throws it if invalid

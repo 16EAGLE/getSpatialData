@@ -568,7 +568,8 @@
 #' @keywords internal
 #' @noRd
 .record_is_olci <- function(record) {
-  return(strsplit(record[[name_record_id()]], "_")[[1]][2] == "OL")
+  is_olci <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "OL"
+  return(ifelse(is.na(is_olci), FALSE, is_olci))
 }
 
 #' checks if a record is a Sentinel-3 SLSTR record
@@ -577,7 +578,8 @@
 #' @keywords internal
 #' @noRd
 .record_is_slstr <- function(record) {
-  return(strsplit(record[[name_record_id()]], "_")[[1]][2] == "SL")
+  is_slstr <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SL"
+  return(ifelse(is.na(is_slstr), FALSE, is_slstr))
 }
 
 #' checks if a record is a MODIS reflectance/radiance product

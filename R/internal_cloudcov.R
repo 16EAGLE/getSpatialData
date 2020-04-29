@@ -76,16 +76,15 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   preview <- .check_crs(preview)
   has_values <- .preview_has_valid_values(preview, aoi = aoi)
-  is_not_raster <- !class(preview) %in% c("RasterStack", "RasterBrick")
-  if (is_not_raster || !has_values) {
+  is_raster <- inherits(preview, "RasterStack") || inherits(preview, "RasterBrick")
+  if (!is_raster || !has_values) {
     record <- .cloudcov_handle_skip(record, dir_out = dir_out)
     return(record)
   }
-  
-  preview <- .mask_preview_na(preview, record) # masking happens only in case of Landsat or Sentinel-2
+  preview <- .mask_preview_na(preview, record) # masking only in case of Landsat or Sentinel-2
   
   # in case of Landsat the tiles have invalid edges not represented 
-  # as zeros that have to be masked as well
+  # as zeros. Have to be masked as well
   if (product_group %in% c(name_product_group_landsat())) {
     preview <- .landsat_preview_mask_edges(preview)
   } 
@@ -206,8 +205,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   hot_threshold <- ifelse(.record_is_slstr(record), 80, 50)
   num_try <- 1
   deviation <- 101
-  
-  plot(hot)
   
   # create water and clear mask
   clear_mask <- try(.safe_clear(preview))

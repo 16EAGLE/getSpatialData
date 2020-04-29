@@ -189,7 +189,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     # otherwise run HOT afterwards
     record_path <- .generate_records_filename(file_name = id, dir_out = dir_out, driver = driver)
     if (.check_file_exists(record_path)) {
-      out(paste0(out_status,"Loading yet processed record: ", id), msg = T, verbose=v)
+      out(paste0(out_status,"Reloading processed record: ", id), msg = T, verbose=v)
       record <- read_records(record_path, as_sf = F, verbose = FALSE)
       nms <- names(record)
       if (cloud_mask_file %in% nms && preview_file %in% nms &&
@@ -197,7 +197,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
         if (.check_file_exists(record[[cloud_mask_file]])) {
           return(record)
         } else {
-          out("Calculating cloud mask of yet processed record", msg = T)
+          out("Calculating cloud mask of reloaded record", msg = T)
         }
       }
     } else {

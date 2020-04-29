@@ -1312,38 +1312,23 @@ rbind.different <- function(x) {
   return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
 }
 
-#' creates NA mask of preview including checks if observations (in aoi) given
-#' @param preview raster stack
-#' @return preview raster stack
+#' mask preview NAs if it is Landsat or Sentinel
+#' @param preview RasterLayer
+#' @param record sf data.frame
+#' @return preview RasterLayer
 #' @keywords internal
 #' @noRd
-.mask_preview_na <- function(preview, aoi) {
-  
-  MIN_DN <- 5 # for NA masking
-  MIN_BROKEN <- 20 # for checks if no observations with DN >= 20
-  
-  # Check if preview is broken
-  is_broken <- .check_preview(preview)
-  
-  # Check for valid observations in aoi
-  if (!is_broken) {
-    prevMasked <- mask(preview,aoi)
-    maxValPrevMasked <- maxValue(prevMasked)
-    # if max value smaller 20: no valid observations
-    not_valid_in_aoi <- maxValPrevMasked[1] < MIN_BROKEN || is.na(maxValPrevMasked[1])
-  }
-  
-  # if preview is broken or nor valid observations in aoi return NA
-  if (isTRUE(any(c(is_broken,not_valid_in_aoi)))) {
-    return(NA)
-  } else {
-    # mask NA values in preview (considered as RGB DN < 5 here)
-    NA_mask <- (preview[[1]] > MIN_DN) * (preview[[2]] > MIN_DN) * (preview[[3]] > MIN_DN)
+.mask_preview_na <- function(preview, record) {
+  MIN_DN <- 3 # for NA masking
+  product_group <- record[[name_product_group()]]
+  if (product_group %in% c(name_product_group_landsat(), name_product_group_sentinel())) {
+    # mask NA values in preview (considered as RGB DN < MIN_DN here)
+    NA_mask <- ((preview[[1]] > MIN_DN) + (preview[[2]] > MIN_DN) + (preview[[3]] > MIN_DN)) >= 1
     preview <- mask(preview, NA_mask, maskvalue=0)
-    return(preview)
-  }
-  
+  } 
+  return(preview)
 }
+
 
 # -------------------------------------------------------------
 # vector utils

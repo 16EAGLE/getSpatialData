@@ -180,7 +180,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     sensor <- record[[name_product()]]
     
     if (any(is.na(c(id, sensor)))) {
-      return(.cloudcov_handle_skip(record,FALSE,dir_out))
+      return(.cloudcov_handle_skip(record, FALSE, dir_out))
     }
     
     cloudcov_supported <- .cloudcov_supported(record)
@@ -196,8 +196,6 @@ calc_cloudcov <- function(records, max_deviation = 5,
           NROW(record) > 0) {
         if (.check_file_exists(record[[cloud_mask_file]])) {
           return(record)
-        } else {
-          out("Calculating cloud mask of reloaded record", msg = T, verbose = v)
         }
       }
     } else {

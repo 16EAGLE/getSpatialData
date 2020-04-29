@@ -405,6 +405,29 @@
   return(all(prev_vals < 20))
 }
 
+#' checks if preview has valid observations (optinally in aoi)
+#' @param preview raster stack
+#' @return preview raster stack
+#' @keywords internal
+#' @noRd
+.preview_has_valid_values <- function(preview, record, aoi = NULL) {
+  MIN_BROKEN <- 20 # for checks if no observations with DN >= 20
+  
+  # Check if preview is broken
+  is_broken <- .check_preview(preview)
+  
+  # Check for valid observations in aoi
+  if (!is_broken) {
+    if (!is.null(aoi)) {
+      preview <- mask(preview, aoi)
+    }
+    maxValPrevMasked <- maxValue(preview)
+    # if max value smaller 20: no valid observations
+    not_valid_in_aoi <- maxValPrevMasked[1] < MIN_BROKEN || is.na(maxValPrevMasked[1])
+  }
+  return(any(c(is_broken, not_valid_in_aoi)))
+}
+
 #' checks input, generates a type error message and throws it if invalid
 #' Does NOT check for NULL and NA. If any of these, test is skipped
 #' @param input variable of any type

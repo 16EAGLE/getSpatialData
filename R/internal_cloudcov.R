@@ -285,6 +285,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     record[[cols$cloud_mask_path]] <- mask_path
   } else if (!file.exists(mask_path) && dir_out_exists) {
     writeRaster(cMask, mask_path, overwrite=T, datatype="INT2S")
+    record[[cols$cloud_mask_path]] <- mask_path
   } else {
     record[[cols$cloud_mask_path]] <- "NONE"
   }

@@ -107,6 +107,7 @@ get_previews <- function(records, dir_out = NULL, ..., as_sf = TRUE, verbose = T
       }
 
       # write
+      prev <- .ensure_minmax(prev) # sometimes values are above 255 (MODIS), ensure 0-255
       writeRaster(prev, file.tif)
       return(file.tif)
     }, error = function(e){

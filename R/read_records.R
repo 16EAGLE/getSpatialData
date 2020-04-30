@@ -9,6 +9,8 @@
 #' 
 #' @return sf object or data.frame depending on \code{as_sf}.
 #' 
+#' @importFrom sf st_geometry
+#' 
 #' @author Henrik Fisser, 2020
 #' 
 #' @export

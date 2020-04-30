@@ -324,7 +324,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
            + (preview[[2]] < DARK_THRESHOLD)
            + (preview[[3]] < DARK_THRESHOLD)) >= 1
   # handling for bright clear-sky areas (e.g. deserts) -> red higher blue
-  clear_prob <- getSpatialData:::.rescale_raster(getSpatialData:::.normalized_difference(preview[[1]], preview[[3]]))
+  clear_prob <- .rescale_raster(getSpatialData:::.normalized_difference(preview[[1]], preview[[3]]))
+  clear_prob[is.na(clear_prob)] <- 0
   clear <- ((clear_prob > 55) + medium + dark) >= 1
   return(clear)
 }

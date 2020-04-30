@@ -718,6 +718,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   for (i in 1:NCOL(records)) {
     column <- records[,i]
     if (inherits(column, "list")) {
+      # if it's a matrix it's a footprint thing
       if (!is.matrix(records[,i][[1]])) {
         records[,i] <- records[,i][[1]] # assuming it's a list of one element, should be nothing else
       }

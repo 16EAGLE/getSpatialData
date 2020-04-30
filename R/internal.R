@@ -709,7 +709,7 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 # data.frame utils
 # -------------------------------------------------------------
 
-#' unlists all columns of a data.frame
+#' 'unlists' all columns of a data.frame
 #' @param records data.frame.
 #' @param records data.frame with all columns unlisted
 #' @keywords internal
@@ -717,9 +717,10 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 .unlist_df <- function(records) {
   for (i in 1:NCOL(records)) {
     column <- records[,i]
-    is_not_sfc <- !inherits(column, "sfc")
-    if (is_not_sfc && (inherits(column, "list") || inherits(column[[1]], "list"))) {
-      records[,i] <- unlist(records[,i])
+    if (inherits(column, "list")) {
+      if (!is.matrix(records[,i][[1]])) {
+        records[,i] <- records[,i][[1]] # assuming it's a list of one element, should be nothing else
+      }
     }
   }
   return(records)

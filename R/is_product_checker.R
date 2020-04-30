@@ -15,7 +15,7 @@
 #' @return logical vector
 #' @export
 is_product_group_ <- function(records, product_group) {
-  records <- .check_records(records)
+  records <- .check_records(records, col.names = c(name_product_group()))
   product_groups <- records[[name_product_group()]]
   return(which(product_groups == product_group))
 }
@@ -28,7 +28,7 @@ is_product_group_ <- function(records, product_group) {
 #' @inherit is_product_group_ return author
 #' @export
 is_product_ <- function(records, product) {
-  records <- .check_records(records)
+  records <- .check_records(records, col.names = c(name_product()))
   products <- records[[name_product()]]
   return(which(products == product))
 }

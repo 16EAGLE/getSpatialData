@@ -33,12 +33,12 @@ select_unitemporal <- function(records,
   
   #### Prep
   num_timestamps <- 1
-  prep <- .select_prep_wrap(records,num_timestamps,"UT")
+  prep <- .select_prep_wrap(records, num_timestamps, "UT")
   records <- prep$records
   params <- prep$params
-
+  
   #### Main checks
-  .select_checks(records,aoi,params$period,num_timestamps,prio_products,params,dir_out,verbose)
+  .select_checks(records, aoi, params$period, num_timestamps, prio_products, params, dir_out, verbose)
   
   #### Main Process
   .select_start_info(mode="Uni-Temporal",params$sep)

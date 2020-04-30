@@ -625,6 +625,21 @@
   return(ifelse(is.na(is_sral), FALSE, is_sral))
 }
 
+#' checks if a record is a Sentinel-3 continental or global tile
+#' @param record sf data.frame one line
+#' @return logical
+#' @keywords internal
+#' @noRd
+.record_is_s3_continental <- function(record) {
+  tile_id <- record[[name_tile_id()]]
+  tile_id <- ifelse(is.na(tile_id) || is.null(tile_id), "", tile_id)
+  if (record[[name_product()]] == name_product_sentinel3()) {
+    return(tolower(tile_id) %in% tolower(names_continental_s3()))
+  } else {
+    return(FALSE)
+  }
+}
+
 #' checks if a record is a MODIS reflectance/radiance product
 #' @param record data.frame one line
 #' @return logical

@@ -1324,8 +1324,9 @@ rbind.different <- function(x) {
   product_group <- record[[name_product_group()]]
   is_olci <- .record_is_olci(record)
   is_landsat_or_sentinel2 <- product_group %in% c(name_product_group_landsat(), name_product_group_sentinel())
-  if (any(is_olci, is_landsat_or_sentinel2)) {
-    MIN_DN <- ifelse(is_landsat_or_sentinel2, 3, 1)
+  is_continental_s3 <- .record_is_s3_continental(record)
+  if (any(is_olci, is_landsat_or_sentinel2, is_continental_s3)) {
+    MIN_DN <- ifelse(is_landsat_or_sentinel2, 3, 0)
     # mask NA values in preview (considered as RGB DN < MIN_DN here)
     NA_mask <- ((preview[[1]] > MIN_DN) + (preview[[2]] > MIN_DN) + (preview[[3]] > MIN_DN)) >= 1
     preview <- mask(preview, NA_mask, maskvalue = 0)

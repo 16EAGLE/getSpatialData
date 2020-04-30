@@ -233,6 +233,10 @@ name_product_group_landsat <- function() {
 name_product_group_sentinel <- function() {
   return("Sentinel")
 }
+# names of continental / global Sentinel-3 tiles
+names_continental_s3 <- function() {
+  return(c("global", "africa", "europe", "australia", "asia", "south_america", "north_america"))
+}
 
 #' returns optical product names supported by calc_cloudcov
 #' @return character vector of product names

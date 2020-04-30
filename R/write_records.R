@@ -1,8 +1,9 @@
 #' Writes records to a file
 #' 
-#' @description \code{write_records} write records to a file.
+#' @description \code{write_records} write records to a file. They can be read through
+#' \link{read_records}.
 #' 
-#' @inheritParams get_records
+#' @inheritParams calc_cloudcov
 #' 
 #' @param file_name character name of the file to be saved. If it is NULL a file name will be 
 #' automatically generated from date and time.

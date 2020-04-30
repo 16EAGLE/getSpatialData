@@ -1312,20 +1312,24 @@ rbind.different <- function(x) {
   return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
 }
 
-#' mask preview NAs if it is Landsat or Sentinel
+#' mask NA-like DNs in previews (very low RGB). Only in case of Landsat, Sentinel-2 and Sentinel-3 OLCi
 #' @param preview RasterLayer
 #' @param record sf data.frame
 #' @return preview RasterLayer
 #' @keywords internal
 #' @noRd
 .mask_preview_na <- function(preview, record) {
-  MIN_DN <- 3 # for NA masking
   product_group <- record[[name_product_group()]]
-  if (product_group %in% c(name_product_group_landsat(), name_product_group_sentinel())) {
+  not_slstr <- !.record_is_slstr(record)
+  not_syn <- !.record_is_syn(record)
+  not_sral <- !.record_is_sral(record)
+  not_modis <- !.record_is_refl_modis(record)
+  if (all(not_slstr, not_syn, not_sral, not_modis)) {
+    MIN_DN <- ifelse(product_group %in% c(name_product_group_landsat(), name_product_group_sentinel()), 3, 1)
     # mask NA values in preview (considered as RGB DN < MIN_DN here)
     NA_mask <- ((preview[[1]] > MIN_DN) + (preview[[2]] > MIN_DN) + (preview[[3]] > MIN_DN)) >= 1
-    preview <- mask(preview, NA_mask, maskvalue=0)
-  } 
+    preview <- mask(preview, NA_mask, maskvalue = 0)
+  }
   return(preview)
 }
 

@@ -81,7 +81,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
     record <- .cloudcov_handle_skip(record, dir_out = dir_out)
     return(record)
   }
-  preview <- .mask_preview_na(preview, record) # masking only in case of Landsat or Sentinel-2
+  preview <- .mask_preview_na(preview, record) # masking only in case of Landsat or Sentinel-2 or Sentinel-3 OLCI
   
   # in case of Landsat the tiles have invalid edges not represented 
   # as zeros. Have to be masked as well

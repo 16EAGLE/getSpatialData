@@ -722,7 +722,10 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
     if (inherits(column, "list")) {
       # if it's a matrix it's a footprint thing
       if (not_matrix) {
-        records[,i] <- unlist(records[,i])
+        column <- unlist(column)
+        if (!is.matrix(column) && length(column) == NROW(records)) {
+          records[,i] <- unlist(column)
+        }
       }
     }
   }

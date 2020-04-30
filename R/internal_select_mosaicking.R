@@ -46,11 +46,10 @@
 #' @noRd
 .select_cmask_mos <- function(s, aoi, dir_out) {
   
-  save_str <- paste0(sample(LETTERS[1:20], 10),collapse = "")
-  save_path_cmos <- file.path(dir_out,paste0(save_str,"cloud_mask_mosaic_timestamp",s$timestamp,".tif"))
-  cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths,aoi,save_path_cmos)
+  save_path_cmos <- file.path(dir_out, paste0("cloud_mask_mosaic_ts", s$timestamp, ".tif"))
+  cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths, aoi, save_path_cmos)
   rm(cMask_mosaic)
-  .delete_tmp_files(raster::tmpDir())
+  .delete_tmp_files(tmpDir())
   return(save_path_cmos)
   
 }
@@ -215,7 +214,7 @@
   base_records <- .aggr_rasters(base_records,names,aoi=aoi,dir_out=tmp_dir)
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
-  base_mos_path <- normalizePath(file.path(tmp_dir,"base_mosaic_tmp.tif"))
+  base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
   if (class(base_mos) != r) start <- 1
   # cleanup
@@ -337,7 +336,7 @@
                                  params, dir_out) {
   
   console_info <- list()
-  cols <- c(params$selected_col,params$timestamp_col,params$pmos_col,params$cmos_col)
+  cols <- c(params$selected_col, params$timestamp_col, params$pmos_col, params$cmos_col)
   records <- .select_prep_cols(records,cols,params$selected_col)
   
   for (i in 1:length(selected)) {
@@ -359,7 +358,9 @@
     }
     
     #C add columns to records
-    insert <- c(TRUE,s$timestamp,save_path_pmos,save_path_cmos)
+    save_path_pmos <- normalizePath(save_path_pmos)
+    save_path_cmos <- normalizePath(save_path_cmos)
+    insert <- c(TRUE, s$timestamp, save_path_pmos, save_path_cmos)
     for (j in 1:length(cols)) {
       records[which(records[[params$identifier]] %in% ids_selected),cols[j]] <- insert[j]      
     }
@@ -368,6 +369,7 @@
     
   }
   each_timestamp <- .out_vector(console_info)
+  rm(each_timestamp)
   return(records)
   
 }

@@ -717,10 +717,12 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
 .unlist_df <- function(records) {
   for (i in 1:NCOL(records)) {
     column <- records[,i]
+    # when sf we need one more [[1]] to reach
+    not_matrix <- ifelse(inherits(records, "sf"), !is.matrix(column[[1]][[1]]), !is.matrix(column[[1]][[1]][[1]]))
     if (inherits(column, "list")) {
       # if it's a matrix it's a footprint thing
-      if (!is.matrix(records[,i][[1]])) {
-        records[,i] <- records[,i][[1]] # assuming it's a list of one element, should be nothing else
+      if (not_matrix) {
+        records[,i] <- unlist(records[,i])
       }
     }
   }

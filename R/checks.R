@@ -605,6 +605,26 @@
   return(ifelse(is.na(is_slstr), FALSE, is_slstr))
 }
 
+#' checks if a record is a Sentinel-3 SYN record
+#' @param record sf data.frame one line
+#' @return logcial
+#' @keywords internal
+#' @noRd
+.record_is_syn <- function(record) {
+  is_syn <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SY"
+  return(ifelse(is.na(is_syn), FALSE, is_syn))
+}
+
+#' checks if a record is a Sentinel-3 SRAL record
+#' @param record sf data.frame one line
+#' @return logcial
+#' @keywords internal
+#' @noRd
+.record_is_sral <- function(record) {
+  is_sral <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SR"
+  return(ifelse(is.na(is_sral), FALSE, is_sral))
+}
+
 #' checks if a record is a MODIS reflectance/radiance product
 #' @param record data.frame one line
 #' @return logical

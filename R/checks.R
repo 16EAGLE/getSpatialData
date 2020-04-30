@@ -261,10 +261,11 @@
   sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
   info <- paste0("Selected number of timestamps (",num_timestamps)
   s <- ifelse(length(sensor)==1,"\n- Sensor: ","\nSensors: ")
-  out(cat("\n- Number of timestamps selected:",num_timestamps,s,sensor))
-  if (sub_period < r) {
+  out(cat("\n- Number of timestamps selected:", num_timestamps, s, sensor))
+  not_unitemporal <- num_timestamps > 1
+  if (sub_period < r && not_unitemporal) {
     out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
-  } else if (sub_period == r) {
+  } else if (sub_period == r && not_unitemporal) {
     out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this frequent"),1)
   }
 }
@@ -279,22 +280,25 @@
   
   missing <- c()
   empty <- c()
+  print(cols)
+  print(names(records))
   for (col in cols) {
     is_missing <- isFALSE(col %in% names(records))
-    is_empty <- all(is.na(records[[col]]))
     if (isTRUE(is_missing)) {
-      missing <- c(missing,col)
-    }
-    if (isTRUE(is_empty)) {
-      empty <- c(empty,col)
+      missing <- c(missing, col)
+    } else {
+      is_empty <- all(is.na(records[[col]]))
+      if (isTRUE(is_empty)) {
+        empty <- c(empty,col)
+      }
     }
   }
   for (fail in unique(c(missing,empty))) {
-    if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n",fail,"\n"),2)
-    if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n",fail,"\n"),2)
+    if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n", fail, "\n"), 2)
+    if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n", fail, "\n"), 2)
   }
   
-  error <- sapply(c(missing,empty),function(x) !is.null(x))
+  error <- sapply(c(missing, empty),function(x) !is.null(x))
   if (TRUE %in% error) return(TRUE) else return(FALSE)
   
 }
@@ -314,14 +318,13 @@
 #' @keywords internal
 #' @noRd
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
-                           par, dir_out, verbose) {
+                           params, dir_out, verbose) {
   
   dir_out <- .check_dir_out(dir_out)
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi,"sf",quiet=T)
   # check if all columns are provided
-  has_error <- .check_missing_columns(records,cols=c(par$aoi_cc_col,par$aoi_cc_prb_col,
-                                                     par$preview_col,par$cloud_mask_col))
+  has_error <- .check_missing_columns(records, cols = c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col))
   if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
   .select_check_revisit(unique(unlist(records$product)),period,num_timestamps)

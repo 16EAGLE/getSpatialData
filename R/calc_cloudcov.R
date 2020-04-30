@@ -305,15 +305,11 @@ calc_cloudcov <- function(records, max_deviation = 5,
     
   }))
   
-  return(records)
-  
   # when we get a matrix from do.call rbind convert to data.frame
   # otherwise it is already sf data.frame
-  if (inherits(records, "matrix")) {
-    records <- as.data.frame(records)
-  }
+  if (is.matrix(records)) records <- as.data.frame(records)
   records <- .unlist_df(records)
-  
+
   # ensure spatial footprints
   records <- .eval_records_footprints(records, as_sf = as_sf)
   records <- .check_records(records, as_df = !as_sf)

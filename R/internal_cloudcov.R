@@ -304,6 +304,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   blue <- preview[[3]]
   norm_diff <- getSpatialData:::.normalized_difference(blue, red)
   wprob <- getSpatialData:::.rescale_raster(norm_diff)
+  wprob[is.na(wprob)] <- 0
   wmask <- wprob > 65
   return(wmask)
 }

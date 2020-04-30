@@ -278,14 +278,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   }
   cMask[cMask == 0] <- NA
 
-  if (file.exists(mask_path)) {
-    record[[cols$cloud_mask_path]] <- mask_path
-  } else if (!file.exists(mask_path) && dir_out_exists) {
+  if (!file.exists(mask_path) && dir_out_exists) {
     writeRaster(cMask, mask_path, overwrite=T, datatype = "INT2S")
-    record[[cols$cloud_mask_path]] <- mask_path
-  } else {
-    record[[cols$cloud_mask_path]] <- "NONE"
   }
+  
+  record[[cols$cloud_mask_path]] <- ifelse(file.exists(mask_path), normalizePath(mask_path), "NONE")
 
   # add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
   record[[cols$aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)

@@ -321,7 +321,7 @@
 #' @param records data.frame.
 #' @param period character vector of a start date [1] and an end date [2].
 #' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
-#' @param date_col character name of the date column.
+#' @param params list
 #' @return \code{records} with one added numeric column 'sub_period' indicating in which sub-period the record is situated.
 #' @keywords internal
 #' @noRd
@@ -333,7 +333,7 @@
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
   l <- length(dates)
   dates[l] <- dates[l] + 1
-  date_col_mirr <- sapply(records[[params$date_col]],as.Date) # mirror of the date column as days since 1970-01-01
+  date_col_mirr <- sapply(records[[params$date_col]], as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
     within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
     records[within, params$sub_period_col] <- i

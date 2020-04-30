@@ -117,7 +117,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   # calculate aoi cloud cover percentage
   if (hot_fail) {
     record <- .cloudcov_handle_skip(record, dir_out = dir_out)
-    out(hot_fail, type=2)
+    out(hot_fail, type = 2)
     return(NA)
   } else {
     record <- .cloudcov_record_finalize(record, aoi, cloud_mask, hot,
@@ -202,7 +202,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   provider_cloudcov <- record[[name_cloudcov()]][1]
   
   # S3 SLSTR needs different handling due to sea surface temperature measurement
-  hot_threshold <- ifelse(.record_is_slstr(record), 80, 50)
+  hot_threshold <- ifelse(.record_is_slstr(record), 60, 50)
   num_try <- 1
   deviation <- 101
   

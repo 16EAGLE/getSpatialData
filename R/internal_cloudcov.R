@@ -302,8 +302,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 .safe_water <- function(preview) {
   red <- preview[[1]]
   blue <- preview[[3]]
-  norm_diff <- getSpatialData:::.normalized_difference(blue, red)
-  wprob <- getSpatialData:::.rescale_raster(norm_diff)
+  norm_diff <- .normalized_difference(blue, red)
+  wprob <- .rescale_raster(norm_diff)
   wprob[is.na(wprob)] <- 0
   wmask <- wprob > 65
   return(wmask)

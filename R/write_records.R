@@ -31,11 +31,11 @@ write_records <- function(records, file = NULL, driver = "GPKG", dir_out = NULL,
   .check_records_type(records)
   records <- .check_records(records) # ensure it's sf
   records <- .unlist_df(records)
-  file_is_path <- !is.null(file) && file != basename(file)
-  if (!file_is_path) {
+  user_file_is_path <- !is.null(file) && file != basename(file)
+  if (!user_file_is_path) {
     dir_out <- .check_dir_out()
     # generate a file path from dir_out
-    file <- ifelse(file_is_path, .generate_records_filename(file_name = file, dir_out = dir_out, driver = driver), file)
+    file <- ifelse(user_file_is_path, .generate_records_filename(file_name = file, dir_out = dir_out, driver = driver), file)
   }
   # check if file ends with a valid file extension
   split <- strsplit(file, "\\.")[[1]]
@@ -53,7 +53,7 @@ write_records <- function(records, file = NULL, driver = "GPKG", dir_out = NULL,
     out(paste0("Wrote ", NROW(records), " records"), msg=F, type=1)
   }
   return(file)
-  
+
 }
 
 #' Returns drivers for writing records

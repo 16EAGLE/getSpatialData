@@ -209,7 +209,7 @@ name_product_sentinel5 <- function() {
   return("Sentinel-5")
 }
 name_product_sentinel5p <- function() {
-  return("Sentinel-5p")
+  return("Sentinel-5P")
 }
 #' @keywords internal
 #' @noRd

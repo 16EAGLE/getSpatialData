@@ -130,11 +130,11 @@ is.sentinel3 <- function(records) {
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' SYNERGY
-#' @description \code{is_sentinel3_synergy} checks which records are Sentinel-3 SYNERGY records.
+#' @description \code{is.sentinel3_synergy} checks which records are Sentinel-3 SYNERGY records.
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel3_synergy <- function(records) {
+is.sentinel3_synergy <- function(records) {
   return(which(sapply(1:NROW(records), function(i) {return(.record_is_syn(records[i,]))})))
 }
 

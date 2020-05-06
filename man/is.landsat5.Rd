@@ -6,6 +6,13 @@
 \usage{
 is.landsat5(records)
 }
+\arguments{
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is 
+returned by \link{get_records}.}
+}
+\value{
+logical vector, same length as number of rows in \code{records}.
+}
 \description{
 \code{is.landsat5} checks which records are Landsat-5 records.
 }

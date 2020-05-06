@@ -62,14 +62,14 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   if(length(records) > 1) records <- rbind.different(.gsd_compact(records)) else records <- records[[1]]
   
   # where not tile id given make a tile id from sensor and record specific row/path parameters
-  if (!is.null(records)) {
+  if (is.null(records)) {
+    return(records)
+  } else {
     records <- .make_tileid(records) # you find this function in internal
     # convert to sf
     return(.check_records(records, as_df = !as_sf))
-  } else {
-    return(records)
   }
-  
+
 }
 
 #' @rdname get_records

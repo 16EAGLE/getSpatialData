@@ -30,7 +30,6 @@
 #' @keywords internal
 #' @noRd
 .select_params <- function(records, mode) {
-  
   modes <- list("TS"="timeseries","BT"="bitemporal","UT"="unitemporal")
   params <- list(selected_col=paste0("selected_for_",modes[[mode]]), # logical column if a record is selected at all
                  pmos_col=name_rgb_mosaic_file(), # path to the RGB mosaic tif where record is included
@@ -48,7 +47,6 @@
   params$tileids <- unique(na.omit(records[[params$tileid_col]]))
   params$sep <- sep()
   return(params)
-  
 }
 
 #' prep process of a selection process
@@ -59,15 +57,14 @@
 #' @keywords internal
 #' @noRd
 .select_prep <- function(records, num_timestamps, params) {
-  
-  records[[params$date_col]] <- sapply(records[[params$date_col]],as.character)
+  records[params$date_col] <- sapply(records[[params$date_col]], as.character)
   period <- .identify_period(records[[params$date_col]])
   # calculates the sub_period column
-  records <- .select_sub_periods(records,period,num_timestamps,params$date_col)
+  records <- .select_sub_periods(records, period, num_timestamps, params)
   # check which records in records are supported by select and mark unsupported records with NA in 'sub_period'
   supported <- sapply(1:NROW(records), function(i) .select_supported(records[i,]))
   records[!supported, params$sub_period_col] <- NA
-  
+  return(records)
 }
 
 #' wrapper of the preparation steps in select
@@ -82,9 +79,9 @@
   
   records <- .unlist_df(records)
   records <- .make_tileid(records)
-  params <- .select_params(records,mode)
-  params$period <- .identify_period(records[[params$date_col]])
-  records <- .select_prep(records,num_timestamps,params)
+  params <- .select_params(records, mode)
+  params$period <- .identify_period(records[[params[["date_col"]]]])
+  records <- .select_prep(records, num_timestamps, params)
   has_SAR <- .has_SAR(params$product) # check if SAR records in records (1 for TRUE, 0 for FALSE or 100 for "all"). If 100 selection is done only for SAR
   prep <- list(records=records,
                params=params,

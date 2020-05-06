@@ -224,15 +224,23 @@ name_product_landsat7 <- function() {
 name_product_landsat8 <- function() {
   return("LANDSAT_8_C1")
 }
+#' @keywords internal
+#' @noRd
 name_product_group_modis <- function() {
   return("MODIS")
 }
+#' @keywords internal
+#' @noRd
 name_product_group_landsat <- function() {
   return("Landsat")
 }
+#' @keywords internal
+#' @noRd
 name_product_group_sentinel <- function() {
   return("Sentinel")
 }
+#' @keywords internal
+#' @noRd
 # names of continental / global Sentinel-3 tiles
 names_continental_s3 <- function() {
   return(c("global", "africa", "europe", "australia", "asia", "south_america", "north_america"))

@@ -1,6 +1,6 @@
 #' ---------------------------------------------------------------------
-#' @name internal_select_sub
-#' @description These functions do the temporal selection of SAR (Sentinel-1) records.
+#' name: internal_select_sub
+#' description: These functions do the temporal selection of SAR (Sentinel-1) records.
 #' They create a temporary tile id for each record, according to which they can be
 #' selected. As they are cloud-free no further spatial selection is necessary. These
 #' records are thus only selected according to their tile and temporal characteristics.
@@ -9,8 +9,7 @@
 #' records has priority due to cloud cover constraints. SAR selection is hence temporally
 #' guided by the optical selection in case there is one. Otherwise, SAR selection is
 #' conducted independently.
-#' @keywords internal
-#' @author Henrik Fisser, 2019
+#' author: Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' select timestamps for SAR data according to num_timestamps, min_distance and max_sub_period.

@@ -1,9 +1,8 @@
 #' ---------------------------------------------------------------------
-#' @name internal_names
-#' @description These are internal functions that return names used in getSpatialData.
+#' name: internal_names
+#' description: These are internal functions that return names used in getSpatialData.
 #' The purpose is generic naming and simple maintenance. A name can for example
 #' be a column name of the records data.frame.
-#' @keywords internal
 #' ---------------------------------------------------------------------
 
 #' Column names as determined by getSpatialData

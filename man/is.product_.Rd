@@ -7,7 +7,12 @@
 is.product_(records, product)
 }
 \arguments{
+\item{records}{sf data.frame}
+
 \item{product}{character specifies the product to be checked on.}
+}
+\value{
+logical vector
 }
 \description{
 \code{is.product_} checks which records are of product \code{product}.

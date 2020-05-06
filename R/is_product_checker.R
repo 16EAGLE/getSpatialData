@@ -1,10 +1,10 @@
 #' ---------------------------------------------------------------------
-#' @name is_product_checker
-#' @description These are check utils for product and product group and
+#' name: is_product_checker
+#' description: These are check utils for product and product group and
 #' work in same manner as is.na(). Apart from product and product group
 #' some methods target more specific types that are identified from 
 #' the record ids. All methods return logical vectors of the same length as NROW(records).
-#' @author Henrik Fisser, 2020
+#' author: Henrik Fisser, 2020
 #' ---------------------------------------------------------------------
 
 #' Returns TRUE for records that are of the specified product group
@@ -17,21 +17,21 @@
 is.product_group_ <- function(records, product_group) {
   records <- .check_records(records, col.names = c(name_product_group()), as_df = TRUE)
   product_groups <- records[[name_product_group()]]
-  return(which(product_groups == product_group))
+  return(product_groups == product_group)
 }
 
 #' Returns TRUE for records that are of the specified product
 #' @description \code{is.product_} checks which records are of product \code{product}.
 #' @details Check \link{get_names} for available product names.
-#' @inheritParams is_product_group
 #' @param product character specifies the product to be checked on.
+#' @param records sf data.frame
 #' @inherit is.product_group_ return
 #' @author Henrik Fisser, 2020
 #' @export
 is.product_ <- function(records, product) {
   records <- .check_records(records, col.names = c(name_product()), as_df = TRUE)
   products <- records[[name_product()]]
-  return(which(products == product))
+  return(products == product)
 }
 
 #' Returns TRUE for records that are of product group 'Landsat'
@@ -49,6 +49,7 @@ is.landsat <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.modis <- function(records) {
   return(is.product_group_(records, name_product_group_modis()))
 }
@@ -60,6 +61,7 @@ is.modis <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.landsatMSS <- function(records) {
   return(is.product_(records, name_product_landsatmss()))
 }
@@ -89,6 +91,7 @@ is.landsat7 <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.landsat8 <- function(records) {
   return(is.product_(records, name_product_landsat8()))
 }
@@ -98,8 +101,9 @@ is.landsat8 <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel <- function(records) {
-  return(is_product_group(records, name_product_group_sentinel()))
+  return(is.product_group_(records, name_product_group_sentinel()))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-1'
@@ -107,6 +111,7 @@ is.sentinel <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel1 <- function(records) {
   return(is.product_(records, name_product_sentinel1()))
 }
@@ -116,6 +121,7 @@ is.sentinel1 <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel2 <- function(records) {
   return(is.product_(records, name_product_sentinel2()))
 }
@@ -125,6 +131,7 @@ is.sentinel2 <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel3 <- function(records) {
   return(is.product_(records, name_product_sentinel3()))
 }
@@ -134,6 +141,7 @@ is.sentinel3 <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel3_synergy <- function(records) {
   return(which(sapply(1:NROW(records), function(i) {return(.record_is_syn(records[i,]))})))
 }
@@ -143,6 +151,7 @@ is.sentinel3_synergy <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel3_slstr <- function(records) {
   return(which(sapply(1:NROW(records), function(i) {return(.record_is_slstr(records[i,]))})))
 }
@@ -152,6 +161,7 @@ is.sentinel3_slstr <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel3_sral <- function(records) {
   return(which(sapply(1:NROW(records), function(i) {return(.record_is_sral(records[i,]))})))
 }
@@ -161,6 +171,7 @@ is.sentinel3_sral <- function(records) {
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
+#' @export
 is.sentinel3_olci <- function(records) {
   return(which(sapply(1:NROW(records), function(i) {return(.record_is_olci(records[i,]))})))
 }

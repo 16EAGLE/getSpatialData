@@ -1,9 +1,8 @@
 #' ---------------------------------------------------------------------
-#' @name internal_select_mosaicking
-#' @description These are the functions that conduct the spatial selection
+#' name: internal_select_mosaicking
+#' description: These are the functions that conduct the spatial selection
 #' process and everything related to cloud mask and preview mosaicking within select.
-#' @keywords internal
-#' @author Henrik Fisser, 2019
+#' author: Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' bridge to .make_mosaic

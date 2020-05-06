@@ -1,6 +1,6 @@
 #' ---------------------------------------------------------------------
-#' @name internal_select_sub
-#' @description The selection process is distinguished into a main selection
+#' name: internal_select_sub
+#' description: The selection process is distinguished into a main selection
 #' and a sub selection process. These are functions that conduct the process of a
 #' sub selection. A sub refers to one timestamp. The sub selection consists
 #' of a temporal and a spatial selection. 
@@ -11,8 +11,7 @@
 #' This results in a new temporal sub-period covering fewer dates and agreeing
 #' with 'max_sub_period'. This temporal sub selection process is followed by
 #' the spatial sub selection process, which is done through internal_select_mosaicking.
-#' @keywords internal
-#' @author Henrik Fisser, 2019
+#' author: Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
 #' calls the steps of a selection for a sub-period

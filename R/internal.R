@@ -1,9 +1,8 @@
 #' ---------------------------------------------------------------------
-#' @name internal
-#' @description These are internal functions that rather work as utils.
+#' name: internal
+#' description: These are internal functions that rather work as utils.
 #' This internal file should only contain generic functions that can be
 #' used multiple times within the package.
-#' @keywords internal
 #' ---------------------------------------------------------------------
 
 #' creates a temp dir (tmp_dir) and/or deletes it
@@ -857,6 +856,7 @@ rbind.different <- function(x) {
 
   # in many cases now value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
+  records <- .make_tileid_sentinel1(records)
   records <- .make_tileid_sentinel2(records)
   records <- .make_tileid_sentinel3(records)
   records <- .make_tileid_landsat(records)

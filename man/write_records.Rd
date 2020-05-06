@@ -2,7 +2,7 @@
 % Please edit documentation in R/write_records.R
 \name{write_records}
 \alias{write_records}
-\title{Writes records to a file}
+\title{Writes records to file}
 \usage{
 write_records(records, file = NULL, driver = "GPKG", dir_out = NULL,
   append = FALSE, verbose = TRUE, ...)

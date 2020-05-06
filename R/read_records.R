@@ -1,11 +1,12 @@
-#' read records from a csv file
+#' read records from file
 #' 
 #' @description \code{read_records} reads records from a csv file
 #' that has been previously written through \link{write_records}.
 #' 
-#' @param file character complete file path from where to read the records file.
+#' @param file character file path from where to read the records file.
 #' @param as_sf logical specifies if the records shall be returned as sf object.
-#' Otherwise a data.frame will be returned.
+#' Otherwise a data.frame will be returned. Default is TRUE.
+#' @inheritParams calc_cloudcov
 #' 
 #' @return sf object or data.frame depending on \code{as_sf}.
 #' 

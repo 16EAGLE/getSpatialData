@@ -2,15 +2,18 @@
 % Please edit documentation in R/read_records.R
 \name{read_records}
 \alias{read_records}
-\title{read records from a csv file}
+\title{read records from file}
 \usage{
 read_records(file, as_sf = TRUE, verbose = TRUE)
 }
 \arguments{
-\item{file}{character complete file path from where to read the records file.}
+\item{file}{character file path from where to read the records file.}
 
 \item{as_sf}{logical specifies if the records shall be returned as sf object.
-Otherwise a data.frame will be returned.}
+Otherwise a data.frame will be returned. Default is TRUE.}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile 
+on the console. Default is TRUE.}
 }
 \value{
 sf object or data.frame depending on \code{as_sf}.

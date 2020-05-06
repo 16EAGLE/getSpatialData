@@ -1,4 +1,4 @@
-#' Writes records to a file
+#' Writes records to file
 #' 
 #' @description \code{write_records} Write records to a file. Obtain available formats through \link{get_records_drivers}.
 #' Records can be read through \link{read_records}.

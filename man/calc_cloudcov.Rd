@@ -5,7 +5,8 @@
 \title{Calculate the cloud cover of optical Sentinel, Landsat or MODIS data in an aoi based on small previews}
 \usage{
 calc_cloudcov(records, max_deviation = 5, aoi = NULL, dir_out = NULL,
-  username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE)
+  username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE,
+  ...)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is 
@@ -24,7 +25,7 @@ for all queries within the running session. If \code{aoi} is undefined, the AOI 
 set using \link{set_aoi} is used.}
 
 \item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
-a record csv for each record will be saved in \code{dir_out}. If it is NULL, the session 
+a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
 \code{dir_out} is used.
 If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}
 
@@ -40,6 +41,9 @@ details on registration).}
 
 \item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile 
 on the console. Default is TRUE.}
+
+\item{...}{further arguments that can be passed to \link{write_records} for writing record files.
+Can be: driver, append.}
 }
 \value{
 \code{records} data.frame with three added columns:
@@ -61,12 +65,12 @@ red and blue information of the input RGB. HOT procedure is applied to the red a
 Orignally, the base computation was introduced by Zhang et al. (2002) [2]. 
 The computation done in \code{calc_cloudcov} includes the following steps:
 \enumerate{
-\enum Binning: extract low red values and their highest blue values
-\enum Regression: calculate linear regression of these values
-\enum HOT layer: compute haze-optimal transformation cloud likelihood layer
-\enum Iterative thresholding: Find a HOT threshold by iterative comparison with
+\item Binning: extract low red values and their highest blue values
+\item Regression: calculate linear regression of these values
+\item HOT layer: compute haze-optimal transformation cloud likelihood layer
+\item Iterative thresholding: Find a HOT threshold by iterative comparison with
 the provider scene cloud cover.
-\enum Aoi cloud cover calculation: Calculate the aoi cloud cover from the binary
+\item Aoi cloud cover calculation: Calculate the aoi cloud cover from the binary
 cloud mask.
 }
 

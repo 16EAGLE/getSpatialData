@@ -5,15 +5,23 @@
 \title{Writes records to a file}
 \usage{
 write_records(records, file_name = NULL, driver = "GPKG",
-  dir_out = NULL, file = NULL, append = FALSE, verbose = TRUE)
+  dir_out = NULL, file = NULL, append = FALSE, verbose = TRUE, ...)
 }
 \arguments{
+\item{records}{data.frame, one or multiple records (each represented by one row), as it is 
+returned by \link{get_records}.}
+
 \item{file_name}{character name of the file to be saved. If it is NULL a file name will be 
 automatically generated from date and time.}
 
-\item{driver}{character specifies the writer. Options are all returned by
-sf::st_drivers() and "csv". Will be ignored in case a fully qualified
+\item{driver}{character specifies the writer. Options are all thise returned by
+sf::st_drivers() plus "csv". Will be ignored in case a fully qualified
 \code{file} path is provided. Default is "GPKG"}
+
+\item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
+a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
+\code{dir_out} is used.
+If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}
 
 \item{file}{character complete file path where to write the records. Must be a full file path
 including file basename and extension matching a supported driver. Default is NULL.}
@@ -21,13 +29,17 @@ including file basename and extension matching a supported driver. Default is NU
 \item{append}{logical, if TRUE and a file path is given through \code{file}, the record(s)
 will be appended to \code{file} if possible.}
 
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile 
+on the console. Default is TRUE.}
+
+\item{...}{further arguments to be passed to sf::st_write.}
 }
 \value{
 character file path to the saved records.
 }
 \description{
-\code{write_records} write records to a file.
+\code{write_records} write records to a file. They can be read through
+\link{read_records}.
 }
 \author{
 Henrik Fisser, 2020

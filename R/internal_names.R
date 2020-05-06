@@ -205,6 +205,14 @@ name_product_sentinel3 <- function() {
 }
 #' @keywords internal
 #' @noRd
+name_product_sentinel5 <- function() {
+  return("Sentinel-5")
+}
+name_product_sentinel5p <- function() {
+  return("Sentinel-5p")
+}
+#' @keywords internal
+#' @noRd
 name_product_landsatmss <- function() {
   return("LANDSAT_MSS_C1")
 }

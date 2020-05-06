@@ -233,6 +233,29 @@ is.sentinel3_olci <- function(records) {
   }
 }
 
+#' Returns TRUE for records that are of product 'Sentinel-5p' or 'Sentinel-5'
+#' @description \code{is.sentinel5} checks which records are Sentinel-5 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel5 <- function(records) {
+  s5 <- is.product_(records, name_product_sentinel5())
+  s5p <- is.product_(records, name_product_sentinel5p())
+  s5[which(s5p == TRUE)] <- TRUE
+  return()
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-5p'
+#' @description \code{is.sentinel5} checks which records are Sentinel-5 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel5p <- function(records) {
+  return(is.product_(records, name_product_sentinel5p()))
+}
+
 #' checks if a record is a MODIS reflectance/radiance product
 #' @param record data.frame one line
 #' @inherit .record_is_olci return

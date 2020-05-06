@@ -6,13 +6,6 @@
 \usage{
 is_sentinel3_synergy(records)
 }
-\arguments{
-\item{records}{data.frame, one or multiple records (each represented by one row), as it is 
-returned by \link{get_records}.}
-}
-\value{
-logical vector, same length as number of rows in \code{records}.
-}
 \description{
 \code{is_sentinel3_synergy} checks which records are Sentinel-3 SYNERGY records.
 }

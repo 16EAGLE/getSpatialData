@@ -8,161 +8,161 @@
 #' ---------------------------------------------------------------------
 
 #' Returns TRUE for records that are of the specified product group
-#' @description \code{is_product_group} checks which records are of product group \code{product_group}
+#' @description \code{is.product_group_} checks which records are of product group \code{product_group}
 #' @param records sf data.frame
 #' @param product_group character specifies the product group to be checked on.
 #' @return logical vector
 #' @author Henrik Fisser, 2020
 #' @export
-is_product_group <- function(records, product_group) {
-  records <- .check_records(records, col.names = c(name_product_group()))
+is.product_group_ <- function(records, product_group) {
+  records <- .check_records(records, col.names = c(name_product_group()), as_df = TRUE)
   product_groups <- records[[name_product_group()]]
   return(which(product_groups == product_group))
 }
 
 #' Returns TRUE for records that are of the specified product
-#' @description \code{is_product} checks which records are of product \code{product}.
+#' @description \code{is.product_} checks which records are of product \code{product}.
 #' @details Check \link{get_names} for available product names.
 #' @inheritParams is_product_group
 #' @param product character specifies the product to be checked on.
-#' @inherit is_product_group return
+#' @inherit is.product_group_ return
 #' @author Henrik Fisser, 2020
 #' @export
-is_product <- function(records, product) {
-  records <- .check_records(records, col.names = c(name_product()))
+is.product_ <- function(records, product) {
+  records <- .check_records(records, col.names = c(name_product()), as_df = TRUE)
   products <- records[[name_product()]]
   return(which(products == product))
 }
 
 #' Returns TRUE for records that are of product group 'Landsat'
-#' @description \code{is_landsat} checks which records are Landsat records.
+#' @description \code{is.landsat} checks which records are Landsat records.
 #' @inheritParams calc_cloudcov
 #' @return logical vector, same length as number of rows in \code{records}.
 #' @author Henrik Fisser, 2020
 #' @export
-is_landsat <- function(records) {
-  return(is_product_group(records, name_product_group_landsat()))
+is.landsat <- function(records) {
+  return(is.product_group_(records, name_product_group_landsat()))
 }
 
 #' Returns TRUE for records that are of product group 'MODIS'
-#' @description \code{is_modis} checks which records are MODIS records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.modis} checks which records are MODIS records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_modis <- function(records) {
-  return(is_product_group(records, name_product_group_modis()))
+is.modis <- function(records) {
+  return(is.product_group_(records, name_product_group_modis()))
 }
 
 #' Returns TRUE for records that are of product group 'MODIS'
 
 #' Returns TRUE for records that are of product 'LANDSAT_MSS_C1'
-#' @description \code{is_landsatMSS} checks which records are Landsat MSS records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.landsatMSS} checks which records are Landsat MSS records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_landsatMSS <- function(records) {
-  return(is_product(records, name_product_landsatmss()))
+is.landsatMSS <- function(records) {
+  return(is.product_(records, name_product_landsatmss()))
 }
 
 #' Returns TRUE for records that are of product 'LANDSAT_TM_C1' (Landsat-5)
-#' @description \code{is_landsat5} checks which records are Landsat-5 records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.landsat5} checks which records are Landsat-5 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
 #' @export
-is_landsat5 <- function(records) {
-  return(is_product(records, name_product_landsat5()))
+is.landsat5 <- function(records) {
+  return(is.product_(records, name_product_landsat5()))
 }
 
 #' Returns TRUE for records that are of product 'LANDSAT_ETM_C1' (Landsat-7)
-#' @description \code{is_landsat7} checks which records are Landsat-7 records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.landsat7} checks which records are Landsat-7 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
 #' @export
-is_landsat7 <- function(records) {
-  return(is_product(records, name_product_landsat7()))
+is.landsat7 <- function(records) {
+  return(is.product_(records, name_product_landsat7()))
 }
 
 #' Returns TRUE for records that are of product 'LANDSAT_8_C1' (Landsat-8)
-#' @description \code{is_landsat8} checks which records are Landsat-8 records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.landsat8} checks which records are Landsat-8 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_landsat8 <- function(records) {
-  return(is_product(records, name_product_landsat8()))
+is.landsat8 <- function(records) {
+  return(is.product_(records, name_product_landsat8()))
 }
 
 #' Returns TRUE for records that are of product group 'Sentinel'
-#' @description \code{is_sentinel} checks which records are Sentinel records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel} checks which records are Sentinel records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel <- function(records) {
+is.sentinel <- function(records) {
   return(is_product_group(records, name_product_group_sentinel()))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-1'
-#' @description \code{is_sentinel1} checks which records are Sentinel-1 records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel1} checks which records are Sentinel-1 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel1 <- function(records) {
-  return(is_product(records, name_product_sentinel1()))
+is.sentinel1 <- function(records) {
+  return(is.product_(records, name_product_sentinel1()))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-2'
-#' @description \code{is_sentinel2} checks which records are Sentinel-2 records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel2} checks which records are Sentinel-2 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel2 <- function(records) {
-  return(is_product(records, name_product_sentinel2()))
+is.sentinel2 <- function(records) {
+  return(is.product_(records, name_product_sentinel2()))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3'
-#' @description \code{is_sentinel3} checks which records are Sentinel-3 records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel3} checks which records are Sentinel-3 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel3 <- function(records) {
-  return(is_product(records, name_product_sentinel3()))
+is.sentinel3 <- function(records) {
+  return(is.product_(records, name_product_sentinel3()))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' SYNERGY
 #' @description \code{is_sentinel3_synergy} checks which records are Sentinel-3 SYNERGY records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
 is_sentinel3_synergy <- function(records) {
-  return(which(sapply(records[[name_record_id()]], .record_is_syn)))
+  return(which(sapply(1:NROW(records), function(i) {return(.record_is_syn(records[i,]))})))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' SLSTR
-#' @description \code{is_sentinel3_slstr} checks which records are Sentinel-3 SLSTR records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel3_slstr} checks which records are Sentinel-3 SLSTR records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel3_slstr <- function(records) {
-  return(which(sapply(records[[name_record_id()]], .record_is_slstr)))
+is.sentinel3_slstr <- function(records) {
+  return(which(sapply(1:NROW(records), function(i) {return(.record_is_slstr(records[i,]))})))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' SRAL
-#' @description \code{is_sentinel3_sral} checks which records are Sentinel-3 SRAL records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel3_sral} checks which records are Sentinel-3 SRAL records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel3_sral <- function(records) {
-  return(which(sapply(records[[name_record_id()]], .record_is_sral)))
+is.sentinel3_sral <- function(records) {
+  return(which(sapply(1:NROW(records), function(i) {return(.record_is_sral(records[i,]))})))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' OLCI
-#' @description \code{is_sentinel3_olci} checks which records are Sentinel-3 OLCI records.
-#' @inheritParams is_landsat
-#' @inherit is_landsat return
+#' @description \code{is.sentinel3_olci} checks which records are Sentinel-3 OLCI records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
-is_sentinel3_olci <- function(records) {
-  return(which(sapply(records[[name_record_id()]], .record_is_olci)))
+is.sentinel3_olci <- function(records) {
+  return(which(sapply(1:NROW(records), function(i) {return(.record_is_olci(records[i,]))})))
 }
 
 # internal product check utils

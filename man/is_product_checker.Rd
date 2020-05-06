@@ -2,10 +2,10 @@
 % Please edit documentation in R/is_product_checker.R
 \name{is_product_checker}
 \alias{is_product_checker}
-\alias{is_product_group}
+\alias{is.product_group_}
 \title{---------------------------------------------------------------------}
 \usage{
-is_product_group(records, product_group)
+is.product_group_(records, product_group)
 }
 \arguments{
 \item{records}{sf data.frame}
@@ -21,7 +21,7 @@ work in same manner as is.na(). Apart from product and product group
 some methods target more specific types that are identified from 
 the record ids. All methods return logical vectors of the same length as NROW(records).
 
-\code{is_product_group} checks which records are of product group \code{product_group}
+\code{is.product_group_} checks which records are of product group \code{product_group}
 }
 \author{
 Henrik Fisser, 2020

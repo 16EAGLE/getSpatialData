@@ -4,27 +4,25 @@
 \alias{write_records}
 \title{Writes records to a file}
 \usage{
-write_records(records, file_name = NULL, driver = "GPKG",
-  dir_out = NULL, file = NULL, append = FALSE, verbose = TRUE, ...)
+write_records(records, file = NULL, driver = "GPKG", dir_out = NULL,
+  append = FALSE, verbose = TRUE, ...)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is 
 returned by \link{get_records}.}
 
-\item{file_name}{character name of the file to be saved. If it is NULL a file name will be 
-automatically generated from date and time.}
+\item{file}{character file name or file path of file to be saved. If it is a file name it will be written
+at \code{dir_out} in the format of \code{driver}. If it is a file path without valid file extension 
+it will be written in the format of \code{driver} at the specified path. If it is a file path with 
+valid file extension it will be written there. Check for available drivers and extensions through \link{get_records_drivers}.}
 
 \item{driver}{character specifies the writer. Options are all thise returned by
-sf::st_drivers() plus "csv". Will be ignored in case a fully qualified
-\code{file} path is provided. Default is "GPKG"}
+\link{get_records_drivers}. Will be ignored in case a fully qualified \code{file} path is provided. Default is "GPKG".}
 
 \item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
 a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
 \code{dir_out} is used.
 If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}
-
-\item{file}{character complete file path where to write the records. Must be a full file path
-including file basename and extension matching a supported driver. Default is NULL.}
 
 \item{append}{logical, if TRUE and a file path is given through \code{file}, the record(s)
 will be appended to \code{file} if possible.}
@@ -38,8 +36,8 @@ on the console. Default is TRUE.}
 character file path to the saved records.
 }
 \description{
-\code{write_records} write records to a file. They can be read through
-\link{read_records}.
+\code{write_records} Write records to a file. Obtain available formats through \link{get_records_drivers}.
+Records can be read through \link{read_records}.
 }
 \author{
 Henrik Fisser, 2020

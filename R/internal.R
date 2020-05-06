@@ -1344,16 +1344,16 @@ rbind.different <- function(x) {
 # vector utils
 # -------------------------------------------------------------
 
-#' wrapper for reading shapefile via sf::read_sf(). Mainly for unit tests.
-#' @param Character absolute file_path to shp including extension (".shp")
-#' @return SpatialPolygons shp
-#' @importFrom sf read_sf as_Spatial
+#' wrapper for reading polygons file via sf::read_sf(). Mainly for unit tests.
+#' @param Character absolute file_path to file including extension
+#' @return SpatialPolygons polygons
+#' @importFrom sf read_sf as_Spatial st_zm
 #' @importFrom methods as
 #' @keywords internal
 #' @noRd
-.read_shp <- function(file_path) {
-  shp <- as(as_Spatial(read_sf(file_path)), "SpatialPolygons")
-  return(shp)
+.read_polygons <- function(file_path) {
+  polygons <- as(as(st_zm(read_sf(file_path)), "Spatial"), "SpatialPolygons")
+  return(polygons)
 }
 
 # -------------------------------------------------------------

@@ -508,7 +508,7 @@
 .check_rasterStack <- function(input, arg_name) {
   stack <- "RasterStack"
   brick <- "RasterBrick"
-  if (!inherits(input, stack) || inherits(input, brick)) {
+  if (!inherits(input, stack) && inherits(input, brick)) {
     .check_type(input, arg_name, "RasterStack")
   }
 }

@@ -42,7 +42,7 @@ write_records <- function(records, file = NULL, driver = "GPKG", dir_out = NULL,
   ext <- split[length(split)]
   out(paste0("Writing records to ", file), msg=T, type=1)
   drivers <- get_records_drivers()
-  if (ext %in% drivers) {
+  if (paste0(".", ext) %in% drivers) {
     write <- try(st_write(records, dsn = file, append = append, quiet = TRUE))
   } else {
     file <- paste0(file, drivers[[driver]]) # add extension

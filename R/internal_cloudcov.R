@@ -75,8 +75,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   preview <- .check_crs(preview)
   has_values <- .preview_has_valid_values(preview, aoi = aoi)
-  is_raster <- inherits(preview, "RasterStack") || inherits(preview, "RasterBrick")
-  if (!is_raster || !has_values) {
+  if (isFALSE(has_values)) {
     record <- .cloudcov_handle_skip(record, dir_out = dir_out)
     return(record)
   }

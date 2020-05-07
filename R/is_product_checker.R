@@ -22,7 +22,7 @@ is.product_group_ <- function(records, product_group) {
 
 #' Returns TRUE for records that are of the specified product
 #' @description \code{is.product_} checks which records are of product \code{product}.
-#' @details Check \link{get_names} for available product names.
+#' @details Check \link{get_products} for available product names.
 #' @param product character specifies the product to be checked on.
 #' @param records sf data.frame
 #' @inherit is.product_group_ return

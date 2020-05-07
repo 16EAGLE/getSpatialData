@@ -425,7 +425,7 @@
   # Check for valid observations in aoi
   if (!is_not_broken) {
     if (!is.null(aoi)) {
-      preview <- mask(preview, aoi)
+      preview <- .mask_raster_by_polygon(preview, aoi)
       is_not_broken <- !.check_preview(preview)
     }
   }

@@ -382,6 +382,13 @@ RASTER_BRICK <- function()  {return("RasterBrick")}
 #' @keywords internal
 #' @noRd
 SF <- function()  {return("sf")}
+#' Spatial
+#' @keywords internal
+#' @noRd
+SPATIAL <- function() {return("Spatial")}
+#' SpatialPolygonsDataFrame
+#' @keywords internal
+#' @noRd
 #' SpatialPolygons
 #' @keywords internal
 #' @noRd

@@ -68,8 +68,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   if (.check_file_exists(mask_path)) {
     cloud_mask <- raster(mask_path)
     out(reload_msg, msg=T)
-    record <- .cloudcov_record_finalize(record, aoi, cloud_mask, HOT = NULL,
-                                        scene_cPercent = 9999, mask_path, cols, reload = T)
+    record <- .cloudcov_record_finalize(record, aoi, cloud_mask,
+                                        scene_cPercent = 9999, mask_path = mask_path, cols = cols, reload = T)
     return(record)
   }
   
@@ -263,7 +263,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 #' @importFrom raster cellStats writeRaster mask
 #' @keywords internal
 #' @noRd
-.cloudcov_record_finalize <- function(record, aoi, cMask, hot, scene_cPercent,
+.cloudcov_record_finalize <- function(record, aoi, cMask, hot = NULL, scene_cPercent,
                                       mask_path, cols, reload=F) {
   
   dir_out_exists <- file.exists(dirname(mask_path))
@@ -271,7 +271,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   if (is.null(hot)) {
     aoi_cProb <- 9999
   } else {
-    hot_masked <- mask(hot, aoi)
+    hot_masked <- .mask_raster_by_polygon(hot, aoi)
     aoi_cProb <- cellStats(hot_masked, mean) # calculate the mean HOT cloud probability in aoi
   }
   cMask[cMask == 0] <- NA

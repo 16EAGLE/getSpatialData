@@ -21,11 +21,11 @@
   srcnodata <- ifelse(src_datatype == INT2S(),"-32768","-3.3999999521443642e+38")
   mos_base <- .make_mosaic(paths,save_path, mode=mode, srcnodata=srcnodata,
                            datatype=src_datatype)
-  if (class(mos_base) != RASTER_LAYER) {
+  if (!inherits(mos_base, RASTER_LAYER())) {
     return(NA)
   } else {
     
-    mos_base_mask <- mask(mos_base, aoi)
+    mos_base_mask <- .mask_raster_by_polygon(mos_base, aoi)
     mos_base_crop <- crop(mos_base_mask, aoi)
     writeRaster(mos_base_crop, save_path, overwrite=T,
                 srcnodata=srcnodata, datatype=src_datatype)
@@ -70,7 +70,7 @@
 .select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, 
                                 cloud_mask_col, preview_col, sensors_given) {
   
-  tmp_dir_orig <- base::tempdir()
+  tmp_dir_orig <- tempdir()
   tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
   
   r <- RASTER_LAYER()
@@ -109,10 +109,10 @@
     curr_layers <- lapply(preview_paths,function(x) path <- x[j])
     save_path_pmos <- paste0(save_pmos,"_",layers[j],".grd")
     pmos <- try(.select_bridge_mosaic(unlist(curr_layers),aoi,save_path_pmos,mode="rgb"))
-    if (class(pmos) != r) return(NA) else return(pmos)
+    if (!inherits(pmos, r)) return(NA) else return(pmos)
   })
   
-  if (any(sapply(preview_mos,class) != r)) out("Could not create preview RGB mosaic",2)
+  if (any(sapply(preview_mos, class) != r)) out("Could not create preview RGB mosaic",2)
   
   # stack all bands and write to file
   preview_mos_stack <- stack(preview_mos)
@@ -145,6 +145,7 @@
 #' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
 #' Side effect: creates a tmp_dir, writes into it, deletes tmp_dir with all files.
 #' @importFrom raster minValue maxValue writeRaster raster crs crs<- dataType intersect
+#' @importFrom sf st_union st_intersection st_as_sfc st_bbox
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
@@ -162,7 +163,6 @@
   TMP_BASE_MOS <- "base_mos_tmp_"
   r <- RASTER_LAYER()
   curr_sensor <- unique(records$product)
-  if (!class(aoi)[1] %in% c(SPATIAL_POLYGONS(), SPATIAL_POLYGONS_DF())) aoi <- as(aoi, "Spatial")
   le_first_order <- length(sub_within[[1]])
   
   if (length(sub_within) > 1) {
@@ -180,7 +180,6 @@
       sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous, decreasing=TRUE)]
       return(sorted_order)
     }))
-    
     sub_within <- unlist(.gsd_compact(sub_within_sorted)) # vector of integer indices
   }
   
@@ -213,12 +212,12 @@
   # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records, aoi, base_mos_path)
-  if (class(base_mos) != r) start <- 1
+  if (!inherits(base_mos, r)) start <- 1
   # cleanup
   .delete_tmp_files(tmp_dir) # delete temp raster .grd files in r tmp
   rm(base_mos)
   base_coverage <- -1000
-  n_pixel_aoi <- .calc_aoi_corr_vals(aoi,raster(base_records[1])) # correction values for coverage calc
+  n_pixel_aoi <- .calc_aoi_corr_vals(aoi, raster(base_records[1])) # correction values for coverage calc
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:le_collection) {
@@ -239,15 +238,15 @@
     x <- .aggr_rasters(x, name_x, aoi=aoi, dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
-    next_record <- mask(next_record, aoi) # mask to aoi because saved cloud mask is not aoi cloud mask
+    next_record <- .mask_raster_by_polygon(next_record, aoi) # mask to aoi because saved cloud mask is not aoi cloud mask
     next_record <- .check_crs(next_record)
     curr_base_mos_crop <- crop(base_mos, next_record) # crop base mosaic to tile area of next
-    
-    aoi_subset <- as(extent(next_record), SPATIAL_POLYGONS())
+    aoi_subset <- st_as_sfc(st_bbox(next_record), crs=4326)
     aoi_subset <- .check_crs(aoi_subset)
-    aoi_subset <- intersect(aoi_subset, aoi)
+    aoi_union <- st_union(aoi) # ensure it's a single feature
+    aoi_subset <- st_intersection(aoi_subset, aoi_union) # get intersection of tile and aoi
     cov_init <- .raster_percent(curr_base_mos_crop, mode="aoi", aoi=aoi_subset, n_pixel_aoi)
-    
+
     if (round(cov_init) == 99) {
       add_it <- FALSE
     } else {
@@ -256,14 +255,14 @@
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p, x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
-      if (class(curr_mos_tmp) != r) {
-        add_it <- FALSE
-      } else {
+      if (inherits(curr_mos_tmp, r)) {        
+        print("5")
         cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
         # cleanup
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
         rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
+        print("6")
         
         # calculate if valid coverage in whole aoi is improved > min_improvement 
         # when adding the record to the tile area
@@ -272,24 +271,27 @@
         } else {
           add_it <- .select_exceeds_improvement(min_improvement,cov_init,cov_aft)
         }
+      } else {
+        add_it <- FALSE
       }
     }
     
     if (add_it) {
+      print("7")
       save_str <- TMP_BASE_MOS
       curr <- paste0(save_str,i, ".tif")
       base_mos_path_tmp <- normalizePath(file.path(tmp_dir,curr))
-      base_records <- c(base_records,x) # add save path of current mosaic
+      base_records <- c(base_records, x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
-      
-      if (class(base_mos) == r) {
+      print("8")
+      if (inherits(base_mos, r)) {
         # cleanup
         rm(base_mos)
         # delete previous base_mos_tmp tifs
         base_mos_tmp_files <- list.files(tmp_dir,pattern=save_str)
         base_mos_tmp_files <- base_mos_tmp_files[which(base_mos_tmp_files!=curr)]
-        del <- sapply(base_mos_tmp_files,function(del_file) {
-          del_path <- file.path(tmp_dir,del_file)
+        del <- sapply(base_mos_tmp_files, function(del_file) {
+          del_path <- file.path(tmp_dir, del_file)
           if (file.exists(del_path) && del_file != curr) unlink(del_path)
         })
         rm(del)

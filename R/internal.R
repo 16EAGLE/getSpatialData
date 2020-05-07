@@ -772,7 +772,7 @@ rbind.different <- function(x) {
   if (length(aoi_area) > 1) { # in case of multipolygon
     aoi_area <- sum(aoi_area)
   }
-  return(aoi_area / 1000) # km2
+  return(as.numeric(aoi_area) / 1000) # km2
   
 }
 
@@ -813,7 +813,7 @@ rbind.different <- function(x) {
   # calculate area of aoi in order to get a suitable resolution for percentage cells computations
   r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4], crs=crs(x), resolution=res(x))
   values(r) <- as.integer(1)
-  r <- mask(r, aoi)
+  r <- .mask_raster_by_polygon(r, aoi)
   r_vals <- getValues(r)
   aoi_npixels <- length(which(r_vals == 1))
   return(aoi_npixels)
@@ -1118,7 +1118,7 @@ rbind.different <- function(x) {
   coords[4,2] <- coords[4,2] + 0.05
   coords[5,2] <- coords[5,2] + 0.38
   slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
-  preview_masked <- mask(preview,poly)
+  preview_masked <- .mask_raster_by_polygon(preview,poly)
   return(preview_masked)
   
 }
@@ -1163,7 +1163,7 @@ rbind.different <- function(x) {
   
   if (mode == "na") {
     na_mask <- is.na(x)
-    x <- mask(na_mask, aoi)
+    x <- .mask_raster_by_polygon(na_mask, aoi)
     x_mat <- as.integer(as.matrix(x))
     # clouds = 1 and clear = 0 now
     percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
@@ -1198,12 +1198,12 @@ rbind.different <- function(x) {
   adj <- aoi_area / factor
   res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
   target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
-  # do not reduce the resolution to the equivalent of double the Sentinel-2 preview resolution
+  # do not reduce more than the equivalent of double the Sentinel-2 preview resolution
   if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref
   adj <- ifelse(adj < 2 && adj > 1, 2, adj)
   if (adj > 1) {
-    x_adj <- sapply(1:length(x),function(i) {
+    x_adj <- sapply(1:length(x), function(i) {
       r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
       if (file.exists(r_save_path)) return(r_save_path)
       r_load <- stack(x[[i]])
@@ -1245,6 +1245,18 @@ rbind.different <- function(x) {
   }
   
 }
+
+#' wrapper for masking rasters by polygon
+#' @param x RasterLayer, RasterStack or RasterBrick
+#' @param mask sfc or sp
+#' @return x masked
+#' @importFrom raster mask
+#' @importFrom sf as
+#' @keywords internal
+#' @noRd
+.mask_raster_by_polygon <- function(x, polygon) {
+  return(mask(x, as(polygon, SPATIAL())))
+} 
 
 #' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
 #' @param character absolute file_path

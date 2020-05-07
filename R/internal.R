@@ -1198,7 +1198,6 @@ rbind.different <- function(x) {
   adj <- aoi_area / factor
   res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
   target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
-  print(aoi_area)
   # do not reduce the resolution to the equivalent of double the Sentinel-2 preview resolution
   if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref

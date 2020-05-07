@@ -162,10 +162,10 @@
   TMP_CROP_MOS <- "curr_crop_mos_tmp.tif"
   TMP_BASE_MOS <- "base_mos_tmp_"
   r <- "RasterLayer"
-  spatialpoly <- "SpatialPolygons"
-  spatialpolydf <- "SpatialPolygonsDataFrame"
+  SPATIAL_POLYGONS <- "SpatialPolygons"
+  SPATIAL_POLYGONS_DF <- "SpatialPolygonsDataFrame"
   curr_sensor <- unique(records$product)
-  if (!class(aoi)[1] %in% c(spatialpoly, spatialpolydf)) aoi <- as(aoi,"Spatial")
+  if (!class(aoi)[1] %in% c(SPATIAL_POLYGONS, SPATIAL_POLYGONS_DF)) aoi <- as(aoi,"Spatial")
   le_first_order <- length(sub_within[[1]])
   
   if (length(sub_within) > 1) {
@@ -230,7 +230,7 @@
     
     if (i == start) {
       is_last_record <- i == le_collection
-      base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
+      base_coverage <- .raster_percent(base_mos, mode="aoi", aoi=aoi, n_pixel_aoi)
       .select_out_cov(base_coverage,ifelse(is_last_record,i,i-1),le_collection,curr_sensor)
       if (is_last_record) break
     }
@@ -241,10 +241,11 @@
     x <- .aggr_rasters(x,name_x, aoi=aoi, dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
-    next_record <- mask(x, aoi) # mask to aoi because saved cloud mask is not aoi cloud mask
+    next_record <- mask(next_record, aoi) # mask to aoi because saved cloud mask is not aoi cloud mask
     next_record <- .check_crs(next_record)
     curr_base_mos_crop <- crop(base_mos, next_record) # crop base mosaic to tile area of next
-    aoi_subset <- as(extent(next_record), spatialpoly)
+    
+    aoi_subset <- as(extent(next_record), SPATIAL_POLYGONS)
     aoi_subset <- .check_crs(aoi_subset)
     aoi_subset <- intersect(aoi_subset,aoi)
     cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,n_pixel_aoi)
@@ -293,6 +294,7 @@
           del_path <- file.path(tmp_dir,del_file)
           if (file.exists(del_path) && del_file != curr) unlink(del_path)
         })
+        rm(del)
         base_mos <- raster(base_mos_path_tmp)
         base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
         base_mos_path <- normalizePath(base_mos_path_tmp)
@@ -315,7 +317,7 @@
                    valid_pixels=base_coverage)
   
   if (delete_files) {
-    .tmp_dir(dir_out,2,TRUE,tmp_dir_orig)
+    .tmp_dir(dir_out, 2, TRUE, tmp_dir_orig)
   }
   
   return(selected)

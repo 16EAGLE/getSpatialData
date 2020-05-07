@@ -224,7 +224,7 @@ You could modify these values (most likely decrease (some of) them.")
   cov <- as.character(round(base_coverage,2))
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
   i <- ifelse(i==0,1,i)
-  out(paste0("\r", "-      ",cov,"  %      after having checked on ",i," of ",le_collection," available records of sensor ",sensor,"  "), flush = T)
+  out(paste0("\r", "-      ",cov,"  %      [",i,"/",le_collection,"] checked records of ", sensor, "  "), flush = T)
   
 }
 

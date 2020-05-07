@@ -65,7 +65,7 @@
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
     out(params$sep)
-    out(paste0("Calculating mosaic for timestamp: ", ts))
+    out(paste0("Calculating mosaic of timestamp: ", ts))
   }
   
   selected <- try(.select_calc_mosaic(records,

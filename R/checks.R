@@ -590,3 +590,14 @@
     }
   }
 }
+
+# logical type checks
+
+#' check if inherits sf
+#' @param x of any type
+#' @return logical if it inherits sf
+#' @keywords internal
+#' @noRd
+.is_sf <- function(x) {
+  return(inherits(x, "sf"))
+}

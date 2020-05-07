@@ -207,10 +207,10 @@
   
   # if the base mosaics contains already all available records
   start <- ifelse(start > le_collection,le_collection,start)
-  
+
   # aggregate raster adjusted to aoi area size in order to speed up process
   names <- names(base_records)
-  base_records <- .aggr_rasters(base_records,names,aoi=aoi,dir_out=tmp_dir)
+  base_records <- .aggr_rasters(base_records, names, aoi=aoi, dir_out=tmp_dir)
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
@@ -224,7 +224,7 @@
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   for (i in start:le_collection) {
-    
+
     x <- collection[i] # current cloud mask
     base_mos <- raster(base_mos_path) # current base mosaic
     
@@ -238,7 +238,7 @@
     name_x <- names(x)
     # before calculating the next mosaic, 
     # check if record tile is within the area of non-covered pixels at all
-    x <- .aggr_rasters(x,name_x, aoi=aoi, dir_out=tmp_dir)
+    x <- .aggr_rasters(x, name_x, aoi=aoi, dir_out=tmp_dir)
     names(x) <- name_x
     next_record <- raster(x) # record to be added if it supports the mosaic
     next_record <- mask(next_record, aoi) # mask to aoi because saved cloud mask is not aoi cloud mask
@@ -247,8 +247,8 @@
     
     aoi_subset <- as(extent(next_record), SPATIAL_POLYGONS)
     aoi_subset <- .check_crs(aoi_subset)
-    aoi_subset <- intersect(aoi_subset,aoi)
-    cov_init <- .raster_percent(curr_base_mos_crop,mode="aoi",aoi=aoi_subset,n_pixel_aoi)
+    aoi_subset <- intersect(aoi_subset, aoi)
+    cov_init <- .raster_percent(curr_base_mos_crop, mode="aoi", aoi=aoi_subset, n_pixel_aoi)
     
     if (round(cov_init) == 99) {
       add_it <- FALSE
@@ -256,7 +256,7 @@
       crop_p <- file.path(tmp_dir, TMP_CROP)
       curr_mos_tmp_p <- normalizePath(file.path(tmp_dir, TMP_CROP_MOS))
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
-      curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x),aoi,curr_mos_tmp_p) # in this tile add next_record
+      curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
       if (class(curr_mos_tmp) != r) {
         add_it <- FALSE
@@ -296,7 +296,7 @@
         })
         rm(del)
         base_mos <- raster(base_mos_path_tmp)
-        base_coverage <- .raster_percent(base_mos,mode="aoi",aoi=aoi,n_pixel_aoi)
+        base_coverage <- .raster_percent(base_mos ,mode="aoi", aoi=aoi, n_pixel_aoi)
         base_mos_path <- normalizePath(base_mos_path_tmp)
         # cleanup
         rm(base_mos)

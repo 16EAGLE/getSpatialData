@@ -414,6 +414,8 @@
 
 #' checks if preview has valid observations (optinally in aoi)
 #' @param preview raster stack
+#' @param record sf
+#' @param aoi sf
 #' @return preview raster stack
 #' @keywords internal
 #' @noRd
@@ -539,9 +541,10 @@
 #' @noRd
 .check_crs <- function(x) {
   if (is.na(crs(x))) {
-    if (inherits(x, "sf") && is.na(st_crs(x))) {
+    is_sf <- .is_sf(x)
+    if (is_sf && is.na(st_crs(x))) {
       st_crs(x) <- st_crs(4326)
-    } else {
+    } else if (!is_sf) {
       crs(x) <- st_crs(4326)$proj4string
     }
   }

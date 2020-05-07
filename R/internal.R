@@ -806,14 +806,14 @@ rbind.different <- function(x) {
 #' @importFrom raster extent raster res crs values<- mask
 #' @keywords internal
 #' @noRd
-.calc_aoi_corr_vals <- function(aoi,x) {
+.calc_aoi_corr_vals <- function(aoi, x) {
   
   # calculate aoi number of cells (calculation is suitable for large areas)
   e <- extent(aoi)
   # calculate area of aoi in order to get a suitable resolution for percentage cells computations
-  r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4],crs=crs(x),resolution=res(x))
+  r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4], crs=crs(x), resolution=res(x))
   values(r) <- as.integer(1)
-  r <- mask(r,aoi)
+  r <- mask(r, aoi)
   r_vals <- getValues(r)
   aoi_npixels <- length(which(r_vals == 1))
   return(aoi_npixels)
@@ -1163,7 +1163,7 @@ rbind.different <- function(x) {
   
   if (mode == "na") {
     na_mask <- is.na(x)
-    x <- mask(na_mask,aoi)
+    x <- mask(na_mask, aoi)
     x_mat <- as.integer(as.matrix(x))
     # clouds = 1 and clear = 0 now
     percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
@@ -1207,8 +1207,8 @@ rbind.different <- function(x) {
       r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
       if (file.exists(r_save_path)) return(r_save_path)
       r_load <- stack(x[[i]])
-      r_aggr <- aggregate(r_load,adj)
-      writeRaster(r_aggr,r_save_path,overwrite=T,datatype=dataType(r_load))
+      r_aggr <- aggregate(r_load, adj)
+      writeRaster(r_aggr,r_save_path, overwrite=T, datatype=dataType(r_load))
       return(r_save_path)
     })
   } else {

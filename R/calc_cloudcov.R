@@ -143,7 +143,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
   
   ## Check input
   .check_verbose(verbose)
-  aoi <- .check_aoi(aoi, "sp")
+  aoi <- .check_aoi(aoi, "sf")
   .check_numeric(max_deviation, "max_deviation")
   dir_out <- .check_dir_out(dir_out, which="cloud_masks")
   .check_character(username, "username")

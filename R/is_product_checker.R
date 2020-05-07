@@ -126,6 +126,30 @@ is.sentinel2 <- function(records) {
   return(is.product_(records, name_product_sentinel2()))
 }
 
+#' Returns TRUE for records that are of product 'Sentinel-2' L2A
+#' @description \code{is.sentinel2_L2A} checks which records are Sentinel-2 L2A records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel2_L2A <- function(records) {
+  return(sapply(1:NROW(records), function(i) {
+    strsplit(records[i,][[name_record_id()]], "_")[[1]][2] == name_sentinel2_L2A()
+  }))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-2' L1C
+#' @description \code{is.sentinel2_L1C} checks which records are Sentinel-2 L1C records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel2_L1C <- function(records) {
+  return(sapply(1:NROW(records), function(i) {
+    strsplit(records[i,][[name_record_id()]], "_")[[1]][2] == name_sentinel2_L1C()
+  }))
+}
+
 #' Returns TRUE for records that are of product 'Sentinel-3'
 #' @description \code{is.sentinel3} checks which records are Sentinel-3 records.
 #' @inheritParams is.landsat

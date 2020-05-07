@@ -200,6 +200,17 @@ name_product_sentinel2 <- function() {
 }
 #' @keywords internal
 #' @noRd
+name_sentinel2_L2A <- function() {
+  return("MSIL2A")
+}
+#' @keywords internal
+#' @noRd
+name_sentinel2_L1C <- function() {
+  return("MSIL1C")
+}
+
+#' @keywords internal
+#' @noRd
 name_product_sentinel3 <- function() {
   return("Sentinel-3")
 }

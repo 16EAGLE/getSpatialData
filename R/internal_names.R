@@ -5,7 +5,7 @@
 #' be a column name of the records data.frame.
 #' ---------------------------------------------------------------------
 
-#' Column names as determined by getSpatialData
+#### column names as determined by getSpatialData
 #' @keywords internal
 #' @noRd
 name_product <- function() {
@@ -187,7 +187,7 @@ name_sub_period <- function() {
   return("sub_period")
 }
 
-# Names as they occur in the records 'product' column
+#### names related to products
 #' @keywords internal
 #' @noRd
 name_product_sentinel1 <- function() {
@@ -340,3 +340,75 @@ names_continental_s3 <- function() {
                   "csv" = ".csv")
   return(drivers)
 }
+
+#### classes
+#' numeric
+#' @keywords internal
+#' @noRd
+NUMERIC <- function() {return(class(numeric()))}
+#' integer
+#' @keywords internal
+#' @noRd
+INTEGER <- function() {return(class(integer()))}
+#' character
+#' @keywords internal
+#' @noRd
+CHARACTER <- function() {return(class(character()))}
+#' logical
+#' @keywords internal
+#' @noRd
+LOGICAL <- function() {return(class(logical()))}
+#' List
+#' @keywords internal
+#' @noRd
+LIST <- function() {return(class(list()))}
+#' data.frame
+#' @keywords internal
+#' @noRd
+DATAFRAME <- function() {return(class(data.frame()))}
+#' RasterLayer
+#' @keywords internal
+#' @noRd
+RASTER_LAYER <- function() {return("RasterLayer")}
+#' RasterStack
+#' @keywords internal
+#' @noRd
+RASTER_STACK <- function() {return("RasterStack")}
+#' RasterBrick
+#' @keywords internal
+#' @noRd
+RASTER_BRICK <- function()  {return("RasterBrick")}
+#' sf
+#' @keywords internal
+#' @noRd
+SF <- function()  {return("sf")}
+#' SpatialPolygons
+#' @keywords internal
+#' @noRd
+SPATIAL_POLYGONS <- function() {return("SpatialPolygons")}
+#' SpatialPolygonsDataFrame
+#' @keywords internal
+#' @noRd
+SPATIAL_POLYGONS_DF <- function() {return("SpatialPolygonsDataFrame")}
+#' sp
+#' @keywords internal
+#' @noRd
+SP <- function()  {return("sp")}
+
+#### data types
+
+#' INT2S
+#' @keywords internal
+#' @noRd
+INT2S <- function() {return("INT2S")}
+
+
+#### ERRORS
+#' try-error
+#' @keywords internal
+#' @noRd
+TRY_ERROR <- function() {"try-error"}
+#' error
+#' @keywords internal
+#' @noRd
+ERROR <- function() {return("error")}

@@ -39,8 +39,7 @@
                                 period, period_new = NULL, base_records = NULL,
                                 max_sub_period, max_cloudcov_tile, min_improvement, satisfaction_value,
                                 delete_files, params, dir_out, ts) {
-  LIST <- "list"
-  
+
   # the sub is an ordering of all available records per tile according to aoi cloud cover
   # this is the step where max_cloudcov_tile is ensured
   sub <- .select_sub(records=records,
@@ -52,7 +51,7 @@
                      identifier=params$identifier)
   
   sub <- .check_compact_list(sub)
-  if (class(sub) != LIST) return(NA)
+  if (!inherits(sub, LIST())) return(NA)
   
   # this step enforces max_sub_period. It returns a list of vectors of indices 
   # pointing to records in records. The list is ordererd according to aoi cloud cover
@@ -60,7 +59,7 @@
                                      date_col=params$date_col,aoi_cc_col=params$aoi_cc_col)
   
   sub_within <- .check_compact_list(sub_within)
-  if (!inherits(sub_within, LIST)) return(NA)
+  if (!inherits(sub_within, LIST())) return(NA)
   
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
@@ -79,7 +78,7 @@
                                       dir_out,
                                       params$identifier,
                                       delete_files=delete_files))
-  if (inherits(selected,"try-error")) {
+  if (inherits(selected, TRY_ERROR())) {
     out(paste0("\nSelection error at timestamp: ",ts),2)
   }
   selected$period <- .identify_period(records[which(records[[params$identifier]] %in% selected$ids),params$date_col])
@@ -110,10 +109,10 @@
     rec_ord <- rec_tile_sub[order(rec_tile_sub[[aoi_cc_col]]),]
     while(!is.na(lwst_cc) && i <= NROW(rec_tile_sub)) {
       i <- i+1
-      if (i > NROW(rec_tile_sub)) {
+      if (i > NROW(rec_tile_sub)) {# is this needed? hf
         lwst_cc <- NA
       } else {
-        lwst_cc <- rec_ord[i,identifier] # id of i lowest
+        lwst_cc <- unlist(rec_ord[i,][identifier]) # id of i lowest
         # ensure max_cloudcov_tile
         cc <- rec_ord[i,aoi_cc_col]
         above_max <- ifelse(is.na(cc) || any(is.null(c(lwst_cc,cc))),TRUE,
@@ -175,7 +174,7 @@
         period_new <- c(.select_bridge_period(records[order_within,date_col],period_new))
         
         # check which tile ids were not given in first order and move this record to first order
-        covered_tiles[[i]] <- records[order_within,"tile_id"]
+        covered_tiles[[i]] <- records[order_within,][[name_tile_id()]]
         if (i > 1) {
           tiles_not_in_first <- which(!covered_tiles[[i]] %in% covered_tiles[[1]])
           if (length(tiles_not_in_first) > 0) {
@@ -227,7 +226,7 @@
                                          min_date = min_date, max_date = max_date,
                                          period_new = period_new,
                                          max_sub_period = max_sub_period))
-  if (inherits(best_period, "try-error")) {
+  if (inherits(best_period, TRY_ERROR())) {
     return(NA)
   } else {
     incl <- .select_subset_to_best_period(dates,best_period)
@@ -271,7 +270,7 @@
     # calculate the sum grade of all dates within that sub_period
     # check optionally if this sub_period matches max_sub_period together within period_new
     # return the mean grade value or NA
-    sum_grade <- sapply(dates_seq,function(d) {
+    sum_grade <- sapply(dates_seq, function(d) {
       period_tmp <- c(d - air_minus, d + air_plus)
       if (period_tmp[1] < min_date) period_tmp[1] <- min_date
       if (period_tmp[2] > max_date) period_tmp[2] <- max_date
@@ -281,7 +280,7 @@
       return(sum_grade)
     })
     best_mid_date <- dates_seq[which(sum_grade == max(sum_grade))][1]
-    best_period <- c(round(best_mid_date-air_minus),(best_mid_date+air_plus))
+    best_period <- c(round(best_mid_date-air_minus), (best_mid_date+air_plus))
   } else {
     # find optimal new sub-period from period_new and given grades of dates
     # 1 remove dates from dates_seq and date_grade that cannot be within
@@ -334,7 +333,7 @@
   dates[l] <- dates[l] + 1
   date_col_mirr <- sapply(records[[params$date_col]], as.Date) # mirror of the date column as days since 1970-01-01
   for (i in 1:num_timestamps) {
-    within <- intersect(which(date_col_mirr >= dates[i]),which(date_col_mirr < dates[i+1]))
+    within <- intersect(which(date_col_mirr >= dates[i]), which(date_col_mirr < dates[i+1]))
     records[within, params$sub_period_col] <- i
   }
   return(records)
@@ -407,8 +406,6 @@
 #' @keywords internal
 #' @noRd
 .select_bridge_period <- function(dates_tmp,period_new) {
-  
   period_curr <- .identify_period(dates_tmp)
   period_new <- .identify_period(c(period_new,period_curr))
-  
 }

@@ -30,7 +30,7 @@ select_bitemporal <- function(records,
   
   #### Pre-checks
   records <- .check_records(records, .get_needed_cols_select(), as_df=T)
-  aoi <- .check_aoi(aoi,"sp")
+  aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
   #### Prep

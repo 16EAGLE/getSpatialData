@@ -137,13 +137,13 @@ calc_cloudcov <- function(records, max_deviation = 5,
                           aoi = NULL, dir_out = NULL,
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE, ...) {
   
-  TRYERROR <- "try-error"
-  DF <- "data.frame"
+  TRYERROR <- TRY_ERROR()
+  DF <- DATAFRAME()
   NONE <- "NONE"
   
   ## Check input
   .check_verbose(verbose)
-  aoi <- .check_aoi(aoi, "sf")
+  aoi <- .check_aoi(aoi, SF())
   .check_numeric(max_deviation, "max_deviation")
   dir_out <- .check_dir_out(dir_out, which="cloud_masks")
   .check_character(username, "username")
@@ -229,7 +229,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
         })
       }
       
-      if (inherits(record_preview, "error")) {
+      if (inherits(record_preview, ERROR())) {
         .check_http_error(record_preview,record,username,password,verbose=v)
         record_preview <- tryCatch({
           get_previews(record, dir_out = dir_out, verbose = F)

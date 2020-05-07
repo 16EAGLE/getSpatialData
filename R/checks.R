@@ -441,10 +441,10 @@
 #' @keywords internal
 #' @noRd
 .check_type <- function(input, arg_name, type) {
-  raster_classes <- c("RasterLayer", "RasterStack", "RasterBrick")
+  raster_classes <- c(RASTER_LAYER(), RASTER_STACK(), RASTER_BRICK())
   is_raster <- any(class(input) %in% raster_classes)
   check_possible <- !is.null(input)
-  is_list <- inherits(check_possible, "list")
+  is_list <- inherits(check_possible, LIST())
   check_possible <- ifelse(is_list, check_possible[[1]], check_possible[1])
   if (check_possible) {
     if (!is_raster) {
@@ -467,7 +467,7 @@
 #' @keywords internal
 #' @noRd
 .check_numeric <- function(input, arg_name) {
-  .check_type(input, arg_name, "numeric")
+  .check_type(input, arg_name, NUMERIC())
 }
 
 #' checks if input is character
@@ -477,7 +477,7 @@
 #' @keywords internal
 #' @noRd
 .check_character <- function(input, arg_name) {
-  .check_type(input, arg_name, "character")
+  .check_type(input, arg_name, CHARACTER())
 }
 
 #' checks if input is data.frame
@@ -487,7 +487,7 @@
 #' @keywords internal
 #' @noRd
 .check_dataframe <- function(input, arg_name) {
-  .check_type(input, arg_name, "data.frame")
+  .check_type(input, arg_name, DATAFRAME())
 }
 
 #' checks if input is list
@@ -497,7 +497,7 @@
 #' @keywords internal
 #' @noRd
 .check_list <- function(input, arg_name) {
-  .check_type(input, arg_name, "list")
+  .check_type(input, arg_name, LIST())
 }
 
 #' checks if input is RasterBrick or RasterStack
@@ -507,10 +507,8 @@
 #' @keywords internal
 #' @noRd
 .check_rasterStack <- function(input, arg_name) {
-  stack <- "RasterStack"
-  brick <- "RasterBrick"
-  if (!inherits(input, stack) && inherits(input, brick)) {
-    .check_type(input, arg_name, "RasterStack")
+  if (!inherits(input, RASTER_STACK()) && inherits(input, RASTER_BRICK())) {
+    .check_type(input, arg_name, RASTER_STACK())
   }
 }
 
@@ -521,7 +519,7 @@
 #' @keywords internal
 #' @noRd
 .check_raster <- function(input, arg_name) {
-  .check_type(input, arg_name, "RasterLayer")
+  .check_type(input, arg_name, RASTER_LAYER())
 }
 
 #' checks if input is logical
@@ -531,7 +529,7 @@
 #' @keywords internal
 #' @noRd
 .check_logical <- function(input, arg_name) {
-  .check_type(input, arg_name, "logical")
+  .check_type(input, arg_name, LOGICAL())
 }
 
 #' checks if spatial object has a crs and assigns EPSG 4326 if not
@@ -602,5 +600,5 @@
 #' @keywords internal
 #' @noRd
 .is_sf <- function(x) {
-  return(inherits(x, "sf"))
+  return(inherits(x, SF()))
 }

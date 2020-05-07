@@ -14,7 +14,7 @@
 #' @keywords internal
 #' @noRd
 .select_supported <- function(record) {
-  if (record$product == "Sentinel-1") {
+  if (record[[name_product()]] == name_product_sentinel1()) {
     return(TRUE)
   } else {
     is_supported <- .cloudcov_supported(record) # nearly the same unless: Sentinel-1 (supported in select_*())
@@ -101,7 +101,7 @@
   
   for (j in 1:length(cols)) {
     col <- cols[j]
-    val <- ifelse(col == selected_col,FALSE,NA)
+    val <- ifelse(col == selected_col, FALSE, NA)
     records[[col]] <- val
   }
   return(records)

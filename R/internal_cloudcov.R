@@ -13,9 +13,9 @@
 .cloudcov_supported <- function(record) {
   MODIS <- name_product_group_modis()
   given_product <- record[[name_product()]]
-  is_modis <- startsWith(given_product, MODIS)
-  is_sentinel3 <- startsWith(given_product, "S3")
-  given_product <- ifelse(startsWith(given_product, MODIS), MODIS, given_product)
+  is_modis <- is.modis(record)
+  is_sentinel3 <- is.sentinel3(record)
+  given_product <- ifelse(is_modis, MODIS, given_product)
   cloudcov_products <- .cloudcov_products()
   if (is_modis) {
     is_supported <- .record_is_refl_modis(record)
@@ -50,14 +50,14 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
                               cols = NULL, dir_out = NULL, verbose = TRUE) {
 
   max_try <- 30 # how often threshold adjustment should be repeated with adjusted threshold
-  error <- "try-error"
+  try_error <- TRY_ERROR()
   reload_msg = "Loading existing HOT aoi cloud mask"
   product_group <- record[[name_product_group()]]
   
   # checks & prep
   .check_dataframe(record, "record")
   .check_rasterStack(preview, "preview")
-  aoi <- .check_aoi(aoi, "sf")
+  aoi <- .check_aoi(aoi, SF())
   .check_numeric(max_deviation, "max_deviation")
   .check_list(cols, "cols")
   .check_verbose(verbose)
@@ -90,11 +90,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   # calculation
   water_mask <- try(.safe_water(preview))
-  hot_fail <- inherits(water_mask, error)
+  hot_fail <- inherits(water_mask, try_error)
   
   if (!hot_fail) {
     hot <- try(.cloudcov_calc_hot(preview, water_mask))
-    hot_fail <- inherits(hot, error)
+    hot_fail <- inherits(hot, try_error)
   }
   
   if (!hot_fail) {
@@ -196,7 +196,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 .cloudcov_calc_cmask <- function(record, preview, hot, water_mask,
                                  max_deviation, max_try) {
   
-  error <- "try-error"
+  try_error <- TRY_ERROR()
   provider_cloudcov <- record[[name_cloudcov()]][1]
   
   # S3 SLSTR needs different handling due to sea surface temperature measurement
@@ -206,19 +206,19 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   # create water and clear mask
   clear_mask <- try(.safe_clear(preview))
-  hot_fail <- inherits(clear_mask, error)
+  hot_fail <- inherits(clear_mask, try_error)
   
   while (isFALSE(hot_fail) && num_try <= max_try && abs(deviation) > max_deviation) {
     cloud_mask <- try(hot < hot_threshold)
     cloud_mask[water_mask == 1] <- 1
     cloud_mask[clear_mask == 1] <- 1
-    hot_fail <- inherits(cloud_mask, error)
+    hot_fail <- inherits(cloud_mask, try_error)
     cPercent <- .raster_percent(cloud_mask, mode="custom", custom = c(0,1))
     # if provider cloudcov is NA get out at this point
     if (is.na(provider_cloudcov)) provider_cloudcov <- cPercent
     # difference between scene cloud cover from HOT and from data provider
     deviation <- try(provider_cloudcov - cPercent)
-    hot_fail <- inherits(deviation, error) || is.na(deviation) || is.null(deviation)
+    hot_fail <- inherits(deviation, try_error) || is.na(deviation) || is.null(deviation)
     if (!hot_fail) {
       # if deviation is larger positive maxDeviation
       if (deviation >= max_deviation) { 
@@ -277,7 +277,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   cMask[cMask == 0] <- NA
 
   if (!file.exists(mask_path) && dir_out_exists) {
-    writeRaster(cMask, mask_path, overwrite=T, datatype = "INT2S")
+    writeRaster(cMask, mask_path, overwrite=T, datatype = INT2S())
   }
   
   record[[cols$cloud_mask_path]] <- ifelse(file.exists(mask_path), normalizePath(mask_path), "NONE")

@@ -73,7 +73,7 @@
                                        params=params,
                                        dir_out=dir_out))
     
-    if (inherits(selected_ts,"try-error")) {
+    if (inherits(selected_ts, TRY_ERROR())) {
       out("\nSelection failed for timestamp: ",t)
     }
     selected_ts[["timestamp"]] <- t
@@ -106,7 +106,7 @@
   w <- w[which(w!="NULL")]
   summary <- .out_vector(csw[[1]])
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
-  records[["sub_period"]] <- NULL # remove sub-period column
+  records[[name_sub_period()]] <- NULL # remove sub-period column
   records <- .column_summary(records,cols_initial)
   rm(summary, to_console)
   
@@ -205,7 +205,7 @@
                                     dir_out,
                                     ts=timestamp)
     
-    if (class(selected) != "list") {
+    if (class(selected) != LIST()) {
       .select_catch_empty_records(data.frame(),timestamp, s)
     } else {
       if (isFALSE(single_prio_product)) {

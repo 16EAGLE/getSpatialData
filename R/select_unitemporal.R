@@ -28,7 +28,7 @@ select_unitemporal <- function(records,
                                aoi = NULL, dir_out = NULL, verbose = TRUE) {
   #### Pre-checks
   records <- .check_records(records, .get_needed_cols_select(), as_df=T)
-  aoi <- .check_aoi(aoi,"sp")
+  aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
   #### Prep

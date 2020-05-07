@@ -18,18 +18,17 @@
   
   tmp_load <- raster(paths[1])
   src_datatype <- dataType(tmp_load)
-  srcnodata <- ifelse(src_datatype == "INT2S","-32768","-3.3999999521443642e+38")
+  srcnodata <- ifelse(src_datatype == INT2S(),"-32768","-3.3999999521443642e+38")
   mos_base <- .make_mosaic(paths,save_path, mode=mode, srcnodata=srcnodata,
                            datatype=src_datatype)
-  if (class(mos_base) != "RasterLayer") {
+  if (class(mos_base) != RASTER_LAYER) {
     return(NA)
   } else {
     
-    mos_base_mask <- mask(mos_base,aoi)
-    mos_base_crop <- crop(mos_base_mask,aoi)
-    writeRaster(mos_base_crop,save_path,overwrite=T,
-                srcnodata=srcnodata,datatype=src_datatype)
-    
+    mos_base_mask <- mask(mos_base, aoi)
+    mos_base_crop <- crop(mos_base_mask, aoi)
+    writeRaster(mos_base_crop, save_path, overwrite=T,
+                srcnodata=srcnodata, datatype=src_datatype)
     return(mos_base_crop)
   }
   
@@ -74,11 +73,11 @@
   tmp_dir_orig <- base::tempdir()
   tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
   
-  r <- "RasterLayer"
+  r <- RASTER_LAYER()
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
   save_str <- paste0(sample(LETTERS[1:20], 10),"_",collapse = "")
   save_pmos <- file.path(tmp_dir,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
-  layers <- c("red","green","blue")
+  layers <- c("red", "green", "blue")
   
   # cloud mask previews band-wise
   # this returns a list of paths to each of the three cloud-masked bands per record
@@ -161,25 +160,24 @@
   TMP_CROP <- "crop_tmp.tif"
   TMP_CROP_MOS <- "curr_crop_mos_tmp.tif"
   TMP_BASE_MOS <- "base_mos_tmp_"
-  r <- "RasterLayer"
-  SPATIAL_POLYGONS <- "SpatialPolygons"
-  SPATIAL_POLYGONS_DF <- "SpatialPolygonsDataFrame"
+  r <- RASTER_LAYER()
   curr_sensor <- unique(records$product)
-  if (!class(aoi)[1] %in% c(SPATIAL_POLYGONS, SPATIAL_POLYGONS_DF)) aoi <- as(aoi,"Spatial")
+  if (!class(aoi)[1] %in% c(SPATIAL_POLYGONS(), SPATIAL_POLYGONS_DF())) aoi <- as(aoi, "Spatial")
   le_first_order <- length(sub_within[[1]])
   
   if (length(sub_within) > 1) {
     # sort the orders of sub_within according to the aoi cloud cover of the same tile in previous order
     # this way for each order those tiles will be checked first that had the highest cloud cover in previous order
     # it shall result in handling large gaps first and small gaps late
-    tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,"tile_id"]))))
+    tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,][[name_tile_id()]]))))
     cc_col <- name_aoi_hot_cloudcov_percent()
     sub_within_sorted <- append(sub_within[1],lapply(2:length(sub_within),function(i) {
       curr_tiles <- tile_mirror[[i]]
       prev_tiles <- tile_mirror[[i-1]]
       tile_in_previous <- which(curr_tiles %in% prev_tiles)
-      cc_previous <- records[sub_within[[i-1]][which(prev_tiles %in% curr_tiles)],cc_col] # cloud cover of records of previous order
-      sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous,decreasing=TRUE)]
+      # cloud cover of records of previous order
+      cc_previous <- records[sub_within[[i-1]][which(prev_tiles %in% curr_tiles)],cc_col] 
+      sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous, decreasing=TRUE)]
       return(sorted_order)
     }))
     
@@ -206,7 +204,7 @@
   }
   
   # if the base mosaics contains already all available records
-  start <- ifelse(start > le_collection,le_collection,start)
+  start <- ifelse(start > le_collection, le_collection,start)
 
   # aggregate raster adjusted to aoi area size in order to speed up process
   names <- names(base_records)
@@ -214,7 +212,7 @@
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
   base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
-  base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path)
+  base_mos <- .select_bridge_mosaic(base_records, aoi, base_mos_path)
   if (class(base_mos) != r) start <- 1
   # cleanup
   .delete_tmp_files(tmp_dir) # delete temp raster .grd files in r tmp
@@ -245,7 +243,7 @@
     next_record <- .check_crs(next_record)
     curr_base_mos_crop <- crop(base_mos, next_record) # crop base mosaic to tile area of next
     
-    aoi_subset <- as(extent(next_record), SPATIAL_POLYGONS)
+    aoi_subset <- as(extent(next_record), SPATIAL_POLYGONS())
     aoi_subset <- .check_crs(aoi_subset)
     aoi_subset <- intersect(aoi_subset, aoi)
     cov_init <- .raster_percent(curr_base_mos_crop, mode="aoi", aoi=aoi_subset, n_pixel_aoi)
@@ -256,7 +254,7 @@
       crop_p <- file.path(tmp_dir, TMP_CROP)
       curr_mos_tmp_p <- normalizePath(file.path(tmp_dir, TMP_CROP_MOS))
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
-      curr_mos_tmp <- .select_bridge_mosaic(c(crop_p,x), aoi, curr_mos_tmp_p) # in this tile add next_record
+      curr_mos_tmp <- .select_bridge_mosaic(c(crop_p, x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
       if (class(curr_mos_tmp) != r) {
         add_it <- FALSE
@@ -279,7 +277,7 @@
     
     if (add_it) {
       save_str <- TMP_BASE_MOS
-      curr <- paste0(save_str,i,".tif")
+      curr <- paste0(save_str,i, ".tif")
       base_mos_path_tmp <- normalizePath(file.path(tmp_dir,curr))
       base_records <- c(base_records,x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record

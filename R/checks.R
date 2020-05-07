@@ -280,8 +280,6 @@
   
   missing <- c()
   empty <- c()
-  print(cols)
-  print(names(records))
   for (col in cols) {
     is_missing <- isFALSE(col %in% names(records))
     if (isTRUE(is_missing)) {
@@ -329,7 +327,7 @@
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
   .select_check_revisit(unique(unlist(records$product)),period,num_timestamps)
   # check if needed files exist
-  out("Checking if all needed clouds mask and preview rasters exist..",msg=T)
+  out("Checking if all needed clouds mask and preview rasters exist..", msg=T)
   check <- sapply(list(preview_file=records$preview_file,
                        cloud_mask_file=records$cloud_mask_file),function(x) {
     .select_check_files(x,names(x))
@@ -404,8 +402,14 @@
 #' @keywords internal
 #' @noRd
 .check_preview <- function(preview) {
-  prev_vals <- as.integer(as.vector(values(preview)))
-  return(all(prev_vals < 20))
+  max <- 20
+  .check_rasterStack(preview)
+  if (all(cellStats(preview, "max") < max)) {
+    prev_vals <- as.integer(as.vector(values(preview)))
+    return(all(prev_vals < max))
+  } else {
+    return(FALSE)
+  }
 }
 
 #' checks if preview has valid observations (optinally in aoi)
@@ -414,21 +418,16 @@
 #' @keywords internal
 #' @noRd
 .preview_has_valid_values <- function(preview, record, aoi = NULL) {
-  MIN_BROKEN <- 20 # for checks if no observations with DN >= 20
-  
   # Check if preview is broken
-  is_broken <- .check_preview(preview)
-  
+  is_not_broken <- !.check_preview(preview)
   # Check for valid observations in aoi
-  if (!is_broken) {
+  if (!is_not_broken) {
     if (!is.null(aoi)) {
       preview <- mask(preview, aoi)
+      is_not_broken <- !.check_preview(preview)
     }
-    maxValPrevMasked <- maxValue(preview)
-    # if max value smaller 20: no valid observations
-    not_valid_in_aoi <- maxValPrevMasked[1] < MIN_BROKEN || is.na(maxValPrevMasked[1])
   }
-  return(all(c(!is_broken, !not_valid_in_aoi)))
+  return(is_not_broken)
 }
 
 #' checks input, generates a type error message and throws it if invalid
@@ -540,7 +539,7 @@
 #' @noRd
 .check_crs <- function(x) {
   if (is.na(crs(x))) {
-    if (is.na(st_crs(x))) {
+    if (inherits(x, "sf") && is.na(st_crs(x))) {
       st_crs(x) <- st_crs(4326)
     } else {
       crs(x) <- st_crs(4326)$proj4string

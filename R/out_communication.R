@@ -14,13 +14,17 @@
 #' @noRd
 
 out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALSE, verbose = getOption("gSD.verbose")){
-  if(!is.na(type) && !type %in% c(1, 2, 3)) type <- 1
-  if(isTRUE(flush)) flush.console()
-  if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
-  if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
-  else{if(type == 3){stop(input, call. = FALSE)}else{if(ll == 1){
-    if(msg == FALSE){ cat(paste0(sign,input), sep = ifelse(isTRUE(flush), " ", "\n"))
-    } else{message(paste0(sign,input))}}}}
+  if (inherits(input, DATAFRAME()) && verbose) {
+    print(input, row.names = FALSE, right = FALSE)
+  } else {
+    if(!is.na(type) && !type %in% c(1, 2, 3)) type <- 1
+    if(isTRUE(flush)) flush.console()
+    if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
+    if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
+    else{if(type == 3){stop(input, call. = FALSE)}else{if(ll == 1){
+      if(msg == FALSE){ cat(paste0(sign,input), sep = ifelse(isTRUE(flush), " ", "\n"))
+      } else{message(paste0(sign,input))}}}}
+  }
 }
 
 #' prints character vectors in console combined into one message in out()
@@ -30,12 +34,11 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALS
 #' @return nothing. Console print
 #' @keywords internal
 #' @noRd
-.out_vector <- function(x,type=1,msg=FALSE) {
-  
+.out_vector <- function(x, type=1, msg=FALSE) {
   shout_out <- sapply(x,function(vec) {
     print_out <- sapply(vec,function(v) out(v,type=type,msg=msg))
   })
-  
+  rm(shout_out)
 }
 
 #' seperator for console communication
@@ -92,7 +95,7 @@ quiet <- function(expr){
 #' @keywords internal
 #' @noRd
 .select_start_info <- function(mode,sep) {
-  out(paste0(sep,"\n           Starting ",mode," Selection Process           ",sep))
+  out(paste0("Starting ", mode," Selection           "))
 }
 
 #' Throws error because temporal arguments disable a consistent selection
@@ -126,6 +129,30 @@ You could modify these values (most likely decrease (some of) them.")
   
 }
 
+#' creates a selection summary per timestamp as a table
+#' @param timestamps_seq integer vector
+#' @param coverage_vector numeric vector
+#' @param n_records_vector numeric vector
+#' @param sep character separator to be printed before and after table
+#' @keywords internal
+#' @noRd
+.select_final_info_table <- function(timestamps_seq, coverage_vector, n_records_vector, sep) {
+  out(paste0(sep, "\n"), msg=F)
+  two_spaces <- "  "
+  coverage_visual <- sapply(coverage_vector, function(cov) {
+    bar <- paste(rep("#", cov / 10), collapse = "")
+    return(paste0("| ", two_spaces, bar, " "))
+  })
+  table_sep <- "| "
+  summary_df <- data.frame("| Timestamp" = paste0(table_sep, timestamps_seq),
+                           "| 0 ########## 100 %" = coverage_visual,
+                           "cloud-free pixels" = round(coverage_vector, 2),
+                           "| Number records" = paste0(table_sep, n_records_vector), check.names = FALSE)
+  
+  out(summary_df)
+  out(paste0(sep, "\n"), msg=F)
+}
+
 #' constructs a summary of the console info of \code{.select_final_info}.
 #' In addition: if the minimum coverage amongst the timestamps is below 60 \% return a warning message. 
 #' In addition: if the mean coverage amongst the timestamps is below 80 \% return a warning message.
@@ -141,21 +168,26 @@ You could modify these values (most likely decrease (some of) them.")
 .select_summary_ts <- function(selected) {
   
   sep <- sep()
+  out(paste0("\n", sep), msg=F)
   coverages <- sapply(selected,function(x) {x$valid_pixels})
   num_timestamps <- length(selected)
   min_cov <- round(min(coverages))
   mean_cov <- round(mean(coverages))
   p <- " %"
-  header <- paste0("\nSelection Process Overall Summary")
-  cov_pixels <- "overage of valid pixels "
-  info1 <- paste0("\n- Number of timestamps: ",num_timestamps)
-  info2 <- paste0("\n- C",cov_pixels,"in timestamp-wise mosaics of selected records: ")
-  info3 <- paste0("\n-      Mean:     ",mean_cov,p)
-  info4 <- paste0("\n-      Lowest:   ",min_cov,p)
-  info5 <- paste0("\n-      Highest:  ",round(max(coverages)),p)
-  console_summary <- paste0(sep,header,sep,info1,info2,info3,info4,info5,sep,"\n")
+  header <- paste0("\nOverall Summary")
   
-  # optional warnings
+  empty <- ""
+  table_sep <- "| "
+  placeholder <- paste0(table_sep, empty)
+  summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, as.character(num_timestamps)), placeholder),
+                           "| Cloud-free pixels (%)" = c(placeholder, placeholder),
+                           " " = c("Mean", as.character(mean_cov)),
+                           " " = c("Min", as.character(min_cov)),
+                           " " = c("Max", as.character(round(max(coverages)))), check.names = FALSE)
+  out(summary_df)
+  
+  # optionally thrown warnings
+  cov_pixels <- "overage of valid pixels "
   min_thresh <- 60
   mean_thresh <- 80
   check_min <- min_cov < min_thresh # return warning below this
@@ -170,7 +202,8 @@ You could modify these values (most likely decrease (some of) them.")
                                       "\n",warn_str,"the lowest coverage amongst all timestamps is below: ",min_thresh,p,"\n"),"NULL")
   warn_mean <- ifelse(check_mean,paste0("The mean c",cov_pixels,in_ts,"is ",mean_cov,warn_help,
                                         "\n",warn_str,"the mean coverage is below: ",mean_thresh,p,"\n"),"NULL")
-  console_summary_warning <- list(console_summary,warn_min,warn_mean)
+  console_summary_warning <- list(warn_min, warn_mean)
+  return(console_summary_warning)
   
 }
 
@@ -259,8 +292,8 @@ You could modify these values (most likely decrease (some of) them.")
   
   sep <- sep()
   csw_SAR <- .select_SAR_summary(records,selected_SAR,num_timestamps,params)
-  out(paste0(sep,"\nSelection Process Overall Summary",sep))
-  out(paste0("- Number of timestamps: ",num_timestamps,"\n"))
+  out(paste0(sep,"\nOverall Summary",sep))
+  out(paste0("Number of timestamps: ",num_timestamps,"\n"))
   summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
   rm(summary)
   w <- csw_SAR[[2]]

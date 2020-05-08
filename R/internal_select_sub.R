@@ -55,7 +55,7 @@
   
   # this step enforces max_sub_period. It returns a list of vectors of indices 
   # pointing to records in records. The list is ordererd according to aoi cloud cover
-  sub_within <- .select_force_period(records,sub,period,max_sub_period,period_new=period_new,
+  sub_within <- getSpatialData:::.select_force_period(records,sub,period,max_sub_period,period_new=period_new,
                                      date_col=params$date_col,aoi_cc_col=params$aoi_cc_col)
   
   sub_within <- .check_compact_list(sub_within)
@@ -101,8 +101,8 @@
 .select_sub <- function(records, tiles, max_cloudcov_tile,
                         aoi_cc_col, tileid_col, date_col, identifier) {
   
-  sub <- lapply(tiles,function(x) {
-    rec_tile_sub <- records[which(records[[tileid_col]]==x),]
+  sub <- lapply(tiles, function(x) {
+    rec_tile_sub <- records[which(records[[tileid_col]] == x),]
     i <- as.integer(0)
     lwst_cc <- as.integer(0)
     selected <- c()
@@ -147,7 +147,7 @@
   
   # check if covered period of timestamp is within max_sub_period
   # and re-calculate period consecutively with record of next-lowest cloud cover
-  max_num_sel <- max(sapply(sub,length))
+  max_num_sel <- max(sapply(sub, length))
   orders <- sapply(1:max_num_sel,function(i) unlist(sapply(sub,function(x) return(x[i]))))
   orders <- data.frame(orders)
   sub_within <- list()
@@ -168,7 +168,7 @@
       # for the case where at least one of record of order x is not within period_new
       # try with all values in all possible combinations (not orders). Might be that 
       # from 0 to all records except one are within period
-      order_within <- .select_remove_dates(order,records,period_new,max_sub_period,
+      order_within <- .select_remove_dates(order, records, period_new, max_sub_period,
                                            date_col, aoi_cc_col)
       if (!is.na(order_within[1])) {
         period_new <- c(.select_bridge_period(records[order_within,date_col],period_new))
@@ -193,7 +193,7 @@
 }
 
 #' finds optimal dates from a records order within a period of a timestamp and max_sub-period.
-#' @param x numeric vector. All values index a record in records.
+#' @param order numeric vector. Values index a record in records.
 #' @param records data.frame.
 #' @param period_new character vector of two dates.
 #' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed.
@@ -203,9 +203,9 @@
 #' @importFrom stats median
 #' @keywords internal
 #' @noRd
-.select_remove_dates <- function(x, records, period_new, max_sub_period, date_col, aoi_cc_col) {
+.select_remove_dates <- function(order, records, period_new, max_sub_period, date_col, aoi_cc_col) {
   
-  dates <- sapply(records[x,date_col],function(d) {as.Date(d)})
+  dates <- sapply(records[order, date_col],function(d) {as.Date(d)})
   # for each of the dates count how many records are given, this creates a distribution of the records in time as a basis for reference date selection
   # grade each date according to number of given records and the mean aoi cloud cover of this records
   min_date <- min(dates)
@@ -213,10 +213,10 @@
   dates_seq <- min_date:max_date
   date_grade <- list()
   for (d in dates_seq) {
-    sel <- which(dates == d)
+    sel <- order[which(dates == d)]
     # turn low cc values into high ones because high counts of sel are good
-    cc <- sapply(records[sel,aoi_cc_col],function(c) {100-as.numeric(c)}) 
-    value <- ifelse(length(cc)==0,0,mean(length(sel) * cc))
+    cc <- sapply(records[sel, aoi_cc_col],function(c) {100-as.numeric(c)}) # 100 - cloudcov!!
+    value <- ifelse(length(cc)==0,0, mean(length(sel) * cc)) # number of values * the aoi cloudcov
     date_grade[[as.character(d)]] <- value
   }
   
@@ -230,7 +230,7 @@
     return(NA)
   } else {
     incl <- .select_subset_to_best_period(dates,best_period)
-    order <- if (length(incl) == 0) NA else x[incl]
+    order <- if (length(incl) == 0) NA else order[incl]
     return(order)
   }
   
@@ -262,9 +262,9 @@
 .select_best_period <- function(date_grade, dates_seq, min_date, max_date, 
                                 period_new, max_sub_period) {
   
-  max_sub_half <- round((max_sub_period - 1) / 2)
-  air_plus <- ifelse(max_sub_half*2+1 < max_sub_period,max_sub_half+1,max_sub_half)
-  air_minus <- max_sub_half
+  max_sub_half <- max_sub_period / 2
+  air_plus <- as.integer(ifelse(max_sub_half*2+1 <= max_sub_period, max_sub_half+1, max_sub_half))
+  air_minus <- as.integer(max_sub_half) - 1
   if (is.null(period_new)) {
     # for each date in dates_seq create the sub_period around it according to max_sub_period
     # calculate the sum grade of all dates within that sub_period
@@ -274,18 +274,29 @@
       period_tmp <- c(d - air_minus, d + air_plus)
       if (period_tmp[1] < min_date) period_tmp[1] <- min_date
       if (period_tmp[2] > max_date) period_tmp[2] <- max_date
-      first <- which(dates_seq==period_tmp[1])
-      last <- which(dates_seq==period_tmp[2])
+      first <- which(dates_seq == period_tmp[1])
+      last <- which(dates_seq == period_tmp[2])
       sum_grade <- sum(unlist(date_grade[first:last]))
       return(sum_grade)
     })
     best_mid_date <- dates_seq[which(sum_grade == max(sum_grade))][1]
-    best_period <- c(round(best_mid_date-air_minus), (best_mid_date+air_plus))
+    start <- best_mid_date - air_minus
+    dev_from_first <- min_date - start
+    shift_up <- dev_from_first > 0
+    start <- ifelse(shift_up, min_date, start)
+    end <- best_mid_date + air_plus
+    dev_from_last <- end - max_date
+    shift_low <- dev_from_last > 0
+    end <- ifelse(shift_low, max_date, end)
+    start <- ifelse(shift_low, start - dev_from_last, start)
+    end <- ifelse(shift_up, end + dev_from_first, end)
+    best_period <- c(ifelse(start < min_date, min_date, start), ifelse(end > max_date, max_date, end))
+    return(best_period)
   } else {
     # find optimal new sub-period from period_new and given grades of dates
     # 1 remove dates from dates_seq and date_grade that cannot be within
     # max_sub_period when combining with period_new
-    period_new_date <- sapply(period_new,as.Date)
+    period_new_date <- sapply(period_new, as.Date)
     period_new_seq <- period_new_date[1]:period_new_date[2]
     # how many new dates can be added before reaching max_sub_period
     air <- max_sub_period - length(period_new_seq)
@@ -293,7 +304,7 @@
       best_period <- period_new_date
       return(best_period)
     } else {
-      # try all possible periods with air and return the sum of grades within that
+      # try all possible periods with period_new and air and return the sum of grades within that
       air_minus <- air:0
       air_plus <- rev(air_minus)
       shifted_grades <- sapply(1:length(air_minus),function(i) {
@@ -307,8 +318,8 @@
         return(NA)
       }
       best_grade <- which(shifted_grades == max(shifted_grades))[1]
-      best_period <- c(period_new_date[1]-air_minus[best_grade],
-                       period_new_date[2]+air_plus[best_grade])
+      best_period <- c(period_new_date[1] - air_minus[best_grade],
+                       period_new_date[2] + air_plus[best_grade])
       return(best_period)
     }
   }

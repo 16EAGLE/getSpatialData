@@ -5,7 +5,7 @@
 #' combined selection for different products across systems and data providers.
 #'  
 #' @details For running the selection you have to process \link{calc_cloudcov} first.
-#' Generally, the following products can be processed in \code{select_timeseries}:
+#' Generally, the following products can be processed in \code{select_*} functionalities:
 #' \itemize{
 #' \item Sentinel-1
 #' \item Sentinel-2 A/B
@@ -43,15 +43,7 @@
 #' selection was not fullfilled by previous product. Product names must be provided as returned by \link{get_select_supported}.
 #' Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
 #' If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.
-#' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
-#' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
-#' and at least three rows (each row representing one corner coordinate). 
-#' Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
-#' If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param dir_out character directory where to save the cloud mask mosaics and the RGB preview mosaic.
-#' Note: Below this dir_out a tmp_dir will be created where temporary files will be saved during selection.This folder is
-#' deleted before returning \code{records}.
-#' @param verbose	logical, whether to display details on the function's progress or output on the console.
+#' @inheritParams calc_cloudcov
 #'
 #' @return \code{records} data.frame holding four additional columns:
 #' \enumerate{
@@ -69,10 +61,10 @@ select_timeseries <- function(records,
                               num_timestamps, min_distance, max_sub_period,
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_products = c(), 
-                              aoi = NULL, dir_out = NULL, verbose = TRUE) {
+                              aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records, .get_needed_cols_select(), as_df=T)
+  records <- .check_records(records, .get_needed_cols_select(), as_df = TRUE)
   aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
@@ -106,6 +98,7 @@ The minimum number for select_timeseries is: 3"),3)
                           params,
                           cols_initial)
   
+  records <- .check_records(records, as_df = !as_sf)
   return(records)
   
 }

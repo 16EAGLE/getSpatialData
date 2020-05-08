@@ -3,11 +3,8 @@
 #' @description Selection is done according to aoi cloud cover (in case of optical data) 
 #' and temporal characteristics. Both optical and SAR records are supported as well as
 #' combined selection for different products across systems and data providers.
-#' 
-#' @details For running the selection you have to process \link{calc_cloudcov} first.
-#' 
-#' @note This functionality creates a 'tmp' folder below \code{dir_out} where
-#' temporary files are saved. This folder will be deleted at the end of the function call.
+#'  
+#' @inherit select_timeseries note details
 #' 
 #' @inheritParams select_timeseries
 # 
@@ -26,10 +23,10 @@ select_bitemporal <- function(records,
                               min_distance, max_sub_period,
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_products = c(),
-                              aoi = NULL, dir_out = NULL, verbose = TRUE) {
+                              aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records, .get_needed_cols_select(), as_df=T)
+  records <- .check_records(records, .get_needed_cols_select(), as_df = TRUE)
   aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
@@ -58,6 +55,7 @@ select_bitemporal <- function(records,
                           params,
                           cols_initial)
 
+  records <- .check_records(records, as_df = !as_sf)
   return(records)
 
 }

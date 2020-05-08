@@ -382,6 +382,10 @@ RASTER_BRICK <- function()  {return("RasterBrick")}
 #' @keywords internal
 #' @noRd
 SF <- function()  {return("sf")}
+#' sfc
+#' @keywords internal
+#' @noRd
+SFC <- function()  {return("sfc")}
 #' Spatial
 #' @keywords internal
 #' @noRd

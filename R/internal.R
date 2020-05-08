@@ -630,21 +630,6 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   records[,c(na.omit(match(dict$gSD, colnames(records))), which(!(colnames(records) %in% dict$gSD)))]
 }
 
-#' converts everything in a data.frame that is not of class c("character","numeric","integer","logical")
-#' to character
-#' @param x data.frame.
-#' @return data.frame as x but only with columns of classes c("character","numeric","integer","logical").
-#' @keywords internal
-#' @noRd
-.df_dates_to_chars <- function(x) {
-  to_char <- sapply(names(x), function(name) {
-    if(isFALSE(inherits(x[[name]], c("character", "numeric", "integer", "logical", "sfc")))) {
-      x[name] <- as.character(x[,name])
-    }
-  })
-  return(x)
-}
-
 #' On package startup
 #' @keywords internal
 #' @noRd
@@ -717,8 +702,8 @@ gSD.retry <- function(files, FUN, ..., n.retry = 3, delay = 0, verbose = T){
   for (i in 1:NCOL(records)) {
     column <- records[,i]
     # when sf we need one more [[1]] to reach
-    not_matrix <- ifelse(inherits(records, "sf"), !is.matrix(column[[1]][[1]]), !is.matrix(column[[1]][[1]][[1]]))
-    if (inherits(column, "list")) {
+    not_matrix <- ifelse(inherits(records, SF()), !is.matrix(column[[1]][[1]]), !is.matrix(column[[1]][[1]][[1]]))
+    if (inherits(column, LIST())) {
       # if it's a matrix it's a footprint thing
       if (not_matrix) {
         column <- unlist(column)
@@ -803,21 +788,20 @@ rbind.different <- function(x) {
 #' @param aoi aoi.
 #' @param x raster with the resolution.
 #' @return integer number of pixels in aoi.
-#' @importFrom raster extent raster res crs values<- mask
+#' @importFrom sf st_bbox
+#' @importFrom raster raster res crs values<-
 #' @keywords internal
 #' @noRd
 .calc_aoi_corr_vals <- function(aoi, x) {
-  
   # calculate aoi number of cells (calculation is suitable for large areas)
-  e <- extent(aoi)
+  e <- as.vector(st_bbox(aoi))
   # calculate area of aoi in order to get a suitable resolution for percentage cells computations
-  r <- raster(xmn=e[1],xmx=e[2],ymn=e[3],ymx=e[4], crs=crs(x), resolution=res(x))
+  r <- raster(xmn=e[1],xmx=e[3],ymn=e[2],ymx=e[4], crs=crs(x), resolution=res(x))
   values(r) <- as.integer(1)
   r <- .mask_raster_by_polygon(r, aoi)
   r_vals <- getValues(r)
   aoi_npixels <- length(which(r_vals == 1))
   return(aoi_npixels)
-  
 }
 
 #' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
@@ -1246,7 +1230,7 @@ rbind.different <- function(x) {
   
 }
 
-#' wrapper for masking rasters by polygon
+#' wrapper for masking raster by polygon
 #' @param x RasterLayer, RasterStack or RasterBrick
 #' @param mask sfc or sp
 #' @return x masked
@@ -1256,6 +1240,18 @@ rbind.different <- function(x) {
 #' @noRd
 .mask_raster_by_polygon <- function(x, polygon) {
   return(mask(x, as(polygon, SPATIAL())))
+}
+
+#' wrapper for cropping raster by polygon
+#' @param x RasterLayer, RasterStack or RasterBrick
+#' @param mask sfc or sp
+#' @return x masked
+#' @importFrom raster mask
+#' @importFrom sf as
+#' @keywords internal
+#' @noRd
+.crop_raster_by_polygon <- function(x, polygon) {
+  return(crop(x, as(polygon, SPATIAL())))
 } 
 
 #' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
@@ -1390,18 +1386,16 @@ rbind.different <- function(x) {
 }
 
 #' removes NULLs and NAs from list or data.frame.
-#' @param x list data.frame.
-#' @return x list without NULLs and NAs.
+#' @param x list or vector.
+#' @return x list or vector without NULLs and NAs.
 #' @keywords internal
 #' @noRd
 .gsd_compact <- function(x) {
-  
-  if (inherits(x, "list")) {
-    not_na <- sapply(x,function(y) {return((!is.na(y) && !is.null(y)))})
+  if (inherits(x, LIST()) || length(x) > 1) {
+    not_na <- sapply(x, function(y) {return((!is.na(y) && !is.null(y)))})
     x <- x[not_na]
   }
   return(x)
-  
 }
 
 #' returns TRUE if a vector or list has length 0/is.null() or is.na()

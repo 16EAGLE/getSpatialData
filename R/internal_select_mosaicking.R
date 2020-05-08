@@ -21,15 +21,14 @@
   srcnodata <- ifelse(src_datatype == INT2S(),"-32768","-3.3999999521443642e+38")
   mos_base <- .make_mosaic(paths,save_path, mode=mode, srcnodata=srcnodata,
                            datatype=src_datatype)
-  if (!inherits(mos_base, RASTER_LAYER())) {
-    return(NA)
-  } else {
-    
+  if (inherits(mos_base, RASTER_LAYER())) {
     mos_base_mask <- .mask_raster_by_polygon(mos_base, aoi)
-    mos_base_crop <- crop(mos_base_mask, aoi)
+    mos_base_crop <- .crop_raster_by_polygon(mos_base_mask, aoi)
     writeRaster(mos_base_crop, save_path, overwrite=T,
                 srcnodata=srcnodata, datatype=src_datatype)
     return(mos_base_crop)
+  } else {
+    return(NA)
   }
   
 }
@@ -244,25 +243,23 @@
     aoi_subset <- st_as_sfc(st_bbox(next_record), crs=4326)
     aoi_subset <- .check_crs(aoi_subset)
     aoi_union <- st_union(aoi) # ensure it's a single feature
-    aoi_subset <- st_intersection(aoi_subset, aoi_union) # get intersection of tile and aoi
+    aoi_subset <- suppressMessages(st_intersection(aoi_subset, aoi_union)) # get intersection of tile and aoi
     cov_init <- .raster_percent(curr_base_mos_crop, mode="aoi", aoi=aoi_subset, n_pixel_aoi)
 
     if (round(cov_init) == 99) {
       add_it <- FALSE
     } else {
       crop_p <- file.path(tmp_dir, TMP_CROP)
-      curr_mos_tmp_p <- normalizePath(file.path(tmp_dir, TMP_CROP_MOS))
+      curr_mos_tmp_p <- file.path(tmp_dir, TMP_CROP_MOS)
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p, x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
       if (inherits(curr_mos_tmp, r)) {        
-        print("5")
         cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
         # cleanup
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
         rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
-        print("6")
         
         # calculate if valid coverage in whole aoi is improved > min_improvement 
         # when adding the record to the tile area
@@ -277,13 +274,11 @@
     }
     
     if (add_it) {
-      print("7")
       save_str <- TMP_BASE_MOS
       curr <- paste0(save_str,i, ".tif")
-      base_mos_path_tmp <- normalizePath(file.path(tmp_dir,curr))
+      base_mos_path_tmp <- file.path(tmp_dir,curr)
       base_records <- c(base_records, x) # add save path of current mosaic
       base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
-      print("8")
       if (inherits(base_mos, r)) {
         # cleanup
         rm(base_mos)
@@ -297,7 +292,7 @@
         rm(del)
         base_mos <- raster(base_mos_path_tmp)
         base_coverage <- .raster_percent(base_mos ,mode="aoi", aoi=aoi, n_pixel_aoi)
-        base_mos_path <- normalizePath(base_mos_path_tmp)
+        base_mos_path <- base_mos_path_tmp
         # cleanup
         rm(base_mos)
         .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
@@ -336,11 +331,15 @@
 .select_save_mosaics <- function(records, selected, aoi, 
                                  params, dir_out) {
   
-  console_info <- list()
+  #console_info <- list()
   cols <- c(params$selected_col, params$timestamp_col, params$pmos_col, params$cmos_col)
   records <- .select_prep_cols(records,cols,params$selected_col)
   
-  for (i in 1:length(selected)) {
+  ts_seq <- 1:length(selected) # needed for console print
+  coverage_vector <- c()
+  n_records_vector <- c()
+  
+  for (i in ts_seq) {
     
     s <- selected[[i]]
     ids_selected <- s$ids
@@ -366,10 +365,18 @@
       records[which(records[[params$identifier]] %in% ids_selected),cols[j]] <- insert[j]      
     }
     # get print info
-    console_info[[i]] <- .select_final_info(s)
+    #console_info[[i]] <- .select_final_info(s)
+    curr_n_records <- length(s$cMask_paths)
+    curr_n_valid_pixels <- round(s$valid_pixels)
+    n_records_vector <- append(n_records_vector, curr_n_records)
+    coverage_vector <- append(coverage_vector, curr_n_valid_pixels)
     
   }
-  each_timestamp <- .out_vector(console_info)
+  #each_timestamp <- .out_vector(console_info)
+  
+  # print selection summary
+  .select_final_info_table(ts_seq, coverage_vector, n_records_vector, params$sep)
+  
   rm(each_timestamp)
   return(records)
   

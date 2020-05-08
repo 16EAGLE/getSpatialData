@@ -58,7 +58,7 @@
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
   for (t in 1:length(sub_periods)) {
     
-    previous_period <- ifelse(t > 1,selected[[t-1]]$period,NA)
+    previous_period <- ifelse(t > 1,selected[[t-1]]$period, NA)
     
     selected_ts <- try(.select_process(records,
                                        aoi,
@@ -95,21 +95,20 @@
   #3 the timestamp number for which the record is selected
   mode_console <- ifelse(length(selected)==1,""," per timestamp")
   sep <- params$sep
-  out(paste0(sep,"\nSelection Process Summary",
+  out(paste0(sep,"\nSummary per timestamp",
              mode_console))
   # create final mosaics for each timestamp and summary message per timestamp
   records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
                                   params=params,dir_out=dir_out)
   # create optional warning(s) and overall summary message
   csw <- .select_summary_ts(selected)
-  w <- csw[2:3] # warnings
+  w <- csw[1:2] # warnings
   w <- w[which(w!="NULL")]
-  summary <- .out_vector(csw[[1]])
-  if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x,type=2))
+  if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x, type=2))
   records[[name_sub_period()]] <- NULL # remove sub-period column
-  records <- .column_summary(records,cols_initial)
   rm(summary, to_console)
   
+  records <- .column_summary(records,cols_initial)
   return(records)
   
 }
@@ -134,23 +133,23 @@
                             timestamp,
                             min_distance, max_sub_period, max_cloudcov_tile, 
                             min_improvement, previous_period,
-                            satisfaction_value, prio_sensors = NULL,
+                            satisfaction_value, prio_products = NULL,
                             params, dir_out) {
   
   name_product <- name_product()
   name_product_group <- name_product_group()
-  completed_info <- paste0("\nCompleted selection process for timestamp: ",timestamp)
+  completed_info <- paste0("\nCompleted selection for timestamp: ", timestamp)
   period_new <- c() # for selection of multiple sensors
   base_records <- c() # same 
   ids <- c() # same
   valid_pixels <- 0 # same
   
-  if (is.null(prio_sensors)) {
-    prio_sensors <- .generate_random_prio_prods(records)
+  if (is.null(prio_products)) {
+    prio_products <- .generate_random_prio_prods(records)
   }
-  single_prio_product <- length(prio_sensors) == 1 # single product given
+  single_prio_product <- length(prio_products) == 1  # single product given
   
-  for (s in prio_sensors) {
+  for (s in prio_products) {
     
     if (single_prio_product) {
       # in case prio_sensors is not given process all sensors together
@@ -163,7 +162,7 @@
         s_match <- which(startsWith(records[[name_product_group]], s))
       }
     }
-    sensor_match <- intersect(which(records$sub_period==timestamp), s_match)
+    sensor_match <- intersect(which(records$sub_period == timestamp), s_match)
     if (length(sensor_match) == 0) { # no records for sensor s at timestamp
       .select_catch_empty_records(data.frame(), timestamp, s)
       if (single_prio_product) break else next
@@ -173,11 +172,11 @@
     tstamp$records <- records[sensor_match,]
     # in case of Sentinel-3 and MODIS we might have non-supported products
     # since the supported products cannot be identified through the product but the record_id
-    tstamp$records <- .select_filter_supported(tstamp$records)
+    tstamp$records <- getSpatialData:::.select_filter_supported(tstamp$records)
     tstamp$records <- records[which(!is.na(records[[params$sub_period_col]])),]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
-    .select_catch_empty_records(tstamp$records, timestamp, s)
-    tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
+    getSpatialData:::.select_catch_empty_records(tstamp$records, timestamp, s)
+    tstamp$period <- getSpatialData:::.identify_period(tstamp$records[[params$date_col]])
     
     if (timestamp > 1) {
       # enforce to min_distance from previous timestamp
@@ -188,7 +187,7 @@
       tstamp$records <- .select_within_period(records,tstamp$period,params$date_col) # subset to records in period
     }
     
-    delete_files <- ifelse(single_prio_product,FALSE,ifelse(s == tail(prio_sensors,1),TRUE,FALSE))
+    delete_files <- ifelse(single_prio_product, FALSE, s == tail(prio_products,1))
     
     # run the selection process
     selected <- .select_process_sub(tstamp$records,
@@ -205,7 +204,7 @@
                                     dir_out,
                                     ts=timestamp)
     
-    if (class(selected) != LIST()) {
+    if (!inherits(selected, LIST())) {
       .select_catch_empty_records(data.frame(),timestamp, s)
     } else {
       if (isFALSE(single_prio_product)) {

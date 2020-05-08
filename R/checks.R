@@ -539,10 +539,11 @@
 #' @noRd
 .check_crs <- function(x) {
   if (is.na(crs(x))) {
+    is_sfc <- .is_sfc(x)
     is_sf <- .is_sf(x)
-    if (is_sf && is.na(st_crs(x))) {
+    if (any(is_sfc, is_sf) && is.na(st_crs(x))) {
       st_crs(x) <- st_crs(4326)
-    } else if (!is_sf) {
+    } else if (!is_sfc && !is_sf) {
       crs(x) <- st_crs(4326)$proj4string
     }
   }
@@ -601,4 +602,13 @@
 #' @noRd
 .is_sf <- function(x) {
   return(inherits(x, SF()))
+}
+
+#' check if inherits sfc
+#' @param x of any type
+#' @return logical if it inherits sfc
+#' @keywords internal
+#' @noRd
+.is_sfc <- function(x) {
+  return(inherits(x, SFC()))
 }

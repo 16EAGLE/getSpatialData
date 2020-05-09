@@ -1078,16 +1078,15 @@ rbind.different <- function(x) {
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
-#' @importFrom raster mask crs extent crs<-
+#' @importFrom raster crs extent crs<-
 #' @keywords internal
 #' @noRd
 .landsat_preview_mask_edges <- function(preview) {
-  
   polygons <- "polygons"
   COORDS_SLOT <- "coords"
   ext <- try(extent(preview))
-  if (inherits(ext,"try-error")) return (preview)
-  poly <- as(ext,"SpatialPolygons")
+  if (inherits(ext, TRY_ERROR())) return (preview)
+  poly <- as(ext, SPATIAL_POLYGONS())
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
   coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
@@ -1102,10 +1101,43 @@ rbind.different <- function(x) {
   coords[4,2] <- coords[4,2] + 0.05
   coords[5,2] <- coords[5,2] + 0.38
   slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
-  preview_masked <- .mask_raster_by_polygon(preview,poly)
+  preview_masked <- .mask_raster_by_polygon(preview, poly)
+  extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
   return(preview_masked)
-  
 }
+
+#' mask the edges of Sentinel-2 preview raster
+#' @param preview raster.
+#' @return \code{preview_masked} masked preview
+#' @importFrom methods as slot slot<-
+#' @importFrom raster crs extent crs<-
+#' @keywords internal
+#' @noRd
+.sentinel2_preview_mask_edges <- function(preview) {
+  polygons <- "polygons"
+  COORDS_SLOT <- "coords"
+  ext <- try(extent(preview))
+  if (inherits(ext, getSpatialData:::TRY_ERROR())) return (preview)
+  poly <- as(ext, getSpatialData:::SPATIAL_POLYGONS())
+  crs(poly) <- crs(preview)
+  # get the vertices of the extent and modify them
+  coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
+  val <- 0.005
+  coords[1,1] <- coords[1,1] + val
+  coords[2,1] <- coords[2,1] + val
+  coords[3,1] <- coords[3,1] - val
+  coords[4,1] <- coords[4,1] - val
+  coords[5,1] <- coords[5,1] + val
+  coords[1,2] <- coords[1,2] + val
+  coords[2,2] <- coords[2,2] - val
+  coords[3,2] <- coords[3,2] - val
+  coords[4,2] <- coords[4,2] + val
+  coords[5,2] <- coords[5,2] + val
+  slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
+  preview_masked <- getSpatialData:::.mask_raster_by_polygon(preview, poly)
+  extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
+  return(preview_masked)
+} 
 
 #' ensures min/max values of raster, stack or brick are between 0 and 255
 #' @param x raster, stack or brick.
@@ -1239,7 +1271,10 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .mask_raster_by_polygon <- function(x, polygon) {
-  return(mask(x, as(polygon, SPATIAL())))
+  if (!inherits(polygon, SPATIAL_POLYGONS())) {
+    polygon <- as(polygon, SPATIAL())
+  }
+  return(mask(x, polygon))
 }
 
 #' wrapper for cropping raster by polygon
@@ -1251,7 +1286,10 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .crop_raster_by_polygon <- function(x, polygon) {
-  return(crop(x, as(polygon, SPATIAL())))
+  if (!inherits(polygon, SPATIAL_POLYGONS())) {
+    polygon <- as(polygon, SPATIAL())
+  }
+  return(crop(x, polygon))
 } 
 
 #' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
@@ -1330,10 +1368,11 @@ rbind.different <- function(x) {
 #' mask NA-like DNs in previews (very low RGB). Only in case of Landsat, Sentinel-2 and Sentinel-3 OLCi
 #' @param preview RasterLayer
 #' @param record sf data.frame
-#' @return preview RasterLayer
+#' @return na_mask RasterLayer
+#' @importFrom raster mask
 #' @keywords internal
 #' @noRd
-.mask_preview_na <- function(preview, record) {
+.create_preview_na_mask <- function(preview, record) {
   product_group <- record[[name_product_group()]]
   is_olci <- .record_is_olci(record)
   is_landsat_or_sentinel2 <- product_group %in% c(name_product_group_landsat(), name_product_group_sentinel())
@@ -1342,9 +1381,10 @@ rbind.different <- function(x) {
     MIN_DN <- ifelse(is_landsat_or_sentinel2, 3, 0)
     # mask NA values in preview (considered as RGB DN < MIN_DN here)
     NA_mask <- ((preview[[1]] > MIN_DN) + (preview[[2]] > MIN_DN) + (preview[[3]] > MIN_DN)) >= 1
-    preview <- mask(preview, NA_mask, maskvalue = 0)
+  } else {
+    NA_mask <- preview[[1]] > -100
   }
-  return(preview)
+  return(NA_mask)
 }
 
 

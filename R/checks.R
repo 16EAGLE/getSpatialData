@@ -318,9 +318,9 @@
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
                            params, dir_out, verbose) {
   
-  dir_out <- .check_dir_out(dir_out)
+  dir_out <- .check_dir_out(dir_out, "select")
   .check_verbose(verbose)
-  aoi <- .check_aoi(aoi,"sf",quiet=T)
+  aoi <- .check_aoi(aoi, SF(), quiet=T)
   # check if all columns are provided
   has_error <- .check_missing_columns(records, cols = c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col))
   if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
@@ -330,7 +330,7 @@
   out("Checking if all needed clouds mask and preview rasters exist..", msg=T)
   check <- sapply(list(preview_file=records$preview_file,
                        cloud_mask_file=records$cloud_mask_file),function(x) {
-    .select_check_files(x,names(x))
+    .select_check_files(x, names(x))
   })
   if (any(!is.na(check))) out("Cannot find (some) files on disk",3)
   

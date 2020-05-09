@@ -15,7 +15,6 @@
 #' @keywords internal
 #' @noRd
 .select_bridge_mosaic <- function(paths, aoi, save_path, mode = "mask") {
-  
   tmp_load <- raster(paths[1])
   src_datatype <- dataType(tmp_load)
   srcnodata <- ifelse(src_datatype == INT2S(),"-32768","-3.3999999521443642e+38")
@@ -30,7 +29,6 @@
   } else {
     return(NA)
   }
-  
 }
 
 #' creates a mosaic of all used cloud masks and writes it as .tif
@@ -74,22 +72,32 @@
   
   r <- RASTER_LAYER()
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
-  save_str <- paste0(sample(LETTERS[1:20], 10),"_",collapse = "")
+  save_str <- paste0(sample(LETTERS[1:20], 10),"_", collapse = "")
   save_pmos <- file.path(tmp_dir,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
   layers <- c("red", "green", "blue")
   
   # cloud mask previews band-wise
   # this returns a list of paths to each of the three cloud-masked bands per record
   preview_paths <- lapply(id_sel,function(id_index) {
-    
-    p_path <- records[id_index,preview_col]
+    record <- records[id_index,]
+    p_path <- record[[preview_col]]
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
     cMask <- raster(records[id_index,cloud_mask_col]) # cloud mask
     preview <- stack(p_path)
     cMask <- .check_crs(cMask)
     preview <- .check_crs(preview)
-    
-    preview_cloud_masked <- preview * cMask
+
+    # mask NA edges of preview
+    # generically for all
+    na_mask <- .create_preview_na_mask(preview, record)
+    cMask <- mask(cMask, na_mask, maskvalue=0)
+    # specifically for Landsat and Sentinel-2
+    if (is.landsat(record)) {
+      cMask <- .landsat_preview_mask_edges(cMask)
+    } else if (is.sentinel2(record)) {
+      cMask <- .sentinel2_preview_mask_edges(cMask)
+    }
+    preview_cloud_masked <- mask(preview, cMask, maskvalue=0)
     preview_save <- file.path(tmp_dir,paste0(records[id_index,identifier],"_cmasked"))
     
     paths_sep <- sapply(1:nlayers(preview_cloud_masked),function(j) {

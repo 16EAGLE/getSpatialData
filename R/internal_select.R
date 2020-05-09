@@ -69,7 +69,7 @@
                                        min_improvement=min_improvement,
                                        previous_period=previous_period,
                                        satisfaction_value=satisfaction_value,
-                                       prio_sensors=prio_sensors,
+                                       prio_products=prio_sensors,
                                        params=params,
                                        dir_out=dir_out))
     
@@ -93,15 +93,13 @@
   #1 logical column if a record is selected at all
   #2 path to the RGB mosaic tif where record is included
   #3 the timestamp number for which the record is selected
-  mode_console <- ifelse(length(selected)==1,""," per timestamp")
   sep <- params$sep
-  out(paste0(sep,"\nSummary per timestamp",
-             mode_console))
+  out(paste0(sep,"\nSummary per timestamp"))
   # create final mosaics for each timestamp and summary message per timestamp
   records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
                                   params=params,dir_out=dir_out)
   # create optional warning(s) and overall summary message
-  csw <- .select_summary_ts(selected)
+  csw <- .select_overall_summary(selected)
   w <- csw[1:2] # warnings
   w <- w[which(w!="NULL")]
   if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x, type=2))

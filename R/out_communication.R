@@ -95,7 +95,7 @@ quiet <- function(expr){
 #' @keywords internal
 #' @noRd
 .select_start_info <- function(mode,sep) {
-  out(paste0("Starting ", mode," Selection           "))
+  out(paste0("Starting ", mode," Selection"))
 }
 
 #' Throws error because temporal arguments disable a consistent selection
@@ -118,15 +118,14 @@ You could modify these values (most likely decrease (some of) them.")
 #' @keywords internal
 #' @noRd
 .select_final_info <- function(selected_i) {
-  
-  sep <- "----------------------------------------------------------------"
+  sep <- sep()
   ts <- selected_i$timestamp
   n_records <- length(selected_i$cMask_paths)
   header <- paste0("- Timestamp: ",ts)
   coverage_info <- paste0("- Coverage of valid pixels in mosaic of selected records: ",round(selected_i$valid_pixels)," %")
   num_selected_info <- paste0("- Number of selected records: ",n_records)
   console_info <- c(sep,header,coverage_info,num_selected_info)
-  
+  return(console_info)
 }
 
 #' creates a selection summary per timestamp as a table
@@ -137,20 +136,46 @@ You could modify these values (most likely decrease (some of) them.")
 #' @keywords internal
 #' @noRd
 .select_final_info_table <- function(timestamps_seq, coverage_vector, n_records_vector, sep) {
-  out(paste0(sep, "\n"), msg=F)
-  two_spaces <- "  "
-  coverage_visual <- sapply(coverage_vector, function(cov) {
-    bar <- paste(rep("#", cov / 10), collapse = "")
-    return(paste0("| ", two_spaces, bar, " "))
-  })
+  coverage_vector[1] <- 100
+  cov_bars <- .create_numeric_bars(coverage_vector, n = 5, bar_symbol = "/")
   table_sep <- "| "
   summary_df <- data.frame("| Timestamp" = paste0(table_sep, timestamps_seq),
-                           "| 0 ########## 100 %" = coverage_visual,
-                           "cloud-free pixels" = round(coverage_vector, 2),
-                           "| Number records" = paste0(table_sep, n_records_vector), check.names = FALSE)
-  
+                           "| Cloud-free pixels" = paste0("| ", cov_bars, " ", round(coverage_vector, 2), " %"),
+                           "| Number records" = paste0(table_sep, n_records_vector),
+                           "|  " = rep(placeholder, length(timestamps_seq)), check.names = FALSE)
   out(summary_df)
-  out(paste0(sep, "\n"), msg=F)
+  out(sep())
+}
+
+#' creates a static bar visualizing percentages as characters
+#' @param x numeric vector
+#' @param n integer specifies the number of chars that represents 100
+#' @param bracket_symbols character vector
+#' @keywords internal
+#' @noRd
+.create_numeric_bars <- function(x, n = 5, bar_symbol = "/", bracket_symbols = c("[", "]")) {
+  bars <- paste0(bracket_symbols[1], .visual_numeric(x, symbol = bar_symbol, by = n))
+  brackets <- sapply(bars, function(bar) {
+    gap <- (100 / n) - nchar(bar) + 1
+    gap <- ifelse(nchar(bar) == n, 0, gap)
+    paste0(paste(rep(" ", gap), collapse=""), bracket_symbols[2])
+  })
+  bars <- paste0(bars, brackets)
+  return(bars)
+}
+
+#' creates a character representation of a numeric with number of signs according to the numeric
+#' @param x numeric vector
+#' @param symbol character. Default is '/'
+#' @param by integer specifies the value represented by a single symbol
+#' @return visualx character vector
+#' @keywords internal
+#' @noRd
+.visual_numeric <- function(x, symbol = "/", by = 20) {
+  visualx <- sapply(x, function(value) {
+    return(paste(rep(symbol, as.integer(value / by)), collapse = ""))
+  })
+  return(visualx)
 }
 
 #' constructs a summary of the console info of \code{.select_final_info}.
@@ -165,26 +190,29 @@ You could modify these values (most likely decrease (some of) them.")
 #' The second [[2]] character vector holds the optional warning(s). 
 #' @keywords internal
 #' @noRd
-.select_summary_ts <- function(selected) {
+.select_overall_summary <- function(selected) {
   
   sep <- sep()
-  out(paste0("\n", sep), msg=F)
   coverages <- sapply(selected,function(x) {x$valid_pixels})
-  num_timestamps <- length(selected)
-  min_cov <- round(min(coverages))
+  num_timestamps <- as.character(length(selected))
   mean_cov <- round(mean(coverages))
-  p <- " %"
-  header <- paste0("\nOverall Summary")
+  max_cov <- round(max(coverages))
+  min_cov <- round(min(coverages))
+  out("Overall Summary", msg=F)
   
+  cov_metrics <- c(mean_cov, max_cov, min_cov)
+  bars <- .create_numeric_bars(coverages, n = 5, bar_symbol = "/")
+  p <- " %"
   empty <- ""
   table_sep <- "| "
   placeholder <- paste0(table_sep, empty)
-  summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, as.character(num_timestamps)), placeholder),
-                           "| Cloud-free pixels (%)" = c(placeholder, placeholder),
-                           " " = c("Mean", as.character(mean_cov)),
-                           " " = c("Min", as.character(min_cov)),
-                           " " = c("Max", as.character(round(max(coverages)))), check.names = FALSE)
+  
+  summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, num_timestamps), placeholder, placeholder),
+                           "| " = c("| Mean", "| Max", "| Min"),
+                           "  Overall cloud-free pixels" = paste0(" ", bars, " ", cov_metrics, " %"),
+                           "|  " = c(placeholder, placeholder, placeholder), check.names = FALSE)
   out(summary_df)
+  out(sep)
   
   # optionally thrown warnings
   cov_pixels <- "overage of valid pixels "
@@ -198,12 +226,12 @@ You could modify these values (most likely decrease (some of) them.")
   - decrease 'num_timestamps',
   - decrease 'min_distance',
   - increase 'max_period'.\n"
-  warn_min <- ifelse(check_min,paste0("The lowest c",cov_pixels,in_ts,"is ",min_cov,warn_help,
+  warn_min <- ifelse(check_min,paste0("The lowest c", cov_pixels,in_ts,"is ",min_cov,warn_help,
                                       "\n",warn_str,"the lowest coverage amongst all timestamps is below: ",min_thresh,p,"\n"),"NULL")
-  warn_mean <- ifelse(check_mean,paste0("The mean c",cov_pixels,in_ts,"is ",mean_cov,warn_help,
+  warn_mean <- ifelse(check_mean,paste0("The mean c", cov_pixels,in_ts,"is ",mean_cov,warn_help,
                                         "\n",warn_str,"the mean coverage is below: ",mean_thresh,p,"\n"),"NULL")
-  console_summary_warning <- list(warn_min, warn_mean)
-  return(console_summary_warning)
+  warnings <- list(warn_min, warn_mean)
+  return(warnings)
   
 }
 
@@ -240,8 +268,8 @@ You could modify these values (most likely decrease (some of) them.")
                                       - decrease 'num_timestamps',
                                       - decrease 'min_distance',
                                       - increase 'max_period'.")) 
-  
   console_summary_warning <- list(console_summary,warning)
+  return(console_summary_warning)
 }
 
 #' communicates the current coverage of valid pixels in select to user through .out()
@@ -253,12 +281,11 @@ You could modify these values (most likely decrease (some of) them.")
 #' @keywords internal
 #' @noRd
 .select_out_cov <- function(base_coverage, i, le_collection, sensor) {
-  
   cov <- as.character(round(base_coverage,2))
   cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
   i <- ifelse(i==0,1,i)
-  out(paste0("\r", "-      ",cov,"  %      [",i,"/",le_collection,"] checked records of ", sensor, "  "), flush = T)
-  
+  checked_records <- paste0("[",i,"/", le_collection,"] checked records of ", sensor, "  ")
+  out(paste0("\r", checked_records, "            ", cov," %"), flush = T)
 }
 
 #' catches and communicates the case where the records data.frame of a sub-period is empty.
@@ -292,8 +319,8 @@ You could modify these values (most likely decrease (some of) them.")
   
   sep <- sep()
   csw_SAR <- .select_SAR_summary(records,selected_SAR,num_timestamps,params)
-  out(paste0(sep,"\nOverall Summary",sep))
-  out(paste0("Number of timestamps: ",num_timestamps,"\n"))
+  out(paste0(sep,"\nOverall Summary", sep))
+  out(paste0("Number of timestamps: ", num_timestamps,"\n"))
   summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
   rm(summary)
   w <- csw_SAR[[2]]

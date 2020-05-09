@@ -245,13 +245,9 @@ calc_cloudcov <- function(records, max_deviation = 5,
     .set_verbose(v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
-    if (inherits(record_preview, DF)) {
-      preview_exists <- preview_file %in% names(record_preview)
-      if (preview_exists) {
-        preview_exists <- !is.na(record_preview[[preview_file]])
-        if (preview_exists) {
+    if (inherits(record_preview, DF) && preview_file %in% names(record_preview)) {
+      if (!is.na(record_preview[[preview_file]])) {
           preview_exists <- .check_file_exists(record_preview[[preview_file]])
-        }
       }
     }
 

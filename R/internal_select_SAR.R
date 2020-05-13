@@ -41,7 +41,7 @@
   for (timestamp in 1:length(subperiods)) {
     
     # sensor_match are all Sentinel-1 records of this sub-period
-    sensor_match <- intersect(which(s_match), which(records$sub_period==timestamp))
+    sensor_match <- intersect(s_match, which(records$sub_period==timestamp))
     records_in_s <- records[sensor_match,]
     
     if (NROW(records_in_s) == 0) {
@@ -49,10 +49,11 @@
     } else {
       # Sentinel-1 records do not come with tile ids as known from other sensors
       # thus, we create a temporary tile id from averaging footprints
-      records_in_s <- .make_tileid_sentinel1(records_in_s)
+      records_in_s <- try(.make_tileid_sentinel1(records_in_s))
+      if (inherits(records_in_s, TRY_ERROR())) out("Failed to create tile id", 3)
       
       period_new <- period_new_all[[timestamp]]
-      previous <- timestamp-1
+      previous <- timestamp - 1
       
       if (timestamp > 1) {
         # enforce min_distance

@@ -773,7 +773,6 @@ rbind.different <- function(x) {
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
   
   if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi, x)
-  
   x_vals <- getValues(x)
   # calc number of pixels with value 1
   x_valid <- length(x_vals[!is.na(x_vals)])
@@ -805,15 +804,15 @@ rbind.different <- function(x) {
 }
 
 #' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
-#' @param sensor character vector of all sensors in records.
+#' @param products character vector of all products in records.
 #' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
 #' @keywords internal
 #' @noRd
-.has_SAR <- function(sensor) {
+.has_SAR <- function(products) {
   
   sentinel1 <- name_product_sentinel1()
-  if (sentinel1 %in% sensor) {
-    has_SAR <- ifelse(all(sensor == sentinel1),100,1)
+  if (sentinel1 %in% products) {
+    has_SAR <- ifelse(all(products == sentinel1), 100, 1)
   } else {
     has_SAR <- 0
   }
@@ -1056,7 +1055,7 @@ rbind.different <- function(x) {
 #' @noRd
 .identify_period <- function(dates) {
   dates_sorted <- sort(dates)
-  period <- c(dates_sorted[1],tail(dates_sorted,1))
+  period <- c(dates_sorted[1], tail(dates_sorted,1))
   return(period)
 }
 
@@ -1066,7 +1065,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .period_days <- function(period) {
-  days <- as.integer(as.Date(period[2]) - as.Date(period[1]))
+  days <- as.integer(unclass(as.Date(period[2])) - unclass(as.Date(period[1])))
   return(days)
 }
 
@@ -1251,9 +1250,10 @@ rbind.different <- function(x) {
   write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",
                                 srcnodata=as.character(srcnodata),
                                 vrtnodata="0",
-                                seperate=F,overwrite=T,datatype=datatype))
+                                seperate=F,overwrite=T,
+                                datatype=datatype))
 
-  if (inherits(write_mos,"try-error")) {
+  if (inherits(write_mos, TRY_ERROR())) {
     return(NA)
   } else {
     mos <- raster(save_path)
@@ -1267,12 +1267,12 @@ rbind.different <- function(x) {
 #' @param mask sfc or sp
 #' @return x masked
 #' @importFrom raster mask
-#' @importFrom sf as
+#' @importFrom sf as_Spatial
 #' @keywords internal
 #' @noRd
 .mask_raster_by_polygon <- function(x, polygon) {
   if (!inherits(polygon, SPATIAL_POLYGONS())) {
-    polygon <- as(polygon, SPATIAL())
+    polygon <- as_Spatial(st_zm(polygon))
   }
   return(mask(x, polygon))
 }
@@ -1282,12 +1282,12 @@ rbind.different <- function(x) {
 #' @param mask sfc or sp
 #' @return x masked
 #' @importFrom raster mask
-#' @importFrom sf as
+#' @importFrom sf as_Spatial
 #' @keywords internal
 #' @noRd
 .crop_raster_by_polygon <- function(x, polygon) {
   if (!inherits(polygon, SPATIAL_POLYGONS())) {
-    polygon <- as(polygon, SPATIAL())
+    polygon <- as_Spatial(polygon)
   }
   return(crop(x, polygon))
 } 
@@ -1395,12 +1395,11 @@ rbind.different <- function(x) {
 #' wrapper for reading polygons file via sf::read_sf(). Mainly for unit tests.
 #' @param Character absolute file_path to file including extension
 #' @return SpatialPolygons polygons
-#' @importFrom sf read_sf as_Spatial st_zm
-#' @importFrom methods as
+#' @importFrom sf read_sf st_zm st_sfc
 #' @keywords internal
 #' @noRd
 .read_polygons <- function(file_path) {
-  polygons <- as(as(st_zm(read_sf(file_path)), "Spatial"), "SpatialPolygons")
+  polygons <- st_sfc(st_zm(read_sf(file_path))$geom)
   return(polygons)
 }
 
@@ -1433,7 +1432,9 @@ rbind.different <- function(x) {
 .gsd_compact <- function(x) {
   if (inherits(x, LIST()) || length(x) > 1) {
     not_na <- sapply(x, function(y) {return((!is.na(y) && !is.null(y)))})
-    x <- x[not_na]
+    if (length(x) > 0) {
+      x <- x[not_na]
+    }
   }
   return(x)
 }
@@ -1444,7 +1445,16 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .is_empty_array <- function(x) {
-  return(length(x) == 0 || is.null(x) || is.na(x))
+  return(length(x) == 0 || is.null(x) || is.na(x) || all(sapply(x, is.null)) || all(sapply(x, is.na)))
+}
+
+#' checks if a character can be integer
+#' @param x character
+#' @return logical
+#' @keywords internal
+#' @noRd
+.char_can_be_int <- function(x) {
+  return(!grepl("[^0-9]", x))
 }
 
 #' evaluate records footprints after csv read (they get wasted when writing to csv)
@@ -1559,4 +1569,12 @@ rbind.different <- function(x) {
     }
   }
   return(df)
+}
+
+#' create a string from date and time
+#' @return character date time string
+#' @keywords internal
+#' @noRd
+.create_datetime_string <- function() {
+  return(gsub(":", "_", gsub(" ", "_", as.character(Sys.time()))))
 }

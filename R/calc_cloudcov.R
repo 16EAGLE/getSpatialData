@@ -1,10 +1,11 @@
 #' Calculate the cloud cover of optical Sentinel, Landsat or MODIS data in an aoi based on small previews
 #' 
 #' \code{calc_cloudcov} calculates the aoi cloud cover and optionally saves raster cloud
-#' masks, all based on preview images. The previews are requested through \link{get_previews}. As the
-#' cloud masks, the previews are written to \code{dir_out}. You may call \link{get_previews} before
-#' \code{calc_cloudcov}, they will be reloaded.
-#'
+#' masks, all based on preview images. The previews are requested through \link{get_previews}. 
+#' You may call \link{get_previews} before \code{calc_cloudcov}. In this case the previews will be reloaded.
+#' If one or more records have been processed in \code{calc_cloudcov} and in the same \code{dir_out} before 
+#' they will be reloaded. 
+#' 
 #' @details Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the 
 #' red and blue information of the input RGB. HOT procedure is applied to the red and blue bands [1-3]. 
 #' Orignally, the base computation was introduced by Zhang et al. (2002) [2]. 
@@ -137,7 +138,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
                           aoi = NULL, dir_out = NULL,
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE, ...) {
   
-  TRYERROR <- TRY_ERROR()
+  TRY_ERROR <- TRY_ERROR()
   DF <- DATAFRAME()
   NONE <- "NONE"
   
@@ -180,7 +181,7 @@ calc_cloudcov <- function(records, max_deviation = 5,
     sensor <- record[[name_product()]]
     
     if (any(is.na(c(id, sensor)))) {
-      return(.cloudcov_handle_skip(record, FALSE, dir_out))
+      return(.cloudcov_handle_skip(record))
     }
     
     cloudcov_supported <- .cloudcov_supported(record)
@@ -204,22 +205,17 @@ calc_cloudcov <- function(records, max_deviation = 5,
     
     # if preview exists not yet: get it. Then run HOT
     if (cloudcov_supported) {
-      preview_col_given <- preview_file %in% names(record)
-      if (preview_col_given) {
+      preview_given <- preview_file %in% names(record)
+      if (preview_given) {
         pfile <- record[[preview_file]]
         preview_exists <- ifelse(is.na(pfile) || pfile == NONE, FALSE, file.exists(pfile))
         if (preview_exists) {
           record_preview <- record
         } else {
-          .check_login(records=record)
-          record_preview <- tryCatch({
-            get_previews(record, dir_out = dir_out, verbose = F)
-          },
-          error=function(err) {
-            return(err)
-          })
+          preview_given <- FALSE
         }
-      } else {
+      } 
+      if (!preview_given) {
         .check_login(records=record)
         record_preview <- tryCatch({
           get_previews(record, dir_out = dir_out, verbose = F)
@@ -245,22 +241,15 @@ calc_cloudcov <- function(records, max_deviation = 5,
     .set_verbose(v) # reset verbose to original value after supressing verbose in get_previews
     verbose <- v
     
-    if (inherits(record_preview, DF) && preview_file %in% names(record_preview)) {
+    preview_worked <- inherits(record_preview, DF)
+    if (preview_worked && preview_file %in% names(record_preview)) {
       if (!is.na(record_preview[[preview_file]])) {
-          preview_exists <- .check_file_exists(record_preview[[preview_file]])
+        preview_worked <- .check_file_exists(record_preview[[preview_file]])
       }
     }
-
-    no_preview <- is.null(record_preview) || !preview_exists
-    preview_error <- inherits(record_preview, TRYERROR)
-    get_preview_failed <- any(no_preview, preview_error)
-    if (get_preview_failed) {
-      record[[preview_file_jpg]] <- NONE
-      record[[preview_file]] <- NONE
-      record_preview <- record
-    } else {
+    if (preview_worked) {
       # pass preview to HOT function
-      preview <- stack(record_preview$preview_file)
+      preview <- stack(record_preview[[preview_file]])
       record_cc <- try(calc_hot_cloudcov(record = record_preview,
                                          preview = preview,
                                          aoi = aoi,
@@ -268,10 +257,14 @@ calc_cloudcov <- function(records, max_deviation = 5,
                                          cols = .cloudcov_colnames(),
                                          dir_out = dir_out,
                                          verbose = verbose))
+    } else {
+      record[[preview_file_jpg]] <- NONE
+      record[[preview_file]] <- NONE
+      record_preview <- record
     }
     
-    if (isTRUE(get_preview_failed) || !inherits(record_cc, DF) || is.na(record_cc)) {
-      record_cc <- .cloudcov_handle_skip(record_preview, cloudcov_supported, dir_out)
+    if (!preview_worked || !inherits(record_cc, DF) || is.na(record_cc)) {
+      record_cc <- .cloudcov_handle_skip(record_preview)
     }
     
     endTime <- Sys.time()

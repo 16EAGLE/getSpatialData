@@ -47,7 +47,7 @@
 #' @keywords internal
 #' @noRd
 
-calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5, 
+calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2, 
                               cols = NULL, dir_out = NULL, verbose = TRUE) {
 
   max_try <- 30 # how often threshold adjustment should be repeated with adjusted threshold
@@ -308,6 +308,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   # handling for bright clear-sky areas (e.g. deserts) -> red higher blue
   clear_prob <- .rescale_raster(.normalized_difference(preview[[3]], preview[[1]]))
   clear_prob[is.na(clear_prob)] <- 0
-  clear <- ((clear_prob > 55) + medium + dark) >= 1
+  clear <- ((clear_prob < 45) + medium + dark) >= 1
   return(clear)
 }

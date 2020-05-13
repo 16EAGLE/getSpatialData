@@ -34,7 +34,8 @@
 #' 
 #' @inheritParams calc_cloudcov
 #' @param record data.frame, single line representing one record from a records data.frame.
-#' @param preview raster, subject of cloud cover calculation. Either two layers: layer 1 = red, layer 2 = blue. Or three layers: layer 1 = red, layer 2 = something, layer 3 = blue.#' @param cols character vector of column names.
+#' @param preview raster, subject of cloud cover calculation.
+#' @param cols character vector of column names.
 #'        
 #' @return A data.frame, one line as the input with one additional column holding the estimated cloud cover within the aoi.
 #' 
@@ -52,15 +53,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   max_try <- 30 # how often threshold adjustment should be repeated with adjusted threshold
   try_error <- TRY_ERROR()
   reload_msg = "Loading existing HOT aoi cloud mask"
-  product_group <- record[[name_product_group()]]
-  product <- record[[name_product()]]
-  
-  # checks & prep
-  .check_dataframe(record, "record")
-  .check_rasterStack(preview, "preview")
-  aoi <- .check_aoi(aoi, SF())
-  .check_numeric(max_deviation, "max_deviation")
-  .check_list(cols, "cols")
+
   .check_verbose(verbose)
 
   identifier <- name_record_id()
@@ -77,17 +70,10 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   preview <- .check_crs(preview)
   has_values <- .preview_has_valid_values(preview, aoi = aoi)
   if (isFALSE(has_values)) {
-    record <- .cloudcov_handle_skip(record, dir_out = dir_out)
+    record <- .cloudcov_handle_skip(record)
     return(record)
   }
-  #preview <- .mask_preview_na(preview, record) # masking only in case of Landsat or Sentinel-2 or Sentinel-3 OLCI
-  # in case of Landsat the tiles have invalid edges not represented 
-  # as zeros. Have to be masked as well
-  #if (product_group %in% c(name_product_group_landsat())) {
-    #preview <- .landsat_preview_mask_edges(preview)
-  #} else if (product %in% c(name_product_sentinel2())) {
-    #preview <- .sentinel2_preview_mask_edges(preview)
-  #}
+
   preview <- .ensure_minmax(preview)
   
   # calculation
@@ -123,8 +109,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   
   # calculate aoi cloud cover percentage
   if (hot_fail) {
-    record <- .cloudcov_handle_skip(record, dir_out = dir_out)
-    out(hot_fail, type = 2)
+    record <- .cloudcov_handle_skip(record)
     return(NA)
   } else {
     record <- .cloudcov_record_finalize(record, aoi, cloud_mask, hot,
@@ -144,7 +129,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 #' @keywords internal
 #' @noRd
 .cloudcov_calc_hot <- function(preview, water_mask) {
-  LOW_RED <- 20
+  LOW_RED <- 10
   HIGH_RED <- 200
   red <- preview[[1]]
   blue <- preview[[3]]
@@ -248,11 +233,11 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 
 #' fills the record data.frame aoi cloud cover columns with NA cases if cc calculation failed or SAR is given
 #' @param record data.frame with one row.
-#' @param is_SAR logical if the record is a SAR acquisition. Default is FALSE.
 #' @return record data.frame with one row but added columns.
 #' @keywords internal
 #' @noRd
-.cloudcov_handle_skip <- function(record, is_SAR = FALSE, dir_out = NULL) {
+.cloudcov_handle_skip <- function(record) {
+  is_SAR <- is.sentinel1(record)
   record[[name_cloud_mask_file()]] <- "NONE"
   record[[name_aoi_hot_cloudcov_percent()]] <- ifelse(is_SAR, NA, 100)
   record[[name_scene_hot_cloudcov_percent()]] <- ifelse(is_SAR, NA, 9999)
@@ -278,11 +263,9 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
   dir_out_exists <- file.exists(dirname(mask_path))
   aoi_cPercent <- .raster_percent(cMask, aoi = aoi) # calculate the absolute HOT cloud cover in aoi
   cMask[cMask == 0] <- NA
-
   if (!file.exists(mask_path) && dir_out_exists) {
-    writeRaster(cMask, mask_path, overwrite=T, datatype = getSpatialData:::INT2S())
+    writeRaster(cMask, mask_path, overwrite=T, datatype = INT2S())
   }
-  
   record[[cols$cloud_mask_path]] <- ifelse(file.exists(mask_path), normalizePath(mask_path), "NONE")
 
   # add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
@@ -300,8 +283,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 .safe_water <- function(preview) {
   red <- preview[[1]]
   blue <- preview[[3]]
-  norm_diff <- getSpatialData:::.normalized_difference(blue, red)
-  wprob <- getSpatialData:::.rescale_raster(norm_diff)
+  norm_diff <- .normalized_difference(blue, red)
+  wprob <- .rescale_raster(norm_diff)
   wprob[is.na(wprob)] <- 0
   wmask <- wprob > 65
   return(wmask)
@@ -314,7 +297,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
 #' @keywords internal
 #' @noRd
 .safe_clear <- function(preview) {
-  MEDIUM_RGB <- 100
+  MEDIUM_RGB <- 110
   DARK_THRESHOLD <- 50
   medium <- ((preview[[1]] < MEDIUM_RGB)
             + (preview[[2]] < MEDIUM_RGB) 
@@ -323,7 +306,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 5,
            + (preview[[2]] < DARK_THRESHOLD)
            + (preview[[3]] < DARK_THRESHOLD)) >= 1
   # handling for bright clear-sky areas (e.g. deserts) -> red higher blue
-  clear_prob <- getSpatialData:::.rescale_raster(getSpatialData:::.normalized_difference(preview[[3]], preview[[1]]))
+  clear_prob <- .rescale_raster(.normalized_difference(preview[[3]], preview[[1]]))
   clear_prob[is.na(clear_prob)] <- 0
   clear <- ((clear_prob > 55) + medium + dark) >= 1
   return(clear)

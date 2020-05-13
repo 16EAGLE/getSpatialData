@@ -30,11 +30,16 @@
 .check_records <- function(records, col.names = NULL, as_df = FALSE){
   .check_records_type(records)
   if(!is.null(col.names)){
-    catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3))
+    catch <- lapply(col.names, function(x) if(!(x %in% colnames(records))) {
+      out(paste0("A column of 'records' named '", x, "' is required for this action, but is missing."), type = 3)
+    })
     rm(catch)
   }
-  records <- st_sf(records, sfc_last = F)
-  if(as_df) records <- as.data.frame(records) 
+  if(as_df) {
+    records <- as.data.frame(records) 
+  } else {
+    records <- st_sf(records, sfc_last = F)
+  }
   return(records)
 }
 
@@ -64,7 +69,7 @@
   argument_set <- !is.null(dir_out)
   
   if (!archive_set && !argument_set) out(msg1, 3)
-  if (argument_set) .check_character(dir_out)
+  if (argument_set) .check_character(dir_out, "dir_out")
   
   ## Check output directory
   if(archive_set){
@@ -131,8 +136,9 @@
   ## get coordinates
   aoi.m <- st_coordinates(aoi)[,c(1,2)]
   #aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
-  aoi.sf <- aoi
-  aoi.sp <- as_Spatial(aoi.sf)
+  aoi.sf <- st_union(st_zm(aoi))
+  st_crs(aoi.sf) <- st_crs(4326)
+  aoi.sp <- as_Spatial(aoi.sf) # st_zm drops z dim if given
   
   if(type == "matrix") return(aoi.m)
   if(type == "sf") return(aoi.sf)
@@ -189,21 +195,28 @@
 
 #' checks the prio_sensors argument
 #' @param prio_sensors character vector of sensors ordered by preference (first highest priority, selected first).
+#' @param records sf data.frame
 #' @return nothing. In case of flawed input in prio_sensors: error.
 #' @keywords internal
 #' @noRd
-.select_check_prio_sensors <- function(prio_sensors) {
+.select_check_prio_sensors <- function(prio_sensors, records) {
   if (!.is_empty_array(prio_sensors)) {
-    .check_type(prio_sensors, "prio_sensors", "character")
+    .check_type(prio_sensors, "prio_sensors", CHARACTER())
+    # check if prio products are given in records at all
+    not_in_product_group <- !any(prio_sensors %in% records[[name_product_group()]])
+    not_in_product <- !any(prio_sensors %in% records[[name_product()]])
+    prio_prods_not_in_records <- not_in_product && not_in_product_group
+    if (prio_prods_not_in_records) out("No product name provided in 'prio_products' existing in 'records'", 3)
     MODIS <- name_product_group_modis()
     optical_sensors <- get_cloudcov_supported() # because Sentinel-1 is not allowed for prio_products
-    some_wrong <- isFALSE(any(sapply(prio_sensors, function(x) {
-      check <- x %in% optical_sensors || x %in% c("Landsat", "MODIS")
+    all_valid <- all(sapply(prio_sensors, function(x) {
+      check <- x %in% optical_sensors || x %in% c(getSpatialData:::name_product_group_landsat(), getSpatialData:::name_product_group_modis())
       check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
-    })))
-    if (some_wrong) {
+    }))
+    if (name_product_sentinel1() %in% prio_sensors) out(paste0(name_product_sentinel1(), " cannot be handled in 'prio_products'"))
+    if (!all_valid) {
       out("Argument 'prio_products' has to be provided with sensor names in the 
-        same format as returned by get_select_supported()",3)
+        same format as returned by get_select_supported()", 3)
     }
   }
 }
@@ -231,13 +244,13 @@
 }
 
 #' creates an error if requested coverage is higher than sensor revisit time
-#' @param sensor character vector of sensor(s).
+#' @param sensors character vector of sensor(s).
 #' @param period character vector of start and end date.
 #' @param num_timestamps numeric number of timestamps. 
 #' @return nothing. Console communication
 #' @keywords internal
 #' @noRd
-.select_check_revisit <- function(sensor, period, num_timestamps) {
+.select_check_revisit <- function(sensors, period, num_timestamps) {
   revisit_times <- list()
   revisit_times[[name_product_sentinel1()]] <- 4
   revisit_times[[name_product_sentinel2()]] <- 5
@@ -257,16 +270,21 @@
   revisit_times[["MODIS_MYD09GQ_V6"]] <- 1
   revisit_times[["MODIS_MOD09CMG_V6"]] <- 1
   revisit_times[["MODIS_MYD09CMG_V6"]] <- 1
-  r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
-  sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
-  info <- paste0("Selected number of timestamps (",num_timestamps)
-  s <- ifelse(length(sensor)==1,"\n- Sensor: ","\nSensors: ")
-  out(cat("\n- Number of timestamps selected:", num_timestamps, s, sensor))
-  not_unitemporal <- num_timestamps > 1
-  if (sub_period < r && not_unitemporal) {
-    out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r,"). Decrease 'num_timestamps'"),3)
-  } else if (sub_period == r && not_unitemporal) {
-    out(paste0(info,") results in equal coverage frequency as revisit time (",r,"). It is unlikely to get cloud-free coverage this frequent"),1)
+  
+  sel_num_timestamps <- "Number timestamps"
+  info <- paste0(sel_num_timestamps, " (",num_timestamps)
+  s <- ifelse(length(sensors)==1,"\nProduct: ","\nProducts: ")
+  out(paste0(sel_num_timestamps, ": ", num_timestamps, s, paste(sensors, collapse=", ")))
+  for (sensor in sensors) {
+    r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
+    sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
+    not_unitemporal <- num_timestamps > 1
+    if (sub_period < r && not_unitemporal) {
+      out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r," days). Decrease 'num_timestamps'"), 3)
+    } else if (sub_period == r && not_unitemporal) {
+      out(paste0(info,") results in coverage frequency equal to revisit time (",r," days) of product '", 
+                 sensor, "'"), 2)
+    }
   }
 }
 
@@ -322,12 +340,14 @@
   .check_verbose(verbose)
   aoi <- .check_aoi(aoi, SF(), quiet=T)
   # check if all columns are provided
-  has_error <- .check_missing_columns(records, cols = c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col))
-  if (has_error) out("Argument 'records' cannot be processed as it lacks needed columns/values",3)
-  if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors)
-  .select_check_revisit(unique(unlist(records$product)),period,num_timestamps)
+  needed_cols <- c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col)
+  if (.has_SAR(records[[name_product()]]) != 100) {
+    checked <- .check_records(records, col.names = needed_cols)
+    rm(checked)
+  }
+  if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors, records)
+  .select_check_revisit(unique(unlist(records$product)), period,num_timestamps)
   # check if needed files exist
-  out("Checking if all needed clouds mask and preview rasters exist..", msg=T)
   check <- sapply(list(preview_file=records$preview_file,
                        cloud_mask_file=records$cloud_mask_file),function(x) {
     .select_check_files(x, names(x))
@@ -399,11 +419,13 @@
 #' checks preview and returns if it is broken (no values above DN 20)
 #' @param RasterStack preview
 #' @return logical if preview is spoiled
+#' @importFrom raster nlayers
 #' @keywords internal
 #' @noRd
 .check_preview <- function(preview) {
   max <- 20
-  .check_rasterStack(preview)
+  if (nlayers(preview) < 3) out("Preview is not RGB", 3)
+  .check_rasterStack(preview, "preview")
   if (all(cellStats(preview, "max") < max)) {
     prev_vals <- as.integer(as.vector(values(preview)))
     return(all(prev_vals < max))
@@ -507,7 +529,7 @@
 #' @keywords internal
 #' @noRd
 .check_rasterStack <- function(input, arg_name) {
-  if (!inherits(input, RASTER_STACK()) && inherits(input, RASTER_BRICK())) {
+  if (!inherits(input, RASTER_STACK()) && !inherits(input, RASTER_BRICK())) {
     .check_type(input, arg_name, RASTER_STACK())
   }
 }

@@ -10,7 +10,7 @@
 #' 
 #' @return sf object or data.frame depending on \code{as_sf}.
 #' 
-#' @importFrom sf st_geometry
+#' @importFrom sf st_geometry<- st_read
 #' 
 #' @author Henrik Fisser, 2020
 #' 

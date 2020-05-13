@@ -201,7 +201,7 @@ name_product_sentinel2 <- function() {
 #' @keywords internal
 #' @noRd
 name_sentinel2_L2A <- function() {
-  return("MSIL2A")
+  return("MSIL12A")
 }
 #' @keywords internal
 #' @noRd
@@ -390,9 +390,6 @@ SFC <- function()  {return("sfc")}
 #' @keywords internal
 #' @noRd
 SPATIAL <- function() {return("Spatial")}
-#' SpatialPolygonsDataFrame
-#' @keywords internal
-#' @noRd
 #' SpatialPolygons
 #' @keywords internal
 #' @noRd

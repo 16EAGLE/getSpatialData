@@ -51,20 +51,28 @@
                      identifier=params$identifier)
   
   sub <- .check_compact_list(sub)
-  if (!inherits(sub, LIST())) return(NA)
+  if (!inherits(sub, LIST()) || .is_empty_array(sub)) {
+    return(NA)
+  }
   
   # this step enforces max_sub_period. It returns a list of vectors of indices 
   # pointing to records in records. The list is ordererd according to aoi cloud cover
-  sub_within <- getSpatialData:::.select_force_period(records,sub,period,max_sub_period,period_new=period_new,
-                                     date_col=params$date_col,aoi_cc_col=params$aoi_cc_col)
+  sub_within <- .select_force_period(records, sub, period, max_sub_period, period_new=period_new,
+                                     date_col=params$date_col, aoi_cc_col=params$aoi_cc_col)
   
   sub_within <- .check_compact_list(sub_within)
-  if (!inherits(sub_within, LIST())) return(NA)
+  if (!inherits(sub_within, LIST()) || .is_empty_array(sub)) {
+    return(NA)
+  }
   
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
     out(params$sep)
-    out(paste0("Calculating mosaic of timestamp: ", ts))
+    out(paste0("Calculating selection of timestamp: ", ts))
+  }
+  
+  if (length(sub_within) > 1) {
+    sub_within <- .sort_sub_within(sub_within, records)
   }
   
   selected <- try(.select_calc_mosaic(records,
@@ -79,9 +87,9 @@
                                       params$identifier,
                                       delete_files=delete_files))
   if (inherits(selected, TRY_ERROR())) {
-    out(paste0("\nSelection error at timestamp: ",ts),2)
+    out(paste0("\nSelection error at timestamp: ", ts), 2)
   }
-  selected$period <- .identify_period(records[which(records[[params$identifier]] %in% selected$ids),params$date_col])
+  selected$period <- .identify_period(records[which(records[[params$identifier]] %in% selected$ids), params$date_col])
   return(selected)
   
 }
@@ -152,13 +160,13 @@
   orders <- data.frame(orders)
   sub_within <- list()
   covered_tiles <- list()
-  
+
   for (i in 1:NCOL(orders)) {
     order <- orders[,i]
     order <- order[!is.na(order)]
     # first, try to use all records of this order
-    dates_x <- records[order,date_col]
-    period_tmp <- .select_bridge_period(dates_x,period_new)
+    dates_x <- records[order, date_col]
+    period_tmp <- .select_bridge_period(dates_x, period_new)
     period_tmp_le <- .period_days(period_tmp)
     
     if (period_tmp_le <= max_sub_period) { # the case where all records from current order x are within period_new
@@ -178,7 +186,7 @@
         if (i > 1) {
           tiles_not_in_first <- which(!covered_tiles[[i]] %in% covered_tiles[[1]])
           if (length(tiles_not_in_first) > 0) {
-            sub_within[[1]] <- append(sub_within[[1]],order_within[tiles_not_in_first])
+            sub_within[[1]] <- append(sub_within[[1]], order_within[tiles_not_in_first])
             covered_tiles[[1]] <- append(covered_tiles[[1]],covered_tiles[[i]])
             order_within <- order_within[-tiles_not_in_first]
           }
@@ -188,7 +196,7 @@
     }
   }
   
-  return(sub_within)
+  return(.gsd_compact(sub_within))
   
 }
 
@@ -229,7 +237,7 @@
   if (inherits(best_period, TRY_ERROR())) {
     return(NA)
   } else {
-    incl <- .select_subset_to_best_period(dates,best_period)
+    incl <- .select_subset_to_best_period(dates, best_period)
     order <- if (length(incl) == 0) NA else order[incl]
     return(order)
   }
@@ -243,7 +251,7 @@
 #' @keywords internal
 #' @noRd
 .select_subset_to_best_period <- function(dates, best_period) {
-  incl <- intersect(which(dates > best_period[1]), which(dates < best_period[2]))
+  incl <- intersect(which(dates >= best_period[1]), which(dates <= best_period[2]))
   return(incl)
 }
 
@@ -310,7 +318,7 @@
       shifted_grades <- sapply(1:length(air_minus),function(i) {
         a <- air_minus[i]
         period_tmp <- as.integer(period_new_date[1]-a):as.integer(period_new_date[2]+air_plus[i])
-        sum_grade <- sum(unlist(date_grade[which(period_tmp %in% dates_seq)]))
+        sum_grade <- sum(unlist(date_grade[which(dates_seq %in% period_tmp)]))
         return(sum_grade)
       })
       shifted_grades <- shifted_grades[!is.na(shifted_grades)]
@@ -336,7 +344,7 @@
 #' @noRd
 .select_sub_periods <- function(records, period, num_timestamps, params) {
   
-  period <- sapply(period,as.Date)
+  period <- sapply(period, as.Date)
   days <- as.integer(diff(period))
   le_subperiods <- days / num_timestamps
   dates <- sapply(0:num_timestamps,function(i) date <- period[1] + (i * le_subperiods))
@@ -373,12 +381,11 @@
 .select_handle_next_sub <- function(first_date, period_initial, min_distance, max_sub_period) {
   dfirst_date <- as.Date(first_date)
   dperiod_initial <- as.Date(period_initial)
-  
   if (dfirst_date >= dperiod_initial[1] || dfirst_date < dperiod_initial[1]) {
-    period <- as.character(c(dfirst_date,dperiod_initial[2]))
+    period <- as.character(c(dfirst_date, dperiod_initial[2])) 
     return(period)
   } else if (dfirst_date >= dperiod_initial[2]) {
-    # theoretical first date of next sub is larger than the last date of period available in records
+    # first date of next sub is later than the last date of period available in records
     .select_temporally_incosistent_error(min_distance, max_sub_period)
   }
 }
@@ -420,3 +427,29 @@
   period_curr <- .identify_period(dates_tmp)
   period_new <- .identify_period(c(period_new,period_curr))
 }
+
+# sort the orders of sub_within according to the aoi cloud cover of the same tile in previous order
+# this way for each order those tiles will be checked first that had the highest cloud cover in previous order
+# it shall result in handling large gaps first and small gaps late
+#' @param sub_within list
+#' @param records data.frame
+#' @return sub_within list sorted
+#' @keywords internal
+#' @noRd
+.sort_sub_within <- function(sub_within, records) {
+  tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,][[name_tile_id()]]))))
+  cc_col <- name_aoi_hot_cloudcov_percent()
+  sub_within_sorted <- append(sub_within[1],lapply(2:length(sub_within),function(i) {
+    curr_tiles <- tile_mirror[[i]]
+    prev_tiles <- tile_mirror[[i-1]]
+    tile_in_previous <- which(curr_tiles %in% prev_tiles)
+    # cloud cover of records of previous order
+    cc_previous <- records[sub_within[[i-1]][which(prev_tiles %in% curr_tiles)], cc_col] 
+    sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous, decreasing=TRUE)]
+    return(sorted_order)
+  }))
+  sub_within <- unlist(.gsd_compact(sub_within_sorted)) # vector of integer indices
+  return(sub_within)
+}
+
+

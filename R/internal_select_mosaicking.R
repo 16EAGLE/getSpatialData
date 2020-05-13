@@ -18,7 +18,7 @@
   tmp_load <- raster(paths[1])
   src_datatype <- dataType(tmp_load)
   srcnodata <- ifelse(src_datatype == INT2S(),"-32768","-3.3999999521443642e+38")
-  mos_base <- .make_mosaic(paths,save_path, mode=mode, srcnodata=srcnodata,
+  mos_base <- .make_mosaic(paths, save_path, mode=mode, srcnodata=srcnodata,
                            datatype=src_datatype)
   if (inherits(mos_base, RASTER_LAYER())) {
     mos_base_mask <- .mask_raster_by_polygon(mos_base, aoi)
@@ -41,7 +41,8 @@
 #' @noRd
 .select_cmask_mos <- function(s, aoi, dir_out) {
   
-  save_path_cmos <- file.path(dir_out, paste0("cloud_mask_mosaic_ts", s$timestamp, ".tif"))
+  save_path_cmos <- file.path(dir_out, paste0(.create_datetime_string(), "_",
+                                              "cloud_mask_mosaic_ts", s$timestamp, ".tif"))
   cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths, aoi, save_path_cmos)
   rm(cMask_mosaic)
   .delete_tmp_files(tmpDir())
@@ -73,12 +74,12 @@
   r <- RASTER_LAYER()
   id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
   save_str <- paste0(sample(LETTERS[1:20], 10),"_", collapse = "")
-  save_pmos <- file.path(tmp_dir,paste0(save_str,"preview_mosaic_timestamp",s$timestamp))
+  save_pmos <- file.path(tmp_dir,paste0(save_str, "preview_mosaic_timestamp", s$timestamp))
   layers <- c("red", "green", "blue")
   
   # cloud mask previews band-wise
   # this returns a list of paths to each of the three cloud-masked bands per record
-  preview_paths <- lapply(id_sel,function(id_index) {
+  preview_paths <- lapply(id_sel, function(id_index) {
     record <- records[id_index,]
     p_path <- record[[preview_col]]
     if (is.na(p_path) || !file.exists(p_path)) return(NA)
@@ -90,15 +91,15 @@
     # mask NA edges of preview
     # generically for all
     na_mask <- .create_preview_na_mask(preview, record)
-    cMask <- mask(cMask, na_mask, maskvalue=0)
+    preview <- mask(preview, na_mask, maskvalue=0)
     # specifically for Landsat and Sentinel-2
     if (is.landsat(record)) {
-      cMask <- .landsat_preview_mask_edges(cMask)
+      preview <- .landsat_preview_mask_edges(preview)
     } else if (is.sentinel2(record)) {
-      cMask <- .sentinel2_preview_mask_edges(cMask)
+      preview <- .sentinel2_preview_mask_edges(preview)
     }
-    preview_cloud_masked <- mask(preview, cMask, maskvalue=0)
-    preview_save <- file.path(tmp_dir,paste0(records[id_index,identifier],"_cmasked"))
+    preview_cloud_masked <- mask(preview, cMask, maskvalue=NA)
+    preview_save <- file.path(tmp_dir, paste0(records[id_index,identifier], "_cmasked"))
     
     paths_sep <- sapply(1:nlayers(preview_cloud_masked),function(j) {
       layer_save <- paste0(preview_save,"_",id_index,"_",layers[j],".tif")
@@ -119,12 +120,13 @@
     if (!inherits(pmos, r)) return(NA) else return(pmos)
   })
   
-  if (any(sapply(preview_mos, class) != r)) out("Could not create preview RGB mosaic",2)
+  if (any(sapply(preview_mos, class) != r)) out("Could not create preview RGB mosaic", 2)
   
   # stack all bands and write to file
   preview_mos_stack <- stack(preview_mos)
-  save_pmos_final <- file.path(dir_out,paste0("rgb_preview_mosaic_ts",i,".tif"))
-  writeRaster(preview_mos_stack,save_pmos_final,overwrite=T)
+  save_pmos_final <- file.path(dir_out,paste0(.create_datetime_string(), "_",
+                                              "rgb_preview_mosaic_ts", i,".tif"))
+  writeRaster(preview_mos_stack, save_pmos_final, overwrite=T)
   
   # cleanup
   .delete_tmp_files(tmp_dir)
@@ -162,36 +164,20 @@
   
   tmp_dir_orig <- tempdir()
   tmp_dir <- .tmp_dir(dir_out,1,TRUE)
-  
-  if (is.null(base_records)) out("Current coverage of valid pixels..")
+  space <- "          "
+  space <- paste0(space, space)
+  if (is.null(base_records)) out(paste0("Checked records", space, "Cloud-free pixels"))
   
   TMP_CROP <- "crop_tmp.tif"
   TMP_CROP_MOS <- "curr_crop_mos_tmp.tif"
   TMP_BASE_MOS <- "base_mos_tmp_"
   r <- RASTER_LAYER()
+  mode_aoi <- "aoi"
   curr_sensor <- unique(records$product)
   le_first_order <- length(sub_within[[1]])
   
-  if (length(sub_within) > 1) {
-    # sort the orders of sub_within according to the aoi cloud cover of the same tile in previous order
-    # this way for each order those tiles will be checked first that had the highest cloud cover in previous order
-    # it shall result in handling large gaps first and small gaps late
-    tile_mirror <- sapply(sub_within,function(order) return(sapply(order,function(i) return(records[i,][[name_tile_id()]]))))
-    cc_col <- name_aoi_hot_cloudcov_percent()
-    sub_within_sorted <- append(sub_within[1],lapply(2:length(sub_within),function(i) {
-      curr_tiles <- tile_mirror[[i]]
-      prev_tiles <- tile_mirror[[i-1]]
-      tile_in_previous <- which(curr_tiles %in% prev_tiles)
-      # cloud cover of records of previous order
-      cc_previous <- records[sub_within[[i-1]][which(prev_tiles %in% curr_tiles)],cc_col] 
-      sorted_order <- sub_within[[i]][tile_in_previous][order(cc_previous, decreasing=TRUE)]
-      return(sorted_order)
-    }))
-    sub_within <- unlist(.gsd_compact(sub_within_sorted)) # vector of integer indices
-  }
-  
   # get paths to cloud masks. This is the queue for processing
-  collection <- sapply(sub_within,function(x) cMask_path <- as.character(records[[cloud_mask_col]][x])) 
+  collection <- sapply(sub_within, function(x) cMask_path <- as.character(records[[cloud_mask_col]][x])) 
   # this vector are all orders ordered from best records (lowest aoi cc) 
   # to worst records (highest aoi cc) in a queue and respecting the tile order
   names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
@@ -217,7 +203,7 @@
   base_records <- .aggr_rasters(base_records, names, aoi=aoi, dir_out=tmp_dir)
   names(base_records) <- names
   # this base mosaic will be updated with each added record after check if valid cover is increased
-  base_mos_path <- file.path(tmp_dir,"base_mosaic_tmp.tif")
+  base_mos_path <- file.path(tmp_dir, "base_mosaic_tmp.tif")
   base_mos <- .select_bridge_mosaic(base_records, aoi, base_mos_path)
   if (!inherits(base_mos, r)) start <- 1
   # cleanup
@@ -234,9 +220,16 @@
     
     if (i == start) {
       is_last_record <- i == le_collection
-      base_coverage <- .raster_percent(base_mos, mode="aoi", aoi=aoi, n_pixel_aoi)
-      .select_out_cov(base_coverage,ifelse(is_last_record,i,i-1),le_collection,curr_sensor)
-      if (is_last_record) break
+      base_coverage <- .raster_percent(base_mos, mode=mode_aoi, aoi=aoi, n_pixel_aoi)
+      base_coverage_seq <- 0:base_coverage
+      last_base <- i - 1
+      cov_seq <- split(base_coverage_seq, 
+                       ceiling(seq_along(base_coverage_seq)/(length(base_coverage_seq) / last_base)))
+      for (cov_out in cov_seq) {
+        for (q in 1:1000000) {}
+        index <- ifelse(is_last_record, i, last_base)
+        .select_out_cov(tail(cov_out, n=1), index, le_collection, curr_sensor)
+      }
     }
     
     name_x <- names(x)
@@ -252,7 +245,7 @@
     aoi_subset <- .check_crs(aoi_subset)
     aoi_union <- st_union(aoi) # ensure it's a single feature
     aoi_subset <- suppressMessages(st_intersection(aoi_subset, aoi_union)) # get intersection of tile and aoi
-    cov_init <- .raster_percent(curr_base_mos_crop, mode="aoi", aoi=aoi_subset, n_pixel_aoi)
+    cov_init <- .raster_percent(curr_base_mos_crop, mode=mode_aoi, aoi=aoi_subset, n_pixel_aoi)
 
     if (round(cov_init) == 99) {
       add_it <- FALSE
@@ -262,8 +255,8 @@
       writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p, x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
-      if (inherits(curr_mos_tmp, r)) {        
-        cov_aft <- .raster_percent(curr_mos_tmp,mode="aoi",aoi=aoi_subset) # check new coverage
+      if (inherits(curr_mos_tmp, r)) {   
+        cov_aft <- .raster_percent(curr_mos_tmp,mode=mode_aoi,aoi=aoi_subset) # check new coverage
         # cleanup
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
@@ -274,7 +267,7 @@
         if (((cov_init + (cov_init / 100) * min_improvement)) > 100) {
           add_it <- cov_aft > cov_init && cov_init < 99
         } else {
-          add_it <- .select_exceeds_improvement(min_improvement,cov_init,cov_aft)
+          add_it <- .select_exceeds_improvement(min_improvement, cov_init, cov_aft)
         }
       } else {
         add_it <- FALSE
@@ -291,21 +284,21 @@
         # cleanup
         rm(base_mos)
         # delete previous base_mos_tmp tifs
-        base_mos_tmp_files <- list.files(tmp_dir,pattern=save_str)
-        base_mos_tmp_files <- base_mos_tmp_files[which(base_mos_tmp_files!=curr)]
+        base_mos_tmp_files <- list.files(tmp_dir, pattern=save_str)
+        base_mos_tmp_files <- base_mos_tmp_files[which(base_mos_tmp_files != curr)]
         del <- sapply(base_mos_tmp_files, function(del_file) {
           del_path <- file.path(tmp_dir, del_file)
           if (file.exists(del_path) && del_file != curr) unlink(del_path)
         })
         rm(del)
         base_mos <- raster(base_mos_path_tmp)
-        base_coverage <- .raster_percent(base_mos ,mode="aoi", aoi=aoi, n_pixel_aoi)
+        base_coverage <- .raster_percent(base_mos ,mode=mode_aoi, aoi=aoi, n_pixel_aoi)
         base_mos_path <- base_mos_path_tmp
         # cleanup
         rm(base_mos)
         .delete_tmp_files(tmp_dir) # delete temp raster grd files in r tmp
         # coverage console update
-        .select_out_cov(base_coverage,i,le_collection,curr_sensor)
+        .select_out_cov(base_coverage, i, le_collection, curr_sensor)
       }
     }
     if (base_coverage >= satisfaction_value) {
@@ -354,7 +347,7 @@
     
     if (isFALSE(.is_empty_array(ids_selected))) {
       #A cloud mask mosaic
-      save_path_cmos <- .select_cmask_mos(s,aoi,dir_out)
+      save_path_cmos <- .select_cmask_mos(s, aoi, dir_out)
       #B preview mosaic
       save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
                                             cloud_mask_col=params$cloud_mask_col,
@@ -366,23 +359,25 @@
     }
     
     #C add columns to records
-    save_path_pmos <- normalizePath(save_path_pmos)
-    save_path_cmos <- normalizePath(save_path_cmos)
+    if (!is.na(save_path_cmos)) save_path_pmos <- normalizePath(save_path_pmos)
+    if (!is.na(save_path_cmos)) save_path_cmos <- normalizePath(save_path_cmos)
     insert <- c(TRUE, s$timestamp, save_path_pmos, save_path_cmos)
     for (j in 1:length(cols)) {
-      records[which(records[[params$identifier]] %in% ids_selected),cols[j]] <- insert[j]      
+      records[which(records[[params$identifier]] %in% ids_selected), 
+              cols[j]] <- ifelse(.char_can_be_int(insert[j]), as.integer(insert[j]), insert[j])  
     }
+    
     # get print info
     #console_info[[i]] <- .select_final_info(s)
     curr_n_records <- length(s$cMask_paths)
-    curr_n_valid_pixels <- round(s$valid_pixels)
+    curr_n_valid_pixels <- s$valid_pixels
     n_records_vector <- append(n_records_vector, curr_n_records)
     coverage_vector <- append(coverage_vector, curr_n_valid_pixels)
     
   }
-  #each_timestamp <- .out_vector(console_info)
-  
+
   # print selection summary
+  out("Summary per timestamp")
   .select_final_info_table(ts_seq, coverage_vector, n_records_vector, params$sep)
   
   rm(each_timestamp)

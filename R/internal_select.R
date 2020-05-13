@@ -40,9 +40,6 @@
                          params,
                          cols_initial) {
   
-  # if any SAR records given create a tileid for these
-  
-  
   # if all are SAR records
   if (has_SAR == 100) {
     records <- .select_all_SAR(records, max_sub_period,
@@ -53,13 +50,24 @@
   
   #### Start Process for optical data selection
   selected <- list() # list to be filled by all selected 'record_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
-  sub_periods <- unique(na.omit(records$sub_period))
+  sub_periods <- unique(na.omit(records[[name_sub_period()]]))
+  if (!all(1:num_timestamps %in% sub_periods)) sub_periods <- 1:num_timestamps
   
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
   for (t in 1:length(sub_periods)) {
     
-    previous_period <- ifelse(t > 1,selected[[t-1]]$period, NA)
-    
+    if (t > 1) {
+      previous_timestamp <- t - 1
+      previous_period <- selected[[previous_timestamp]]$period
+      if (is.null(previous_period)) {
+        # get the default period of previous timestamp as assigned by the sub_periods (based on max_sub_period)
+        start_offset <- (previous_timestamp - 1) * max_sub_period
+        end_offset <- (previous_timestamp * max_sub_period) - 1
+        previous_period <- as.character(c(as.Date(params$period[1]) + start_offset, as.Date(params$period[1]) + end_offset))
+      }
+    } else {
+      previous_period <- NA
+    }
     selected_ts <- try(.select_process(records,
                                        aoi,
                                        timestamp=t,
@@ -74,7 +82,7 @@
                                        dir_out=dir_out))
     
     if (inherits(selected_ts, TRY_ERROR())) {
-      out("\nSelection failed for timestamp: ",t)
+      out(paste0("\nSelection failed for timestamp: ", t), 2)
     }
     selected_ts[["timestamp"]] <- t
     selected[[t]] <- selected_ts # insert 'selected_ts' list into selected list
@@ -94,19 +102,24 @@
   #2 path to the RGB mosaic tif where record is included
   #3 the timestamp number for which the record is selected
   sep <- params$sep
-  out(paste0(sep,"\nSummary per timestamp"))
+  out(sep, msg=F)
+  out("Writing resulting mosaics", msg=T)
   # create final mosaics for each timestamp and summary message per timestamp
-  records <- .select_save_mosaics(records,selected=selected,aoi=aoi,
-                                  params=params,dir_out=dir_out)
+  records <- try(.select_save_mosaics(records, selected=selected, aoi=aoi,
+                                      params=params, dir_out=dir_out))
+  if (inherits(records, TRY_ERROR())) {
+    out("Selection error", 3)
+  }
   # create optional warning(s) and overall summary message
+  out(paste0(sep, "\nOverall Summary"), msg=F)
   csw <- .select_overall_summary(selected)
   w <- csw[1:2] # warnings
   w <- w[which(w!="NULL")]
-  if (length(w) > 0) to_console <- sapply(w,function(x) .out_vector(x, type=2))
+  if (length(w) > 0) to_console <- sapply(w, function(x) .out_vector(x, type=2))
   records[[name_sub_period()]] <- NULL # remove sub-period column
   rm(summary, to_console)
   
-  records <- .column_summary(records,cols_initial)
+  records <- .column_summary(records, cols_initial)
   return(records)
   
 }
@@ -133,14 +146,15 @@
                             min_improvement, previous_period,
                             satisfaction_value, prio_products = NULL,
                             params, dir_out) {
-  
+
   name_product <- name_product()
   name_product_group <- name_product_group()
-  completed_info <- paste0("\nCompleted selection for timestamp: ", timestamp)
+  completed_info <- paste0("\nCompleted selection of timestamp: ", timestamp)
   period_new <- c() # for selection of multiple sensors
   base_records <- c() # same 
   ids <- c() # same
   valid_pixels <- 0 # same
+  selected <- NULL
   
   if (is.null(prio_products)) {
     prio_products <- .generate_random_prio_prods(records)
@@ -149,15 +163,16 @@
   
   for (s in prio_products) {
     
+    selection_failed <- FALSE
     if (single_prio_product) {
       # in case prio_sensors is not given process all sensors together
-      s_match <- which(!is.na(records[[name_product]]))  
+      s_match <- which(!is.na(records[[name_product]]))
     } else {
       # in case prio_sensors is given process sensors in this order
-      s_match <- which(records[[name_product]]==s) # check for the product name
+      s_match <- which(records[[name_product]] == s) # check for the product name
       # the prio product can also be a product group in case of Landsat and MODIS
-      if (length(s_match) == 0) {
-        s_match <- which(startsWith(records[[name_product_group]], s))
+      if (s == name_product_group_landsat()) {
+        s_match <- which(records[[name_product_group()]] == s)
       }
     }
     sensor_match <- intersect(which(records$sub_period == timestamp), s_match)
@@ -170,49 +185,57 @@
     tstamp$records <- records[sensor_match,]
     # in case of Sentinel-3 and MODIS we might have non-supported products
     # since the supported products cannot be identified through the product but the record_id
-    tstamp$records <- getSpatialData:::.select_filter_supported(tstamp$records)
-    tstamp$records <- records[which(!is.na(records[[params$sub_period_col]])),]
+    tstamp$records <- .select_filter_supported(tstamp$records)
+    tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$sub_period_col]])),]
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$preview_col]])),]
-    getSpatialData:::.select_catch_empty_records(tstamp$records, timestamp, s)
-    tstamp$period <- getSpatialData:::.identify_period(tstamp$records[[params$date_col]])
-    
+    .select_catch_empty_records(tstamp$records, timestamp, s)
+    tstamp$period <- .identify_period(tstamp$records[[params$date_col]])
+
     if (timestamp > 1) {
       # enforce to min_distance from previous timestamp
-      tstamp$first_date <- .select_force_distance(previous_period,min_distance)
-      tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
-                                               period_initial=tstamp$period,
-                                               min_distance,max_sub_period)
-      tstamp$records <- .select_within_period(records,tstamp$period,params$date_col) # subset to records in period
+      if (is.null(previous_period) || is.na(previous_period)) {
+        selection_failed <- TRUE
+      } else {
+        tstamp$first_date <- .select_force_distance(previous_period, min_distance)
+        tstamp$period <- .select_handle_next_sub(first_date=tstamp$first_date,
+                                                 period_initial=tstamp$period,
+                                                 min_distance,
+                                                 max_sub_period)
+        tstamp$records <- .select_within_period(tstamp$records, tstamp$period, params$date_col) # subset to records in period
+      }
     }
     
-    delete_files <- ifelse(single_prio_product, FALSE, s == tail(prio_products,1))
+    delete_files <- ifelse(single_prio_product, FALSE, s == tail(prio_products, 1))
+    if (!selection_failed) {
+      # run the selection process
+      selected <- .select_process_sub(tstamp$records,
+                                      aoi,
+                                      tstamp$period,
+                                      period_new=period_new,
+                                      base_records=base_records,
+                                      max_sub_period,
+                                      max_cloudcov_tile,
+                                      min_improvement,
+                                      satisfaction_value,
+                                      delete_files,
+                                      params,
+                                      dir_out,
+                                      ts=timestamp)      
+    }
     
-    # run the selection process
-    selected <- .select_process_sub(tstamp$records,
-                                    aoi,
-                                    tstamp$period,
-                                    period_new=period_new,
-                                    base_records=base_records,
-                                    max_sub_period,
-                                    max_cloudcov_tile,
-                                    min_improvement,
-                                    satisfaction_value,
-                                    delete_files,
-                                    params,
-                                    dir_out,
-                                    ts=timestamp)
-    
-    if (!inherits(selected, LIST())) {
-      .select_catch_empty_records(data.frame(),timestamp, s)
+    selection_failed <- !inherits(selected, LIST())
+    if (selection_failed) {
+      .select_catch_empty_records(data.frame(), timestamp, s)
     } else {
       if (isFALSE(single_prio_product)) {
         # if combined selection of multiple optical sensors
-        if (selected$valid_pixels < satisfaction_value) out("\nSelecting records for next product in 'prio_products'")
+        has_next <- s != tail(prio_products, n=1)
+        if ((selected$valid_pixels < satisfaction_value) && has_next) out("\nSelecting records of next product", msg=T)
         base_records <- c(base_records,selected$cMask_paths) # for base mosaic for selection from next sensor
-        ids <- unique(c(ids,selected$ids)) # ids of selected records
+        ids <- unique(c(ids, selected$ids)) # ids of selected records
         names(base_records) <- ids
         valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi
-        period_new <- .identify_period(c(period_new,selected$period)) # combined period
+        period_new <- .identify_period(c(period_new, selected$period)) # combined period
       } else {
         # if only one optical sensor is given
         out(completed_info)
@@ -221,14 +244,16 @@
     }  
   }
   
-  if (length(ids) == 0) .select_catch_empty_records(data.frame(), timestamp, s)
+  out(completed_info)
+  out(sep())
+  
+  # if warning has not been thrown before do it
+  if (!selection_failed && length(ids) == 0) .select_catch_empty_records(data.frame(), timestamp, s)
   
   selected <- list(ids=ids,
                    cMask_paths=base_records,
                    valid_pixels=valid_pixels,
                    period=period_new)
-  
-  out(completed_info)
   
   return(selected)
   

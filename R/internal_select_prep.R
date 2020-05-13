@@ -77,6 +77,7 @@
 #' @noRd
 .select_prep_wrap <- function(records, num_timestamps, mode) {
   
+  out("Preparing", msg=T)
   records <- .unlist_df(records)
   records <- .make_tileid(records)
   params <- .select_params(records, mode)

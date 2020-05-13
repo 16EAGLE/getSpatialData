@@ -4,7 +4,10 @@
 #' and temporal characteristics. Both optical and SAR records are supported as well as
 #' combined selection for different products across systems and data providers.
 #'  
-#' @inherit select_timeseries note details
+#' @inherit select_timeseries details
+#' 
+#' @note This functionality creates a 'tmp' folder below \code{dir_out} where
+#' temporary files are saved. This folder will be deleted at the end of the function call.
 #' 
 #' @inheritParams select_timeseries
 # 
@@ -26,25 +29,26 @@ select_bitemporal <- function(records,
                               aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records, .get_needed_cols_select(), as_df = TRUE)
+  # columns are checked in .select_checks() due to SAR
+  records <- .check_records(records, col.names = NULL, as_df = TRUE)
   aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
   #### Prep
-  num_timestamps <- 2
-  prep <- .select_prep_wrap(records,num_timestamps,"BT")
+  n_timestamps <- 2
+  prep <- .select_prep_wrap(records, n_timestamps, "BT")
   records <- prep$records
   params <- prep$params
 
   #### Main checks
-  .select_checks(records,aoi,prio_products,params,dir_out,verbose)
+  .select_checks(records, aoi, params$period, n_timestamps, prio_products, params, dir_out, verbose)
   
   #### Main Process
-  .select_start_info(mode="Bi-Temporal",params$sep)
+  .select_start_info(mode="Bitemporal",params$sep)
   records <- .select_main(records,
                           aoi,
                           prep$has_SAR,
-                          num_timestamps,
+                          n_timestamps,
                           min_distance,
                           min_improvement,
                           max_sub_period,

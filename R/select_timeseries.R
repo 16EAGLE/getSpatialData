@@ -25,7 +25,7 @@
 #' 
 #' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 #' Records will be selected from these records. If \code{prio_products} is provided only these products will be handled.
-#' @param num_timestamps numeric the number of timestamps the timeseries shall cover.
+#' @param n_timestamps numeric the number of timestamps the timeseries shall cover.
 #' @param min_distance numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 #' For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
 #' then the next timestamp will not include scenes in <= 10 days after 20th May 2019. 
@@ -58,36 +58,36 @@
 #' @export
 
 select_timeseries <- function(records,
-                              num_timestamps, min_distance, max_sub_period,
+                              n_timestamps, min_distance, max_sub_period,
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_products = c(), 
                               aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   
   #### Pre-checks
-  records <- .check_records(records, .get_needed_cols_select(), as_df = TRUE)
+  # columns are checked in .select_checks() due to SAR
+  records <- .check_records(records, col.names = NULL, as_df = TRUE) 
   aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
-  
-  .check_numeric(num_timestamps, "num_timestamps")
-  if (num_timestamps < 3) {
-    out(paste0("Argument 'num_timestamps' is: ",num_timestamps,". 
-The minimum number for select_timeseries is: 3"),3)
+  .check_numeric(n_timestamps, "n_timestamps")
+  if (n_timestamps < 3) {
+    out(paste0("Argument 'n_timestamps' is: ", n_timestamps,". 
+The minimum number for select_timeseries is: 3"), 3)
   }
   
   #### Prep
-  prep <- .select_prep_wrap(records,num_timestamps,"TS")
+  prep <- .select_prep_wrap(records, n_timestamps, "TS")
   records <- prep$records
   params <- prep$params
 
   #### Main checks
-  .select_checks(records,aoi,params$period,num_timestamps,prio_products,params,dir_out,verbose)
+  .select_checks(records, aoi, params$period, n_timestamps, prio_products, params, dir_out, verbose)
   
   #### Main Process
-  .select_start_info(mode="Time Series",params$sep)
+  .select_start_info(mode="Time Series", params$sep)
   records <- .select_main(records,
                           aoi,
                           prep$has_SAR,
-                          num_timestamps,
+                          n_timestamps,
                           min_distance,
                           min_improvement,
                           max_sub_period,

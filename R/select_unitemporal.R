@@ -4,7 +4,10 @@
 #' and temporal characteristics. Both optical and SAR records are supported as well as
 #' combined selection for different products across systems and data providers. 
 #' 
-#' @inherit select_timeseries note details
+#' @inherit select_timeseries details
+#' 
+#' @note This functionality creates a 'tmp' folder below \code{dir_out} where
+#' temporary files are saved. This folder will be deleted at the end of the function call.
 #' 
 #' @inheritParams select_timeseries
 #' 
@@ -24,13 +27,14 @@ select_unitemporal <- function(records,
                                prio_products = c(),
                                aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   #### Pre-checks
-  records <- getSpatialData:::.check_records(records, getSpatialData:::.get_needed_cols_select(), as_df = TRUE)
-  aoi <- getSpatialData:::.check_aoi(aoi, getSpatialData:::SF())
+  # columns are checked in .select_checks() due to SAR
+  records <- .check_records(records, col.names = NULL, as_df = TRUE)
+  aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
   #### Prep
   num_timestamps <- 1
-  prep <- getSpatialData:::.select_prep_wrap(records, num_timestamps, "UT")
+  prep <- .select_prep_wrap(records, num_timestamps, "UT")
   records <- prep$records
   params <- prep$params
   
@@ -38,7 +42,7 @@ select_unitemporal <- function(records,
   .select_checks(records, aoi, params$period, num_timestamps, prio_products, params, dir_out, verbose)
   
   #### Main Process
-  .select_start_info(mode="Uni-Temporal",params$sep)
+  .select_start_info(mode="Unitemporal", params$sep)
   records <- .select_main(records,
                           aoi,
                           prep$has_SAR,

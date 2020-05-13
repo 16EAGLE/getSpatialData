@@ -35,17 +35,18 @@ write_records <- function(records, file = NULL, driver = "GPKG", dir_out = NULL,
   if (!user_file_is_path) {
     dir_out <- .check_dir_out()
     # generate a file path from dir_out
-    file <- ifelse(user_file_is_path, .generate_records_filename(file_name = file, dir_out = dir_out, driver = driver), file)
+    file <- ifelse(user_file_is_path, .generate_records_filename(file_name = file, 
+                                                                 dir_out = dir_out, driver = driver), file)
   }
   # check if file ends with a valid file extension
   split <- strsplit(file, "\\.")[[1]]
   ext <- split[length(split)]
   out(paste0("Writing records to ", file), msg=T, type=1)
   drivers <- get_records_drivers()
-  if (paste0(".", ext) %in% drivers) {
+  if (tolower(paste0(".", ext)) %in% tolower(drivers)) {
     write <- try(st_write(records, dsn = file, append = append, quiet = TRUE))
   } else {
-    #file <- paste0(file, drivers[[driver]]) # add extension
+    if (!endsWith(file, drivers[[driver]])) file <- paste0(file, drivers[[driver]])
     write <- try(st_write(records, dsn = file, driver = driver, append = append, quiet = TRUE))
   }
   

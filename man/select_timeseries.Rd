@@ -4,16 +4,16 @@
 \alias{select_timeseries}
 \title{Selects remote sensing records for a time series}
 \usage{
-select_timeseries(records, num_timestamps, min_distance, max_sub_period,
+select_timeseries(records, n_timestamps, min_distance, max_sub_period,
   min_improvement = 5, max_cloudcov_tile = 80,
   satisfaction_value = 98, prio_products = c(), aoi = NULL,
-  dir_out = NULL, verbose = TRUE)
+  dir_out = NULL, as_sf = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
 Records will be selected from these records. If \code{prio_products} is provided only these products will be handled.}
 
-\item{num_timestamps}{numeric the number of timestamps the timeseries shall cover.}
+\item{n_timestamps}{numeric the number of timestamps the timeseries shall cover.}
 
 \item{min_distance}{numeric the minimum number of days between two used acquisitions for distinguished timestamps. 
 For example, if a scene from 20th May 2019 is selected for a timestamp and \code{min_distance == 10} 
@@ -38,17 +38,23 @@ selection was not fullfilled by previous product. Product names must be provided
 Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
 If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.}
 
-\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
-polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
-and at least three rows (each row representing one corner coordinate). 
-Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
-If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
+\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point 
+(at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to 
+have two columns (longitude and latitude) and at least three rows (each row representing one 
+#corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, 
+it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally 
+for all queries within the running session. If \code{aoi} is undefined, the AOI that has been 
+set using \link{set_aoi} is used.}
 
-\item{dir_out}{character directory where to save the cloud mask mosaics and the RGB preview mosaic.
-Note: Below this dir_out a tmp_dir will be created where temporary files will be saved during selection.This folder is
-deleted before returning \code{records}.}
+\item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
+a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
+\code{dir_out} is used.
+If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}
 
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile 
+on the console. Default is TRUE.}
 }
 \value{
 \code{records} data.frame holding four additional columns:
@@ -66,7 +72,7 @@ combined selection for different products across systems and data providers.
 }
 \details{
 For running the selection you have to process \link{calc_cloudcov} first.
-Generally, the following products can be processed in \code{select_timeseries}:
+Generally, the following products can be processed in \code{select_*} functionalities:
 \itemize{
 \item Sentinel-1
 \item Sentinel-2 A/B

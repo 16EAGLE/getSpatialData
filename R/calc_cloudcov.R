@@ -48,7 +48,7 @@
 #' set using \link{set_aoi} is used.
 #' @param max_deviation numeric, the maximum allowed deviation of calculated scene cloud cover 
 #' from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover 
-#' \% given by the data distributor. Default is \code{maxDeviation = 5}.
+#' \% given by the data distributor. Default is 2.
 #' @param dir_out character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
 #' a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
 #' \code{dir_out} is used.
@@ -134,7 +134,7 @@
 #' 
 #' @export
 
-calc_cloudcov <- function(records, max_deviation = 5,
+calc_cloudcov <- function(records, max_deviation = 2,
                           aoi = NULL, dir_out = NULL,
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE, ...) {
   

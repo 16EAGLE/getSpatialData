@@ -6,7 +6,8 @@
 \usage{
 select_unitemporal(records, max_sub_period, min_improvement = 5,
   max_cloudcov_tile = 80, satisfaction_value = 98,
-  prio_products = c(), aoi = NULL, dir_out = NULL, verbose = TRUE)
+  prio_products = c(), aoi = NULL, dir_out = NULL, as_sf = TRUE,
+  verbose = TRUE)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns. 
@@ -30,17 +31,23 @@ selection was not fullfilled by previous product. Product names must be provided
 Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
 If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.}
 
-\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
-polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
-and at least three rows (each row representing one corner coordinate). 
-Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
-If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.}
+\item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point 
+(at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to 
+have two columns (longitude and latitude) and at least three rows (each row representing one 
+#corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, 
+it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally 
+for all queries within the running session. If \code{aoi} is undefined, the AOI that has been 
+set using \link{set_aoi} is used.}
 
-\item{dir_out}{character directory where to save the cloud mask mosaics and the RGB preview mosaic.
-Note: Below this dir_out a tmp_dir will be created where temporary files will be saved during selection.This folder is
-deleted before returning \code{records}.}
+\item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
+a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
+\code{dir_out} is used.
+If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}
 
-\item{verbose}{logical, whether to display details on the function's progress or output on the console.}
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
+
+\item{verbose}{logical, if \code{TRUE}, details on the function's progress will be visibile 
+on the console. Default is TRUE.}
 }
 \value{
 \code{records} data.frame holding three additional columns:
@@ -57,6 +64,20 @@ combined selection for different products across systems and data providers.
 }
 \details{
 For running the selection you have to process \link{calc_cloudcov} first.
+Generally, the following products can be processed in \code{select_*} functionalities:
+\itemize{
+\item Sentinel-1
+\item Sentinel-2 A/B
+\item Sentinel-3 OLCI
+\item Landsat 5-8
+\item MODIS
+}
+For the precise supported product names call \link{get_select_supported}.
+When aiming at mixing two or more optical products you may order them by priority
+through \code{prio_products}.
+Coupled selection of optical and SAR sensors is possible. Optical records will always
+be selected first, SAR records second, in temporal accordance with the selected
+optical records.
 }
 \note{
 This functionality creates a 'tmp' folder below \code{dir_out} where

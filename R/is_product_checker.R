@@ -116,6 +116,80 @@ is.sentinel1 <- function(records) {
   return(is.product_(records, name_product_sentinel1()))
 }
 
+#' Returns TRUE for records that are of product 'Sentinel-1' IW SLC
+#' @description \code{is.sentinel1_iw_slc} checks which records are Sentinel-1 Interferometric Wideswath (IW)
+#' Single Look Complex (SLC) records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_iw_slc <- function(records) {
+  return(.identify_sentinel1_substrings(records, "iw", "slc"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-1' IW GRDH
+#' @description \code{is.sentinel1_iw_grdh} checks which records are Sentinel-1 Interferometric Wideswath (IW)
+#' Ground Range Detected (GRDH) records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_iw_grdh <- function(records) {
+  return(.identify_sentinel1_substrings(records, "iw", "grdh"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-1' IW RAW
+#' @description \code{is.sentinel1_iw_raw} checks which records are Sentinel-1 Interferometric Wideswath (IW)
+#' RAW records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_iw_raw <- function(records) {
+  return(.identify_sentinel1_substrings(records, "iw", "raw"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-1' IW OCN
+#' @description \code{is.sentinel1_iw_ocn} checks which records are Sentinel-1 Interferometric Wideswath (IW)
+#' Ocean (OCN) records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_iw_ocn <- function(records) {
+  return(.identify_sentinel1_substrings(records, "iw", "ocn"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-1' Level 0
+#' @description \code{is.sentinel1_level0} checks which records are Sentinel-1 level 0 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_level0 <- function(records) {
+  return(.identify_sentinel1_level(records, level = "0"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-1' Level 1
+#' @description \code{is.sentinel1_level1} checks which records are Sentinel-1 level 1 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_level1 <- function(records) {
+  return(.identify_sentinel1_level(records, level = "1"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-1' Level 2
+#' @description \code{is.sentinel1_level2} checks which records are Sentinel-1 level 2 records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel1_level2 <- function(records) {
+  return(.identify_sentinel1_level(records, level = "2"))
+}
+
 #' Returns TRUE for records that are of product 'Sentinel-2'
 #' @description \code{is.sentinel2} checks which records are Sentinel-2 records.
 #' @inheritParams is.landsat
@@ -134,7 +208,46 @@ is.sentinel2 <- function(records) {
 #' @export
 is.sentinel2_L2A <- function(records) {
   return(sapply(1:NROW(records), function(i) {
-    strsplit(records[i,][[name_record_id()]], "_")[[1]][2] == name_sentinel2_L2A()
+    record <- records[i,]
+    if (is.sentinel2(record)) {
+      return(strsplit(records[i,][[name_record_id()]], "_")[[1]][2] == name_sentinel2_L2A())
+    } else {
+      return(FALSE)
+    }
+  }))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-2' and sensor S2A
+#' @description \code{is.sentinel2_S2A} checks which records are Sentinel-2A records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel2_S2A <- function(records) {
+  return(sapply(1:NROW(records), function(i) {
+    record <- records[i,]
+    if (is.sentinel2(record)) {
+      return(startsWith(strsplit(record[[name_record_id()]], "_")[[1]][1], "S2A"))
+    } else {
+      return(FALSE)
+    }
+  }))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-2' and sensor S2B
+#' @description \code{is.sentinel2_S2B} checks which records are Sentinel-2B records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel2_S2B <- function(records) {
+  return(sapply(1:NROW(records), function(i) {
+    record <- records[i,]
+    if (is.sentinel2(record)) {
+      return(startsWith(strsplit(record[[name_record_id()]], "_")[[1]][1], "S2B"))
+    } else {
+      return(FALSE)
+    }
   }))
 }
 
@@ -146,7 +259,12 @@ is.sentinel2_L2A <- function(records) {
 #' @export
 is.sentinel2_L1C <- function(records) {
   return(sapply(1:NROW(records), function(i) {
-    strsplit(records[i,][[name_record_id()]], "_")[[1]][2] == name_sentinel2_L1C()
+    record <- records[i,]
+    if (is.sentinel2(record)) {
+      return(strsplit(record[[name_record_id()]], "_")[[1]][2] == name_sentinel2_L1C())
+    } else {
+      return(FALSE)
+    }
   }))
 }
 
@@ -160,6 +278,46 @@ is.sentinel3 <- function(records) {
   return(is.product_(records, name_product_sentinel3()))
 }
 
+#' Returns TRUE for records that are of product 'Sentinel-3' and sensor S3A
+#' @description \code{is.sentinel3_S3A} checks which records are Sentinel-3A records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel3_S3A <- function(records) {
+  return(.identify_sentinel3_sensor(records, "S3A"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-3' and sensor S3B
+#' @description \code{is.sentinel3_S3B} checks which records are Sentinel-3B records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel3_S3B <- function(records) {
+  return(.identify_sentinel3_sensor(records, "S3B"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-3' and sensor S3C
+#' @description \code{is.sentinel3_S3C} checks which records are Sentinel-3C records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel3_S3C <- function(records) {
+  return(.identify_sentinel3_sensor(records, "S3C"))
+}
+
+#' Returns TRUE for records that are of product 'Sentinel-3' and sensor S3D
+#' @description \code{is.sentinel3_S3D} checks which records are Sentinel-3D records.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.sentinel3_S3D <- function(records) {
+  return(.identify_sentinel3_sensor(records, "S3D"))
+}
+
 #' Returns TRUE for records that are of product 'Sentinel-3' SYNERGY
 #' @description \code{is.sentinel3_synergy} checks which records are Sentinel-3 SYNERGY records.
 #' @inheritParams is.landsat
@@ -167,7 +325,7 @@ is.sentinel3 <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel3_synergy <- function(records) {
-  return(which(sapply(1:NROW(records), function(i) {return(.record_is_syn(records[i,]))})))
+  return(sapply(1:NROW(records), function(i) {return(.record_is_syn(records[i,]))}))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' SLSTR
@@ -177,7 +335,7 @@ is.sentinel3_synergy <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel3_slstr <- function(records) {
-  return(which(sapply(1:NROW(records), function(i) {return(.record_is_slstr(records[i,]))})))
+  return(sapply(1:NROW(records), function(i) {return(.record_is_slstr(records[i,]))}))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' SRAL
@@ -187,7 +345,7 @@ is.sentinel3_slstr <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel3_sral <- function(records) {
-  return(which(sapply(1:NROW(records), function(i) {return(.record_is_sral(records[i,]))})))
+  return(sapply(1:NROW(records), function(i) {return(.record_is_sral(records[i,]))}))
 }
 
 #' Returns TRUE for records that are of product 'Sentinel-3' OLCI
@@ -197,10 +355,65 @@ is.sentinel3_sral <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel3_olci <- function(records) {
-  return(which(sapply(1:NROW(records), function(i) {return(.record_is_olci(records[i,]))})))
+  return(sapply(1:NROW(records), function(i) {return(getSpatialData:::.record_is_olci(records[i,]))}))
 }
 
+########################################
 # internal product check utils
+
+#' helper for identifying the Sentinel-1 processing level
+#' @param records sf data.frame
+#' @param level character '0', '1' or '2'
+#' @inherit is.landsat return
+#' @keywords internal
+#' @noRd
+.identify_sentinel1_level <- function(records, level) {
+  return(sapply(1:NROW(records), function(i) {
+    record <- records[i,]
+    if (is.sentinel1(record)) {
+      split <- strsplit(record[[name_record_id()]], "_")[[1]]
+      return(ifelse(nchar(split[4]) == 0, startsWith(split[5], level), startsWith(split[4], level)))
+    } else {
+      return(FALSE)
+    }
+  }))
+}
+
+#' helper for identifying the first two substrings of Sentinel-1 record ids
+#' @param records sf data.frame
+#' @param sub1 character 
+#' @param sub2 character
+#' @inherit is.landsat return
+#' @keywords internal
+#' @keywords internal
+#' @noRd
+.identify_sentinel1_substrings <- function(records, sub2, sub3 = NULL) {
+  return(sapply(1:NROW(records), function(i) {
+    record <- records[i,]
+    split <- strsplit(tolower(record[[name_record_id()]]), "_")[[1]]
+    split2_match <- split[2] == sub2
+    match <- ifelse(is.null(sub3), split2_match, split2_match && split[3] == sub3)
+    return(match)
+  }))
+}
+
+#' identifies the Sentinel-3 sensor (e.g. Sentinel-3A)
+#' @param sensor character e.g. "S3A"
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @keywords internal
+#' @noRd
+.identify_sentinel3_sensor <- function(records, sensor) {
+  return(sapply(1:NROW(records), function(i) {
+    record <- records[i,]
+    if (is.sentinel3(record)) {
+      return(startsWith(record[[name_record_id()]], sensor))
+    } else {
+      return(FALSE)
+    }
+  }))
+}
 
 #' checks if a record is a Sentinel-3 OLCI record
 #' @param record sf data.frame one line
@@ -208,8 +421,12 @@ is.sentinel3_olci <- function(records) {
 #' @keywords internal
 #' @noRd
 .record_is_olci <- function(record) {
-  is_olci <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "OL"
-  return(ifelse(is.na(is_olci), FALSE, is_olci))
+  if (is.sentinel3(record)) {
+    is_olci <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "OL"
+    return(ifelse(is.na(is_olci), FALSE, is_olci))
+  } else {
+    return(FALSE)
+  }
 }
 
 #' checks if a record is a Sentinel-3 SLSTR record
@@ -218,8 +435,12 @@ is.sentinel3_olci <- function(records) {
 #' @keywords internal
 #' @noRd
 .record_is_slstr <- function(record) {
-  is_slstr <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SL"
-  return(ifelse(is.na(is_slstr), FALSE, is_slstr))
+  if (is.sentinel3(record)) {
+    is_slstr <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SL"
+    return(ifelse(is.na(is_slstr), FALSE, is_slstr))
+  } else {
+    return(FALSE)
+  }
 }
 
 #' checks if a record is a Sentinel-3 SYN record
@@ -228,8 +449,12 @@ is.sentinel3_olci <- function(records) {
 #' @keywords internal
 #' @noRd
 .record_is_syn <- function(record) {
-  is_syn <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SY"
-  return(ifelse(is.na(is_syn), FALSE, is_syn))
+  if (is.sentinel3(record)) {
+    is_syn <- strsplit(record[[name_record_id()]], "_")[[1]][2] == "SY"
+    return(ifelse(is.na(is_syn), FALSE, is_syn))
+  } else {
+    return(FALSE)
+  }
 }
 
 #' checks if a record is a Sentinel-3 SRAL record
@@ -248,10 +473,14 @@ is.sentinel3_olci <- function(records) {
 #' @keywords internal
 #' @noRd
 .record_is_s3_continental <- function(record) {
-  tile_id <- record[[name_tile_id()]]
-  tile_id <- ifelse(is.na(tile_id) || is.null(tile_id), "", tile_id)
-  if (record[[name_product()]] == name_product_sentinel3()) {
-    return(tolower(tile_id) %in% tolower(names_continental_s3()))
+  if (is.sentinel3(record)) {
+    tile_id <- record[[name_tile_id()]]
+    tile_id <- ifelse(is.na(tile_id) || is.null(tile_id), "", tile_id)
+    if (record[[name_product()]] == name_product_sentinel3()) {
+      return(tolower(tile_id) %in% tolower(names_continental_s3()))
+    } else {
+      return(FALSE)
+    }
   } else {
     return(FALSE)
   }

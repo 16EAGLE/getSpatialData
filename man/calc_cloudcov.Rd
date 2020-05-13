@@ -55,9 +55,10 @@ Can be: driver, append.}
 }
 \description{
 \code{calc_cloudcov} calculates the aoi cloud cover and optionally saves raster cloud
-masks, all based on preview images. The previews are requested through \link{get_previews}. As the
-cloud masks, the previews are written to \code{dir_out}. You may call \link{get_previews} before
-\code{calc_cloudcov}, they will be reloaded.
+masks, all based on preview images. The previews are requested through \link{get_previews}. 
+You may call \link{get_previews} before \code{calc_cloudcov}. In this case the previews will be reloaded.
+If one or more records have been processed in \code{calc_cloudcov} and in the same \code{dir_out} before 
+they will be reloaded.
 }
 \details{
 Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the 

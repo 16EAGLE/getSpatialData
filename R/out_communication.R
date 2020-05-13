@@ -46,7 +46,8 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALS
 #' @keywords internal
 #' @noRd
 sep <- function() {
-  sep <- "\n----------------------------------------------------------------"
+  sep <- "\n---------------------------------------------------------------------------------"
+  return(sep)
 }
 
 #' run silent
@@ -95,7 +96,7 @@ quiet <- function(expr){
 #' @keywords internal
 #' @noRd
 .select_start_info <- function(mode,sep) {
-  out(paste0("Starting ", mode," Selection"))
+  out(paste0("Starting ", mode," Selection"), msg=T)
 }
 
 #' Throws error because temporal arguments disable a consistent selection
@@ -106,9 +107,8 @@ quiet <- function(expr){
 #' @noRd
 .select_temporally_incosistent_error <- function(min_distance, max_sub_period) {
   msg <- paste0("Argument 'min_distance' between acquisitions used for dinstinguished timestamps is: ",
-min_distance," days. The 'max_period' of covered acquisitions for one timestamp is: ",max_sub_period,". 
-With the given 'num_timestamps' these values disable creating a temporally consistent selection. 
-You could modify these values (most likely decrease (some of) them.")
+min_distance," days. The 'max_sub_period' of covered acquisitions for one timestamp is: ",max_sub_period,". 
+With the given 'n_timestamps' these values disable creating a temporally consistent selection.", arg_help_msg(1))
   out(msg, 3)
 }
 
@@ -136,15 +136,69 @@ You could modify these values (most likely decrease (some of) them.")
 #' @keywords internal
 #' @noRd
 .select_final_info_table <- function(timestamps_seq, coverage_vector, n_records_vector, sep) {
-  coverage_vector[1] <- 100
   cov_bars <- .create_numeric_bars(coverage_vector, n = 5, bar_symbol = "/")
   table_sep <- "| "
   summary_df <- data.frame("| Timestamp" = paste0(table_sep, timestamps_seq),
-                           "| Cloud-free pixels" = paste0("| ", cov_bars, " ", round(coverage_vector, 2), " %"),
                            "| Number records" = paste0(table_sep, n_records_vector),
-                           "|  " = rep(placeholder, length(timestamps_seq)), check.names = FALSE)
+                           "| Cloud-free pixels" = paste0("| ", cov_bars, " ", round(coverage_vector, 2), " %"), 
+                           check.names = FALSE)
   out(summary_df)
-  out(sep())
+}
+
+#' constructs a summary of the console info of \code{.select_final_info}.
+#' In addition: if the minimum coverage amongst the timestamps is below 60 \% return a warning message. 
+#' In addition: if the mean coverage amongst the timestamps is below 80 \% return a warning message.
+#' These warning messages are returned as NULL if the respective condition is not TRUE.
+#' @param selected list of lists 'selected' each holding for a timestamp: 'ids', 'cMask_paths', 'valid_pixels', 'timestamp'
+#' @return \code{console_summary_warning} list of character vectors holding the messages:
+#' [[1]] Summary info
+#' [[2]] Warning if minimum coverage is below 60 \% else character "NULL".
+#' [[3]] Warning if mean coverage is below 80 \% else character "NULL".
+#' The second [[2]] character vector holds the optional warning(s). 
+#' @keywords internal
+#' @noRd
+.select_overall_summary <- function(selected) {
+  
+  sep <- sep()
+  num_timestamps <- length(selected)
+  coverages <- sapply(selected,function(x) {x$valid_pixels})
+  mean_cov <- round(mean(coverages))
+  max_cov <- round(max(coverages))
+  min_cov <- round(min(coverages))
+  cov_metrics <- c(mean_cov, max_cov, min_cov)
+  bars <- .create_numeric_bars(cov_metrics, n = 5, bar_symbol = "/")
+  empty <- ""
+  table_sep <- "| "
+  placeholder <- paste0(table_sep, empty)
+  
+  summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, num_timestamps), placeholder, placeholder),
+                           "| " = c("| Mean", "| Max", "| Min"),
+                           "  Overall cloud-free pixels" = paste0(" ", bars, " ", cov_metrics, " %"),
+                           check.names = FALSE)
+  out(summary_df)
+  out(sep)
+  
+  # optionally thrown warnings
+  cov_pixels <- "overage of valid pixels "
+  percent <- " %"
+  min_thresh <- 70
+  mean_thresh <- 70
+  check_min <- min_cov < min_thresh # return warning below this
+  check_mean <- mean_cov < mean_thresh # return warning below this 
+  in_ts <- "in selection "
+  warn_str <- "This warning is thrown when "
+  if (length(selected) > 2) {
+    warn_help <- paste0("\nIf you aim at a selection with consistently low cloud cover: ", arg_help_msg(1))
+  } else {
+    warn_help <- paste0("\nIf you aim at a selection with consistently low cloud cover: ", arg_help_msg(2))
+  }
+  warn_min <- ifelse(check_min, paste0("The lowest c", cov_pixels, in_ts, "is ", min_cov, percent, "\n", warn_help,
+                                      "\n",warn_str,"the lowest coverage amongst all timestamps is below: ", min_thresh, percent,"."), "NULL")
+  warn_mean <- ifelse(check_mean, paste0("The mean c", cov_pixels, in_ts, "is ", mean_cov, percent, "\n", warn_help,
+                                        "\n",warn_str,"the mean coverage is below: ", mean_thresh, percent,"."), "NULL")
+  warnings <- list(warn_min, warn_mean)
+  return(warnings)
+  
 }
 
 #' creates a static bar visualizing percentages as characters
@@ -156,8 +210,9 @@ You could modify these values (most likely decrease (some of) them.")
 .create_numeric_bars <- function(x, n = 5, bar_symbol = "/", bracket_symbols = c("[", "]")) {
   bars <- paste0(bracket_symbols[1], .visual_numeric(x, symbol = bar_symbol, by = n))
   brackets <- sapply(bars, function(bar) {
-    gap <- (100 / n) - nchar(bar) + 1
-    gap <- ifelse(nchar(bar) == n, 0, gap)
+    max_nbars <- 100 / n
+    gap <- (max_nbars) - nchar(bar) + 1
+    gap <- ifelse(nchar(bar) == max_nbars, 0, gap)
     paste0(paste(rep(" ", gap), collapse=""), bracket_symbols[2])
   })
   bars <- paste0(bars, brackets)
@@ -176,63 +231,6 @@ You could modify these values (most likely decrease (some of) them.")
     return(paste(rep(symbol, as.integer(value / by)), collapse = ""))
   })
   return(visualx)
-}
-
-#' constructs a summary of the console info of \code{.select_final_info}.
-#' In addition: if the minimum coverage amongst the timestamps is below 60 \% return a warning message. 
-#' In addition: if the mean coverage amongst the timestamps is below 80 \% return a warning message.
-#' These warning messages are returned as NULL if the respective condition is not TRUE.
-#' @param selected list of lists 'selected' each holding for a timestamp: 'ids', 'cMask_paths', 'valid_pixels', 'timestamp'
-#' @return \code{console_summary_warning} list of character vectors holding the messages:
-#' [[1]] Summary info
-#' [[2]] Warning if minimum coverage is below 60 \% else character "NULL".
-#' [[3]] Warning if mean coverage is below 80 \% else character "NULL".
-#' The second [[2]] character vector holds the optional warning(s). 
-#' @keywords internal
-#' @noRd
-.select_overall_summary <- function(selected) {
-  
-  sep <- sep()
-  coverages <- sapply(selected,function(x) {x$valid_pixels})
-  num_timestamps <- as.character(length(selected))
-  mean_cov <- round(mean(coverages))
-  max_cov <- round(max(coverages))
-  min_cov <- round(min(coverages))
-  out("Overall Summary", msg=F)
-  
-  cov_metrics <- c(mean_cov, max_cov, min_cov)
-  bars <- .create_numeric_bars(coverages, n = 5, bar_symbol = "/")
-  p <- " %"
-  empty <- ""
-  table_sep <- "| "
-  placeholder <- paste0(table_sep, empty)
-  
-  summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, num_timestamps), placeholder, placeholder),
-                           "| " = c("| Mean", "| Max", "| Min"),
-                           "  Overall cloud-free pixels" = paste0(" ", bars, " ", cov_metrics, " %"),
-                           "|  " = c(placeholder, placeholder, placeholder), check.names = FALSE)
-  out(summary_df)
-  out(sep)
-  
-  # optionally thrown warnings
-  cov_pixels <- "overage of valid pixels "
-  min_thresh <- 60
-  mean_thresh <- 80
-  check_min <- min_cov < min_thresh # return warning below this
-  check_mean <- mean_cov < mean_thresh # return warning below this 
-  in_ts <- " in selection "
-  warn_str <- "This warning is thrown when "
-  warn_help <- ". \nIf you aim at a selection with consistently low cloud cover you could e.g.:\n
-  - decrease 'num_timestamps',
-  - decrease 'min_distance',
-  - increase 'max_period'.\n"
-  warn_min <- ifelse(check_min,paste0("The lowest c", cov_pixels,in_ts,"is ",min_cov,warn_help,
-                                      "\n",warn_str,"the lowest coverage amongst all timestamps is below: ",min_thresh,p,"\n"),"NULL")
-  warn_mean <- ifelse(check_mean,paste0("The mean c", cov_pixels,in_ts,"is ",mean_cov,warn_help,
-                                        "\n",warn_str,"the mean coverage is below: ",mean_thresh,p,"\n"),"NULL")
-  warnings <- list(warn_min, warn_mean)
-  return(warnings)
-  
 }
 
 #' creates a selection summary for a SAR selection
@@ -263,11 +261,14 @@ You could modify these values (most likely decrease (some of) them.")
   le <- length(check_tile_cov)
   char <- c()
   for (x in check_tile_cov) char <- ifelse(le == 1,x,paste0(char,x,", "))
-  warning <- ifelse(le == 0,NA,paste0("\nFor timestamps: \n   ",char,
-                                      "\nnot all tiles could be covered with the given parameters. You could e.g.:\n
-                                      - decrease 'num_timestamps',
-                                      - decrease 'min_distance',
-                                      - increase 'max_period'.")) 
+  if (num_timestamps > 2) {
+    warn_msg <- paste0("\nFor timestamps: \n   ",char,
+                       "\nnot all tiles could be covered with the given parameters.", arg_help_msg(1))
+  } else {
+    warn_msg <- paste0("\nFor timestamps: \n   ",char,
+                       "\nnot all tiles could be covered with the given parameters.", arg_help_msg(2))
+  }
+  warning <- ifelse(le == 0, NA, warn_msg)
   console_summary_warning <- list(console_summary,warning)
   return(console_summary_warning)
 }
@@ -281,11 +282,15 @@ You could modify these values (most likely decrease (some of) them.")
 #' @keywords internal
 #' @noRd
 .select_out_cov <- function(base_coverage, i, le_collection, sensor) {
-  cov <- as.character(round(base_coverage,2))
-  cov <- ifelse(nchar(cov)==5,cov,paste0(cov,"0"))
-  i <- ifelse(i==0,1,i)
-  checked_records <- paste0("[",i,"/", le_collection,"] checked records of ", sensor, "  ")
-  out(paste0("\r", checked_records, "            ", cov," %"), flush = T)
+  cov <- as.character(round(base_coverage, 2))
+  i <- ifelse(i == 0, 1, i)
+  checked_records <- paste0("[",i,"/", le_collection,"] ", sensor)
+  bar <- .create_numeric_bars(base_coverage)
+  distance <- 34 - nchar(checked_records)
+  distance <- ifelse(distance < 0, 1, distance)
+  space <- " "
+  space_after_product <- paste(rep(" ", times=distance), collapse="")
+  out(paste0("\r", checked_records, space_after_product, bar, space, cov," %"), flush = T)
 }
 
 #' catches and communicates the case where the records data.frame of a sub-period is empty.
@@ -298,12 +303,35 @@ You could modify these values (most likely decrease (some of) them.")
 .select_catch_empty_records <- function(records, ts, sensor = "unspecified") {
   
   if (NROW(records) == 0) {
-    out(paste0("No records at timestamp: ",ts," for product: '", sensor, "'. You could e.g.:\n- decrease 'num_timestamps',
-               - decrease 'min_distance',
-               - increase 'max_period',
-               - add another product.\n"),2)
+    is_product_group <- sensor %in% c(name_product_group_modis(), name_product_group_landsat(), name_product_group_sentinel())
+    out(paste0("No records at timestamp: ",ts," of ", ifelse(is_product_group, "product group: ", "product: "), 
+sensor, "'. ", arg_help_msg(1)), 2)
+    
+    
+
   }
   
+}
+
+
+#' returns a character that can be used as help message for adjusting arguments
+#' @param mode integer if 1 n_timestamps is included in the msg, otherwise not
+#' @return arg_help_msg character
+#' @keywords internal
+#' @noRd
+arg_help_msg <- function(mode = 1) {
+  if (mode == 1) {
+    return("\n
+              - decrease 'n_timestamps',
+              - decrease 'min_distance',
+              - increase 'max_sub_period',
+              - add another product\n")
+  } else {
+    return("\n
+           - decrease 'min_distance',
+           - increase 'max_sub_period',
+           - add another product\n")
+  }
 }
 
 #' finishs a SAR selection where only SAR records were given. Fills the records data.frame
@@ -331,8 +359,8 @@ You could modify these values (most likely decrease (some of) them.")
   records <- .select_prep_cols(records,cols,params$selected_col)
   for (ts in 1:length(ids)) {
     ids_match <- match(ids[[ts]],records[[params$identifier]])
-    records[ids_match,params$selected_col] <- TRUE # is record selected at all
-    records[ids_match,params$timestamp_col] <- ts # timestamp for which record is selected
+    records[ids_match, params$selected_col] <- TRUE # is record selected at all
+    records[ids_match, params$timestamp_col] <- ts # timestamp for which record is selected
   }
   return(records)
   

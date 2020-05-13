@@ -18,7 +18,7 @@ logical vector
 \code{is.product_} checks which records are of product \code{product}.
 }
 \details{
-Check \link{get_names} for available product names.
+Check \link{get_products} for available product names.
 }
 \author{
 Henrik Fisser, 2020

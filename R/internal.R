@@ -2495,8 +2495,9 @@ quiet <- function(expr){
         list(paste0(gsub("index.html", "", index_url), .sapply(as.character(xml_children(xml_children(xml_contents(content(gSD.get(index_url), encoding = "UTF-8"))[2])[4])), function(y){
           strsplit(y,  '\"')[[1]][2]
         }, USE.NAMES = F)))
+      } else{
+        records$gSD.espa_item[[1]]$product_dload_url
       }
-      
       # MODIS LAADS
     } else if(x$product_group == "MODIS"){
       
@@ -2547,8 +2548,9 @@ quiet <- function(expr){
       if(x$level == "l1"){
         if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
         list(paste0(file, "/", .sapply(unlist(x$dataset_url, recursive = T), function(x) tail(strsplit(x, "/")[[1]], n = 1), USE.NAMES = F)))
-      }
-      
+      } else{
+        paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
+      } 
     } else if(x$product_group == "MODIS"){
       paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
     } else NA

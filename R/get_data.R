@@ -33,7 +33,6 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
     .check_login("Copernicus")
   }
   if("Landsat" %in% groups){
-    out("[DEVELOPER ERROR]: Missing end: Landsat download is currently broken --> PLEASE fix. Until then, remove Landsat records from query.", type = 3)
     .check_login("USGS")
   }
   if("MODIS" %in% groups){
@@ -49,6 +48,15 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
   if(all(!records$download_available)) out("All supplied records are currently not availabe for download. Use order_data() to make them available for download.", type = 3)
   if(any(!records$download_available)) out("Some records are currently not available for download and will be skipped (see records$download_available). Use order_data() to make them available for download.", type = 2)
   sub <- which(records$download_available)
+  
+  # check for ESPA records
+  if(any(records[sub,][records$product_group == "Landsat",]$level != "l1")){
+    records$gSD.espa_item <- NA
+    records[sub,][records$product_group == "Landsat" & records$level != "l1",]$gSD.espa_item <- 
+      .apply(records[sub,][records$product_group == "Landsat" & records$level != "l1",], MARGIN = 1, function(x){
+      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x$order_id, "/", x$record_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
+    })
+  }
   
   # get credendtial info
   records$gSD.cred <- NA
@@ -66,6 +74,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
       if(x$product_group == "Sentinel"){
         cred <- unlist(x$gSD.cred)
         if(!is.null(x$md5_url)) content(gSD.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
+      } else if(x$product_group == "Landsat" & x$level != "l1"){
+        records$gSD.espa_item[[1]]$cksum_download_url
       } else NA
     }, verbose = F))
   }

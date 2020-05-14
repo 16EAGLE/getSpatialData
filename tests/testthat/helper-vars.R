@@ -3,6 +3,7 @@
 tt <- list()
 tt$home <- getwd() # testthat directory
 
+###### CAUTION: THIS IS FOR PRELIMINARY LOCAL TESTING .... hf
 tt$home <- file.path(tt$home, "tests", "testthat")
 
 tt$tmp <- file.path(tt$home, "tmp") # tmp dir that can be created for tests (and deleted!)

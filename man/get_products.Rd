@@ -8,8 +8,7 @@
 \alias{getSRTM_products}
 \title{Get product names}
 \usage{
-get_products(product_groups = "all", grouped = FALSE,
-  update_online = TRUE)
+get_products(product_groups = "all", grouped = FALSE, update_online = FALSE)
 
 getSentinel_products()
 

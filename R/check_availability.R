@@ -35,8 +35,20 @@ check_availability <- function(records, verbose = TRUE){
   
   # Landsat
   if("Landsat" %in% records$product_group){
-    out("Checking instant availability for Landsat records...")
+    out("Checking availability for Landsat records...")
     records[records$product_group == "Landsat",]$download_available <- records[records$product_group == "Landsat",]$level == "l1"
+    
+    # check for order column
+    if(length(records$order_i) > 0){
+      if(any(!is.na(records$order_id))){
+        status <- sapply(records$order_id[!is.na(records$order_id)], function(id){
+          sapply(content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
+        }, USE.NAMES = F)
+        if(any(status[status != "complete"])) status[status != "complete"] <- "FALSE"
+        status <- gsub("complete", "TRUE", status)
+        records$download_available[!is.na(records$order_id)] <- as.logical(status)
+      }
+    }
   }
   
   # MODIS
@@ -45,5 +57,6 @@ check_availability <- function(records, verbose = TRUE){
     records[records$product_group == "MODIS",]$download_available <- TRUE
   }
   
+  out(paste0(as.character(length(which(records$download_available))), "/", nrow(records), " records are currently available for download (this includes any completed order)."), type = 1)
   return(.column_summary(records, records.names))
 }

@@ -4,9 +4,18 @@
 \alias{calc_cloudcov}
 \title{Calculate the cloud cover of Sentinel, Landsat or MODIS in an aoi before large data download}
 \usage{
-calc_cloudcov(records, aoi = NULL, maxDeviation = 20,
-  cloudPrbThreshold = 35, slopeDefault = 1.4, interceptDefault = -10,
-  dir_out = NULL, username = NULL, password = NULL, verbose = TRUE)
+calc_cloudcov(
+  records,
+  aoi = NULL,
+  maxDeviation = 20,
+  cloudPrbThreshold = 35,
+  slopeDefault = 1.4,
+  interceptDefault = -10,
+  dir_out = NULL,
+  username = NULL,
+  password = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is returned by \link{get_records}.}

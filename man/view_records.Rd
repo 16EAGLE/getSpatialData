@@ -5,15 +5,26 @@
 \alias{plot_records}
 \title{View footprints of records}
 \usage{
-view_records(records, show_aoi = TRUE,
+view_records(
+  records,
+  show_aoi = TRUE,
   line_colours = hcl.colors(nrow(records)),
-  fill_colours = hcl.colors(nrow(records)), fill_alpha = 0.3,
-  aoi_colour = "deepskyblue", verbose = TRUE)
+  fill_colours = hcl.colors(nrow(records)),
+  fill_alpha = 0.3,
+  aoi_colour = "deepskyblue",
+  verbose = TRUE
+)
 
-plot_records(records, show_aoi = TRUE,
+plot_records(
+  records,
+  show_aoi = TRUE,
   line_colours = hcl.colors(nrow(records)),
-  fill_colours = hcl.colors(nrow(records)), fill_alpha = 0.3,
-  aoi_colour = "deepskyblue", value = FALSE, verbose = TRUE)
+  fill_colours = hcl.colors(nrow(records)),
+  fill_alpha = 0.3,
+  aoi_colour = "deepskyblue",
+  value = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}

@@ -4,12 +4,14 @@
 \name{aoi_data}
 \alias{aoi_data}
 \title{An example AOI of three different classes}
-\format{The example AOI is provided as the following classes:
+\format{
+The example AOI is provided as the following classes:
 \itemize{
   \item \code{aoi_sf}, a \code{sf_POLYGON} object representing a single multi-point polygon, projected in lat/lon
   \item \code{aoi_sp}, a \code{SpatialPolygons} single multi-point polygon, projected in lat/lon
   \item \code{aoi_matrix}, a two-column (longitute & latitude), multi-row matrix without projection
-}}
+}
+}
 \usage{
 aoi_data
 }

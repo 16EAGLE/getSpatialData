@@ -7,17 +7,41 @@
 \alias{getMODIS_data}
 \title{Download datasets}
 \usage{
-get_data(records, dir_out = NULL, md5_check = TRUE, force = FALSE,
-  ..., verbose = TRUE)
+get_data(
+  records,
+  dir_out = NULL,
+  md5_check = TRUE,
+  force = FALSE,
+  ...,
+  verbose = TRUE
+)
 
-getSentinel_data(records, dir_out = NULL, md5_check = TRUE,
-  force = FALSE, ..., verbose = TRUE)
+getSentinel_data(
+  records,
+  dir_out = NULL,
+  md5_check = TRUE,
+  force = FALSE,
+  ...,
+  verbose = TRUE
+)
 
-getLandsat_data(records, dir_out = NULL, md5_check = TRUE,
-  force = FALSE, ..., verbose = TRUE)
+getLandsat_data(
+  records,
+  dir_out = NULL,
+  md5_check = TRUE,
+  force = FALSE,
+  ...,
+  verbose = TRUE
+)
 
-getMODIS_data(records, dir_out = NULL, md5_check = TRUE,
-  force = FALSE, ..., verbose = TRUE)
+getMODIS_data(
+  records,
+  dir_out = NULL,
+  md5_check = TRUE,
+  force = FALSE,
+  ...,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}

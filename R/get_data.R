@@ -21,6 +21,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
+  if(is.null(records$level)) records$level <- NA
   records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id", "summary"))
   
   # save names
@@ -31,8 +32,12 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
   if("Sentinel" %in% groups){
     .check_login("Copernicus")
   }
-  if(any("Landsat" %in% groups, "MODIS" %in% groups)){
+  if("Landsat" %in% groups){
+    out("[DEVELOPER ERROR]: Missing end: Landsat download is currently broken --> PLEASE fix. Until then, remove Landsat records from query.", type = 3)
     .check_login("USGS")
+  }
+  if("MODIS" %in% groups){
+    .check_login(c("USGS", "earthdata"))
   }
   
   # check availability
@@ -42,8 +47,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
     if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   }
   if(all(!records$download_available)) out("All supplied records are currently not availabe for download. Use order_data() to make them available for download.", type = 3)
+  if(any(!records$download_available)) out("Some records are currently not available for download and will be skipped (see records$download_available). Use order_data() to make them available for download.", type = 2)
   sub <- which(records$download_available)
-  if(any(sub)) out("Some records are currently not available for download and will be skipped (see records$download_available). Use order_data() to make them available for download.", type = 2)
   
   # get credendtial info
   records$gSD.cred <- NA

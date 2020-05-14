@@ -29,22 +29,6 @@ firstup <- function(x){
   return(x)
 }
 
-#' Simplifies check of variables being FALSE
-#'
-#' @param evaluate variable or expression to be evaluated
-#'
-#' @keywords internal
-#' @noRd
-is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
-
-#' Simplifies check of variables being TRUE
-#'
-#' @param evaluate variable or expression to be evaluated
-#'
-#' @keywords internal
-#' @noRd
-is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
-
 #' check if url
 #' @param url a url
 #' @keywords internal
@@ -495,57 +479,57 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
 #'
 #' @keywords internal
 #' @noRd
-.ESPA_download <- function(records, username, password, dir_out, delay = 10, wait_for_espa = NULL, n.retry = 3){
-  
-  records$download_success <- F
-  records$download_attempts <- NA
-  continue <- T
-  while(!all(records$download_success) & isTRUE(continue)){
-    
-    ## get tiems
-    items <- unlist(unlist(lapply(unique(records$ESPA_orderID), function(x){
-      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), username, password))
-    }), recursive = F), recursive = F)
-    records$md5_url <- records$dataset_url <- NA
-    
-    ## get tiems
-    records <- do.call(rbind, lapply(1:nrow(records), function(i){
-      x <- records[i,]
-      x.item <- items[[grep(x$displayId, items)]]
-      x$ESPA_status <- x.item$status
-      
-      if(x$ESPA_status == "complete"){
-        x$md5_url <- x.item$cksum_download_url
-        x$md5_checksum <- sapply(x$md5_url, function(url) strsplit(content(gSD.get(x$md5_url), as = "text", encoding = "UTF-8"), " ")[[1]][1], USE.NAMES = F)
-        x$dataset_url <- x.item$product_dload_url
-      }
-      return(x)
-    }))
-    
-    ## download available records
-    if(nrow(records[records$ESPA_status == "complete" & records$download_success == F,]) > 0){
-      records[records$ESPA_status == "complete" & records$download_success == F,] <- gSD.retry(
-        records[records$ESPA_status == "complete" & records$download_success == F,], gSD.download,
-        names = colnames(records), prog = getOption("gSD.verbose"), force = T, n.retry = n.retry)
-    }
-    
-    if(!all(records$download_success)){
-      if(is.null(wait_for_espa)){
-        out("Some datasets are not ready to download from ESPA yet.", msg = T)
-        out("If getLandsat_data should not continue checking ESPA, it will return the records of all requested datasets (including their ESPA order IDs). Use the returned records to call getLandsat_data again later to continue checking/downloading from ESPA.")
-        wait_for_espa <- readline("Should getLandsat_data wait for all datasets to be ready for download? [y/n]: ")
-        if(wait_for_espa == "n") wait_for_espa <- F else wait_for_espa <- T
-      }
-      if(isTRUE(wait_for_espa)){
-        out(paste0("Waiting for dataset(s) '", paste0(records[records$ESPA_status == "complete" & records$download_success == F,]$dataset_name, collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
-        Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
-      } else{
-        continue <- FALSE
-      }
-    }
-  }
-  return(records)
-}
+# .ESPA_download <- function(records, username, password, dir_out, delay = 10, wait_for_espa = NULL, n.retry = 3){
+#   
+#   records$download_success <- F
+#   records$download_attempts <- NA
+#   continue <- T
+#   while(!all(records$download_success) & isTRUE(continue)){
+#     
+#     ## get tiems
+#     items <- unlist(unlist(lapply(unique(records$ESPA_orderID), function(x){
+#       content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), username, password))
+#     }), recursive = F), recursive = F)
+#     records$md5_url <- records$dataset_url <- NA
+#     
+#     ## get tiems
+#     records <- do.call(rbind, lapply(1:nrow(records), function(i){
+#       x <- records[i,]
+#       x.item <- items[[grep(x$displayId, items)]]
+#       x$ESPA_status <- x.item$status
+#       
+#       if(x$ESPA_status == "complete"){
+#         x$md5_url <- x.item$cksum_download_url
+#         x$md5_checksum <- sapply(x$md5_url, function(url) strsplit(content(gSD.get(x$md5_url), as = "text", encoding = "UTF-8"), " ")[[1]][1], USE.NAMES = F)
+#         x$dataset_url <- x.item$product_dload_url
+#       }
+#       return(x)
+#     }))
+#     
+#     ## download available records
+#     if(nrow(records[records$ESPA_status == "complete" & records$download_success == F,]) > 0){
+#       records[records$ESPA_status == "complete" & records$download_success == F,] <- gSD.retry(
+#         records[records$ESPA_status == "complete" & records$download_success == F,], gSD.download,
+#         names = colnames(records), prog = getOption("gSD.verbose"), force = T, n.retry = n.retry)
+#     }
+#     
+#     if(!all(records$download_success)){
+#       if(is.null(wait_for_espa)){
+#         out("Some datasets are not ready to download from ESPA yet.", msg = T)
+#         out("If getLandsat_data should not continue checking ESPA, it will return the records of all requested datasets (including their ESPA order IDs). Use the returned records to call getLandsat_data again later to continue checking/downloading from ESPA.")
+#         wait_for_espa <- readline("Should getLandsat_data wait for all datasets to be ready for download? [y/n]: ")
+#         if(wait_for_espa == "n") wait_for_espa <- F else wait_for_espa <- T
+#       }
+#       if(isTRUE(wait_for_espa)){
+#         out(paste0("Waiting for dataset(s) '", paste0(records[records$ESPA_status == "complete" & records$download_success == F,]$dataset_name, collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
+#         Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
+#       } else{
+#         continue <- FALSE
+#       }
+#     }
+#   }
+#   return(records)
+# }
 
 
 #' translate records column names to gSD standard
@@ -755,8 +739,13 @@ rbind.different <- function(x) {
     gSD.usgs_pass = FALSE,
     gSD.usgs_set = FALSE,
     gSD.usgs_time = NULL,
-    gSD.usgs_refresh = 15, # minutes
+    gSD.usgs_refresh = 60, # minutes
     gSD.usgs_apikey = FALSE,
+    gSD.ed_user = FALSE,
+    gSD.ed_pass = FALSE,
+    gSD.ed_set = FALSE,
+    gSD.ed_time = NULL,
+    gSD.ed_refresh = 60, # minutes
     gSD.archive = FALSE,
     gSD.archive_set = FALSE,
     gSD.aoi = FALSE,
@@ -2495,16 +2484,18 @@ quiet <- function(expr){
       paste0(unlist(x$gSD.cred)[3], "odata/v1/Products('", x$entity_id, "')/$value")
       
       # Landsat 8 Level 1A AWS
-    } else if(x$product == "LANDSAT_8_C1" & x$level == "l1"){
+    } else if(x$product == "LANDSAT_8_C1"){
       
-      # assemble index url
-      hv <- strsplit(x$record_id, "_")[[1]][3]
-      index_url <- paste0(getOption("gSD.api")$aws.l8, substr(hv, 1, 3), "/", substr(hv, 4, 6), "/", x$record_id, "/index.html")
-      
-      # get file urls
-      list(paste0(gsub("index.html", "", index_url), .sapply(as.character(xml_children(xml_children(xml_contents(content(gSD.get(index_url), encoding = "UTF-8"))[2])[4])), function(y){
-        strsplit(y,  '\"')[[1]][2]
-      }, USE.NAMES = F)))
+      if(x$level == "l1"){
+        # assemble index url
+        hv <- strsplit(x$record_id, "_")[[1]][3]
+        index_url <- paste0(getOption("gSD.api")$aws.l8, substr(hv, 1, 3), "/", substr(hv, 4, 6), "/", x$record_id, "/index.html")
+        
+        # get file urls
+        list(paste0(gsub("index.html", "", index_url), .sapply(as.character(xml_children(xml_children(xml_contents(content(gSD.get(index_url), encoding = "UTF-8"))[2])[4])), function(y){
+          strsplit(y,  '\"')[[1]][2]
+        }, USE.NAMES = F)))
+      }
       
       # MODIS LAADS
     } else if(x$product_group == "MODIS"){
@@ -2528,7 +2519,7 @@ quiet <- function(expr){
       } else return(url)
       
     } else NA
-  }, verbose = verbose)
+  })
 }
 
 
@@ -2551,9 +2542,12 @@ quiet <- function(expr){
         paste0(file, ".zip")
       }
       
-    } else if(x$product == "LANDSAT_8_C1" & x$level == "l1"){
-      if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
-      list(paste0(file, "/", .sapply(unlist(x$dataset_url, recursive = T), function(x) tail(strsplit(x, "/")[[1]], n = 1), USE.NAMES = F)))
+    } else if(x$product == "LANDSAT_8_C1"){
+      
+      if(x$level == "l1"){
+        if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
+        list(paste0(file, "/", .sapply(unlist(x$dataset_url, recursive = T), function(x) tail(strsplit(x, "/")[[1]], n = 1), USE.NAMES = F)))
+      }
       
     } else if(x$product_group == "MODIS"){
       paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])

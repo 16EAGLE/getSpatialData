@@ -5,11 +5,22 @@
 \alias{plot_previews}
 \title{View or plot previews of records}
 \usage{
-view_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
-  verbose = TRUE)
+view_previews(
+  records,
+  show_aoi = TRUE,
+  aoi_colour = "deepskyblue",
+  verbose = TRUE
+)
 
-plot_previews(records, show_aoi = TRUE, aoi_colour = "deepskyblue",
-  separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE)
+plot_previews(
+  records,
+  show_aoi = TRUE,
+  aoi_colour = "deepskyblue",
+  separate = FALSE,
+  maxcol = 3,
+  value = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}

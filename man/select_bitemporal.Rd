@@ -4,9 +4,17 @@
 \alias{select_bitemporal}
 \title{Selects remote sensing records bi-temporally}
 \usage{
-select_bitemporal(records, aoi, min_distance, min_improvement = 5,
-  max_sub_period, max_cloudcov_tile = 80, prio_sensors = NULL,
-  dir_out = NULL, verbose = TRUE)
+select_bitemporal(
+  records,
+  aoi,
+  min_distance,
+  min_improvement = 5,
+  max_sub_period,
+  max_cloudcov_tile = 80,
+  prio_sensors = NULL,
+  dir_out = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns.

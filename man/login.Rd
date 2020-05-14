@@ -4,14 +4,15 @@
 \alias{login}
 \alias{login_CopHub}
 \alias{login_USGS}
+\alias{login_earthdata}
 \alias{services}
 \title{Session-wide login}
 \usage{
-login_CopHub(username = NULL, password = NULL, n_retry = 3,
-  verbose = TRUE)
+login_CopHub(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
 
-login_USGS(username = NULL, password = NULL, n_retry = 3,
-  verbose = TRUE)
+login_USGS(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
+
+login_earthdata(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
 
 services(value = F, verbose = T)
 }

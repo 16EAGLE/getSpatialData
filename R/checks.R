@@ -8,9 +8,10 @@
   
   if(is.null(services)){
     if(is.null(records)){
-      services <- c("USGS", "Copernicus")
+      services <- c("USGS", "Copernicus", "earthdata")
     } else{
-      if("Landsat" %in% records$product_group | "MODIS" %in% records$product_group) services <- c(services, "USGS")
+      if("Landsat" %in% records$product_group) services <- c(services, "USGS")
+      if("MODIS" %in% records$product_group) services <- c(services, "USGS", "earthdata")
       if("Sentinel" %in% records$product_group) services <- c(services, "Copernicus")
     }
   }
@@ -22,6 +23,14 @@
     # refresh session if needed
     if(difftime(Sys.time(), getOption("gSD.usgs_time"), units = "mins") > getOption("gSD.usgs_refresh")){
       login_USGS(getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"), verbose = F)
+    }
+  }
+  if("earthdata" %in% services){
+    if(!getOption("gSD.ed_set")) out("You are not logged in to NASA URS EarthData. Please login first using login_earthdata().", type = 3)
+    
+    # refresh session if needed
+    if(difftime(Sys.time(), getOption("gSD.ed_time"), units = "mins") > getOption("gSD.ed_refresh")){
+      login_earthdata(getOption("gSD.ed_user"), getOption("gSD.ed_pass"), verbose = F)
     }
   }
 }

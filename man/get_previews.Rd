@@ -4,8 +4,7 @@
 \alias{get_previews}
 \title{Get previews of records}
 \usage{
-get_previews(records, dir_out = NULL, force = FALSE, ...,
-  verbose = TRUE)
+get_previews(records, dir_out = NULL, force = FALSE, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}

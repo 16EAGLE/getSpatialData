@@ -82,6 +82,29 @@ login_USGS <- function(username = NULL, password = NULL, n_retry = 3, verbose = 
 }
 
 #' @rdname login
+#' @export
+login_earthdata <- function(username = NULL, password = NULL, n_retry = 3, verbose = TRUE){
+  
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+  if(is.null(username)) username <- getPass("Username (NASA URS EarthData):")
+  if(is.null(password)) password <- getPass("Password (NASA URS EarthData):")
+  char_args <- list(username = username, password = password)
+  for(i in 1:length(char_args)){
+    if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
+  }
+  
+  # verify credentials
+  x <- .retry(httr::GET, url = gsub("allData", "README", getOption("gSD.api")$laads), 
+         config = httr::authenticate(username, password),
+         fail = out("Login failed. Please retry later or call services_avail() to check if LAADS is currently unavailable.", type=3),
+         n = n_retry)
+
+  # save credentials
+  options(gSD.ed_user = username, gSD.ed_pass = password, gSD.ed_set = TRUE, gSD.ed_time = Sys.time())
+  out("Login successfull. NASA URS EarthData credentials have been saved for the current session.")
+}
+
+#' @rdname login
 #' @importFrom httr GET http_status
 #' @importFrom cli cat_bullet
 #' @export

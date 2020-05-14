@@ -7,17 +7,49 @@
 \alias{getMODIS_records}
 \title{Query available product records}
 \usage{
-get_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+get_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 
-getSentinel_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+getSentinel_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 
-getLandsat_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+getLandsat_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 
-getMODIS_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+getMODIS_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{time_range}{character, a vector of two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. \code{c("2017-05-15", "2017-06-15")}}

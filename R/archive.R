@@ -2,7 +2,6 @@
 #'
 #' Functions that set and get a session-wide archive directory that can be used by all \code{getSpatialData} functions. 
 #'
-#' @inheritParams getSentinel_records
 #' @param dir_archive character, directory to the \code{getSpatialData} archive folder.
 #' @param create logical, whether to create directory, if not existing or not.
 #'

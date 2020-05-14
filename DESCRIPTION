@@ -33,9 +33,8 @@ Imports:
   methods,
   readr,
   pbapply
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Suggests: 
   testthat
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/
-

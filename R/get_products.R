@@ -37,7 +37,7 @@
 #' 
 #' @name get_products
 #' @export
-get_products <- function(product_groups = "all", grouped = FALSE, update_online = TRUE){
+get_products <- function(product_groups = "all", grouped = FALSE, update_online = FALSE){
   
   # assemble offline products list
   products <- list("Sentinel" = getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "GNSS"],

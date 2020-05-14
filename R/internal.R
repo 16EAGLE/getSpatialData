@@ -2419,7 +2419,7 @@ quiet <- function(expr){
       paste0(unlist(x$gSD.cred)[3], "odata/v1/Products('", x$entity_id, "')/$value")
       
       # Landsat 8 Level 1A AWS
-    } else if(x$product == "LANDSAT_8_C1"){
+    } else if(x$product_group == "Landsat"){
       
       if(x$level == "l1"){
         # assemble index url
@@ -2478,13 +2478,13 @@ quiet <- function(expr){
         paste0(file, ".zip")
       }
       
-    } else if(x$product == "LANDSAT_8_C1"){
+    } else if(x$product_group == "Landsat"){
       
       if(x$level == "l1"){
         if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
         list(paste0(file, "/", .sapply(unlist(x$dataset_url, recursive = T), function(x) tail(strsplit(x, "/")[[1]], n = 1), USE.NAMES = F)))
       } else{
-        paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
+        paste0(file, "_LEVEL_", x$level, ".tar.gz")
       } 
     } else if(x$product_group == "MODIS"){
       paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])

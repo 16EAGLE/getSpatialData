@@ -4,7 +4,7 @@
 \alias{calc_cloudcov}
 \title{Calculate the cloud cover of optical Sentinel, Landsat or MODIS data in an aoi based on small previews}
 \usage{
-calc_cloudcov(records, max_deviation = 5, aoi = NULL, dir_out = NULL,
+calc_cloudcov(records, max_deviation = 2, aoi = NULL, dir_out = NULL,
   username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE,
   ...)
 }
@@ -14,7 +14,7 @@ returned by \link{get_records}.}
 
 \item{max_deviation}{numeric, the maximum allowed deviation of calculated scene cloud cover 
 from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover 
-\% given by the data distributor. Default is \code{maxDeviation = 5}.}
+\% given by the data distributor. Default is 2.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point 
 (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to 

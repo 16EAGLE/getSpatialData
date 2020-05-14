@@ -68,7 +68,7 @@
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
     out(params$sep)
-    out(paste0("Calculating selection of timestamp: ", ts))
+    out(paste0("Calculating selection of timestamp: ", ts), msg=T)
   }
   
   if (length(sub_within) > 1) {
@@ -357,6 +357,21 @@
   }
   return(records)
   
+}
+
+#' calculates a default sub period of a timestamp. For cases where no period is given
+#' @param overall_period character vector overall period of all given records
+#' @param num_timestamps integer number of timestamps
+#' @param curr_timestamp integer current timestamp number
+#' @keywords internal
+#' @noRd
+.calc_default_sub_period <- function(overall_period, num_timestamps, curr_timestamp) {
+  realized_sub_period_length <- as.integer((as.Date(overall_period[2]) - as.Date(overall_period[1])) / num_timestamps)
+  if (realized_sub_period_length == 0) out("Covered period of records is too short", 3)
+  start_offset <- (curr_timestamp - 1) * realized_sub_period_length
+  end_offset <- (curr_timestamp * realized_sub_period_length) - 1
+  period <- as.character(c(as.Date(overall_period[1]) + start_offset, as.Date(overall_period[1]) + end_offset))
+  return(period)
 }
 
 #' checks first possible date for selection after previous selection according to user-specified min_distance

@@ -75,7 +75,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
         cred <- unlist(x$gSD.cred)
         if(!is.null(x$md5_url)) content(gSD.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
       } else if(x$product_group == "Landsat" & x$level != "l1"){
-        records$gSD.espa_item[[1]]$cksum_download_url
+        strsplit(content(gSD.get(x$gSD.espa_item$cksum_download_ur), as = "text", encoding = "UTF-8"), " ")[[1]][1]
       } else NA
     }, verbose = F))
   }

@@ -589,7 +589,7 @@
   if (exists) {
     return(exists)
   } else {
-    if (!is.na(out_type)) out(paste0("File does not exists: ", file), out_type)
+    if (!is.na(out_type)) out(paste0("File does not exist: ", file), out_type)
     return(exists)
   }
 }

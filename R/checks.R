@@ -210,7 +210,7 @@
     MODIS <- name_product_group_modis()
     optical_sensors <- get_cloudcov_supported() # because Sentinel-1 is not allowed for prio_products
     all_valid <- all(sapply(prio_sensors, function(x) {
-      check <- x %in% optical_sensors || x %in% c(getSpatialData:::name_product_group_landsat(), getSpatialData:::name_product_group_modis())
+      check <- x %in% optical_sensors || x %in% c(name_product_group_landsat(), name_product_group_modis())
       check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
     }))
     if (name_product_sentinel1() %in% prio_sensors) out(paste0(name_product_sentinel1(), " cannot be handled in 'prio_products'"))
@@ -229,16 +229,16 @@
 #' @noRd
 .select_check_files <- function(paths, item_name) {
   
-  paths <- paths[intersect(which(!is.na(paths)),which(paths != "NONE"))]
+  paths <- paths[intersect(which(!is.na(paths)), which(paths != "NONE"))]
   exist <- sapply(paths,function(p) file.exists(p))
   all_on_disk <- isTRUE(all(exist))
   if (all_on_disk) {
     return(NA)
   } else {
-    number_not_found <- which(exist == FALSE)
+    number_not_found <- which(!exist)
     out(
-      paste0("All files in '",item_name,"' have to be saved at the location as indicated
-             in the paths. Out of ",length(paths)," files ",number_not_found," cannot be located"),2)
+      paste0("All files in '", item_name, "' have to be saved at the location as indicated
+             in the paths. Out of ",length(paths)," files ", number_not_found," cannot be located"), 2)
   }
   
 }
@@ -272,13 +272,17 @@
   revisit_times[["MODIS_MYD09CMG_V6"]] <- 1
   
   sel_num_timestamps <- "Number timestamps"
-  info <- paste0(sel_num_timestamps, " (",num_timestamps)
   s <- ifelse(length(sensors)==1,"\nProduct: ","\nProducts: ")
-  out(paste0(sel_num_timestamps, ": ", num_timestamps, s, paste(sensors, collapse=", ")))
+  n_spaces <- 4
+  one_space <- " "
+  spaces1 <- paste(rep(one_space, times = n_spaces), collapse="")
+  spaces2 <- paste(rep(one_space, times=nchar(sel_num_timestamps) + 2 - nchar(s) + n_spaces), collapse="")
+  out(paste0(sel_num_timestamps, ": ", spaces1, num_timestamps, s, spaces2, paste(sensors, collapse=", ")))
   for (sensor in sensors) {
     r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
     sub_period <- (as.numeric(as.Date(period[2]) - as.Date(period[1]))) / num_timestamps
     not_unitemporal <- num_timestamps > 1
+    info <- paste0(sel_num_timestamps, " (",num_timestamps)
     if (sub_period < r && not_unitemporal) {
       out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r," days). Decrease 'num_timestamps'"), 3)
     } else if (sub_period == r && not_unitemporal) {

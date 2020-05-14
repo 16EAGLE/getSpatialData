@@ -164,7 +164,7 @@
   
   tmp_dir_orig <- tempdir()
   tmp_dir <- .tmp_dir(dir_out,1,TRUE)
-  space <- "          "
+  space <- "           "
   space <- paste0(space, space)
   if (is.null(base_records)) out(paste0("Checked records", space, "Cloud-free pixels"))
   
@@ -305,6 +305,7 @@
       break
     }
   }
+  out("\n") # get out of the coverage % line
   
   # return ids of selected records and percentage of valid pixels of final mosaic
   selected <- list(ids=names(base_records),
@@ -377,7 +378,7 @@
   }
 
   # print selection summary
-  out("Summary per timestamp")
+  out("Summary by timestamp")
   .select_final_info_table(ts_seq, coverage_vector, n_records_vector, params$sep)
   
   rm(each_timestamp)

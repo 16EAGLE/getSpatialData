@@ -33,7 +33,7 @@ write_records <- function(records, file = NULL, driver = "GPKG", dir_out = NULL,
   records <- .unlist_df(records)
   user_file_is_path <- !is.null(file) && file != basename(file)
   if (!user_file_is_path) {
-    dir_out <- .check_dir_out()
+    dir_out <- .check_dir_out(dir_out)
     # generate a file path from dir_out
     file <- ifelse(user_file_is_path, .generate_records_filename(file_name = file, 
                                                                  dir_out = dir_out, driver = driver), file)

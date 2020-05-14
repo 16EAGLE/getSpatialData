@@ -3,77 +3,125 @@
 # -----------------------------------------------------------------------------------------
 
 dir_records <- tt$resources$records
-prio_sensors <- c("Sentinel-2", "LANDSAT_8_C1", "LANDSAT_ETM_C1", "LANDSAT_TM_C1", "LANDSAT_MSS_C1",
-                  "Sentinel-3", "MODIS")
-max_sub_period <- 10
-min_distance <- 5
-num_timestamps <- 3
+prio_products <- c(getSpatialData:::name_product_sentinel2(), getSpatialData:::name_product_landsat8(), 
+                   getSpatialData:::name_product_landsat7(), getSpatialData:::name_product_landsat5(),
+                   getSpatialData:::name_product_landsatmss(), getSpatialData:::name_product_sentinel3(),
+                   getSpatialData:::name_product_group_modis())
 
 # -----------------------------------------------------------------------------------------
 # DEFINE TEST FUNCTIONS
 # -----------------------------------------------------------------------------------------
 
-# this is the main test function.
-# records_select is the output of a select function with clean input
+# main test function
 # ------------------------------------
-clean_test_select <- function(records_select, COLS) {
+clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, PREFIX, COLS, DATAFRAME, NUMERIC, CHARACTER) {
+  initialize_dir(tt$tmp)
+  modes <- c("select_unitemporal", "select_bitemporal", "select_timeseries")
+  max_sub_period <- 10
+  min_distance <- 5
+  n_timestamps <- 3
+  max_cloudcov_tile <- 80
+  records <- read_records(construct_filepath(dir_records, sensor, PREFIX$cmasks))
   
-  DATAFRAME = "data.frame"
-  CHARACTER = "character"
-  NUMERIC = "numeric"
+  for (mode in modes) {
+    is_unitemporal <- grepl("unitemporal", mode)
+    is_bitemporal <- grepl("bitemporal", mode)
+    is_timeseries <- grepl("timeseries", mode)
+    if (is_unitemporal) {
+      prio_products <- c(SENTINEL2, LANDSAT, SENTINEL3)
+      records_unitemporal <- expect_is(select_unitemporal(records,
+                                                          max_cloudcov_tile = max_cloudcov_tile,
+                                                          max_sub_period = 25,
+                                                          aoi = aoi_test, dir_out = tt$tmp, as_sf = TRUE), SF)
+      records_select <- records_unitemporal
+    } else if (is_bitemporal) {
+      records_bitemporal <- expect_is(select_bitemporal(records, 
+                                                        max_cloudcov_tile = max_cloudcov_tile,
+                                                        max_sub_period = max_sub_period,
+                                                        min_distance = min_distance,
+                                                        aoi = aoi_test, dir_out = tt$tmp, as_sf = TRUE), SF)
+      records_select <- records_bitemporal
+    } else if (is_timeseries) {
+      records_timeseries <- expect_is(select_timeseries(records,
+                                                        n_timestamps = n_timestamps,
+                                                        max_cloudcov_tile = max_cloudcov_tile,
+                                                        max_sub_period = max_sub_period,
+                                                        min_distance = min_distance,
+                                                        aoi = aoi_test, dir_out = tt$tmp, as_sf = FALSE), DATAFRAME)
+      records_select <- records_timeseries
+    }
   
-  expect_is(records_select, DATAFRAME)
-  cols_given <- names(records_select)
-  # check if column exists
-  expect_true(COLS$pmos_col %in% cols_given)
-  expect_true(COLS$cmos_col %in% cols_given)
-  expect_true(COLS$timestamp_col %in% cols_given)
-  expect_true(COLS$sub_period_col %in% cols_given)
-  # get column vectors
-  pmos_col <- records_cc[[COLS$pmos_col]]
-  cmos_col <- records_cc[[COLS$cmos_col]]
-  timestamp_col <- records_cc[[COLS$timestamp_col]]
-  sub_period_col <- records_cc[[COLS$sub_period_col]]
-  # check column data type
-  expect_is(pmos_col, CHARACTER)
-  expect_is(cmos_col, CHARACTER)
-  expect_is(timestamp_col, NUMERIC)
-  expect_is(sub_period_col, NUMERIC)
-  
-  # check rasters
-  for (file in cmos_col) {
-    expect_true(file.exists(file))
-    loaded_cmos <- test_raster_read(file) 
-    expect_false(is.na(crs(loaded_cmos)) && is.na(st_crs(loaded_cmos)))
-    # values must be binary
-    expect_equal(minValue(loaded_cmos), 0)
-    expect_equal(maxValue(loaded_cmos), 1)
+    cols_given <- names(records_select)
+    # check if column exists
+    expect_true(COLS$pmos_col %in% cols_given)
+    expect_true(COLS$cmos_col %in% cols_given)
+    expect_true(COLS$timestamp_col %in% cols_given)
+    # get column vectors
+    cmos_col <- records_select[[COLS$cmos_col]]
+    pmos_col <- records_select[[COLS$pmos_col]]
+    timestamp_col <- records_select[[COLS$timestamp_col]]
+    # check column data type
+    expect_is(pmos_col, CHARACTER)
+    expect_is(cmos_col, CHARACTER)
+    expect_true(any(inherits(timestamp_col, NUMERIC), inherits(timestamp_col, INTEGER)))
+    # check rasters
+    for (file in cmos_col) {
+      if (!is.na(file)) { #  can be
+        expect_true(file.exists(file))
+        loaded_cmos <- test_raster_read(file) 
+        expect_false(is.na(crs(loaded_cmos)) && is.na(st_crs(loaded_cmos)))
+        # values
+        expect_equal(minValue(loaded_cmos), 1) # not 0!
+        expect_equal(maxValue(loaded_cmos), 1)
+      }
+    }
+    for (file in pmos_col) {
+      if (!is.na(file)) { # can be
+        expect_true(file.exists(file))
+        loaded_pmos <- test_stack_read(file)
+        expect_false(is.na(crs(loaded_pmos)) && is.na(st_crs(loaded_pmos)))
+      }
+    }
+    is_selected <- !is.na(timestamp_col)
+    # check if max_cloudcov_tile is fulfilled
+    cloudcov <- records_select[is_selected,][[getSpatialData:::name_cloudcov()]]
+    cloudcov_filtered <- cloudcov[!is.na(cloudcov)]
+    if (length(cloudcov_filtered) > 0) {
+      expect_true(all(cloudcov_filtered) < max_cloudcov_tile)
+    }
+    # check if temporal args are fulfilled
+    timestamp_col_filtered <- timestamp_col[is_selected]
+    dates <- sapply(records_select[is_selected,][[getSpatialData:::name_date_acquisition()]], as.Date)
+    if (is_unitemporal) {
+      expect_true(unique(timestamp_col_filtered) == 1)
+      if (length(dates) > 1) {
+        start_date <- min(dates)
+        end_date <- max(dates)
+        sub_period_length <- end_date - start_date + 1
+        expect_true(sub_period_length < max_sub_period)
+      }
+    } else if (is_bitemporal) {
+      expect_true(all(timestamp_col_filtered < 3))
+    }
+    
+    if (is_bitemporal || is_timeseries) {
+      previous_last_date <- 0
+      for (ts in unique(timestamp_col_filtered)) {
+        match <- which(records_select[[COLS$timestamp_col]] == ts)
+        dates_matched <- records_select[match,][[getSpatialData:::name_date_acquisition()]]
+        start_date <- min(dates_matched)
+        end_date <- max(dates_matched)
+        previous_last_date <- end_date
+        sub_period_length <- as.numeric(as.Date(end_date) - as.Date(start_date)) + 1
+        expect_true(sub_period_length <= max_sub_period)
+        if (ts > 1) {
+          expect_true((start_date - previous_last_date) > min_distance)
+        }
+      }
+    }
+
   }
-  
-  for (file in pmos_col) {
-    expect_true(file.exists(file))
-    loaded_pmos <- test_stack_read(file)
-    expect_false(is.na(crs(loaded_pmos)) && is.na(st_crs(loaded_pmos)))
-  }
-  
-}
-
-clean_unitemporal_wrapper <- function(COLS, records, max_sub_period, aoi, dir_out, prio_sensors = c()) {
-  records_select <- select_unitemporal(records, max_sub_period = max_sub_period, aoi = aoi, dir_out = dir_out)
-  clean_test_select(records_select, COLS)
-}
-
-clean_bitemporal_wrapper <- function(COLS, records, min_distance, max_sub_period, aoi, dir_out, prio_sensors = c()) {
-  records_select <- select_bitemporal(records, min_distance = min_distance, 
-                                      max_sub_period = max_sub_period, aoi = aoi, dir_out = dir_out)
-  clean_test_select(records_select, COLS)
-}
-
-clean_timeseries_wrapper <- function(COLS, records, num_timestamps, min_distance, max_sub_period, aoi, dir_out, prio_sensors = c()) {
-  records_select <- select_timeseries(records, num_timestamps = num_timestamps, min_distance = min_distance,
-                                      max_sub_period = max_sub_period,
-                                      aoi = aoi, dir_out = dir_out)
-  clean_test_select(records_select, COLS)
+  finish_dir(tt$tmp)
 }
 
 # tests errors
@@ -179,7 +227,7 @@ error_test_select <- function(records, aoi, tt) {
                                  satisfaction_value = input1_satisfaction_value,
                                  aoi = aoi, dir_out = tt$tmp), error1_satisfaction_value) # TS
   
-  # prio_sensors
+  # prio_products
   prio_sensors_name <- "prio_sensors"
   input1_prio_sensors <- c(100, 200)
   error1_prio_sensors <- type_error_msg(input1_prio_sensors, prio_sensors_name, CHARACTER)
@@ -258,7 +306,7 @@ error_test_select <- function(records, aoi, tt) {
 # TEST 1
 # -------
 # Target: Test errors
-records <- read.csv(construct_filepath(dir_records, SENTINEL2, SUFFIX$records))
+records <- read_records(construct_filepath(dir_records, SENTINEL2, PREFIX$records))
 # with false input
 error_test_select(records, aoi = aoi_test, tt)
 
@@ -266,8 +314,9 @@ error_test_select(records, aoi = aoi_test, tt)
 # ------------------------------------
 # TEST 2
 # -------
+# Target: test with Sentinel-1
 initialize_dir(tt$tmp)
-records <- read.csv(construct_filepath(dir_records, SENTINEL1, SUFFIX$records))
+records <- read.csv(construct_filepath(dir_records, SENTINEL1, PREFIX$records))
 # Target: test unitemporal with Sentinel-1
 records_select <- select_unitemporal(records, max_sub_period = max_sub_period, dir_out = tt$tmp)
 finish_dir(tt$tmp)
@@ -286,122 +335,51 @@ finish_dir(tt$tmp)
 
 # TEST 3
 # -------
-initialize_dir(tt$tmp)
-records <- read.csv(construct_filepath(dir_records, SENTINEL2, SUFFIX$records))
-# Target: test unitemporal with Sentinel-2
-clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test bitemporal with Sentinel-2
-clean_bitemporal_wrapper(COLS, records, 
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test timeseries with Sentinel-2
-clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
+# Target: test with Sentinel-2
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = SENTINEL2, 
+                  prio_products = NULL, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)
 
 # TEST 4
 # -------
-initialize_dir(tt$tmp)
-records <- read.csv(construct_filepath(dir_records, SENTINEL3, SUFFIX$records))
-# Target: test unitemporal with Sentinel-3
-clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test bitemporal with Sentinel-3
-clean_bitemporal_wrapper(COLS, records, 
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test timeseries with Sentinel-3
-clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
+# Target: test with Sentinel-3
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = SENTINEL3, 
+                  prio_products = NULL, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)
 
 # TEST 5
 # -------
-initialize_dir(tt$tmp)
-records <- read.csv(construct_filepath(dir_records, LANDSAT, SUFFIX$records))
-# Target: test unitemporal with Landsat
-clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test bitemporal with Landsat
-clean_bitemporal_wrapper(COLS, records, 
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test timeseries with Landsat
-clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
+# Target: test with Landsat
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = LANDSAT, 
+                  prio_products = NULL, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)
 
 # TEST 6
 # -------
-initialize_dir(tt$tmp)
-records <- read.csv(construct_filepath(dir_records, MODIS, SUFFIX$records))
-# Target: test unitemporal with MODIS
-clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test bitemporal with MODIS
-clean_bitemporal_wrapper(COLS, records, 
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test timeseries with MODIS
-clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
+# Target: test with MODIS
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = MODIS, 
+                  prio_products = NULL, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)
 
 # TEST 7
 # -------
-initialize_dir(tt$tmp)
-records <- read.csv(construct_filepath(dir_records, MIXED, SUFFIX$records))
-# Target: test unitemporal with mixed sensors without prio_sensors
-clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test bitemporal with mixed sensors without prio_sensors
-clean_bitemporal_wrapper(COLS, records, 
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test timeseries with mixed sensors without prio_sensors
-clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test unitemporal with mixed sensors with prio_sensors
-clean_unitemporal_wrapper(COLS, records, max_sub_period = max_sub_period, 
-                          aoi = aoi_test, dir_out = tt$tmp, prio_sensors = prio_sensors)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test bitemporal with mixed sensors with prio_sensors
-clean_bitemporal_wrapper(COLS, records, 
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp, prio_sensors = prio_sensors)
-finish_dir(tt$tmp)
-initialize_dir(tt$tmp)
-# Target: test timeseries with mixed sensors with prio_sensors
-clean_timeseries_wrapper(COLS, records, num_timestamps = num_timestamps,
-                         min_distance = min_distance, max_sub_period = max_sub_period,
-                         aoi = aoi_test, dir_out = tt$tmp, prio_sensors = prio_sensors)
-finish_dir(tt$tmp)
+# Target: test with mixed sensors without prio_products
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED, 
+                  prio_products = NULL, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)
+
+# TEST 8
+# -------
+# Target: test with mixed sensors with prio_products
+prio_products <- c(getSpatialData:::name_product_sentinel2(), getSpatialData:::name_product_landsat())
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED, 
+                  prio_products = prio_products, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)
+
+# TEST 9
+# -------
+# Target: test with mixed sensors with prio_products and Sentinel-1
+prio_products <- c(getSpatialData:::name_product_sentinel2(), getSpatialData:::name_product_landsat())
+clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED, 
+                  prio_products = prio_products, tt = tt, PREFIX = PREFIX, COLS = COLS,
+                  DATAFRAME = DATAFRAME, NUMERIC = NUMERIC)

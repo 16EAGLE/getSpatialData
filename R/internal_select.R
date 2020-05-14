@@ -53,18 +53,20 @@
   sub_periods <- unique(na.omit(records[[name_sub_period()]]))
   if (!all(1:num_timestamps %in% sub_periods)) sub_periods <- 1:num_timestamps
   
+  if (is.null(prio_sensors)) {
+    given_products <- records[[name_product()]]
+    given_products <- given_products[which(given_products != name_product_sentinel1())]
+    if (length(given_products) > 1) out("No 'prio_products' specified, generating random product priorities", msg=T)
+    prio_sensors <- .generate_random_prio_prods(records)
+    out(paste0("Random priority product order: ", paste(prio_sensors, collapse=", ")), msg=F)
+  }
+  
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
   for (t in 1:length(sub_periods)) {
     
     if (t > 1) {
       previous_timestamp <- t - 1
       previous_period <- selected[[previous_timestamp]]$period
-      if (is.null(previous_period)) {
-        # get the default period of previous timestamp as assigned by the sub_periods (based on max_sub_period)
-        start_offset <- (previous_timestamp - 1) * max_sub_period
-        end_offset <- (previous_timestamp * max_sub_period) - 1
-        previous_period <- as.character(c(as.Date(params$period[1]) + start_offset, as.Date(params$period[1]) + end_offset))
-      }
     } else {
       previous_period <- NA
     }
@@ -83,6 +85,10 @@
     
     if (inherits(selected_ts, TRY_ERROR())) {
       out(paste0("\nSelection failed for timestamp: ", t), 2)
+    }
+    if (is.null(selected_ts[["period"]])) {
+      # if no records available/selected at the timestamp get default period based on length of period and number timestamps
+      selected_ts[["period"]] <- .calc_default_sub_period(params$period, num_timestamps, t)     
     }
     selected_ts[["timestamp"]] <- t
     selected[[t]] <- selected_ts # insert 'selected_ts' list into selected list
@@ -103,7 +109,8 @@
   #3 the timestamp number for which the record is selected
   sep <- params$sep
   out(sep, msg=F)
-  out("Writing resulting mosaics", msg=T)
+  out("Writing mosaics", msg=T)
+  out(sep, msg=F)
   # create final mosaics for each timestamp and summary message per timestamp
   records <- try(.select_save_mosaics(records, selected=selected, aoi=aoi,
                                       params=params, dir_out=dir_out))
@@ -149,19 +156,21 @@
 
   name_product <- name_product()
   name_product_group <- name_product_group()
-  completed_info <- paste0("\nCompleted selection of timestamp: ", timestamp)
+  given_products <- unique(records[[name_product]])
+  SAR_given <- name_product_sentinel1() %in% given_products
   period_new <- c() # for selection of multiple sensors
   base_records <- c() # same 
   ids <- c() # same
   valid_pixels <- 0 # same
   selected <- NULL
   
-  if (is.null(prio_products)) {
-    prio_products <- .generate_random_prio_prods(records)
-  }
   single_prio_product <- length(prio_products) == 1  # single product given
   
   for (s in prio_products) {
+    
+    if (s == name_product_sentinel1()) next # Sentinel-1 gets dedicated handling
+    # enough records selected, no further need
+    if (valid_pixels >= satisfaction_value || round(valid_pixels) == 100) break
     
     selection_failed <- FALSE
     if (single_prio_product) {
@@ -171,7 +180,7 @@
       # in case prio_sensors is given process sensors in this order
       s_match <- which(records[[name_product]] == s) # check for the product name
       # the prio product can also be a product group in case of Landsat and MODIS
-      if (s == name_product_group_landsat()) {
+      if (s == name_product_group_landsat() || s == name_product_group_modis()) {
         s_match <- which(records[[name_product_group()]] == s)
       }
     }
@@ -220,32 +229,35 @@
                                       delete_files,
                                       params,
                                       dir_out,
-                                      ts=timestamp)      
+                                      ts=timestamp)
     }
     
     selection_failed <- !inherits(selected, LIST())
     if (selection_failed) {
       .select_catch_empty_records(data.frame(), timestamp, s)
     } else {
-      if (isFALSE(single_prio_product)) {
+      if (single_prio_product && !SAR_given) {
+        # if only one optical sensor is given
+        .select_completed_statement(timestamp)
+        return(selected)
+      } else {
         # if combined selection of multiple optical sensors
         has_next <- s != tail(prio_products, n=1)
-        if ((selected$valid_pixels < satisfaction_value) && has_next) out("\nSelecting records of next product", msg=T)
-        base_records <- c(base_records,selected$cMask_paths) # for base mosaic for selection from next sensor
+        if ((selected$valid_pixels < satisfaction_value) && has_next) .select_next_product()
+        
+        # save values of selected
+        base_records <- c(base_records, selected$cMask_paths) # for base mosaic for selection from next sensor
         ids <- unique(c(ids, selected$ids)) # ids of selected records
         names(base_records) <- ids
         valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi
         period_new <- .identify_period(c(period_new, selected$period)) # combined period
-      } else {
-        # if only one optical sensor is given
-        out(completed_info)
-        return(selected)
       }
     }  
   }
   
-  out(completed_info)
-  out(sep())
+  if (!SAR_given) {
+    .select_completed_statement(timestamp)
+  }
   
   # if warning has not been thrown before do it
   if (!selection_failed && length(ids) == 0) .select_catch_empty_records(data.frame(), timestamp, s)
@@ -307,10 +319,12 @@
   for (product in unique(given_products)) {
     name_product <- name_product()
     is_supported_modis <- .record_is_refl_modis(data.frame(name_product = product))
-    if (product %in% get_select_supported() || is_supported_modis) {
+    not_SAR <- product != name_product_sentinel1()
+    if (not_SAR && (product %in% get_select_supported() || is_supported_modis)) {
       clean_products <- append(clean_products, product)
     }
   }
+  
   prio_products <- sample(clean_products, length(clean_products))
   prio_products[which(grepl(LANDSAT_GROUP, prio_products))] <- LANDSAT_GROUP
   prio_products[which(grepl(MODIS_GROUP, prio_products))] <- MODIS_GROUP

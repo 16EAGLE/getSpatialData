@@ -168,12 +168,14 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   cov_metrics <- c(mean_cov, max_cov, min_cov)
   bars <- .create_numeric_bars(cov_metrics, n = 5, bar_symbol = "/")
   empty <- ""
+  three_spaces <- "    "
+  one_space <- " "
   table_sep <- "| "
   placeholder <- paste0(table_sep, empty)
   
   summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, num_timestamps), placeholder, placeholder),
                            "| " = c("| Mean", "| Max", "| Min"),
-                           "  Overall cloud-free pixels" = paste0(" ", bars, " ", cov_metrics, " %"),
+                           "  Overall cloud-free pixels" = paste0(three_spaces, bars, one_space, cov_metrics, " %"),
                            check.names = FALSE)
   out(summary_df)
   out(sep)
@@ -210,10 +212,15 @@ With the given 'n_timestamps' these values disable creating a temporally consist
 .create_numeric_bars <- function(x, n = 5, bar_symbol = "/", bracket_symbols = c("[", "]")) {
   bars <- paste0(bracket_symbols[1], .visual_numeric(x, symbol = bar_symbol, by = n))
   brackets <- sapply(bars, function(bar) {
-    max_nbars <- 100 / n
-    gap <- (max_nbars) - nchar(bar) + 1
-    gap <- ifelse(nchar(bar) == max_nbars, 0, gap)
-    paste0(paste(rep(" ", gap), collapse=""), bracket_symbols[2])
+    max_nbars <- as.integer(100 / n)
+    nchar_bar <- nchar(bar) - 1 # due to bracket - 1
+    gap <- (max_nbars) - nchar_bar
+    gap <- ifelse(nchar_bar == max_nbars, 0, gap)
+    space <- paste(rep(" ", gap), collapse="")
+    offset <- max_nbars - (nchar(space) + nchar_bar)
+    space <- ifelse(offset > 0, paste0(space, paste(rep(" ", offset), collapse="")), space)
+    space <- ifelse(offset < 0, substr(space, 1, max_nbars), space)
+    paste0(space, bracket_symbols[2])
   })
   bars <- paste0(bars, brackets)
   return(bars)
@@ -252,9 +259,8 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   info <- c()
   for (i in 1:length(covered_tiles_ts_wise)) {
     num_tiles <- covered_tiles_ts_wise[i]
-    info[i] <- paste0("Timestamp ",i," covers: ",num_tiles," Sentinel-1 tiles")
+    info[i] <- paste0("Timestamp ",i," covers: ", num_tiles, ifelse(num_tiles > 1), " Sentinel-1 tiles", " Sentinel-1 tile")
   }
-  console_summary <- paste0(info,sep)
   # check if for all timestamps all tiles are covered
   check_tile_cov <- which(covered_tiles_ts_wise != length(params$tileids))
   # return warning if check_tile_cov has length > 0
@@ -269,7 +275,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
                        "\nnot all tiles could be covered with the given parameters.", arg_help_msg(2))
   }
   warning <- ifelse(le == 0, NA, warn_msg)
-  console_summary_warning <- list(console_summary,warning)
+  console_summary_warning <- list(info, warning)
   return(console_summary_warning)
 }
 
@@ -282,15 +288,15 @@ With the given 'n_timestamps' these values disable creating a temporally consist
 #' @keywords internal
 #' @noRd
 .select_out_cov <- function(base_coverage, i, le_collection, sensor) {
-  cov <- as.character(round(base_coverage, 2))
+  cov <- round(base_coverage, 2)
   i <- ifelse(i == 0, 1, i)
   checked_records <- paste0("[",i,"/", le_collection,"] ", sensor)
-  bar <- .create_numeric_bars(base_coverage)
+  bar <- .create_numeric_bars(cov)
   distance <- 34 - nchar(checked_records)
   distance <- ifelse(distance < 0, 1, distance)
   space <- " "
   space_after_product <- paste(rep(" ", times=distance), collapse="")
-  out(paste0("\r", checked_records, space_after_product, bar, space, cov," %"), flush = T)
+  out(paste0("\r", checked_records, space_after_product, bar, space, as.character(cov)," %"), flush = T)
 }
 
 #' catches and communicates the case where the records data.frame of a sub-period is empty.
@@ -301,18 +307,24 @@ With the given 'n_timestamps' these values disable creating a temporally consist
 #' @keywords internal
 #' @noRd
 .select_catch_empty_records <- function(records, ts, sensor = "unspecified") {
-  
   if (NROW(records) == 0) {
     is_product_group <- sensor %in% c(name_product_group_modis(), name_product_group_landsat(), name_product_group_sentinel())
-    out(paste0("No records at timestamp: ",ts," of ", ifelse(is_product_group, "product group: ", "product: "), 
-sensor, "'. ", arg_help_msg(1)), 2)
-    
-    
-
+    out(paste0("No records of ", ifelse(is_product_group, "product group ", "product "), sensor, " at timestamp ", ts), msg=T)
   }
-  
 }
 
+#' prints the timestamp selection completed character info
+#' @param timestamp integer/numeric
+#' @return nothing, print to console
+#' @keywords internal
+#' @noRd
+.select_completed_statement <- function(timestamp) {out(paste0("\nCompleted selection of timestamp: ", timestamp), msg=F)}
+
+#' prints to console that selection proceeds to next product
+#' @return nothing, print to console
+#' @keywords internal
+#' @noRd
+.select_next_product <- function() {out("Selecting records of next product", msg=T)}
 
 #' returns a character that can be used as help message for adjusting arguments
 #' @param mode integer if 1 n_timestamps is included in the msg, otherwise not
@@ -334,6 +346,30 @@ arg_help_msg <- function(mode = 1) {
   }
 }
 
+.select_SAR_start <- function() {
+  spaces <- paste(rep(" ", 6), collapse="")
+  header <- paste0("Timestamp", spaces, "Available records", spaces, "Selected records")
+  out(header, msg=F)
+}
+
+#' prints status of SAR selection at a timestamp
+#' @param timestamp integer/numeric
+#' @param selected_SAR_timestamp list of selected items at timestamp
+#' @param n_available_records integer/numeric number of records that were available at this timestamp
+#' @return nothing, prints to console
+#' @keywords internal
+#' @noRd
+.select_SAR_timestamp_status <- function(timestamp, selected_SAR_timestamp, n_available_records) {
+  space <- " "
+  spaces <- paste(rep(space, 6), collapse="")
+  n_selected <- as.character(length(selected_SAR_timestamp$ids))
+  info <- paste0(timestamp, spaces, paste(rep(space, nchar("Timestamp") - nchar(as.character(timestamp))),
+                                                 collapse=""), n_selected, spaces,
+                 paste(rep(space, nchar("Available records") - nchar(n_selected)), collapse=""),
+                 n_available_records)
+  out(info)
+}
+
 #' finishs a SAR selection where only SAR records were given. Fills the records data.frame
 #' return columns and creates final console summary + optional warning.
 #' @param records data.frame.
@@ -344,12 +380,12 @@ arg_help_msg <- function(mode = 1) {
 #' @keywords internal
 #' @noRd
 .select_finish_SAR <- function(records, selected_SAR, num_timestamps, params) {
-  
   sep <- sep()
-  csw_SAR <- .select_SAR_summary(records,selected_SAR,num_timestamps,params)
+  csw_SAR <- .select_SAR_summary(records, selected_SAR, num_timestamps, params)
   out(paste0(sep,"\nOverall Summary", sep))
   out(paste0("Number of timestamps: ", num_timestamps,"\n"))
   summary <- .out_vector(csw_SAR[[1]]) # SAR selection summary
+  out(sep)
   rm(summary)
   w <- csw_SAR[[2]]
   if (!is.na(w)) out(w,type=2) # warning
@@ -363,6 +399,5 @@ arg_help_msg <- function(mode = 1) {
     records[ids_match, params$timestamp_col] <- ts # timestamp for which record is selected
   }
   return(records)
-  
 }
 

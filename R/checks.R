@@ -341,7 +341,6 @@
                            params, dir_out, verbose) {
   
   dir_out <- .check_dir_out(dir_out, "select")
-  .check_verbose(verbose)
   aoi <- .check_aoi(aoi, SF(), quiet=T)
   # check if all columns are provided
   needed_cols <- c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col)
@@ -418,6 +417,15 @@
   .check_logical(verbose, "verbose")
   if (any(c(is.null(verbose), is.na(verbose)))) verbose <- TRUE # default value
   .set_verbose(verbose)
+}
+
+#' checks as_sf argument
+#' @param as_sf logical
+#' @return nothing
+#' @keywords internal
+#' @noRd
+.check_as_sf <- function(as_sf) {
+  .check_logical(as_sf, "as_sf")
 }
 
 #' checks preview and returns if it is broken (no values above DN 20)

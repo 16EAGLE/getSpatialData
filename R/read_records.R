@@ -18,6 +18,7 @@
 read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
   GEOM <- "geom"
   FOOTPRINT <- name_footprint()
+  .check_as_sf(as_sf)
   .check_verbose(verbose)
   .check_character(file, "file")
   .check_file_exists(file, 3)

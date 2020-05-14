@@ -111,5 +111,14 @@ order_data <- function(records, wait_for_order = FALSE, ..., verbose = TRUE){
     if(any(!records[sub,]$ordered)) out("Some datasets could not be ordered succesfully. Check column 'ordered' and retry later for those records that are FALSE.", type = 2)
   }
   
+  if(isTRUE(wait_for_order)){
+    out("Waiting for orders to be completed, since 'wait_for_order' has been set to 'TRUE' (you may abort any time and check manually using 'check_availability()')...")
+    recheck <- TRUE
+    while(isTRUE(recheck)){
+      records <- check_availability(records)
+      if(all(records[sub,]$download_available)) recheck <- FALSE
+    }
+  }
+  
   return(.column_summary(records, records.names))
 }

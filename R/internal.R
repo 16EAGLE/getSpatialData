@@ -1486,11 +1486,13 @@ rbind.different <- function(x) {
       footprint_eval <- try(unlist(eval(parse(text = f))))
       if (inherits(footprint_eval, "try-error")) {
         out("Could not create footprint", type = 2)
+        footprints[[i]] <- f
+      } else {
+        ncol <- 2
+        nrow <- length(footprint_eval) / ncol
+        m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
+        footprints[[i]] <- st_multipolygon(list(list(m)))
       }
-      ncol <- 2
-      nrow <- length(footprint_eval) / ncol
-      m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
-      footprints[[i]] <- st_multipolygon(list(list(m)))
     }
   }
   # assign footprints

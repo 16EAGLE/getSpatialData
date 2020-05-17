@@ -121,7 +121,7 @@ RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 
 
 # TEST VARIABLES
 # -----------------
-aoi_test <- getSpatialData:::.read_polygons(file.path(tt$resources$aoi, "aoi_test.gpkg"))
+aoi_test <- getSpatialData:::.read_polygons(file.path(tt$resources$aoi, "aoi_test.geojson"))
 
 
 ############################################################################

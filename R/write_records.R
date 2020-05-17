@@ -73,7 +73,7 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
 
 #' Returns drivers for writing records
 #' @description \code{get_records_drivers} provides the driver names that can be used in \link{write_records}.
-#' @return list (named) of characters drivers (names) and their extensions (values).
+#' @return list (named) of characters drivers (names) and their file extensions (values).
 #' @author Henrik Fisser, 2020
 #' @export
 get_records_drivers <- function() {

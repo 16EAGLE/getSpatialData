@@ -330,14 +330,9 @@ names_continental_s3 <- function() {
 #' @noRd
 .get_records_drivers <- function() {
   drivers <- list("netCDF" = ".nc", 
-                  "JP2OpenJPEG" = ".jp2", 
-                  "JPEG2000" = ".jp2", 
                   "ESRI Shapefile" = ".shp", 
-                  "MapInfo File" = ".tab",
-                  "GML" = ".gml", 
                   "GeoJSON" = ".geojson", 
-                  "GPKG" = ".gpkg",
-                  "csv" = ".csv")
+                  "GPKG" = ".gpkg")
   return(drivers)
 }
 

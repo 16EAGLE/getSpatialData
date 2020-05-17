@@ -1392,14 +1392,15 @@ rbind.different <- function(x) {
 # vector utils
 # -------------------------------------------------------------
 
-#' wrapper for reading polygons file via sf::read_sf(). Mainly for unit tests.
-#' @param Character absolute file_path to file including extension
-#' @return SpatialPolygons polygons
+#' wrapper for reading polygons file via sf::read_sf(). Util for unit tests.
+#' @param Character absolute file_path to file including extension (geojson or gpkg)
+#' @return sfc
 #' @importFrom sf read_sf st_zm st_sfc
 #' @keywords internal
 #' @noRd
 .read_polygons <- function(file_path) {
-  polygons <- st_sfc(st_zm(read_sf(file_path))$geom)
+  geom <- ifelse(endsWith(".gpkg"), "geom", "geometry")
+  polygons <- st_sfc(st_zm(read_sf(file_path))[[geom]])
   return(polygons)
 }
 

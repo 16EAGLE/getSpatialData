@@ -53,7 +53,7 @@ PREFIX$records <- "records"
 PREFIX$previews <- "records_previews"
 PREFIX$cmasks <- "records_cmasks"
 construct_filepath <- function(dir, sensor, prefix) {
-  return(file.path(dir, paste(prefix, paste0(gsub("-", "", sensor), ".gpkg"), sep="_")))
+  return(file.path(dir, paste(prefix, paste0(gsub("-", "", sensor), ".geojson"), sep="_")))
 }
 
 # HELPERS

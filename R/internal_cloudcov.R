@@ -63,7 +63,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
     cloud_mask <- raster(mask_path)
     out(reload_msg, msg=T)
     record <- .cloudcov_record_finalize(record, aoi, cloud_mask,
-                                        scene_cPercent = 9999, mask_path = mask_path, cols = cols, reload = T)
+                                        mask_path = mask_path, cols = cols, reload = T)
     return(record)
   }
   
@@ -103,7 +103,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
       } else if (is.sentinel2(record)) {
         cloud_mask <- .sentinel2_preview_mask_edges(cloud_mask)
       }
-      scene_cPercent <- .raster_percent(cloud_mask, mode="custom", custom = c(0,1))
     }
   }
   
@@ -113,7 +112,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
     return(NA)
   } else {
     record <- .cloudcov_record_finalize(record, aoi, cloud_mask,
-                                        scene_cPercent, mask_path, cols)
+                                        mask_path, cols)
   }
   
   return(record)
@@ -256,7 +255,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
 #' @importFrom raster cellStats writeRaster mask
 #' @keywords internal
 #' @noRd
-.cloudcov_record_finalize <- function(record, aoi, cMask, scene_cPercent,
+.cloudcov_record_finalize <- function(record, aoi, cMask,
                                       mask_path, cols, reload=F) {
   
   dir_out_exists <- file.exists(dirname(mask_path))

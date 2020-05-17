@@ -22,6 +22,7 @@ for (dir in tt$resources) if (!dir.exists(dir)) stop(paste0(dir_error, dir))
 # classes
 DATAFRAME <- "data.frame"
 SF <- "sf"
+LIST <- "list"
 NUMERIC <- "numeric"
 INTEGER <- "integer"
 CHARACTER <- "character"

@@ -1521,17 +1521,6 @@ rbind.different <- function(x) {
   return(file)
 }
 
-#' returns the extension of a (GDAL) driver
-#' @param driver character name of the driver
-#' @return ext character the corresponding extension
-#' @keywords internal
-#' @noRd
-.get_driver_extension <- function(driver) {
-  drivers <- .get_records_drivers()
-  ext <- ifelse(driver %in% names(drivers), drivers[[driver]], "")
-  return(ext)
-}
-
 #' sets the verbose option
 #' @param verbose logical
 #' @keywords internal

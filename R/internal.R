@@ -1399,7 +1399,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .read_polygons <- function(file_path) {
-  geom <- ifelse(endsWith(".gpkg"), "geom", "geometry")
+  geom <- ifelse(endsWith(file_path, ".gpkg"), "geom", "geometry")
   polygons <- st_sfc(st_zm(read_sf(file_path))[[geom]])
   return(polygons)
 }

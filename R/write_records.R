@@ -53,10 +53,10 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
   if (basename(file) == file) file <- file.path(dir_out, file)
   split <- strsplit(file, "\\.")[[1]]
   ext <- split[length(split)]
-  out(paste0("Writing records to ", file), msg=T, type=1)
   if (!any(sapply(drivers, function(x) {endsWith(file, x)}))) {
     file <- paste0(file, drivers[[driver]])
   }
+  out(paste0("Writing records to ", file), msg=T, type=1)
   if (tolower(paste0(".", ext)) %in% tolower(drivers)) {
     write <- try(suppressWarnings(st_write(records, dsn = file, append = append, quiet = TRUE)))
   } else {

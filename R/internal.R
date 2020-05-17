@@ -1519,7 +1519,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .generate_records_filename <- function(file_name = NULL, dir_out = NULL, driver = NULL) {
-  if (is.null(driver)) driver <- "GPKG" # be able to provide a NULL driver through ... on higher level
+  if (is.null(driver)) driver <- "GeoJSON" # be able to provide a NULL driver through ... on higher level
   ext <- get_records_drivers()[[driver]]
   if (is.null(file_name)) {
     file_name <- .generate_datetime_filename("records", extension = ext)

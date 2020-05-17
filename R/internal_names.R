@@ -329,10 +329,9 @@ names_continental_s3 <- function() {
 #' @keywords internal
 #' @noRd
 .get_records_drivers <- function() {
-  drivers <- list("netCDF" = ".nc", 
-                  "ESRI Shapefile" = ".shp", 
-                  "GeoJSON" = ".geojson", 
-                  "GPKG" = ".gpkg")
+  drivers <- list("GeoJSON" = ".geojson", 
+                  "GPKG" = ".gpkg",
+                  "netCDF" = ".nc")
   return(drivers)
 }
 

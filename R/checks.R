@@ -359,16 +359,19 @@
   
 }
 
-#' checks if a driver name is available in st_drivers() (GDAL)
+#' checks if a driver name is available
 #' @param driver character driver name.
 #' @return nothing. Throws error in case driver cannot be found.
 #' @importFrom sf st_drivers
 #' @keywords internal
 #' @noRd
 .check_gdal_driver <- function(driver) {
-  drivers <- tolower(as.vector(st_drivers()$name))
-  drivers <- append(drivers, "csv")
-  if (!tolower(driver) %in% drivers) out(paste0("Driver: '", driver, "' cannot be found. Use a driver given in get_records_drivers()"), 3)
+  throw_error <- !is.character(driver)
+  if (!throw_error) {
+    drivers <- tolower(as.vector(names(get_records_drivers())))
+    throw_error <- !tolower(driver) %in% drivers
+  }
+  if (throw_error) out(paste0("Driver: '", driver, "' cannot be found. Use a driver given in get_records_drivers()"), 3)
 }
 
 #' call .gsd_compact and return NA if list is empty afterwards

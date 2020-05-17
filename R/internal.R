@@ -1166,15 +1166,21 @@ rbind.different <- function(x) {
 
 #' calculates percentage of a value in a raster or polygon with different modes.
 #' @param x raster.
-#' @param mode character specifies the mode of calculation.
-#' @param custom numeric vector with two values: [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
+#' @param mode character specifies the mode of calculation. Mode "na" calculates
+#' percentage of non-NA values in an aoi. Mode "custom" calculates the percentage
+#' share of a specified value in the collection of two specified values. Mode "aoi"
+#' is a special mode for aoi percentage calculation and only needed in special cases
+#' where the number of values in aoi shall be provided through aoi_ncell. This option
+#' exists to speedup the process especially when it is frequently done for a specific aoi.
+#' @param custom numeric vector with two values: 
+#' [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
 #' @param aoi aoi.
 #' @param aoi_ncell integer number of cells in aoi.
 #' @return \code{percent} numeric percentage
 #' @keywords internal
 #' @importFrom raster as.matrix extent res crs
 #' @noRd
-.raster_percent <- function(x, mode = "na", custom = NULL, aoi = NULL, aoi_ncell = NULL) {
+.raster_percent <- function(x, mode = "na", custom = c(), aoi = NULL, aoi_ncell = NULL) {
   
   if (mode == "na") {
     na_mask <- is.na(x)

@@ -35,7 +35,7 @@
     })
     rm(catch)
   }
-  if(as_df) {
+  if(as_df || !name_footprint() %in% names(records)) {
     records <- as.data.frame(records) 
   } else {
     records <- st_sf(records, sfc_last = F)
@@ -368,8 +368,7 @@
 .check_gdal_driver <- function(driver) {
   drivers <- tolower(as.vector(st_drivers()$name))
   drivers <- append(drivers, "csv")
-  if (!tolower(driver) %in% drivers) out(paste0("Driver: '", driver, "' cannot be found
-                                                       . Use a driver given in sf::st_drivers()"), 3)
+  if (!tolower(driver) %in% drivers) out(paste0("Driver: '", driver, "' cannot be found. Use a driver given in get_records_drivers()"), 3)
 }
 
 #' call .gsd_compact and return NA if list is empty afterwards

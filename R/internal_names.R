@@ -330,8 +330,7 @@ names_continental_s3 <- function() {
 #' @noRd
 .get_records_drivers <- function() {
   drivers <- list("GeoJSON" = ".geojson", 
-                  "GPKG" = ".gpkg",
-                  "netCDF" = ".nc")
+                  "GPKG" = ".gpkg")
   return(drivers)
 }
 

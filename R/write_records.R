@@ -43,6 +43,7 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
     out("One of the two arguments 'file' and 'dir_out' has to be provided", 3)
   }
   
+  driver <- ifelse(inherits(driver, LIST()), driver[[1]], driver)
   if (!user_file_is_path) {
     dir_out <- .check_dir_out(dir_out)
     # generate a file path from dir_out

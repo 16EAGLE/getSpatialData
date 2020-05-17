@@ -1440,12 +1440,18 @@ rbind.different <- function(x) {
 }
 
 #' returns TRUE if a vector or list has length 0/is.null() or is.na()
-#' @param x vector of any type
+#' @param x vector/list of any type
 #' @return logical
 #' @keywords internal
 #' @noRd
 .is_empty_array <- function(x) {
-  return(length(x) == 0 || is.null(x) || is.na(x) || all(sapply(x, is.null)) || all(sapply(x, is.na)))
+  all_null <- sapply(x, function(element) {
+    return(ifelse(inherits(element, LIST()), FALSE, is.null(element)))
+  })
+  all_na <- sapply(x, function(element) {
+    return(ifelse(inherits(element, LIST()), FALSE, is.na(element)))
+  })
+  return(length(x) == 0 || is.null(x) || is.na(x) || all_null || all_na)
 }
 
 #' checks if a character can be integer

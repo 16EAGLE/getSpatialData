@@ -112,7 +112,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
     record <- .cloudcov_handle_skip(record)
     return(NA)
   } else {
-    record <- .cloudcov_record_finalize(record, aoi, cloud_mask, hot,
+    record <- .cloudcov_record_finalize(record, aoi, cloud_mask,
                                         scene_cPercent, mask_path, cols)
   }
   
@@ -249,7 +249,6 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
 #' @param record data.frame.
 #' @param aoi aoi.
 #' @param cMask raster cloud mask.
-#' @param HOT raster HOT cloud probabilitiy layer.
 #' @param scene_cPercent numeric calculated HOT scene cloud cover.
 #' @param maskFilename character file path where to save the cloud mask.
 #' @param cols list of character column names.
@@ -257,17 +256,17 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
 #' @importFrom raster cellStats writeRaster mask
 #' @keywords internal
 #' @noRd
-.cloudcov_record_finalize <- function(record, aoi, cMask, hot = NULL, scene_cPercent,
+.cloudcov_record_finalize <- function(record, aoi, cMask, scene_cPercent,
                                       mask_path, cols, reload=F) {
   
   dir_out_exists <- file.exists(dirname(mask_path))
   aoi_cPercent <- .raster_percent(cMask, aoi = aoi) # calculate the absolute HOT cloud cover in aoi
+  scene_cPercent <- .raster_percent(cMask, mode = "custom", custom = c(0, 1))
   cMask[cMask == 0] <- NA
   if (!file.exists(mask_path) && dir_out_exists) {
     writeRaster(cMask, mask_path, overwrite=T, datatype = INT2S())
   }
   record[[cols$cloud_mask_path]] <- ifelse(file.exists(mask_path), normalizePath(mask_path), "NONE")
-
   # add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame
   record[[cols$aoi_hot_cc_percent]] <- as.numeric(aoi_cPercent)
   record[[cols$scene_hot_cc_percent]] <- as.numeric(scene_cPercent)

@@ -37,7 +37,9 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
   user_file_is_path <- !is.null(file) && file != basename(file)
   
   drivers <- get_records_drivers()
-  ifelse(driver %in% names(drivers), driver, names(drivers)[which(drivers == driver)])
+  lower_driver_names <- tolower(names)
+  lower_driver <- tolower(driver)
+  driver <- drivers[which(lower_driver_names == lower_driver)]
   
   if (is.null(dir_out) && is.null(file)) {
     out("One of the two arguments 'file' and 'dir_out' has to be provided", 3)

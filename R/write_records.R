@@ -9,7 +9,7 @@
 #' at \code{dir_out} in the format of \code{driver}. If it is a file path without valid file extension 
 #' it will be written in the format of \code{driver} at the specified path. If it is a file path with 
 #' valid file extension it will be written there. It can also be a character file name, in this case 
-#' \code{dir_out} has to be provided. 
+#' \code{dir_out} has to be provided. If the specified file exists and \code{append == FALSE} the file will be overwritten.
 #' Check for available drivers and extensions through \link{get_records_drivers}.
 #' @param driver character specifies the writer. Options are all thise returned by
 #' \link{get_records_drivers}. Will be ignored in case a fully qualified \code{file} path is provided. Default is "GeoJSON".
@@ -29,23 +29,29 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
   
   name_footprint <- name_footprint()
   if (is.null(append)) append <- FALSE # could be passed as NULL through ... from higher level
+  if (is.null(dir_out) && is.null(file)) {
+    out("One of the two arguments 'file' and 'dir_out' has to be provided", 3)
+  }
   .check_verbose(verbose)
-  .check_gdal_driver(driver)
   .check_records_type(records)
   records <- .check_records(records) # ensure it's sf
   records <- .unlist_df(records)
   user_file_is_path <- !is.null(file) && file != basename(file)
   
+  # resolve driver
   drivers <- get_records_drivers()
-  lower_driver_names <- tolower(names)
+  lower_driver_names <- tolower(names(drivers))
   lower_driver <- tolower(driver)
-  driver <- drivers[which(lower_driver_names == lower_driver)]
+  user_provided_extension <- ifelse(startsWith(lower_driver, "."), 
+                                    lower_driver, paste0(".", lower_driver)) %in% drivers # drivers are lower case anyways
+  lower_driver <- ifelse(user_provided_extension && !startsWith(lower_driver, "."), paste0(".", lower_driver), lower_driver)
+  driver <- ifelse(user_provided_extension, 
+                   drivers[which(drivers == lower_driver)],
+                   drivers[which(lower_driver_names == lower_driver)])
+  extension <- driver[[1]]
+  driver <- names(drivers)[which(drivers == extension)]
+  .check_gdal_driver(driver)
   
-  if (is.null(dir_out) && is.null(file)) {
-    out("One of the two arguments 'file' and 'dir_out' has to be provided", 3)
-  }
-  
-  driver <- ifelse(inherits(driver, LIST()), driver[[1]], driver)
   if (!user_file_is_path) {
     dir_out <- .check_dir_out(dir_out)
     # generate a file path from dir_out
@@ -53,17 +59,12 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
   }
   # check if file ends with a valid file extension
   if (basename(file) == file) file <- file.path(dir_out, file)
-  split <- strsplit(file, "\\.")[[1]]
-  ext <- split[length(split)]
   if (!any(sapply(drivers, function(x) {endsWith(file, x)}))) {
-    file <- paste0(file, drivers[[driver]])
+    file <- paste0(file, extension)
   }
   out(paste0("Writing records to ", file), msg=T, type=1)
-  if (tolower(paste0(".", ext)) %in% tolower(drivers)) {
-    write <- try(suppressWarnings(st_write(records, dsn = file, append = append, quiet = TRUE)))
-  } else {
-    write <- try(suppressWarnings(st_write(records, dsn = file, driver = driver, append = append, quiet = TRUE)))
-  }
+  if (!append && file.exists(file)) unlink(file)
+  write <- try(suppressWarnings(st_write(records, dsn = file, append = append, quiet = TRUE)))
   if (inherits(write, "try-error")) {
     out(paste0("Failed to write file: ", file), 3)
   } else {

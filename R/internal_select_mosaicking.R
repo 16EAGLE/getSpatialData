@@ -256,7 +256,7 @@
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p, x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
       if (inherits(curr_mos_tmp, r)) {   
-        cov_aft <- .raster_percent(curr_mos_tmp,mode=mode_aoi,aoi=aoi_subset) # check new coverage
+        cov_aft <- .raster_percent(curr_mos_tmp, mode=mode_aoi,aoi=aoi_subset) # check new coverage
         # cleanup
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
@@ -292,7 +292,7 @@
         })
         rm(del)
         base_mos <- raster(base_mos_path_tmp)
-        base_coverage <- .raster_percent(base_mos ,mode=mode_aoi, aoi=aoi, n_pixel_aoi)
+        base_coverage <- .raster_percent(base_mos, mode=mode_aoi, aoi=aoi, n_pixel_aoi)
         base_mos_path <- base_mos_path_tmp
         # cleanup
         rm(base_mos)

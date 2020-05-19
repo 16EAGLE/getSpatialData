@@ -106,7 +106,7 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
 
 #' @rdname getSpatialData-deprecated
 #' @export
-getSentinel_preview <- function(records, ...){
+getSentinel_preview <- function(records = NULL, ...){
   .Deprecated("view_previews", "getSpatialData", "This function is deprecated. Use get_previews, view_previews and plot_previews to download, view or plot previews for different sensors at once.")
   
   if(missing(records)){

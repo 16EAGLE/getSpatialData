@@ -35,6 +35,23 @@ firstup <- function(x){
 #' @noRd
 is.url <- function(url) grepl("www.|http:|https:", url)
 
+#' Simplifies check of variables being FALSE
+#'
+#' @param evaluate variable or expression to be evaluated
+#'
+#' @keywords internal
+#' @noRd
+is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
+
+#' Simplifies check of variables being TRUE
+#'
+#' @param evaluate variable or expression to be evaluated
+#'
+#' @keywords internal
+#' @noRd
+is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
+
+
 #' gSD.get
 #' @param url url
 #' @param username user

@@ -43,8 +43,8 @@
 login_CopHub <- function(username = NULL, password = NULL, n_retry = 3, verbose = TRUE){
   
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-  if(is.null(username)) username <- getPass("Username (Copernicus Open Access Hub):")
-  if(is.null(password)) password <- getPass("Password (Copernicus Open Access Hub):")
+  if(is.null(username)) username <- getPass("Username (ESA Copernicus Open Access Hub):")
+  if(is.null(password)) password <- getPass("Password (ESA Copernicus Open Access Hub):")
   char_args <- list(username = username, password = password)
   for(i in 1:length(char_args)){
     if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}

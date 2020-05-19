@@ -26,11 +26,11 @@ getLandsat_query(...)
 
 getMODIS_query(...)
 
-getSentinel_preview(records, ...)
+getSentinel_preview(records = NULL, ...)
 
-getLandsat_preview(records, ...)
+getLandsat_preview(records = NULL, ...)
 
-getMODIS_preview(records, ...)
+getMODIS_preview(records = NULL, ...)
 }
 \description{
 The functions listed below are deprecated and will be defunct in

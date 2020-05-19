@@ -16,9 +16,9 @@
 #' @keywords internal
 #' @noRd
 selected <- function(record_ids, base_coverage, records) {
+  cmask_paths <- records[which(records[[name_record_id()]] %in% record_ids), name_cloud_mask_file()]
   selected <- list(ids=record_ids,
-                   cMask_paths=records[which(records[[name_record_id()]] %in% names(record_ids)),
-                                       name_cloud_mask_file()],
+                   cMask_paths=cmask_paths,
                    valid_pixels=base_coverage)
   return(selected)
 }

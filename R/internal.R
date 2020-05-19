@@ -1172,6 +1172,7 @@ rbind.different <- function(x) {
 #' is a special mode for aoi percentage calculation and only needed in special cases
 #' where the number of values in aoi shall be provided through aoi_ncell. This option
 #' exists to speedup the process especially when it is frequently done for a specific aoi.
+#' It calculates the percentage of value 1 in the aoi.
 #' @param custom numeric vector with two values: 
 #' [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
 #' @param aoi aoi.
@@ -1186,7 +1187,7 @@ rbind.different <- function(x) {
     na_mask <- is.na(x)
     x <- .mask_raster_by_polygon(na_mask, aoi)
     x_mat <- as.integer(as.matrix(x))
-    # clouds = 1 and clear = 0 now
+    # clouds = 1 and clear = 0 here
     percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
   } else if (mode == "custom") {
     x_mat <- as.integer(as.matrix(x))
@@ -1229,7 +1230,7 @@ rbind.different <- function(x) {
       if (file.exists(r_save_path)) return(r_save_path)
       r_load <- stack(x[[i]])
       r_aggr <- aggregate(r_load, adj)
-      writeRaster(r_aggr,r_save_path, overwrite=T, datatype=dataType(r_load))
+      writeRaster(r_aggr, r_save_path, overwrite=T, datatype=dataType(r_load))
       return(r_save_path)
     })
   } else {

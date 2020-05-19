@@ -181,46 +181,70 @@
   # this vector are all orders ordered from best records (lowest aoi cc) 
   # to worst records (highest aoi cc) in a queue and respecting the tile order
   names(collection) <- sapply(sub_within,function(x) return(records[x,identifier]))
-  collection <- collection[intersect(which(collection != "NONE"),which(!is.na(collection)))]
+  collection <- collection[intersect(which(collection != "NONE"), which(!is.na(collection)))]
   le_collection <- length(collection)
   
   # create the first base mosaic from the first order of collection (best records per tile)
   # if base_records are given through arguments these are records selected for a prio_sensor
   # that create the base mosaic
+  base_mos_path <- file.path(tmp_dir, "base_mosaic_tmp.tif")
   if (is.null(base_records)) {
     # paths of first record of each tile
     base_records <- collection[1:le_first_order]
     start <- le_first_order + 1 # if base mosaic is the first order skip it during further mosaic
   } else {
-    start <- 1 # if base mosaic is the mosaic of a prio sensor process all of this sensor
+    start <- 1 # if base mosaic is the mosaic of a previous prio sensor process all of the current sensor
   }
-  
   # if the base mosaics contains already all available records
-  start <- ifelse(start > le_collection, le_collection,start)
-
-  # aggregate raster adjusted to aoi area size in order to speed up process
-  names <- names(base_records)
-  base_records <- .aggr_rasters(base_records, names, aoi=aoi, dir_out=tmp_dir)
-  names(base_records) <- names
-  # this base mosaic will be updated with each added record after check if valid cover is increased
-  base_mos_path <- file.path(tmp_dir, "base_mosaic_tmp.tif")
-  base_mos <- .select_bridge_mosaic(base_records, aoi, base_mos_path)
-  if (!inherits(base_mos, r)) start <- 1
+  start <- ifelse(start > le_collection, le_collection, start)
+  base_mos_is_new <- !file.exists(base_mos_path)
+  if (base_mos_is_new) {
+    # aggregate raster adjusted to aoi area size in order to speed up process
+    # calculate base mosaic if it has not been calculated before (previous product)
+    names <- names(base_records)
+    base_records <- .aggr_rasters(base_records, names, aoi=aoi, dir_out=tmp_dir)
+    names(base_records) <- names
+    # this base mosaic will be updated with each added record after check if valid cover is increased
+    base_mos <- .select_bridge_mosaic(base_records, aoi, base_mos_path)
+    rm(base_mos)
+    if (!inherits(base_mos, r)) start <- 1
+  }
   # cleanup
   .delete_tmp_files(tmp_dir) # delete temp raster .grd files in r tmp
-  rm(base_mos)
   base_coverage <- -1000
   n_pixel_aoi <- .calc_aoi_corr_vals(aoi, raster(base_records[1])) # correction values for coverage calc
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
+  not_more_than_base <- le_collection == length(base_records) # base mos includes all available records
   for (i in start:le_collection) {
 
     x <- collection[i] # current cloud mask
     base_mos <- raster(base_mos_path) # current base mosaic
+
+    # if there are not more records than in base mosaic
+    # and the base mosaic was newly created (not by previous product):
+    # check if base mosaic exceeds min_improvement from 0 to some values
+    if (base_mos_is_new) {
+      cov_init <- 0 # because it was newly created, coverage must have been 0
+      cov_aft <- .calc_aoi_coverage(base_mos, aoi, n_pixel_aoi)
+      add_them <- .select_exceeds_improvement(min_improvement, cov_init, cov_aft)
+      if (add_them) {
+        base_coverage <- cov_aft
+      } else {
+        # base mosaic does not exceed min_improvement: delete base_mos and return NULL base_records
+        # in this case there cannot be other records strongly enough improving coverage after base records
+        # because base records already include the best on all tiles
+        if (file.exists(base_mos_path)) unlink(base_mos_path)
+        return(NULL) # will be caught in select_process()
+      }
+    }
     
+    # print coverage of base mosaic
     if (i == start) {
       is_last_record <- i == le_collection
-      base_coverage <- .raster_percent(base_mos, mode=mode_aoi, aoi=aoi, n_pixel_aoi)
+      if (base_coverage == -1000) {
+        base_coverage <- .calc_aoi_coverage(base_mos, aoi, n_pixel_aoi)
+      }
       base_coverage_seq <- 0:base_coverage
       last_base <- i - 1
       cov_seq <- split(base_coverage_seq, 
@@ -231,6 +255,9 @@
         .select_out_cov(tail(cov_out, n=1), index, le_collection, curr_sensor)
       }
     }
+    
+    # if base records includes all available records and add_them was FALSE above: return
+    if (not_more_than_base) return(selected(base_records, cov_aft, records))
     
     name_x <- names(x)
     # before calculating the next mosaic, 
@@ -245,22 +272,22 @@
     aoi_subset <- .check_crs(aoi_subset)
     aoi_union <- st_union(aoi) # ensure it's a single feature
     aoi_subset <- suppressMessages(st_intersection(aoi_subset, aoi_union)) # get intersection of tile and aoi
-    cov_init <- .raster_percent(curr_base_mos_crop, mode=mode_aoi, aoi=aoi_subset, n_pixel_aoi)
+    cov_init <- .calc_aoi_coverage(curr_base_mos_crop, aoi_subset, n_pixel_aoi)
 
     if (round(cov_init) == 99) {
       add_it <- FALSE
     } else {
       crop_p <- file.path(tmp_dir, TMP_CROP)
       curr_mos_tmp_p <- file.path(tmp_dir, TMP_CROP_MOS)
-      writeRaster(curr_base_mos_crop,crop_p,overwrite=T,datatype=dataType(base_mos))
+      writeRaster(curr_base_mos_crop, crop_p, overwrite=T, datatype=dataType(base_mos))
       curr_mos_tmp <- .select_bridge_mosaic(c(crop_p, x), aoi, curr_mos_tmp_p) # in this tile add next_record
       
       if (inherits(curr_mos_tmp, r)) {   
-        cov_aft <- .raster_percent(curr_mos_tmp, mode=mode_aoi,aoi=aoi_subset) # check new coverage
+        cov_aft <- .calc_aoi_coverage(curr_mos_tmp, aoi_subset) # check new coverage
         # cleanup
         .delete_tmp_files(tmp_dir)
         unlink(curr_mos_tmp_p)
-        rm(next_record,curr_base_mos_crop,curr_mos_tmp,base_mos)
+        rm(next_record, curr_base_mos_crop, curr_mos_tmp, base_mos)
         
         # calculate if valid coverage in whole aoi is improved > min_improvement 
         # when adding the record to the tile area
@@ -276,10 +303,10 @@
     
     if (add_it) {
       save_str <- TMP_BASE_MOS
-      curr <- paste0(save_str,i, ".tif")
+      curr <- paste0(save_str, i, ".tif")
       base_mos_path_tmp <- file.path(tmp_dir,curr)
-      base_records <- c(base_records, x) # add save path of current mosaic
-      base_mos <- .select_bridge_mosaic(base_records,aoi,base_mos_path_tmp) # mosaic with added record
+      base_records <- c(base_records, x) # add save path of current
+      base_mos <- .select_bridge_mosaic(base_records, aoi, base_mos_path_tmp) # mosaic with added record
       if (inherits(base_mos, r)) {
         # cleanup
         rm(base_mos)
@@ -308,10 +335,7 @@
   out("\n") # get out of the coverage % line
   
   # return ids of selected records and percentage of valid pixels of final mosaic
-  selected <- list(ids=names(base_records),
-                   cMask_paths=records[which(records[[identifier]] %in% names(base_records)),
-                                       cloud_mask_col],
-                   valid_pixels=base_coverage)
+  selected <- selected(names(base_records), base_coverage, records)
   
   if (delete_files) {
     .tmp_dir(dir_out, 2, TRUE, tmp_dir_orig)

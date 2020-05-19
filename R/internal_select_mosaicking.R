@@ -151,7 +151,10 @@
 #' @param identifier numeric indicating a unique identifier in the records data.frame.
 #' @param delete_files logical TRUE if all files in tmp_dir shall be deleted at the end of the call.
 #' If it is a selection for multiple sensors this should be FALSE as long there is a next sensor following.
-#' @return selected list of [[1]] character ids of selected records, [[2]] percentage of valid pixels in mosaic.
+#' @return selected list of 
+#' [[1]] character ids of selected records, 
+#' [[2]] character paths to cloud masks, 
+#' [[3]] percentage of valid pixels in mosaic.
 #' Side effect: creates a tmp_dir, writes into it, deletes tmp_dir with all files.
 #' @importFrom raster minValue maxValue writeRaster raster crs crs<- dataType intersect
 #' @importFrom sf st_union st_intersection st_as_sfc st_bbox
@@ -257,7 +260,7 @@
     }
     
     # if base records includes all available records and add_them was FALSE above: return
-    if (not_more_than_base) return(selected(base_records, cov_aft, records))
+    if (not_more_than_base && base_mos_is_new) return(selected(base_records, base_coverage, records))
     
     name_x <- names(x)
     # before calculating the next mosaic, 

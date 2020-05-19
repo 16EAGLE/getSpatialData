@@ -1,7 +1,7 @@
 #' check logins
 #'
 #' @param records
-#'
+#' 
 #' @keywords internal
 #' @noRd
 .check_login <- function(services = NULL, records = NULL, verbose = F){
@@ -240,7 +240,6 @@
         out(paste0("You are not logged in to ",
                    ifelse(service=="usgs","USGS ERS","Copernicus Hub")," (anymore). Please log in first using login_CopHub()."),3)
       }
-      
     }
   }
   

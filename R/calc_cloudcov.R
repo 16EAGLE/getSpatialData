@@ -227,7 +227,6 @@ calc_cloudcov <- function(records, max_deviation = 2,
       }
       
       if (inherits(record_preview, ERROR())) {
-        .check_http_error(record_preview,record,username,password,verbose=v)
         record_preview <- tryCatch({
           get_previews(record, dir_out = dir_out, verbose = F)
         },

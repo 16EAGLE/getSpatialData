@@ -44,6 +44,7 @@ check_availability <- function(records, verbose = TRUE){
     
     if(any(is.na(records$gSD.order_id))){
       
+      out("Investigating matching ESPA orders in the past...")
       # get all order ids of user
       order_ids <- content(gSD.get(paste0(getOption("gSD.api")$espa, "/list-orders"), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
       
@@ -74,6 +75,7 @@ check_availability <- function(records, verbose = TRUE){
         if(any(status[status != "complete"])) status[status != "complete"] <- "FALSE"
         status <- gsub("complete", "TRUE", status)
         records$download_available[!is.na(records$gSD.order_id)] <- as.logical(status)
+        if(any(as.logical(status))) out("--> Found matching ESPA orders still available for download.")
       }
     }
     records$order_id <- records$gSD.order_id

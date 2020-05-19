@@ -2431,7 +2431,7 @@ quiet <- function(expr){
           strsplit(y,  '\"')[[1]][2]
         }, USE.NAMES = F)))
       } else{
-        records$gSD.espa_item[[1]]$product_dload_url
+        x[["gSD.espa_item"]][["product_dload_url"]]
       }
       # MODIS LAADS
     } else if(x$product_group == "MODIS"){

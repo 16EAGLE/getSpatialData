@@ -8,6 +8,21 @@
 #' @author Henrik Fisser, 2019
 #' ---------------------------------------------------------------------
 
+#' creates list with selected elements
+#' @param record_ids character vector of selected record ids
+#' @param base_coverage numeric specifies the percentage coverage of valid pixels in aoi
+#' @param records sf data.frame
+#' @return selected list
+#' @keywords internal
+#' @noRd
+selected <- function(record_ids, base_coverage, records) {
+  selected <- list(ids=record_ids,
+                   cMask_paths=records[which(records[[name_record_id()]] %in% names(record_ids)),
+                                       name_cloud_mask_file()],
+                   valid_pixels=base_coverage)
+  return(selected)
+}
+
 #' select main process
 #' @param records data.frame.
 #' @param aoi aoi.
@@ -246,7 +261,7 @@
         if ((selected$valid_pixels < satisfaction_value) && has_next) .select_next_product()
         
         # save values of selected
-        base_records <- c(base_records, selected$cMask_paths) # for base mosaic for selection from next sensor
+        base_records <- c(base_records, selected$cMask_paths) # for base mosaic -> selection from next sensor
         ids <- unique(c(ids, selected$ids)) # ids of selected records
         names(base_records) <- ids
         valid_pixels <- selected$valid_pixels # percentage of valid pixels in aoi

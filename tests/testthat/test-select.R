@@ -21,14 +21,16 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
   min_distance <- 5
   n_timestamps <- 3
   max_cloudcov_tile <- 80
-  records <- read_records(construct_filepath(dir_records, sensor, PREFIX$cmasks))
+  records_read <- read_records(construct_filepath(dir_records, sensor, PREFIX$cmasks))
+
+  # calculate cloud masks
+  records <- calc_cloudcov(records_read, aoi = aoi_test, dir_out = tt$tmp)
   
   for (mode in modes) {
     is_unitemporal <- grepl("unitemporal", mode)
     is_bitemporal <- grepl("bitemporal", mode)
     is_timeseries <- grepl("timeseries", mode)
     if (is_unitemporal) {
-      prio_products <- c(SENTINEL2, LANDSAT, SENTINEL3)
       records_unitemporal <- expect_is(select_unitemporal(records,
                                                           max_cloudcov_tile = max_cloudcov_tile,
                                                           max_sub_period = 25,

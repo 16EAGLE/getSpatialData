@@ -1,8 +1,8 @@
 Package: getSpatialData
 Type: Package
 Title: Get different kinds of freely available spatial datasets
-Version: 0.1.0
-Date: 2019-08-13
+Version: 0.2.0
+Date: 2020-05-19
 Depends: R (>= 3.5)
 Authors@R: c(
   person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de", role = c("aut", "cre")),
@@ -27,12 +27,12 @@ Imports:
   RStoolbox,
   ggplot2,
   cowplot,
-  L1pack,
   processx,
   stats,
   methods,
   readr,
-  pbapply
+  pbapply,
+  R.utils
 RoxygenNote: 7.1.0
 Suggests: 
   testthat

@@ -71,9 +71,19 @@ reference:
 - title: Aoi cloud cover
   desc: Calculate cloud cover of Sentinel, Landsat or MODIS within an aoi (pre-download)
   contents:
-  - calcSentinel_aoi_cloudcov
-  - calcLandsat_aoi_cloudcov
-  - calcMODIS_aoi_cloudcov
+  - calc_cloudcov
+  - get_cloudcov_supported
+- title: Records selection
+  desc: Select records automatically according to temporal needs and cloud cover
+  - select_unitemporal
+  - select_bitemporal
+  - select_timeseries
+  - get_select_supported
+- title: records I/O
+  desc: Write and read records
+  contents:
+  - write_records
+  - read_records
 - title: Preprocessing
   desc: Data preparation and preprocessing
   contents:

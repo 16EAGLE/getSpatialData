@@ -4,7 +4,14 @@
 \alias{get_previews}
 \title{Get previews of records}
 \usage{
-get_previews(records, dir_out = NULL, force = FALSE, ..., verbose = TRUE)
+get_previews(
+  records,
+  dir_out = NULL,
+  force = FALSE,
+  as_sf = TRUE,
+  ...,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
@@ -12,6 +19,8 @@ get_previews(records, dir_out = NULL, force = FALSE, ..., verbose = TRUE)
 \item{dir_out}{character, a directory, to which the downloaded file(s) should be saved. By default, these are saved to the archive directory defined with \code{set_archive}.}
 
 \item{force}{logical, whether to force download of files already existing or not.}
+
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{

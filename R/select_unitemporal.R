@@ -2,33 +2,14 @@
 #' 
 #' @description Selection is done according to aoi cloud cover (in case of optical data) 
 #' and temporal characteristics. Both optical and SAR records are supported as well as
-#' combined selection for different sensors across systems and data providers. 
+#' combined selection for different products across systems and data providers. 
 #' 
-#' @details For running the selection you have to process \link{calc_cloudcov} first.
+#' @inherit select_timeseries details
 #' 
-#' @param records data.frame as returned by \link{calc_cloudcov}, either complete or subsetted but with all columns.
-#' Records will be selected from these records.
-#' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) 
-#' polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) 
-#' and at least three rows (each row representing one corner coordinate). 
-#' If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. 
-#' Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. 
-#' If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
-#' @param min_improvement numeric the minimum increase of valid pixels percentage in mosaic when adding record.
-#' The value is the percentage of not yet covered area that shall be covered additionally if adding the record. This protects from
-#' adding masses of records that improve coverage by only a few pixels. Default is 5.
-#' @param max_sub_period numeric maximum number of days to use for creating a mosaic per timestamp if mosaicking is needed. 
-#' This determines how temporally close together the selected records per timestamp are (if mosaicking is needed).
-#' @param max_cloudcov_tile numeric maximum aoi cloud cover (\%) a selected tile is allowed to have. 
-#' The assumption is that a high cloud cover in scene makes it unlikely that theoretically non-cloudy pixels are free from haze
-#' or shadows. Default is 80. 
-#' @param prio_sensors character vector optioal. Sensor names ordered by priority. Selection is done in the order
-#' of prio_sensors starting with the first sensor. Following sensors are included consecutively in case
-#' selection was not fullfilled by previous sensor.
-#' @param dir_out character directory where to save the cloud mask mosaics and the RGB preview mosaic.
-#' Note: Below this dir_out a tmp_dir will be created where temporary files will be saved during selection.This folder is
-#' deleted before returning \code{records}.
-#' @param verbose	logical, whether to display details on the function's progress or output on the console.
+#' @note This functionality creates a 'tmp' folder below \code{dir_out} where
+#' temporary files are saved. This folder will be deleted at the end of the function call.
+#' 
+#' @inheritParams select_timeseries
 #' 
 #' @return \code{records} data.frame holding three additional columns:
 #' \enumerate{
@@ -40,41 +21,45 @@
 #' @author Henrik Fisser
 #' 
 #' @export
-select_unitemporal <- function(records, aoi,
-                               min_improvement = 5, max_sub_period, max_cloudcov_tile = 80, 
-                               prio_sensors = NULL,
-                               dir_out = NULL, verbose = TRUE) {
-  
-  .check_records(records,.cloudcov_colnames())
+select_unitemporal <- function(records,
+                               max_sub_period,
+                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
+                               prio_products = c(),
+                               aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
+  #### Pre-checks
+  # columns are checked in .select_checks() due to SAR
+  .check_as_sf(as_sf)
+  .check_verbose(verbose)
+  records <- .check_records(records, col.names = NULL, as_df = TRUE)
+  aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   
   #### Prep
   num_timestamps <- 1
-  prep <- .select_prep_wrap(records,num_timestamps,"UT")
+  prep <- .select_prep_wrap(records, num_timestamps, "UT")
   records <- prep$records
-  par <- prep$par
-  has_SAR <- prep$has_SAR
-  timestamp <- 1
-  records[["sub_period"]] <- timestamp
+  params <- prep$params
   
-  #### Checks
-  .select_checks(records,aoi,prio_sensors,par,dir_out,verbose)
+  #### Main checks
+  .select_checks(records, aoi, params$period, num_timestamps, prio_products, params, dir_out, verbose)
   
   #### Main Process
-  .select_start_info(mode="uni-temporal",par$sep)
+  .select_start_info(mode="Unitemporal", params$sep)
   records <- .select_main(records,
                           aoi,
-                          has_SAR,
+                          prep$has_SAR,
                           num_timestamps,
                           min_distance=NULL,
                           min_improvement,
                           max_sub_period,
                           max_cloudcov_tile,
-                          prio_sensors,
+                          satisfaction_value,
+                          prio_products,
                           dir_out,
-                          par,
+                          params,
                           cols_initial)
   
+  records <- .check_records(records, as_df = !as_sf)
   return(records)
   
 }

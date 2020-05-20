@@ -131,7 +131,7 @@ cloud_masks_test_calc_cloudcov <- function(records_cc) {
     expect_true(is.na(aoi_cloudcov))
   } else {
     expect_true(is_tif || is_none) # can be NONE
-    cloud_mask <- getSpatialData:::.read_brick(cloud_mask_file)
+    cloud_mask <- .read_brick(cloud_mask_file)
     values <- values(cloud_mask)
     values <- values[!is.na(values)]
     expect_true(!is.null(values))
@@ -193,8 +193,8 @@ record <- set_null_preview_cols(record_cloud_mask)
 record_cloud_mask <- getSpatialData:::calc_cloudcov(record, aoi = aoi_test, dir_out = tt$tmp)
 unlink(record_cloud_mask$cloud_mask_file)
 record_preview <- set_null_cloudcov_cols(record_cloud_mask)
-preview <- getSpatialData:::.read_brick(record_preview$preview_file)
-input_preview1 <- getSpatialData:::.subset_brick(preview) # blue red band preview (should not work)
+preview <- .read_brick(record_preview$preview_file)
+input_preview1 <- .subset_brick(preview) # blue red band preview (should not work)
 expect_error(getSpatialData:::calc_hot_cloudcov(record_preview, input_preview1, 
                                                 aoi = aoi_test, dir_out = tt$tmp))
 finish_dir(tt$tmp)

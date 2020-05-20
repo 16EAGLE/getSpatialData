@@ -51,7 +51,7 @@ login_CopHub <- function(username = NULL, password = NULL, n_retry = 3, verbose 
   }
   
   # verify credentials
-  .retry(gSD.get, url = paste0(getOption("gSD.api")$dhus, "odata/v1/"), username = username, password = password, value = F,
+  .retry(.get, url = paste0(getOption("gSD.api")$dhus, "odata/v1/"), username = username, password = password, value = F,
          fail = out("Login failed. Please retry later or call services_avail() to check if ESA Copernicus services are currently unavailable.", type=3),
          n = n_retry)
   
@@ -119,8 +119,8 @@ services <- function(value = F, verbose = T){
   urls$aws.l8 <- gsub("c1/L8/", "", urls$aws.l8)
   
   # get service status (login for ESPA)
-  response <- lapply(urls, function(x) try(gSD.get(x), silent = T))
-  if(isTRUE(getOption("gSD.usgs_set"))) response$espa <- try(gSD.get(urls$espa, username = getOption("gSD.usgs_user"), password = getOption("gSD.usgs_pass")), silent = T)
+  response <- lapply(urls, function(x) try(.get(x), silent = T))
+  if(isTRUE(getOption("gSD.usgs_set"))) response$espa <- try(.get(urls$espa, username = getOption("gSD.usgs_user"), password = getOption("gSD.usgs_pass")), silent = T)
   
   df <- do.call(rbind, lapply(response, function(x) if(!inherits(x, "try-error")) rbind.data.frame(http_status(x), stringsAsFactors = F) else NA))
   df$code <- sapply(response, function(y) if(!inherits(y, "try-error")) y$status_code else NA)

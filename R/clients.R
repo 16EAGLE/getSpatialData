@@ -56,7 +56,7 @@
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
     
-    query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], product_name = product_name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
+    query <- .get(url = cop.url(ext.xy = aoi, url.root = cred[3], product_name = product_name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
     query.xml <- suppressMessages(xml_contents(as_xml_document(content(query, as = "text"))))
     query.list <- c(query.list, .lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
     
@@ -160,7 +160,7 @@
         x <- rbind.data.frame(x, stringsAsFactors = F)
         colnames(x) <- names
         
-        response <- try(gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = cred$username, password = cred$password), silent = T)
+        response <- try(.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = cred$username, password = cred$password), silent = T)
         if(inherits(response, "try-error")) response <- "l1" else{
           response <- if(all(names(content(response)) == "not_implemented")) "'l1'" else unlist(content(response)[[1]]$products) #paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
         }

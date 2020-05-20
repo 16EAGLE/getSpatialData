@@ -1,18 +1,18 @@
-#' ---------------------------------------------------------------------
-#' name: internal_select_sub
-#' description: The selection process is distinguished into a main selection
-#' and a sub selection process. These are functions that conduct the process of a
-#' sub selection. A sub refers to one timestamp. The sub selection consists
-#' of a temporal and a spatial selection. 
-#' The process receives a collection of possible records for a specific timestamp and
-#' its sub-period. This sub-period can still contradict the user parameter
-#' 'max_sub_period' (maximum number of records accepeted to compose one timestamp).
-#' In this case the sub selection process choses records that have to be dumped.
-#' This results in a new temporal sub-period covering fewer dates and agreeing
-#' with 'max_sub_period'. This temporal sub selection process is followed by
-#' the spatial sub selection process, which is done through internal_select_mosaicking.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select_sub
+# description: The selection process is distinguished into a main selection
+# and a sub selection process. These are functions that conduct the process of a
+# sub selection. A sub refers to one timestamp. The sub selection consists
+# of a temporal and a spatial selection. 
+# The process receives a collection of possible records for a specific timestamp and
+# its sub-period. This sub-period can still contradict the user parameter
+# 'max_sub_period' (maximum number of records accepeted to compose one timestamp).
+# In this case the sub selection process choses records that have to be dumped.
+# This results in a new temporal sub-period covering fewer dates and agreeing
+# with 'max_sub_period'. This temporal sub selection process is followed by
+# the spatial sub selection process, which is done through internal_select_mosaicking.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' calls the steps of a selection for a sub-period
 #' this includes enforcement of max_cloudcov_tile and max_sub_period
@@ -67,7 +67,6 @@
   
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
-    out(params$sep)
     out(paste0("Calculating selection of timestamp: ", ts), msg=T)
   }
   

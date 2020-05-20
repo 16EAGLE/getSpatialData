@@ -140,7 +140,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   table_sep <- "| "
   summary_df <- data.frame("| Timestamp" = paste0(table_sep, timestamps_seq),
                            "| Number records" = paste0(table_sep, n_records_vector),
-                           "| Cloud-free pixels" = paste0("| ", cov_bars, " ", round(coverage_vector, 2), " %"), 
+                           "|    Cloud-free pixels" = paste0("| ", cov_bars, " ", round(coverage_vector, 2), " %"), 
                            check.names = FALSE)
   out(summary_df)
 }
@@ -175,7 +175,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   
   summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, num_timestamps), placeholder, placeholder),
                            "| " = c("| Mean", "| Max", "| Min"),
-                           "  Overall cloud-free pixels" = paste0(three_spaces, bars, one_space, cov_metrics, " %"),
+                           "     Overall cloud-free pixels" = paste0(three_spaces, bars, one_space, cov_metrics, " %"),
                            check.names = FALSE)
   out(summary_df)
   out(sep)
@@ -318,7 +318,8 @@ With the given 'n_timestamps' these values disable creating a temporally consist
 #' @return nothing, print to console
 #' @keywords internal
 #' @noRd
-.select_completed_statement <- function(timestamp) {out(paste0("\nCompleted selection of timestamp: ", timestamp), msg=F)}
+.select_completed_statement <- function(timestamp) {out(paste0("Completed selection of timestamp: ", 
+                                                               timestamp, "\n", sep()), msg=F)}
 
 #' prints to console that selection proceeds to next product
 #' @return nothing, print to console

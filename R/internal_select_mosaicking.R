@@ -219,6 +219,7 @@
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   not_more_than_base <- le_collection == length(base_records) # base mos includes all available records
+  
   for (i in start:le_collection) {
 
     x <- collection[i] # current cloud mask
@@ -238,16 +239,14 @@
         # in this case there cannot be other records strongly enough improving coverage after base records
         # because base records already include the best on all tiles
         if (file.exists(base_mos_path)) unlink(base_mos_path)
-        return(NULL) # will be caught in select_process()
+        return(selected(NULL, 0, records)) # will be caught in select_process()
       }
     }
     
     # print coverage of base mosaic
     if (i == start) {
       is_last_record <- i == le_collection
-      if (base_coverage == -1000) {
-        base_coverage <- .calc_aoi_coverage(base_mos, aoi, n_pixel_aoi)
-      }
+      base_coverage <- .calc_aoi_coverage(base_mos, aoi, n_pixel_aoi)
       base_coverage_seq <- 0:base_coverage
       last_base <- i - 1
       cov_seq <- split(base_coverage_seq, 
@@ -260,7 +259,7 @@
     }
     
     # if base records includes all available records and add_them was FALSE above: return
-    if (not_more_than_base && base_mos_is_new) return(selected(base_records, base_coverage, records))
+    if (not_more_than_base && base_mos_is_new) break
     
     name_x <- names(x)
     # before calculating the next mosaic, 
@@ -335,7 +334,7 @@
       break
     }
   }
-  out("\n") # get out of the coverage % line
+  out("\n") # leave coverage % line
   
   # return ids of selected records and percentage of valid pixels of final mosaic
   selected <- selected(names(base_records), base_coverage, records)

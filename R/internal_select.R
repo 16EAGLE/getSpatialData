@@ -1,12 +1,11 @@
-#' ---------------------------------------------------------------------
-#' @name internal_select
-#' @description This document is the main backend of select functionalities. 
-#' @details It contains select_ specific methods. Rather generic methods that
-#' might be useful for other package-internal functionalities are situated
-#' in internal. Checks are in checks. The frontends of select_ are located in dedicated select_ functions.
-#' @keywords internal
-#' @author Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select
+# description: This document is the main backend of select functionalities. 
+# details: It contains select_ specific methods. Rather generic methods that
+# might be useful for other package-internal functionalities are situated
+# in internal. Checks are in checks. The frontends of select_ are located in dedicated select_ functions.
+# author Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' creates list with selected elements
 #' @param record_ids character vector of selected record ids
@@ -63,7 +62,7 @@ selected <- function(record_ids, base_coverage, records) {
     return(records)
   }
   
-  #### Start Process for optical data selection
+  # start Process of optical data selection
   selected <- list() # list to be filled by all selected 'record_id' ids, the valid coverage percentage per timestamp and the cloud mask paths
   sub_periods <- unique(na.omit(records[[name_sub_period()]]))
   if (!all(1:num_timestamps %in% sub_periods)) sub_periods <- 1:num_timestamps
@@ -73,7 +72,7 @@ selected <- function(record_ids, base_coverage, records) {
     given_products <- given_products[which(given_products != name_product_sentinel1())]
     if (length(given_products) > 1) out("No 'prio_products' specified, generating random product priorities", msg=T)
     prio_sensors <- .generate_random_prio_prods(records)
-    out(paste0("Random priority product order: ", paste(prio_sensors, collapse=", ")), msg=F)
+    out(paste0("Random priority product order: ", paste(prio_sensors, collapse=", "), "\n", sep()), msg=F)
   }
   
   # select per sub-period (=timestamp) best mosaic. The sub-periods are adjusted dynamically according to min_distance, max_sub_period
@@ -123,7 +122,6 @@ selected <- function(record_ids, base_coverage, records) {
   #2 path to the RGB mosaic tif where record is included
   #3 the timestamp number for which the record is selected
   sep <- params$sep
-  out(sep, msg=F)
   out("Writing mosaics", msg=T)
   out(sep, msg=F)
   # create final mosaics for each timestamp and summary message per timestamp
@@ -248,9 +246,7 @@ selected <- function(record_ids, base_coverage, records) {
     }
     
     selection_failed <- !inherits(selected, LIST())
-    if (selection_failed) {
-      .select_catch_empty_records(data.frame(), timestamp, s)
-    } else {
+    if (!selection_failed) {
       if (single_prio_product && !SAR_given) {
         # if only one optical sensor is given
         .select_completed_statement(timestamp)
@@ -275,7 +271,7 @@ selected <- function(record_ids, base_coverage, records) {
   }
   
   # if warning has not been thrown before do it
-  if (!selection_failed && length(ids) == 0) .select_catch_empty_records(data.frame(), timestamp, s)
+  if (selection_failed || length(ids) == 0) .select_catch_empty_records(data.frame(), timestamp, s)
   
   selected <- list(ids=ids,
                    cMask_paths=base_records,
@@ -339,7 +335,6 @@ selected <- function(record_ids, base_coverage, records) {
       clean_products <- append(clean_products, product)
     }
   }
-  
   prio_products <- sample(clean_products, length(clean_products))
   prio_products[which(grepl(LANDSAT_GROUP, prio_products))] <- LANDSAT_GROUP
   prio_products[which(grepl(MODIS_GROUP, prio_products))] <- MODIS_GROUP

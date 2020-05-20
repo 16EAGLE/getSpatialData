@@ -328,7 +328,7 @@
   n_spaces <- 4
   one_space <- " "
   spaces1 <- paste(rep(one_space, times = n_spaces), collapse="")
-  spaces2 <- paste(rep(one_space, times=nchar(sel_num_timestamps) + 2 - nchar(s) + n_spaces), collapse="")
+  spaces2 <- paste(rep(one_space, times=nchar(sel_num_timestamps) + 3 - nchar(s) + n_spaces), collapse="")
   out(paste0(sel_num_timestamps, ": ", spaces1, num_timestamps, s, spaces2, paste(sensors, collapse=", ")))
   for (sensor in sensors) {
     r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
@@ -338,7 +338,7 @@
     if (sub_period < r && not_unitemporal) {
       out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r," days). Decrease 'num_timestamps'"), 3)
     } else if (sub_period == r && not_unitemporal) {
-      out(paste0(info,") results in coverage frequency equal to revisit time (",r," days) of product '", 
+      out(paste0(info,") results in coverage frequency equal to revisit time (", r, " days) of product '", 
                  sensor, "'"), 2)
     }
   }

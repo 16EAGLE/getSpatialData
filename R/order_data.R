@@ -79,7 +79,7 @@ order_data <- function(records, wait_for_order = FALSE, ..., verbose = TRUE){
           if(!inherits(request_head, "try-error")){
             if(request_head$status_code == 200) x$ordered <- TRUE
             if(request_head$status_code == 202){
-              request <- try(gSD.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+              request <- try(.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
               x$ordered <- TRUE
             }
           }

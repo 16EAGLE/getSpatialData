@@ -50,173 +50,6 @@
   
 }
 
-#' first character to upper
-#'
-#' @param x character
-#' @keywords internal
-#' @noRd
-
-firstup <- function(x){
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  return(x)
-}
-
-#' check if url
-#' @param url a url
-#' @keywords internal
-#' @noRd
-is.url <- function(url) grepl("www.|http:|https:", url)
-
-#' Simplifies check of variables being FALSE
-#'
-#' @param evaluate variable or expression to be evaluated
-#'
-#' @keywords internal
-#' @noRd
-is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
-
-#' Simplifies check of variables being TRUE
-#'
-#' @param evaluate variable or expression to be evaluated
-#'
-#' @keywords internal
-#' @noRd
-is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
-
-
-#' gSD.get
-#' @param url url
-#' @param username user
-#' @param password pass
-#' @param dir.file output file path
-#' @param prog show or not show progress console
-#' 
-#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress authenticate write_disk
-#' 
-#' @keywords internal
-#' @noRd
-gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
-
-  x <- NULL # needed due to checks
-  get.str <-"x <- try(GET(url"
-  if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
-  if(!is.null(dir.file)) get.str <- paste0(get.str, ", write_disk(dir.file)")
-  if(isTRUE(prog)) get.str <- paste0(get.str, ", progress()")
-  get.str <- paste0(get.str, "), silent = T)")
-  eval(parse(text = get.str))
-
-  #if(inherits(x, "try-error")) out(paste0("Could not process request: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
-  if(!inherits(x, "try-error")){
-    stop_for_status(x, "process request")
-    warn_for_status(x)
-    #message_for_status(x); cat("\n")
-  }
-  return(x)
-}
-
-#' gSD.post
-#' @param url url
-#' @param username user
-#' @param password pass
-#' @param body body
-#' 
-#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
-#' 
-#' @keywords internal
-#' @noRd
-gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
-
-  x <- NULL # needed due to checks
-  post.str <-"x <- POST(url"
-  if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
-  post.str <- paste0(post.str, ", body = body)")
-  #eval(parse(text = post.str))
-
-  if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  #message_for_status(x); cat("\n")}
-  return(x)
-}
-
-#' gSD.download
-#' @param x file record
-#' @param names column names of record
-#' @param prog logical
-#' @param force logical
-#' @importFrom tools md5sum
-#' @keywords internal
-#' @noRd
-gSD.download <- function(url, file, name, head, type = "dataset", md5 = NA, prog = T, force = F, ...){
-  
-  if(file.exists(file) & !isTRUE(force)){
-    #out(paste0("\r", head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."), flush = T)
-    out(paste0(head, "Skipping download of ", type, " '", name, "', since '", file, "' already exists..."))
-    return(TRUE)
-  } else{
-    
-    out(paste0(head, "Downloading ", type, " '", name, "' to '", file, "'..."))
-    file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-    response <- try(gSD.get(url, dir.file = file.tmp, prog = prog, ...), silent = T)
-    
-    if(inherits(response, "try-error")){
-      if(grepl("aborted", as.character(attributes(response)$condition))) out("Operation was aborted by an application callback.", type = 3)
-      out(paste0(head, "Download of ", type, " '", name, "' failed:", gsub("\n", "", tail(strsplit(response[1], "\n ")[[1]], n = 1))), type = 2)
-      file.remove(file.tmp)
-      return(FALSE)
-    }
-    
-    if(!is.na(md5)){
-      if(!as.character(md5sum(file.tmp)) == tolower(md5)){
-        out(paste0(head, "Download of ", type, " '", name, "' failed: MD5 check sums do not match."), type = 2)
-        file.remove(file.tmp)
-        return(FALSE)
-      }
-    }
-  }
-  
-  file.rename(file.tmp, file)
-  return(TRUE)
-}
-
-#' gSD.retry
-#' @param files files data.frame
-#' @param ... additional arguments
-#' @param FUN function to retry
-#' @param n.retry How many retries?
-#' @importFrom tools md5sum
-#' @keywords internal
-#' @noRd
-gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
-  
-  i <- n
-  retry <- T
-  out(paste0("[Attempt ", toString((n-i)+1), "/", toString(n), "] Attempting downloads..."))
-  
-  while(isTRUE(retry) & i > 0){
-    
-    # download per record
-    records$download_success <- apply(records, MARGIN = 1, function(x){
-      gSD.download(url = x$dataset_url, file = x$dataset_file, name = x$record_id, head = x$gSD.head, type = "dataset", prog = T)
-    })
-    records[which(records$download_success == TRUE & is.na(records$download_attempts)), "download_attempts"] <- (n-i)+1
-    
-    # retry download
-    if(all(records$download_success == TRUE)){
-      retry <- F
-    } else{
-      
-      records <- records[records$download_success == F,]
-      i <- i-1
-      
-      if(isTRUE(verbose)) out(paste0("[Attempt ", toString((n-i)+1), "/", toString(n), "] Reattempting downloads..."), msg = T)
-    }
-  }
-  
-  records$download_attempts[records$download_success == F] <- n
-  return(records)
-}
-
 #' column summary 
 #'
 #' @param records df
@@ -242,244 +75,6 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
     }
   }
   return(records)
-}
-
-#' get Copernicus Hub API url and credentials from user input
-#'
-#' @param x API keyword or URL
-#' @param p platform
-#' @param user user name
-#' @param pw password
-#' @keywords internal
-#' @noRd
-.CopHub_select <- function(x, p, user, pw){ #cophub_api
-  if(is.url(x)){
-    url <- x
-  } else{
-    if(x == "auto"){
-      x <- getOption("gSD.copnames")[getOption("gSD.copnames")$name == p, 2]
-    }
-    if(x == "dhus"){url <- getOption("gSD.api")$dhus}
-    if(x == "s5p"){
-      url <- getOption("gSD.api")$s5p
-      user <- "s5pguest"
-      pw <- "s5pguest"
-    }
-    if(x == "gnss"){
-      url <- getOption("gSD.api")$gnss
-      user <- "gnssguest"
-      pw <- "gnssguest"
-    }
-  }
-  return(c(user, pw, url, x))
-}
-
-
-#' get odata for uuid
-#'
-#' @param uuid one or multiple uuids
-#' @param cred return of .CopHub_select c(user, password, API ulr)
-#' @param field field to be checked
-#' @keywords internal
-#' @noRd
-.get_odata <- function(uuid, cred, field = ""){
-  lapply(uuid, function(x) content(gSD.get(paste0(cred[3], "/odata/v1/Products('", x, "')/", field),  cred[1], cred[2])))
-}
-
-#' get ERS API key from user input
-#'
-#' @param username username
-#' @param password password
-#' @keywords internal
-#' @importFrom httr POST content stop_for_status warn_for_status content_type
-#' @importFrom utils URLencode
-#' @noRd
-.ERS_login <- function(username, password, n_retry = 3){
-  x <- POST(url = paste0(getOption("gSD.api")$ee, "login"),
-            body = URLencode(paste0('jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}')),
-            content_type("application/x-www-form-urlencoded; charset=UTF-8"))
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  v <- content(x)$data
-  if(is.null(v)) out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)
-  return(v)
-}
-
-#' logout from ERS with API key
-#'
-#' @param api.key api.key
-#' @keywords internal
-#' @noRd
-.ERS_logout <- function(api.key){
-  x <- gSD.get(paste0(getOption("gSD.api")$ee, 'logout?jsonRequest={"apiKey":"', api.key, '"}'))
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  content(x)$data
-}
-
-#' get EE products
-#'
-#' @param api.key api.key
-#' @param wildcard wildcard
-#' @keywords internal
-#' @noRd
-.EE_ds <- function(api.key, wildcard = NULL){
-  q <- paste0(getOption("gSD.api")$ee, 'datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
-  if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
-  x <- gSD.get(q)
-  sapply(content(x)$data, function(y) y$datasetName, USE.NAMES = F)
-}
-
-
-#' query EE
-#'
-#' @param aoi aoi
-#' @param time_range time_range
-#' @param product_name name
-#' @param api.key api.key
-#' @param meta.fields meta.fields
-#'
-#' @importFrom sf st_bbox st_as_text
-#' @importFrom xml2 as_list
-#'
-#' @keywords internal
-#' @noRd
-.EE_query <- function(aoi, time_range, product_name, api.key, meta.fields = NULL){
-  
-  spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
-  temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
-  
-  out(paste0("Searching records for product name '", product_name, "'..."))
-  query <- lapply(product_name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
-  query.cont <- lapply(query, content)
-  if(all(c(length(product_name) == 1), query.cont[[1]]$error != "")){
-    out("No results could be obtained for this product, time range and AOI.", msg = T)
-  } else{
-    
-    query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
-    query.cont <- query.cont[query.use]
-    query.names <- product_name[query.use]
-    
-    query.results <- lapply(query.cont, function(x) x$data$results)
-    if(length(query.results) != 0){
-      
-      query.df <- unlist(mapply(y = query.results, n = query.names, function(y, n) lapply(y, function(x, ds_name = n){
-        x.names <- names(x)
-        x.char <- as.character(x)
-        
-        df <- rbind.data.frame(x.char, stringsAsFactors = F)
-        colnames(df) <- x.names
-        
-        # Make sf polygon filed from spatialFootprint
-        spf.sub <- grep("spatialFoot", x.names)
-        spf <- unlist(x[spf.sub])
-        spf <- as.numeric(spf[grep("coordinates", names(spf))])
-        df[,spf.sub] <- st_as_text(.check_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
-        
-        df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
-        colnames(df)[ncol(df)] <- "product"
-        return(df)
-      }), SIMPLIFY = F), recursive = F)
-      
-      ## Read out meta data
-      out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
-      meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
-      meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
-      meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
-        z <- try(y$metadataValue[[1]], silent = T)
-        if(inherits(z, "try-error")) NULL else z
-      }, USE.NAMES = F))
-      meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
-      
-      ## Define meta fields that are usefull for the query output
-      if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
-      meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
-      meta.df <- mapply(FUN = function(v, n, i){
-        x <- v[i]
-        x <- lapply(x, function(x) if(is.null(x)) "" else x)
-        x <- rbind.data.frame(x, stringsAsFactors = F)
-        colnames(x) <- gsub(" ", "", n[i])
-        return(x)
-      }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
-      
-      query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
-        ## apply meaningful order and replace startTime and endTime with meta outputs
-        x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
-        colnames(x)[1] <- colnames(q)[1]
-        return(x)
-      }, SIMPLIFY = F)
-      
-      return.names <- unique(unlist(lapply(query.df, colnames)))
-      return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names), stringsAsFactors = F)
-      return.df <-  do.call(rbind.data.frame, lapply(query.df, function(x, rn = return.names,  rdf = return.df){
-        rdf[1, match(colnames(x), rn)] <- x
-        return(rdf)
-      }))
-      return(return.df)
-    } else{
-      return(NULL)
-    }
-  }
-}
-
-
-#' convert MODIS product names # used????
-#'
-#' @param names names
-#' @keywords internal
-#' @noRd
-.convMODIS_names <- function(names){
-  sapply(names, function(x){
-    y <- strsplit(x, "_")[[1]]
-    y <- y[2:length(y)]
-    if(length(y) > 1) y <- paste0(y[1:(length(y)-1)], collapse = "_")
-    return(y)
-  }, USE.NAMES = F)
-}
-
-
-#' USGS ESPA ordering functon
-#'
-#' @param id id
-#' @param level level
-#' @param username username
-#' @param password password
-#' @param format format
-#' @keywords internal
-#' @importFrom httr content
-#' @noRd
-.ESPA_order <- function(id, level = "sr", username, password, format = "gtiff", verbose){
-  
-  ## check query and abort, if not available
-  out("Ordering requested items from ESPA...")
-  checked <- lapply(id , function(x, v = verbose){
-    r <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
-    if(names(content(r)) == "not_implemented") out(paste0("'", x, "': This ID is invalid, as it cannot be found in the ESPA database. Please remove it from input and reexecute."), type = 3)
-    list(x, r)
-  })
-  
-  ## group request by collection (single or multi order)
-  req.data <- lapply(checked, function(x) c(names(content(x[[2]])), x[[1]]))
-  coll <- sapply(req.data, function(x) x[[1]][[1]], USE.NAMES=F)
-  coll.uni <- unique(coll)
-  out(paste0("Collecting from ", toString(length(coll.uni)), " collection(s) [", paste0(coll.uni, collapse = ", "), "], resulting in ", toString(length(coll.uni)), " order(s)..."))
-  req.coll <- lapply(coll.uni, function(x, c = coll, rd = req.data) rd[which(c == x)])
-  
-  reqlevel <- sapply(strsplit(level, '[, ]+'), function(x) toString(paste0('\"', x, '\"')))
-  reqlevel <- paste0(reqlevel, collapse=",")
-  
-  ## build request
-  req.body <- lapply(req.coll, function(x, p = reqlevel, f = format){
-    i <- paste0(sapply(x, function(y) y[2], USE.NAMES = F), collapse = '", "')
-    paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": [', p, ']}, "format": "', f, '"}')
-  })
-  
-  ## order
-  order <- lapply(req.body, function(x, user = username, pass = password) gSD.post(url = paste0(getOption("gSD.api")$espa, "order/"), username = user, password = pass, body = x))
-  order.list <- sapply(order, function(x) content(x)[[1]], USE.NAMES = F)
-  out(paste0("Products '", paste0(id, collapse = "', '"), "' have been ordered successfully:"))
-  out(paste0("[level = '", level, "', format = '", format, "', order ID(s) '", paste0(order.list, collapse = "', '"), "']."))
-  return(order.list)
 }
 
 
@@ -537,160 +132,6 @@ gSD.retry <- function(records, n = 3, delay = 0, verbose = T){
   return(records)
 }
 
-#' On package startup
-#' @importFrom pbapply pboptions
-#' @keywords internal
-#' @noRd
-.onLoad <- function(libname, pkgname){
-  
-  pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
-  clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
-                                    c("summary", "product"), # place holder
-                                    c("title", "record_id"),
-                                    c("displayId", "record_id"),
-                                    c("uuid", "entity_id"),
-                                    c("entityId", "entity_id"),
-                                    c("summary", "summary"),
-                                    c("beginposition", "date_acquisition"),
-                                    c("acquisitionDate", "date_acquisition"),
-                                    c("beginposition", "start_time"),
-                                    c("StartTime", "start_time"),
-                                    c("AcquisitionStartDate", "start_time"),
-                                    c("endposition", "stop_time"),
-                                    c("StopTime", "stop_time"),
-                                    c("AcquisitionEndDate", "stop_time"),
-                                    c("ingestiondate", "date_ingestion"),
-                                    c("modifiedDate", "date_modified"),
-                                    c("creationdate", "date_creation"),
-                                    c("footprint", "footprint"),
-                                    c("tileid", "tile_id"),
-                                    c("WRSPath", "tile_number_horizontal"),
-                                    c("WRSRow", "tile_number_vertical"),
-                                    c("HorizontalTileNumber", "tile_number_horizontal"),
-                                    c("VerticalTileNumber", "tile_number_vertical"),
-                                    c("url.alt", "md5_url"),
-                                    c("browseUrl", "preview_url"),
-                                    c("url.icon", "preview_url"),
-                                    c("metadataUrl", "meta_url"),
-                                    c("fgdcMetadataUrl", "meta_url_fgdc"),
-                                    c("slicenumber", "slice_number"),
-                                    c("orbitnumber", "orbit_number"),
-                                    c("orbitdirection", "orbit_direction"),
-                                    c("lastorbitnumber", "lastorbit_number"),
-                                    c("relativeorbitnumber", "relativeorbit_number"),
-                                    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
-                                    c("passnumber", "pass_number"),
-                                    c("passdirection", "pass_direction"),
-                                    c("relorbitdir", "relativeorbit_direction"),
-                                    c("relpassnumber", "relativepass_number"),
-                                    c("relpassdirection", "relativepass_direction"),
-                                    c("lastorbitdirection", "lastorbit_direction"),
-                                    c("lastpassnumber", "lastpass_number"),
-                                    c("lastpassdirection", "lastpass_direction"),
-                                    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
-                                    c("lastrelpassnumber", "lastrelativepass_number"),
-                                    c("lastrelpassdirection", "lastrelativepass_direction"),
-                                    c("swathidentifier", "swath_id"),
-                                    c("producttype", "product_type"),
-                                    c("productclass", "product_class"),
-                                    c("productconsolidation", "product_consolidation"),
-                                    c("timeliness", "timeliness"),
-                                    c("platformname", "platform"),
-                                    c("platformidentifier", "platform_id"),
-                                    c("platformserialidentifier", "platform_serial"),
-                                    c("instrumentname", "sensor"),
-                                    c("instrumentshortname", "sensor_id"),
-                                    c("SensorIdentifier", "sensor_id"),
-                                    c("sensoroperationalmode", "sensor_mode"),
-                                    c("polarisationmode", "polarisation_mode"),
-                                    c("acquisitiontype", "aquistion_type"),
-                                    c("size", "size"),
-                                    c("is_gnss", "is_gnss"),
-                                    c("LandCloudCover", "cloudcov_land"),
-                                    c("SceneCloudCover", "cloudcov"),
-                                    c("cloudCover", "cloudcov"),
-                                    c("cloudcoverpercentage", "cloudcov"),
-                                    c("highprobacloudspercentage", "cloudcov_highprob"),
-                                    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
-                                    c("notvegetatedpercentage", "cloudcov_notvegetated"),
-                                    c("snowicepercentage", "snowice"),
-                                    c("unclassifiedpercentage", "unclassified"),
-                                    c("vegetationpercentage", "vegetation"),
-                                    c("waterpercentage", "water"),
-                                    c("processinglevel", "level"),
-                                    c("level", "level"),
-                                    c("AutoQualityFlag", "flag_autoquality"),
-                                    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
-                                    c("ScienceQualityFlag", "flag_sciencequality"),
-                                    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
-                                    c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
-  colnames(clients_dict) <- c("clients", "gSD")
-  
-  op <- options()
-  op.gSD <- list(
-    gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
-                   #s3 = 'https://scihub.copernicus.eu/s3/',
-                   s5p = 'https://s5phub.copernicus.eu/',
-                   gnss = 'https://scihub.copernicus.eu/gnss/',
-                   espa = 'https://espa.cr.usgs.gov/api/v1/',
-                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/',
-                   aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',
-                   aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
-                   laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
-    gSD.api.names = list(dhus = "ESA Copernicus Open Hub",
-                         #s3 = "ESA Copernicus S3 Hub",
-                         s5p = "ESA Copernicus S5P Hub",
-                         gnss = "ESA Copernicus GNSS Hub",
-                         espa = "USGS-EROS ESPA",
-                         ee = "USGS EarthExplorer",
-                         aws.l8 = "AWS Landsat 8",
-                         laads = "NASA DAAC LAADS"),
-    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
-                              api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
-    gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
-                       linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
-                       mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),
-    gSD.verbose = FALSE,
-    gSD.dhus_session = NULL,
-    gSD.dhus_user = FALSE,
-    gSD.dhus_pass = FALSE,
-    gSD.dhus_set = FALSE,
-    gSD.dhus_time = NULL,
-    gSD.usgs_user = FALSE,
-    gSD.usgs_pass = FALSE,
-    gSD.usgs_set = FALSE,
-    gSD.usgs_time = NULL,
-    gSD.usgs_refresh = 60, # minutes
-    gSD.usgs_apikey = FALSE,
-    gSD.ed_user = FALSE,
-    gSD.ed_pass = FALSE,
-    gSD.ed_set = FALSE,
-    gSD.ed_time = NULL,
-    gSD.ed_refresh = 60, # minutes
-    gSD.archive = FALSE,
-    gSD.archive_set = FALSE,
-    gSD.aoi = FALSE,
-    gSD.aoi_set = FALSE,
-    gSD.products = NULL,
-    gSD.clients_dict = clients_dict
-  )
-  toset <- !(names(op.gSD) %in% names(op))
-  if(any(toset)) options(op.gSD[toset])
-
-  ## allocate gdal on load
-  #gdalUtils::gdal_setInstallation(rescan = T)
-  
-  invisible()
-}
-
-#' On package unload (logouts)
-#' @keywords internal
-#' @noRd
-.onUnload <- function(libname, pkgname) {
-  
-  ## logout from USGS
-  if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
-}
 
 # -------------------------------------------------------------
 # data.frame utils
@@ -1029,23 +470,6 @@ rbind.different <- function(x) {
   
 }
 
-#' creates a character date column in the format "YYYY-MM-DD" for Sentinel records
-#' @param records data.frame.
-#' @param date_col_orig character name of the original date colum.
-#' @param date_col_name character name of the added date column.
-#' @return \code{records} data.frame with added column "date_clear".
-#' @keywords internal
-#' @noRd
-.extract_clear_date <- function(records, date_col_orig, date_col_name) {
-  
-  records[[date_col_name]] <- records[[date_col_orig]]
-  sent_recs <- which(records$product_group==name_product_group_sentinel())
-  for (i in sent_recs) {
-    records[i,date_col_name] <- as.character(substr(records[i,date_col_name],1,10))
-  }
-  return(records)
-  
-}
 
 # -------------------------------------------------------------
 # date utils
@@ -1302,55 +726,6 @@ rbind.different <- function(x) {
   return(crop(x, polygon))
 } 
 
-#' wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
-#' @param character absolute file_path
-#' @return RasterBrick
-#' @importFrom raster brick
-#' @keywords internal
-#' @noRd
-.read_brick <- function(file_path) {
-  return(brick(file_path))
-}
-
-#' wrapper for subsetting a raster brick to band 1 and band 3. For unit test.
-#' @param RasterBrick or RasterStack b
-#' @return RasterBrick with band 1 and band 3
-#' @importFrom raster brick
-#' @keywords internal
-#' @noRd
-.subset_brick <- function(b) {
-  return(brick(b[[1]], b[[3]]))
-}
-
-#' calculates the variance along z dimension
-#' @param RasterBrick or RasterStack
-#' @return RasterLayer variance along z dimension
-#' @keywords internal
-#' @noRd
-.calc_ndim_var <- function(array) {
-  ndim <- nlayers(array)
-  squared_sum <- array[[1]]^2
-  for (i in 2:ndim) {
-    squared_sum <- squared_sum + array[[i]]^2
-  }
-  sum <- array[[1]]
-  for (i in 2:ndim) {
-    sum <- sum + array[[i]]
-  }
-  var <- (squared_sum / (sum / ndim))^2
-  return(var)
-}
-
-#' calculates the standard deviation of an RGB raster stack at z dimension
-#' @param x RasterStack
-#' @return sd RasterLayer
-#' @keywords internal
-#' @noRd
-.ndim_sd <- function(x) {
-  xmean <- (x[[1]] + x[[2]] + x[[3]]) / 3
-  stdev <- sqrt(((preview[[1]] - xmean)^2 + (preview[[2]] - xmean)^2 + (preview[[3]] - xmean)^2) / 3)
-  return(stdev)
-}
 
 #' calculates the normalized difference of two rasters
 #' @param x RasterLayer
@@ -1397,22 +772,6 @@ rbind.different <- function(x) {
   return(NA_mask)
 }
 
-
-# -------------------------------------------------------------
-# vector utils
-# -------------------------------------------------------------
-
-#' wrapper for reading polygons file via sf::read_sf(). Util for unit tests.
-#' @param Character absolute file_path to file including extension (geojson or gpkg)
-#' @return sfc
-#' @importFrom sf read_sf st_zm st_sfc
-#' @keywords internal
-#' @noRd
-.read_polygons <- function(file_path) {
-  geom <- ifelse(endsWith(file_path, ".gpkg"), "geom", "geometry")
-  polygons <- st_sfc(st_zm(read_sf(file_path))[[geom]])
-  return(polygons)
-}
 
 # -------------------------------------------------------------
 # miscellaneous
@@ -1587,16 +946,6 @@ rbind.different <- function(x) {
   return(gsub(":", "_", gsub(" ", "_", as.character(Sys.time()))))
 }
 
-#' translate gSD CMR product names to CMR concept id
-#' @param products product name vector
-#' @return CMR concept ids
-#' @keywords internal
-#' @noRd
-.getCMR_id <- function(products = NULL){
-  srtm_names <- list("SRTM_global_3arc_V003" = "C204582034-LPDAAC_ECS",
-                     "SRTM_global_1arc_V001" = "C1000000240-LPDAAC_ECS")
-  if(is.null(products)) unlist(srtm_names) else unlist(srtm_names[products])
-}
 
 
 #' retry the evaluation of an expression n times, if it fails, evaluate another expression
@@ -1664,91 +1013,159 @@ rbind.different <- function(x) {
   if(isTRUE(verbose)) pbapply(X, MARGIN, FUN, ...) else apply(X, MARGIN, FUN, ...)
 }
 
-#' get dataset urls
-#' 
-#' @param records records data.frame
-#' @return character vector
-#' 
-#' @importFrom xml2 xml_children xml_contents
-#' @importFrom httr content http_error
-#' @noRd 
-.get_ds_urls <- function(records){
-  .apply(records, MARGIN = 1, function(x){
-    
-    # Sentinel Copernicus Hub
-    if(x$product_group == "Sentinel"){
-      paste0(unlist(x$gSD.cred)[3], "odata/v1/Products('", x$entity_id, "')/$value")
-      
-      # Landsat 8 Level 1A AWS
-    } else if(x$product_group == "Landsat"){
-      
-      if(x$level == "l1"){
-        # assemble index url
-        hv <- strsplit(x$record_id, "_")[[1]][3]
-        index_url <- paste0(getOption("gSD.api")$aws.l8, substr(hv, 1, 3), "/", substr(hv, 4, 6), "/", x$record_id, "/index.html")
-        
-        # get file urls
-        list(paste0(gsub("index.html", "", index_url), .sapply(as.character(xml_children(xml_children(xml_contents(content(gSD.get(index_url), encoding = "UTF-8"))[2])[4])), function(y){
-          strsplit(y,  '\"')[[1]][2]
-        }, USE.NAMES = F)))
-      } else{
-        x[["gSD.espa_item"]][["product_dload_url"]]
-      }
-      # MODIS LAADS
-    } else if(x$product_group == "MODIS"){
-      
-      # assemble file url
-      fn <- gsub("Entity ID: ", "", strsplit(x$summary, ", ")[[1]][1]) #positional
-      ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
-      url <- paste0(getOption("gSD.api")$laads, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
-                    "/", substr(ydoy, 5, nchar(ydoy)), "/", fn)
-      
-      # test url
-      if(http_error(url)){
-        fn.names <- gSD.get(paste0(paste0(head(strsplit(url, "/")[[1]], n = -1), collapse = "/"), ".csv"))
-        fn.names <- .sapply(gsub("\r", "", strsplit(content(fn.names), "\n")[[1]][-1]), function(y) strsplit(y, ",")[[1]][1], USE.NAMES = F)
-        
-        # assign correct fn
-        fn <- grep(paste0(strsplit(tail(strsplit(url, "/")[[1]], n=1), "[.]")[[1]][1:4], collapse = "."), fn.names, value = T)
-        
-        # redefine URL and file
-        return(paste0(paste0(head(strsplit(url, "/")[[1]], n=-1), collapse = "/"), "/", fn))
-      } else return(url)
-      
-    } else NA
-  })
+
+
+#' On package startup
+#' @importFrom pbapply pboptions
+#' @keywords internal
+#' @noRd
+.onLoad <- function(libname, pkgname){
+  
+  pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
+  clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
+                                    c("summary", "product"), # place holder
+                                    c("title", "record_id"),
+                                    c("displayId", "record_id"),
+                                    c("uuid", "entity_id"),
+                                    c("entityId", "entity_id"),
+                                    c("summary", "summary"),
+                                    c("beginposition", "date_acquisition"),
+                                    c("acquisitionDate", "date_acquisition"),
+                                    c("beginposition", "start_time"),
+                                    c("StartTime", "start_time"),
+                                    c("AcquisitionStartDate", "start_time"),
+                                    c("endposition", "stop_time"),
+                                    c("StopTime", "stop_time"),
+                                    c("AcquisitionEndDate", "stop_time"),
+                                    c("ingestiondate", "date_ingestion"),
+                                    c("modifiedDate", "date_modified"),
+                                    c("creationdate", "date_creation"),
+                                    c("footprint", "footprint"),
+                                    c("tileid", "tile_id"),
+                                    c("WRSPath", "tile_number_horizontal"),
+                                    c("WRSRow", "tile_number_vertical"),
+                                    c("HorizontalTileNumber", "tile_number_horizontal"),
+                                    c("VerticalTileNumber", "tile_number_vertical"),
+                                    c("url.alt", "md5_url"),
+                                    c("browseUrl", "preview_url"),
+                                    c("url.icon", "preview_url"),
+                                    c("metadataUrl", "meta_url"),
+                                    c("fgdcMetadataUrl", "meta_url_fgdc"),
+                                    c("slicenumber", "slice_number"),
+                                    c("orbitnumber", "orbit_number"),
+                                    c("orbitdirection", "orbit_direction"),
+                                    c("lastorbitnumber", "lastorbit_number"),
+                                    c("relativeorbitnumber", "relativeorbit_number"),
+                                    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
+                                    c("passnumber", "pass_number"),
+                                    c("passdirection", "pass_direction"),
+                                    c("relorbitdir", "relativeorbit_direction"),
+                                    c("relpassnumber", "relativepass_number"),
+                                    c("relpassdirection", "relativepass_direction"),
+                                    c("lastorbitdirection", "lastorbit_direction"),
+                                    c("lastpassnumber", "lastpass_number"),
+                                    c("lastpassdirection", "lastpass_direction"),
+                                    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
+                                    c("lastrelpassnumber", "lastrelativepass_number"),
+                                    c("lastrelpassdirection", "lastrelativepass_direction"),
+                                    c("swathidentifier", "swath_id"),
+                                    c("producttype", "product_type"),
+                                    c("productclass", "product_class"),
+                                    c("productconsolidation", "product_consolidation"),
+                                    c("timeliness", "timeliness"),
+                                    c("platformname", "platform"),
+                                    c("platformidentifier", "platform_id"),
+                                    c("platformserialidentifier", "platform_serial"),
+                                    c("instrumentname", "sensor"),
+                                    c("instrumentshortname", "sensor_id"),
+                                    c("SensorIdentifier", "sensor_id"),
+                                    c("sensoroperationalmode", "sensor_mode"),
+                                    c("polarisationmode", "polarisation_mode"),
+                                    c("acquisitiontype", "aquistion_type"),
+                                    c("size", "size"),
+                                    c("is_gnss", "is_gnss"),
+                                    c("LandCloudCover", "cloudcov_land"),
+                                    c("SceneCloudCover", "cloudcov"),
+                                    c("cloudCover", "cloudcov"),
+                                    c("cloudcoverpercentage", "cloudcov"),
+                                    c("highprobacloudspercentage", "cloudcov_highprob"),
+                                    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
+                                    c("notvegetatedpercentage", "cloudcov_notvegetated"),
+                                    c("snowicepercentage", "snowice"),
+                                    c("unclassifiedpercentage", "unclassified"),
+                                    c("vegetationpercentage", "vegetation"),
+                                    c("waterpercentage", "water"),
+                                    c("processinglevel", "level"),
+                                    c("level", "level"),
+                                    c("AutoQualityFlag", "flag_autoquality"),
+                                    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
+                                    c("ScienceQualityFlag", "flag_sciencequality"),
+                                    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
+                                    c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
+  colnames(clients_dict) <- c("clients", "gSD")
+  
+  op <- options()
+  op.gSD <- list(
+    gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
+                   #s3 = 'https://scihub.copernicus.eu/s3/',
+                   s5p = 'https://s5phub.copernicus.eu/',
+                   gnss = 'https://scihub.copernicus.eu/gnss/',
+                   espa = 'https://espa.cr.usgs.gov/api/v1/',
+                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/',
+                   aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',
+                   aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
+                   laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
+    gSD.api.names = list(dhus = "ESA Copernicus Open Hub",
+                         #s3 = "ESA Copernicus S3 Hub",
+                         s5p = "ESA Copernicus S5P Hub",
+                         gnss = "ESA Copernicus GNSS Hub",
+                         espa = "USGS-EROS ESPA",
+                         ee = "USGS EarthExplorer",
+                         aws.l8 = "AWS Landsat 8",
+                         laads = "NASA DAAC LAADS"),
+    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
+                              api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
+    gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
+                       linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
+                       mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),
+    gSD.verbose = FALSE,
+    gSD.dhus_session = NULL,
+    gSD.dhus_user = FALSE,
+    gSD.dhus_pass = FALSE,
+    gSD.dhus_set = FALSE,
+    gSD.dhus_time = NULL,
+    gSD.usgs_user = FALSE,
+    gSD.usgs_pass = FALSE,
+    gSD.usgs_set = FALSE,
+    gSD.usgs_time = NULL,
+    gSD.usgs_refresh = 60, # minutes
+    gSD.usgs_apikey = FALSE,
+    gSD.ed_user = FALSE,
+    gSD.ed_pass = FALSE,
+    gSD.ed_set = FALSE,
+    gSD.ed_time = NULL,
+    gSD.ed_refresh = 60, # minutes
+    gSD.archive = FALSE,
+    gSD.archive_set = FALSE,
+    gSD.aoi = FALSE,
+    gSD.aoi_set = FALSE,
+    gSD.products = NULL,
+    gSD.clients_dict = clients_dict
+  )
+  toset <- !(names(op.gSD) %in% names(op))
+  if(any(toset)) options(op.gSD[toset])
+  
+  ## allocate gdal on load
+  #gdalUtils::gdal_setInstallation(rescan = T)
+  
+  invisible()
 }
 
-
-#' get dataset filenames
-#' 
-#' @param records records data.frame
-#' @return character vector
-#' @importFrom pbapply pbapply
-#' @noRd 
-.get_ds_filenames <- function(records){
-  .apply(records, MARGIN = 1, function(x){
-    file <- paste0(x$gSD.dir, "/", x$record_id)
-    
-    if(x$product_group == "Sentinel"){
-      if(isTRUE(x$is_gnss)){
-        paste0(file, ".TGZ")
-      } else if(x$product == "Sentinel-5P"){
-        paste0(file, ".nc")
-      } else{
-        paste0(file, ".zip")
-      }
-      
-    } else if(x$product_group == "Landsat"){
-      
-      if(x$level == "l1"){
-        if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
-        list(paste0(file, "/", .sapply(unlist(x$dataset_url, recursive = T), function(x) tail(strsplit(x, "/")[[1]], n = 1), USE.NAMES = F)))
-      } else{
-        paste0(file, "_LEVEL_", x$level, ".tar.gz")
-      } 
-    } else if(x$product_group == "MODIS"){
-      paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
-    } else NA
-  })
+#' On package unload (logouts)
+#' @keywords internal
+#' @noRd
+.onUnload <- function(libname, pkgname) {
+  
+  ## logout from USGS
+  if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }

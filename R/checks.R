@@ -139,15 +139,15 @@
   }
 }
 
-#' check if command can be executed on the system command line
-#' @param cmd command
-#' @importFrom processx process
-#' @keywords internal
-#' @noRd
-.check_cmd <- function(cmd){
-  sc <- try(processx::process$new(cmd),silent = TRUE)
-  if(inherits(sc, "try-error")){return(FALSE)}else{return(TRUE)}
-}
+# #' check if command can be executed on the system command line
+# #' @param cmd command
+# #' @importFrom processx process
+# #' @keywords internal
+# #' @noRd
+# .check_cmd <- function(cmd){
+#   sc <- try(processx::process$new(cmd),silent = TRUE)
+#   if(inherits(sc, "try-error")){return(FALSE)}else{return(TRUE)}
+# }
 
 #' check and create aoi from aoi argument
 #'
@@ -345,35 +345,35 @@
   }
 }
 
-#' checks if columns are given in records and if they have values
-#' @param records data.frame.
-#' @param cols character vector of column names to be checked on.
-#' @return nothing. Console error if column is not given.
-#' @keywords internal
-#' @noRd
-.check_missing_columns <- function(records, cols) {
-  
-  missing <- c()
-  empty <- c()
-  for (col in cols) {
-    is_missing <- isFALSE(col %in% names(records))
-    if (isTRUE(is_missing)) {
-      missing <- c(missing, col)
-    } else {
-      is_empty <- all(is.na(records[[col]]))
-      if (isTRUE(is_empty)) {
-        empty <- c(empty,col)
-      }
-    }
-  }
-  for (fail in unique(c(missing,empty))) {
-    if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n", fail, "\n"), 2)
-    if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n", fail, "\n"), 2)
-  }
-  error <- .sapply(c(missing, empty),function(x) !is.null(x))
-  if (TRUE %in% error) return(TRUE) else return(FALSE)
-  
-}
+# #' checks if columns are given in records and if they have values
+# #' @param records data.frame.
+# #' @param cols character vector of column names to be checked on.
+# #' @return nothing. Console error if column is not given.
+# #' @keywords internal
+# #' @noRd
+# .check_missing_columns <- function(records, cols) {
+#   
+#   missing <- c()
+#   empty <- c()
+#   for (col in cols) {
+#     is_missing <- isFALSE(col %in% names(records))
+#     if (isTRUE(is_missing)) {
+#       missing <- c(missing, col)
+#     } else {
+#       is_empty <- all(is.na(records[[col]]))
+#       if (isTRUE(is_empty)) {
+#         empty <- c(empty,col)
+#       }
+#     }
+#   }
+#   for (fail in unique(c(missing,empty))) {
+#     if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n", fail, "\n"), 2)
+#     if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n", fail, "\n"), 2)
+#   }
+#   error <- .sapply(c(missing, empty),function(x) !is.null(x))
+#   if (TRUE %in% error) return(TRUE) else return(FALSE)
+#   
+# }
 
 #' wrapper of all checks in select
 #' @param records data.frame.
@@ -548,15 +548,15 @@
   }
 }
 
-#' checks if input is numeric
-#' @param input variable of any type
-#' @param character arg_name the name as it will appear in error message if raised
-#' @return nothing, raises error if input is not numeric
-#' @keywords internal
-#' @noRd
-.check_numeric <- function(input, arg_name) {
-  .check_type(input, arg_name, NUMERIC())
-}
+# #' checks if input is numeric
+# #' @param input variable of any type
+# #' @param character arg_name the name as it will appear in error message if raised
+# #' @return nothing, raises error if input is not numeric
+# #' @keywords internal
+# #' @noRd
+# .check_numeric <- function(input, arg_name) {
+#   .check_type(input, arg_name, NUMERIC())
+# }
 
 #' checks if input is character
 #' @param input variable of any type
@@ -568,25 +568,25 @@
   .check_type(input, arg_name, CHARACTER())
 }
 
-#' checks if input is data.frame
-#' @param input variable of any type
-#' @param character arg_name the name as it will appear in error message if raised
-#' @return nothing, raises error if input is not data.frame
-#' @keywords internal
-#' @noRd
-.check_dataframe <- function(input, arg_name) {
-  .check_type(input, arg_name, DATAFRAME())
-}
+# #' checks if input is data.frame
+# #' @param input variable of any type
+# #' @param character arg_name the name as it will appear in error message if raised
+# #' @return nothing, raises error if input is not data.frame
+# #' @keywords internal
+# #' @noRd
+# .check_dataframe <- function(input, arg_name) {
+#   .check_type(input, arg_name, DATAFRAME())
+# }
 
-#' checks if input is list
-#' @param input variable of any type
-#' @param character arg_name the name as it will appear in error message if raised
-#' @return nothing, raises error if input is not list
-#' @keywords internal
-#' @noRd
-.check_list <- function(input, arg_name) {
-  .check_type(input, arg_name, LIST())
-}
+# #' checks if input is list
+# #' @param input variable of any type
+# #' @param character arg_name the name as it will appear in error message if raised
+# #' @return nothing, raises error if input is not list
+# #' @keywords internal
+# #' @noRd
+# .check_list <- function(input, arg_name) {
+#   .check_type(input, arg_name, LIST())
+# }
 
 #' checks if input is RasterBrick or RasterStack
 #' @param input variable of any type
@@ -600,15 +600,15 @@
   }
 }
 
-#' checks if input is RasterLayer
-#' @param input variable of any type
-#' @param character arg_name the name as it will appear in error message if raised
-#' @return nothing, raises error if input is not RasterLayer
-#' @keywords internal
-#' @noRd
-.check_raster <- function(input, arg_name) {
-  .check_type(input, arg_name, RASTER_LAYER())
-}
+# #' checks if input is RasterLayer
+# #' @param input variable of any type
+# #' @param character arg_name the name as it will appear in error message if raised
+# #' @return nothing, raises error if input is not RasterLayer
+# #' @keywords internal
+# #' @noRd
+# .check_raster <- function(input, arg_name) {
+#   .check_type(input, arg_name, RASTER_LAYER())
+# }
 
 #' checks if input is logical
 #' @param input variable of any type
@@ -656,30 +656,30 @@
   }
 }
 
-#' checks if a file is a csv file and exists
-#' @param file character file path
-#' @param out_type integer in case of FALSE: what type of out to be thrown? NA for not out at all.
-#' @return logical TRUE if file is a csv file
-#' @keywords internal
-#' @noRd
-.is_existing_csv_file <- function(file, out_type = NA) {
-  exists <- .check_file_exists(file)
-  is_csv <- any(endsWith(file, c(".csv", ".CSV")))
-  check <- exists && is_csv
-  if (check) {
-    return(check)
-  } else {
-    if (is.na(out_type)) {
-      return(check)
-    } else {
-      if (exists && !is_csv) out(paste0("File is not a .csv file: ", file), out_type)
-      if (!exists && is_csv) out(paste0("csv file does not exist: ", file), out_type)
-      if (!exists && !is_csv) out(paste0("File is not a .csv file and does not exist: ", file),
-                                  out_type)
-      return(check)
-    }
-  }
-}
+# #' checks if a file is a csv file and exists
+# #' @param file character file path
+# #' @param out_type integer in case of FALSE: what type of out to be thrown? NA for not out at all.
+# #' @return logical TRUE if file is a csv file
+# #' @keywords internal
+# #' @noRd
+# .is_existing_csv_file <- function(file, out_type = NA) {
+#   exists <- .check_file_exists(file)
+#   is_csv <- any(endsWith(file, c(".csv", ".CSV")))
+#   check <- exists && is_csv
+#   if (check) {
+#     return(check)
+#   } else {
+#     if (is.na(out_type)) {
+#       return(check)
+#     } else {
+#       if (exists && !is_csv) out(paste0("File is not a .csv file: ", file), out_type)
+#       if (!exists && is_csv) out(paste0("csv file does not exist: ", file), out_type)
+#       if (!exists && !is_csv) out(paste0("File is not a .csv file and does not exist: ", file),
+#                                   out_type)
+#       return(check)
+#     }
+#   }
+# }
 
 # logical type checks
 
@@ -700,3 +700,19 @@
 .is_sfc <- function(x) {
   return(inherits(x, SFC()))
 }
+
+
+#' check if url
+#' @param url a url
+#' @keywords internal
+#' @noRd
+is.url <- function(url) grepl("www.|http:|https:", url)
+
+#' Simplifies check of variables being TRUE
+#'
+#' @param evaluate variable or expression to be evaluated
+#'
+#' @keywords internal
+#' @noRd
+is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
+

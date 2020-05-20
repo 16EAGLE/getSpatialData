@@ -59,7 +59,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
                                        
     # download
     if(isFALSE(is.url(url))) return(NA) else{
-      download <- gSD.download(url = url, file = file, name = name, head = head, type = "preview", prog = F, force = force,
+      download <- .download(url = url, file = file, name = name, head = head, type = "preview", prog = F, force = force,
                                username = if(!is.na(cred[[1]][1])) cred[[1]][1] else NULL,
                                password = if(!is.na(cred[[1]][1])) cred[[1]][2] else NULL)
       if(isFALSE(download)) return(NA) else return(file)

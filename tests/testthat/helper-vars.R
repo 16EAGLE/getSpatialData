@@ -115,13 +115,32 @@ dir_out_error_msg <- function(dir_out) {
 column_error_msg <- function(column) {
   return(paste0("A column of 'records' named '", column, "' is required for this action, but is missing."))
 }
+
+
+# wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
+.read_brick <- function(file_path) {
+  return(brick(file_path))
+}
+
+# wrapper for subsetting a raster brick to band 1 and band 3. For unit test.
+.subset_brick <- function(b) {
+  return(brick(b[[1]], b[[3]]))
+}
+
+#' wrapper for reading polygons file via sf::read_sf(). Util for unit tests.
+.read_polygons <- function(file_path) {
+  geom <- ifelse(endsWith(file_path, ".gpkg"), "geom", "geometry")
+  polygons <- st_sfc(st_zm(read_sf(file_path))[[geom]])
+  return(polygons)
+}
+
 AOI_TYPE_ERROR <- "Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object."
 AOI_UNDEFINED_ERROR <- "Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI."
 RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'."
 
 # TEST VARIABLES
 # -----------------
-aoi_test <- getSpatialData:::.read_polygons(file.path(tt$resources$aoi, "aoi_test.geojson"))
+aoi_test <- .read_polygons(file.path(tt$resources$aoi, "aoi_test.geojson"))
 
 
 ############################################################################

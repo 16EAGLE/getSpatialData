@@ -46,7 +46,7 @@ check_availability <- function(records, verbose = TRUE){
       
       out("Investigating matching ESPA orders in the past...")
       # get all order ids of user
-      order_ids <- content(gSD.get(paste0(getOption("gSD.api")$espa, "/list-orders"), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
+      order_ids <- content(.get(paste0(getOption("gSD.api")$espa, "/list-orders"), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
       
       # extract order ids of last 7 days
       order_ids <- gsub('\\["', "", gsub('"]', "", strsplit(xml_text(xml_children(order_ids)[[1]]), '\", \"')[[1]]))
@@ -58,7 +58,7 @@ check_availability <- function(records, verbose = TRUE){
         
         # get item ids for each order
         item_ids <- lapply(order_ids, function(x){
-          response <- content(gSD.get(paste0(getOption("gSD.api")$espa, "/order/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
+          response <- content(.get(paste0(getOption("gSD.api")$espa, "/order/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
           response <- unlist(response$product_opts)
           response[grep("inputs", names(response))]
         })
@@ -70,7 +70,7 @@ check_availability <- function(records, verbose = TRUE){
       # check for order column
       if(any(!is.na(records$gSD.order_id))){
         status <- sapply(records$gSD.order_id[!is.na(records$gSD.order_id)], function(id){
-          sapply(content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
+          sapply(content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
         }, USE.NAMES = F)
         if(any(status[status != "complete"])) status[status != "complete"] <- "FALSE"
         status <- gsub("complete", "TRUE", status)

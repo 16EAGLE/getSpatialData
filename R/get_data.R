@@ -54,7 +54,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
     records$gSD.espa_item <- NA
     records[sub,][records$product_group == "Landsat" & records$level != "l1",]$gSD.espa_item <- 
       .apply(records[sub,][records$product_group == "Landsat" & records$level != "l1",], MARGIN = 1, function(x){
-      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x$order_id, "/", x$record_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
+      content(.get(paste0(getOption("gSD.api")$espa, "item-status/", x$order_id, "/", x$record_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
     })
   }
   
@@ -73,9 +73,9 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
     records[sub,]$md5_checksum <- unlist(.apply(records[sub,], MARGIN = 1, function(x){
       if(x$product_group == "Sentinel"){
         cred <- unlist(x$gSD.cred)
-        if(!is.null(x$md5_url)) content(gSD.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
+        if(!is.null(x$md5_url)) content(.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
       } else if(x$product_group == "Landsat" & x$level != "l1"){
-        strsplit(content(gSD.get(x$gSD.espa_item$cksum_download_ur), as = "text", encoding = "UTF-8"), " ")[[1]][1]
+        strsplit(content(.get(x$gSD.espa_item$cksum_download_ur), as = "text", encoding = "UTF-8"), " ")[[1]][1]
       } else NA
     }, verbose = F))
   }
@@ -109,7 +109,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
         # attempt download
         download <- .sapply(1:length(dataset_url), function(i){
           file.head <- gsub("]", paste0(" | File ", i, "/", length(dataset_url), "]"), x$gSD.head)
-          .retry(gSD.download, url = dataset_url[i],
+          .retry(.download, url = dataset_url[i],
                  file = dataset_file[i],
                  name = paste0(x$record_id, if(!is.na(x$level)) paste0(" (", x$level, ")") else NULL), 
                  head = file.head, type = "dataset", md5 = x$md5_checksum, prog = if(isTRUE(verbose)) TRUE else FALSE,

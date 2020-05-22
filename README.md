@@ -28,7 +28,7 @@ The `getSpatialData` workflow to query, preview, analyse, select, order and down
 3. **analysing** records by deriving scene and AOI cloud distribution and coverage directly from preview imagery (see `calc_cloudcov()`),
 4. **selecting** records based on user-defined measures (see `select_unitemporal()`, `select_bitemporal()` and `select_timeseries()`),
 5. **ordering** datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download (see `check_availability()` and `order_data()`), and lastly
-6. **download** downloads the full datasets for those records that have been selected in the process, solely based on meta and preview-dervied data.
+6. **downloading** the full datasets for those records that have been selected in the process, solely based on meta and preview-dervied data.
 
 For all steps, `getSpatialData` supports local chaching to reduce bandwith usage and uneccasary downloads.
 

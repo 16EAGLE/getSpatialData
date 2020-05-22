@@ -16,7 +16,6 @@
 #' \itemize{
 #'    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
 #'    \item "dhus" to look for operational Open Hub records only,
-#'    \item "s3" to look for Sentinel-3 pre-operational records only,
 #'    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
 #'    \item "GNSS" to look for GNSS RINEX records only,
 #'    \item or a valid API URL.

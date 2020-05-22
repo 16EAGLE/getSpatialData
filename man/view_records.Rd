@@ -45,7 +45,7 @@ plot_records(
 None or a \code{mapview}/\code{plot} object
 }
 \description{
-\code{view_records} displays the footsprint of each record on a map.
+\code{view_records} and \code{plot_records} display the footsprint of each record on a map.
 }
 \author{
 Jakob Schwalb-Willmann

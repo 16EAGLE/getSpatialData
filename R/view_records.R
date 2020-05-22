@@ -1,6 +1,6 @@
 #' View footprints of records
 #' 
-#' \code{view_records} displays the footsprint of each record on a map.
+#' \code{view_records} and \code{plot_records} display the footsprint of each record on a map.
 #'
 #' @inheritParams view_previews
 #' @param line_colours character, colours for each footprint's outline. Vector must be of same length as number of records (\code{nrow(records)}).

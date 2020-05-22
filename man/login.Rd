@@ -31,9 +31,11 @@ services(value = F, verbose = T)
 Functions to login to services supported by \code{getSpatialData} once for the running session and to recieve their current status.
 }
 \details{
-\code{login_CopHub} defines login credentials for the Copernicus Open Access Hub (register on \url{https://scihub.copernicus.eu/})
+\code{login_CopHub} logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 
-\code{login_USGS} defines login credentials to the USGS EROS Registration System (ERS). Register on \url{https://ers.cr.usgs.gov/register/}.
+\code{login_USGS} logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
+
+\code{login_earthdata} logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new
 
 \code{services_avail} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
 }

@@ -28,9 +28,12 @@ select_unitemporal <- function(records,
                                aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   #### Pre-checks
   # columns are checked in .select_checks() due to SAR
+  records <- .check_records(records, col.names = NULL, as_df = TRUE)
+  .check_numeric(max_sub_period, "max_sub_period")
+  .check_numeric(max_cloudcov_tile, "max_cloudcov_tile")
+  .check_numeric(satisfaction_value, "satisfaction_value")
   .check_as_sf(as_sf)
   .check_verbose(verbose)
-  records <- .check_records(records, col.names = NULL, as_df = TRUE)
   aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
   

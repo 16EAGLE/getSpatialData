@@ -25,6 +25,18 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
 
   # calculate cloud masks
   records <- calc_cloudcov(records_read, aoi = aoi_test, dir_out = tt$tmp)
+  # delete a cloud mask and test error
+  unlink(records$cloud_mask_file[1])
+  expect_error(select_unitemporal(records,
+                                  max_cloudcov_tile = max_cloudcov_tile,
+                                  max_sub_period = 25,
+                                  aoi = aoi_test, dir_out = tt$tmp))
+  unlink(records$preview_file[1])
+  records <- calc_cloudcov(records_read, aoi = aoi_test, dir_out = tt$tmp)
+  expect_error(select_unitemporal(records,
+                                  max_cloudcov_tile = max_cloudcov_tile,
+                                  max_sub_period = 25,
+                                  aoi = aoi_test, dir_out = tt$tmp))
   
   for (mode in modes) {
     is_unitemporal <- grepl("unitemporal", mode)
@@ -36,6 +48,7 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
                                                           max_sub_period = 25,
                                                           aoi = aoi_test, dir_out = tt$tmp, as_sf = TRUE), SF)
       records_select <- records_unitemporal
+      expect_error(select_unitemporal(records))
     } else if (is_bitemporal) {
       records_bitemporal <- expect_is(select_bitemporal(records, 
                                                         max_cloudcov_tile = max_cloudcov_tile,

@@ -8,6 +8,15 @@
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
 #' @return A data frame of records (as defined with argument \code{records}), extended by additional columns.
 #' 
+#' @details
+#' 
+#' Sentinel data are downloaded from the *ESA Copernicus Open Access Hubs*.
+#' 
+#' Landsat data are downloaded from *USGS-EROS ESPA* (on-demand higher-level data) and *Amazon Web Srvices* (Landsat-8 Level 1 data).
+#' 
+#' MODIS data are downloaded from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}).
+#' 
+#' 
 #' @author Jakob Schwalb-Willmann
 #' 
 #' @importFrom httr content
@@ -15,7 +24,7 @@
 #' @name get_data
 #' @export
 
-get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, ..., verbose = TRUE){
+get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, as_sf = TRUE, ..., verbose = TRUE){
   
   # check arguments
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -126,6 +135,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, .
       return(NA)
     }
   })
+  
+  records <- .check_records(records, as_df = !as_sf)
   return(.column_summary(records, records.names))
 }
 

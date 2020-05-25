@@ -12,6 +12,7 @@ get_data(
   dir_out = NULL,
   md5_check = TRUE,
   force = FALSE,
+  as_sf = TRUE,
   ...,
   verbose = TRUE
 )
@@ -21,6 +22,7 @@ getSentinel_data(
   dir_out = NULL,
   md5_check = TRUE,
   force = FALSE,
+  as_sf = TRUE,
   ...,
   verbose = TRUE
 )
@@ -30,6 +32,7 @@ getLandsat_data(
   dir_out = NULL,
   md5_check = TRUE,
   force = FALSE,
+  as_sf = TRUE,
   ...,
   verbose = TRUE
 )
@@ -39,6 +42,7 @@ getMODIS_data(
   dir_out = NULL,
   md5_check = TRUE,
   force = FALSE,
+  as_sf = TRUE,
   ...,
   verbose = TRUE
 )
@@ -52,6 +56,8 @@ getMODIS_data(
 
 \item{force}{logical, whether to force download of files already existing or not.}
 
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
+
 \item{...}{additional, sensor-specific arguments:
 \itemize{
    \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
@@ -59,7 +65,6 @@ getMODIS_data(
 \itemize{
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
    \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
@@ -73,6 +78,13 @@ A data frame of records (as defined with argument \code{records}), extended by a
 }
 \description{
 \code{get_data} downloads the full datasets per records. File paths are added to the records data frame.
+}
+\details{
+Sentinel data are downloaded from the *ESA Copernicus Open Access Hubs*.
+
+Landsat data are downloaded from *USGS-EROS ESPA* (on-demand higher-level data) and *Amazon Web Srvices* (Landsat-8 Level 1 data).
+
+MODIS data are downloaded from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}).
 }
 \note{
 To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.

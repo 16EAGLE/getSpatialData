@@ -18,7 +18,6 @@ order_data(records, wait_for_order = FALSE, ..., verbose = TRUE)
 \itemize{
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
    \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
@@ -31,7 +30,7 @@ order_data(records, wait_for_order = FALSE, ..., verbose = TRUE)
 A data frame of records (as defined with argument \code{records}), extended by additional columns.
 }
 \description{
-\code{orde_data} oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download. Use \link{check_availability} to see which datasets need to be ordered before download.
+\code{order_data} oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download. Use \link{check_availability} to see which datasets need to be ordered before download.
 }
 \note{
 To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.

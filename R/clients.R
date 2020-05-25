@@ -16,16 +16,22 @@
   username <- extras$username
   password <- extras$password
   if(!is.null(extras$hub)) hub <- extras$hub else hub <- "auto"
-  if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
   if(is.null(username)) .check_login("Copernicus")
   cred <- .check_credentials(username, password, service = "Copernicus")
+  
+  # GNSS products
+  gnss <- grepl("GNSS", product_name)
+  #if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
+  out(paste0("Searching records for product name '", product_name, "'..."))
   
   ## Global AOI
   if(!isTRUE(gnss)){
     aoi <- st_as_sfc(st_bbox(.check_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
     aoi <- .check_aoi(aoi, type = "matrix")
   } else{
+    out("AOI is ignored, since the requested product is of type GNSS. GNSS records are AOI-independent, as they are only referenced by mission time using argument time_range.", type = 2)
     aoi <- NULL
+    product_name <- gsub("_GNSS", "", product_name)
   }
   
   ## url assembler function
@@ -52,7 +58,6 @@
   row.start <- -100; re.query <- T; give.return <- T
   query.list <- list()
   
-  out(paste0("Searching records for product name '", product_name, "'..."))
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
     
@@ -105,7 +110,7 @@
     if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
     records$is_gnss <- gnss
     
-    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+    if(!is.null(records$footprint)) records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     return(records)
   }
 }

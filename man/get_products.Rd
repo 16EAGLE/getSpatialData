@@ -34,6 +34,11 @@ A character vector
 \note{
 If \code{update_online = TRUE}, you must be logged in at the services required for your request to use this function. See the examples and \link{login} for details.
 }
+\section{GNSS}{
+
+GNSS products (such as "Sentinel-1_GNSS") retrieved from the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 represent a special type of product, as they are AOI-independent and thus only referenced by mission time. GNSS data originally have been used only to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
+}
+
 \examples{
 \dontrun{
 library(getSpatialData)

@@ -8,6 +8,9 @@
 #' 
 #' @note If \code{update_online = TRUE}, you must be logged in at the services required for your request to use this function. See the examples and \link{login} for details.
 #' 
+#' @section GNSS:
+#' GNSS products (such as "Sentinel-1_GNSS") retrieved from the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 represent a special type of product, as they are AOI-independent and thus only referenced by mission time. GNSS data originally have been used only to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
+#' 
 #' @return A character vector
 #'
 #' @author Jakob Schwalb-Willmann
@@ -40,7 +43,8 @@
 get_products <- function(product_groups = "all", grouped = FALSE, update_online = FALSE){
   
   # assemble offline products list
-  products <- list("Sentinel" = getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "GNSS"],
+  products <- list("Sentinel" = c(getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "GNSS"], 
+                                  paste0(getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "GNSS" & getOption("gSD.copnames")$name != "Sentinel-5P"], "_GNSS")),
                    "Landsat" = c("LANDSAT_ETM_C1", "LANDSAT_MSS_C1", "LANDSAT_TM_C1", "LANDSAT_8_C1"),
                    "MODIS" = c("MODIS_MCD43D28_V6", "MODIS_MYD21A1N_V6", "MODIS_MCD43A1_V6", "MODIS_MCD43A2_V6", "MODIS_MCD43A3_V6", 
                                "MODIS_MCD43A4_V6", "MODIS_MCD43C1_V6",  "MODIS_MCD43C2_V6", "MODIS_MCD43C3_V6", "MODIS_MCD43C4_V6", 

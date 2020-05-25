@@ -154,7 +154,7 @@
 #' @param aoi aoi
 #' @keywords internal
 #' @importFrom sp SpatialPolygons
-#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
+#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial st_zm
 #' @noRd
 .check_aoi <- function(aoi, type = "matrix", quiet = F){
   
@@ -548,15 +548,15 @@
   }
 }
 
-# #' checks if input is numeric
-# #' @param input variable of any type
-# #' @param character arg_name the name as it will appear in error message if raised
-# #' @return nothing, raises error if input is not numeric
-# #' @keywords internal
-# #' @noRd
-# .check_numeric <- function(input, arg_name) {
-#   .check_type(input, arg_name, NUMERIC())
-# }
+#' checks if input is numeric
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not numeric
+#' @keywords internal
+#' @noRd
+.check_numeric <- function(input, arg_name) {
+  .check_type(input, arg_name, NUMERIC())
+}
 
 #' checks if input is character
 #' @param input variable of any type

@@ -108,7 +108,7 @@
     file <- paste0(x$gSD.dir, "/", x$record_id)
     
     if(x$product_group == "Sentinel"){
-      if(isTRUE(x$is_gnss)){
+      if(x$prodcut == "GNSS"){
         paste0(file, ".TGZ")
       } else if(x$product == "Sentinel-5P"){
         paste0(file, ".nc")

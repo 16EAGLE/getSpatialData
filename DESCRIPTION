@@ -16,10 +16,8 @@ Imports:
   getPass,
   httr,
   xml2,
-  tools,
   raster,
   sf,
-  sp,
   gdalUtils,
   mapview,
   mapedit,
@@ -27,12 +25,10 @@ Imports:
   RStoolbox,
   ggplot2,
   cowplot,
-  processx,
+  pbapply
+  tools,
   stats,
-  methods,
-  readr,
-  pbapply,
-  R.utils
+  methods
 RoxygenNote: 7.1.0
 Suggests: 
   testthat

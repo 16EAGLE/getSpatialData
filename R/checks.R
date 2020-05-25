@@ -153,7 +153,6 @@
 #'
 #' @param aoi aoi
 #' @keywords internal
-#' @importFrom sp SpatialPolygons
 #' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial st_zm
 #' @noRd
 .check_aoi <- function(aoi, type = "matrix", quiet = F){
@@ -231,9 +230,9 @@
       # login
       out("Renewing login..",msg=T,verbose=verbose)
       if (service=="usgs") {
-        login <- try(withTimeout(login_USGS(username,password),onTimeout="silent",timeout=30))
+        login <- try(login_USGS(username,password))
       } else {
-        login <- try(withTimeout(login_CopHub(username,password),onTimeout="silent",timeout=30))
+        login <- try(login_CopHub(username,password))
       }
       
       if (inherits(login,"try-error")) {

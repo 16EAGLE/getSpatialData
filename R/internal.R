@@ -269,18 +269,21 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid <- function(records) {
-    
-  TILEID <- name_tile_id()
+  
+  if(is.null(getElement(records, name_tile_id()))) records[name_tile_id()] <- NA_character_
   
   # first, try using the horizontal / vertical columns
-  tileid_not_given <- is.na(records$tile_id)
-  vertical_given <- !is.na(records$tile_number_vertical)
-  horizontal_given <- !is.na(records$tile_number_horizontal)
-  use_tile_num <- which((tileid_not_given * vertical_given * horizontal_given) == 1) 
-  horizontal <- records$tile_number_horizontal[use_tile_num]
-  vertical <- records$tile_number_vertical[use_tile_num]
-  records[use_tile_num, TILEID] <- paste0(horizontal, vertical)
-
+  has_tileid <- !is.na(getElement(records, name_tile_id()))
+  has_vertical <- if(!is.null(getElement(records, name_tile_number_vertical()))) !is.na(getElement(records, name_tile_number_vertical())) else rep(FALSE, nrow(records))
+  has_horizontal <- if(!is.null(getElement(records, name_tile_number_horizontal()))) !is.na(getElement(records, name_tile_number_horizontal())) else rep(FALSE, nrow(records))
+  
+  sub <- !has_tileid & has_vertical & has_horizontal
+  if(any(sub)){
+    horizontal <- getElement(records[sub,], name_tile_number_horizontal())
+    vertical <- getElement(records[sub,], name_tile_number_vertical())
+    records[sub, name_tile_id()] <- paste0(horizontal, vertical)
+  }
+  
   # in many cases now value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
   records <- .make_tileid_sentinel1(records)
@@ -313,7 +316,7 @@ rbind.different <- function(x) {
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid) && !.is_empty_array(footprints)) {
       tileids <- sapply(footprints, function(footprint) {
         tryCatch({
-          footprint <- footprint[[1]][[1]]
+          footprint <- footprint[[1]]#[[1]]
           horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), POINT_SEP)[[1]]
           vertical <- strsplit(as.character(mean(footprint[,2][1:4])), POINT_SEP)[[1]]
           id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),

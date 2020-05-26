@@ -355,7 +355,7 @@ is.sentinel3_sral <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel3_olci <- function(records) {
-  return(sapply(1:NROW(records), function(i) {return(getSpatialData:::.record_is_olci(records[i,]))}))
+  return(sapply(1:NROW(records), function(i) {return(.record_is_olci(records[i,]))}))
 }
 
 ########################################

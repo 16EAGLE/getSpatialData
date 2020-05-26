@@ -204,7 +204,6 @@
 #' @param username character username.
 #' @param password character password.
 #' @return nothing. In case of failed login: error.
-#' @importFrom R.utils withTimeout
 #' @keywords internal
 #' @noRd
 .check_http_error <- function(response, record, username = NULL, password = NULL, verbose = FALSE) {

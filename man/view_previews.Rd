@@ -18,7 +18,6 @@ plot_previews(
   aoi_colour = "deepskyblue",
   separate = FALSE,
   maxcol = 3,
-  value = FALSE,
   verbose = TRUE
 )
 }

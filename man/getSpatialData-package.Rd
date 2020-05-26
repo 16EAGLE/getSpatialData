@@ -4,64 +4,37 @@
 \name{getSpatialData-package}
 \alias{getSpatialData}
 \alias{getSpatialData-package}
-\title{Overview of getSpatialData tools}
+\title{Overview of getSpatialData}
 \description{
-\code{getSpatialData} is an R package that aims to provide homogeneous function bundles to query, preview, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data and higher-level environmental data products.
+Homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.
 }
-\details{
-At the moment, the package includes the following functions:
+\section{Introduction}{
 
-\strong{Sentinel}
+
+\code{getSpatialData} is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.
+
+Currently, \code{getSpatialData} supports a variety of products, including Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P, Landsat 8 OLI, Landsat ETM, Landsat TM, Landsat MSS, MODIS (Terra & Aqua) and SRTM DEMs. For this, \code{getSpatialData} facilitates access to multiple services implementing clients to public APIs of ESA Copernicus Open Access Hub, USGS EarthExplorer, USGS EROS ESPA, Amazon Web Services (AWS), NASA DAAC LAADS and NASA CMR search. A full list of all supported products can be found below.
+}
+
+\section{Workflow}{
+
+
+The \code{getSpatialData} workflow to query, preview, analyse, select, order and download spatial data is designed to be as reproducible as possible and is made of six steps: 
+
 \itemize{
-  \item \link{getSentinel_records} querys the Copernicus Open Access Hubs for Sentinel-1, -2 and -3 data and returns a data frame containing the found records (rows) and their attributes (columns).
-  \item \link{getSentinel_restore} requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument \code{check_avail} of \link{getSentinel_records}).
-  \item \link{getSentinel_preview} uses the output of \code{getSentinel_records} to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
-  \item \link{getSentinel_data} uses the output of \code{getSentinel_records} to download Sentinel data.
+\item \strong{querying} products of interest (see \link{get_products()}) for available records by an area of interest (AOI) and time (see \link{get_records()}),
+\item \strong{previewing} geometries and previews of the obtained records (see \link{get_previews()}, \link{view_records()} and \link{view_previews()}),
+\item \strong{analysing} records by deriving scene and AOI cloud distribution and coverage directly from preview imagery (see \link{calc_cloudcov()}),
+\item \strong{selecting} records based on user-defined measures (see \link{select_unitemporal()}, \link{select_bitemporal()} and \link{select_timeseries()}),
+\item \strong{ordering} datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download (see \link{check_availability()} and \link{order_data()}), and lastly
+\item \strong{downloading} the full datasets for those records that have been selected in the process, solely based on meta and preview-dervied data.
 }
 
-
-
-\strong{Landsat}
-\itemize{
-  \item \link{getLandsat_names} obtains available Landsat product names from USGS Earth Explorer, which can be optionally used with \link{getLandsat_records} to narrow the search.
-  \item \link{getLandsat_records} querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).
-  \item \link{getLandsat_preview} uses the output of \link{getLandsat_records} to preview (quick-look) a user-selected record By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
-  \item \link{getLandsat_data} uses the output of \link{getLandsat_records} to order and download Landsat data.
-  \itemize{
-    \item supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.
-    \item supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).
-    \item will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)
-  }
-}
-
-
-\strong{MODIS}
-\itemize{
-  \item \link{getMODIS_names} obtains available MODIS product names from USGS Earth Explorer, which can be optionally used with \link{getMODIS_records} to narrow the search.
-  \item \link{getMODIS_records} querys USGS Earth Explorer for MODIS data and returns a data frame containing the found records (rows) and their attributes (columns).
-  \item \link{getMODIS_preview} uses the output of \link{getMODIS_records} to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.
-  \item \link{getMODIS_data} uses the output of \link{getMODIS_records} to order and download MODIS data from LAADS.
-}
-
-
-\strong{Login}
-\itemize{
-  \item \link{login_CopHub} define your Copernicus Open Access login credentials once for the present R session to be able to call each \code{getSentinel} function without defining login arguments each time you use them.
-  \item \link{login_USGS} define your USGS login credentials once for the present R session to be able to call each \code{get*} function that connects to a USGS service without defining login arguments each time you use them.
-}
-
-
-\strong{Session settings}
-\itemize{
-  \item \link{set_archive} define a \code{getSpatialData} archive directory to which all \code{*_data} functions will download data.
-  \item \link{set_aoi} draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.
-  \item \link{view_aoi} display the session AOI in an interactive \code{mapview}/\code{leaflet} map viewer.
-  \item \link{get_aoi} get the session AOI you have defined or drawn before as sf, sp or matrix object.
-}
-
+For all steps, \code{getSpatialData} supports local chaching to reduce bandwith usage and uneccasary downloads.
 
 Further details are included in the README file, which is constantly updated on \url{https://github.com/16EAGLE/getSpatialData}.
 }
+
 \seealso{
 Useful links:
 \itemize{
@@ -72,4 +45,6 @@ Useful links:
 }
 \author{
 Jakob Schwalb-Willmann
+
+Henrik Fisser
 }

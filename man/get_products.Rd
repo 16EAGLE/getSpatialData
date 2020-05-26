@@ -24,6 +24,8 @@ getSRTM_products()
 \item{grouped}{logical, whether to return a list of names grouped by platform/sensor (\code{TRUE}) or not.}
 
 \item{update_online}{logical, whether to update the internal product list online (default, requires login) or not.}
+
+\item{...}{deprecated arguments.}
 }
 \value{
 A character vector

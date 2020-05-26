@@ -361,6 +361,7 @@ rbind.different <- function(x) {
 #' creates tile ids for Sentinel-3 records
 #' @param records data.frame
 #' @return records data.frame with added tile id of Sentinel-3 records
+#' @importFrom utils tail
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel3 <- function(records) {
@@ -482,6 +483,7 @@ rbind.different <- function(x) {
 #' @param dates character vector of dates ("2019-01-01").
 #' @return \code{period} character vector of two dates
 #' @keywords internal
+#' @importFrom utils tail
 #' @noRd
 .identify_period <- function(dates) {
   dates_sorted <- sort(dates)
@@ -546,8 +548,8 @@ rbind.different <- function(x) {
   polygons <- "polygons"
   COORDS_SLOT <- "coords"
   ext <- try(extent(preview))
-  if (inherits(ext, getSpatialData:::TRY_ERROR())) return (preview)
-  poly <- as(ext, getSpatialData:::SPATIAL_POLYGONS())
+  if (inherits(ext, TRY_ERROR())) return (preview)
+  poly <- as(ext, SPATIAL_POLYGONS())
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
   coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
@@ -563,7 +565,7 @@ rbind.different <- function(x) {
   coords[4,2] <- coords[4,2] + val
   coords[5,2] <- coords[5,2] + val
   slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
-  preview_masked <- getSpatialData:::.mask_raster_by_polygon(preview, poly)
+  preview_masked <- .mask_raster_by_polygon(preview, poly)
   extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
   return(preview_masked)
 } 
@@ -1031,19 +1033,25 @@ rbind.different <- function(x) {
                                     c("displayId", "record_id"),
                                     c("uuid", "entity_id"),
                                     c("entityId", "entity_id"),
+                                    c("id", "entity_id"),
                                     c("summary", "summary"),
+                                    c("dataset_id", "summary"),
                                     c("beginposition", "date_acquisition"),
                                     c("acquisitionDate", "date_acquisition"),
                                     c("beginposition", "start_time"),
                                     c("StartTime", "start_time"),
                                     c("AcquisitionStartDate", "start_time"),
+                                    c("time_start", "start_time"),
                                     c("endposition", "stop_time"),
                                     c("StopTime", "stop_time"),
                                     c("AcquisitionEndDate", "stop_time"),
+                                    c("time_end", "stop_time"),
                                     c("ingestiondate", "date_ingestion"),
                                     c("modifiedDate", "date_modified"),
+                                    c("updated", "date_modified"),
                                     c("creationdate", "date_creation"),
                                     c("footprint", "footprint"),
+                                    c("boxes", "footprint"),
                                     c("tileid", "tile_id"),
                                     c("WRSPath", "tile_number_horizontal"),
                                     c("WRSRow", "tile_number_vertical"),
@@ -1104,7 +1112,8 @@ rbind.different <- function(x) {
                                     c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
                                     c("ScienceQualityFlag", "flag_sciencequality"),
                                     c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
-                                    c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
+                                    c("MissingDataPercentage", "missingdata"),
+                                    c("collection_concept_id", "product_id"), stringsAsFactors = F)
   colnames(clients_dict) <- c("clients", "gSD")
   
   op <- options()

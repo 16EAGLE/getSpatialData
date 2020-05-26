@@ -22,7 +22,6 @@ plot_records(
   fill_colours = hcl.colors(nrow(records)),
   fill_alpha = 0.3,
   aoi_colour = "deepskyblue",
-  value = FALSE,
   verbose = TRUE
 )
 }

@@ -52,7 +52,7 @@ view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
 #' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes_string scale_colour_identity guides guide_legend scale_x_continuous scale_y_continuous
 #' @importFrom cowplot plot_grid get_legend
 #' @export
-plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", separate = FALSE, maxcol = 3, value = FALSE, verbose = TRUE){
+plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", separate = FALSE, maxcol = 3, verbose = TRUE){
   
   # checks
   .check_verbose(verbose)

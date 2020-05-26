@@ -49,10 +49,17 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   .check_verbose(verbose)
   .check_time_range(time_range)
   if(isTRUE(check_products)) .check_products(products, products_available = get_products(update_online = F))
-  is.CopHub <- grepl("Sentinel", products)
+  
+  # use appropriate clients
+  clients <- c(EE = FALSE, CopHub = FALSE, CMR = FALSE)
+  if(grepl("Sentinel", products)) clients["CopHub"] <- TRUE
+  if(any(grepl("Landsat", products), grepl("MODIS", products))) clients["EE"] <- TRUE
+  if(grepl("SRTM", products)) clients["CMR"] <- TRUE
+  if(all(!clients)) out("Could not find appropriate client(s) for this/these product(s).", type = 3) else clients <- names(clients[clients])
+  
   
   # get records
-  records <- mapply(client = c("EE", "CopHub")[as.numeric(is.CopHub)+1], product_name = products, function(client, product_name){
+  records <- mapply(client = clients, product_name = products, function(client, product_name){
     eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, rename_cols = rename_cols, ..., verbose = verbose)")))
   }, USE.NAMES = F, SIMPLIFY = F)
   
@@ -62,7 +69,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   if(!is.null(records)){
     # fill missing tile IDs
     records <- .make_tileid(records)
-    #if(all(is.na(records$tile_id))) records$tile_id <- NULL
+    if(all(is.na(records$tile_id))) records$tile_id <- NULL
     
     # sort records
     used_names <- sapply(unique(getOption("gSD.clients_dict")$gSD), function(x) x %in% colnames(records))

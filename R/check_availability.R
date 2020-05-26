@@ -89,6 +89,12 @@ check_availability <- function(records, verbose = TRUE){
     records[records$product_group == "MODIS",]$download_available <- TRUE
   }
   
+  # SRTM
+  if("SRTM" %in% records$product_group){
+    out("Checking instant availability for SRTM records...")
+    records[records$product_group == "SRTM",]$download_available <- TRUE
+  }
+  
   out(paste0(as.character(length(which(records$download_available))), "/", nrow(records), " records are currently available for download (this includes past completed orders that are still available for download)."), type = 1)
   return(.column_summary(records, records.names))
 }

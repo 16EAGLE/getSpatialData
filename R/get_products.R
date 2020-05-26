@@ -1,10 +1,10 @@
 #' Get product names
 #'
 #' \code{get_products} obtains the names of all products available through \code{getSpatialData}. The returned names can be used with the \link{get_records} functions for querying a specific product.
-#' @inheritParams login
 #' @param product_groups character, either "all" or a combination of product names. Supported names are "Sentinel", "Landsat", "MODIS", "SRTM".
 #' @param grouped logical, whether to return a list of names grouped by platform/sensor (\code{TRUE}) or not.
 #' @param update_online logical, whether to update the internal product list online (default, requires login) or not.
+#' @param ... deprecated arguments.
 #' 
 #' @note If \code{update_online = TRUE}, you must be logged in at the services required for your request to use this function. See the examples and \link{login} for details.
 #' 

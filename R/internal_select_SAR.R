@@ -173,5 +173,4 @@
   }
   .select_completed_statement(timestamp)
   return(selected)
-  
 }

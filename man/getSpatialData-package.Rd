@@ -22,11 +22,11 @@ Currently, \code{getSpatialData} supports a variety of products, including Senti
 The \code{getSpatialData} workflow to query, preview, analyse, select, order and download spatial data is designed to be as reproducible as possible and is made of six steps: 
 
 \itemize{
-\item \strong{querying} products of interest (see \link{get_products()}) for available records by an area of interest (AOI) and time (see \link{get_records()}),
-\item \strong{previewing} geometries and previews of the obtained records (see \link{get_previews()}, \link{view_records()} and \link{view_previews()}),
-\item \strong{analysing} records by deriving scene and AOI cloud distribution and coverage directly from preview imagery (see \link{calc_cloudcov()}),
-\item \strong{selecting} records based on user-defined measures (see \link{select_unitemporal()}, \link{select_bitemporal()} and \link{select_timeseries()}),
-\item \strong{ordering} datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download (see \link{check_availability()} and \link{order_data()}), and lastly
+\item \strong{querying} products of interest (see \link{get_products}) for available records by an area of interest (AOI) and time (see \link{get_records}),
+\item \strong{previewing} geometries and previews of the obtained records (see \link{get_previews}, \link{view_records} and \link{view_previews}),
+\item \strong{analysing} records by deriving scene and AOI cloud distribution and coverage directly from preview imagery (see \link{calc_cloudcov}),
+\item \strong{selecting} records based on user-defined measures (see \link{select_unitemporal}, \link{select_bitemporal} and \link{select_timeseries}),
+\item \strong{ordering} datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download (see \link{check_availability} and \link{order_data}), and lastly
 \item \strong{downloading} the full datasets for those records that have been selected in the process, solely based on meta and preview-dervied data.
 }
 

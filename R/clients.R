@@ -276,7 +276,7 @@
   query.url <- paste0(url, "granules.json?", query.json, "&", query.product, "&", query.sort)
   
   # query API for defined product
-  response <- GET(query.url) %>% content()
+  response <- content(GET(query.url))
   response <- response$feed$entry
   
   # build a records data.frame containing all returned records

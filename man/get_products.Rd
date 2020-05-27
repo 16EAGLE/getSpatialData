@@ -16,7 +16,7 @@ getLandsat_products(..., update_online = TRUE)
 
 getMODIS_products(..., update_online = TRUE)
 
-getSRTM_products()
+getSRTM_products(..., update_online = TRUE)
 }
 \arguments{
 \item{product_groups}{character, either "all" or a combination of product names. Supported names are "Sentinel", "Landsat", "MODIS", "SRTM".}

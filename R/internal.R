@@ -1002,9 +1002,9 @@ rbind.different <- function(x) {
   if(isTRUE(verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
 }
 
-#' verbose lapply
+#' verbose sapply
 #'
-#' @importFrom pbapply pblapply
+#' @importFrom pbapply pbsapply
 #' @noRd 
 .sapply <- function(X, FUN, ..., verbose = FALSE){
   if(isTRUE(verbose)) pbsapply(X, FUN, ...) else sapply(X, FUN, ...)

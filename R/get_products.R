@@ -128,7 +128,7 @@ getMODIS_products <- function(..., update_online = TRUE){
 
 #' @rdname get_products
 #' @export
-getSRTM_products <- function(){
+getSRTM_products <- function(..., update_online = TRUE){
   get_products("SRTM", update_online = update_online)
 }
 

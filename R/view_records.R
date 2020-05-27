@@ -12,6 +12,7 @@
 #' @author Jakob Schwalb-Willmann
 #' 
 #' @importFrom mapview mapview viewRGB
+#' @importFrom grDevices hcl.colors
 #' 
 #' @name view_records
 #' @export
@@ -46,7 +47,8 @@ view_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nro
 }
 
 #' @rdname view_records
-#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes_string scale_colour_identity scale_fill_identity
+#' @importFrom ggplot2 ggplot coord_sf xlab ylab theme theme_bw geom_sf aes_string scale_colour_identity scale_fill_identity
+#' @importFrom grDevices hcl.colors
 #' @export
 plot_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nrow(records)), fill_colours = hcl.colors(nrow(records)), fill_alpha = 0.3, aoi_colour = "deepskyblue", verbose = TRUE){
   

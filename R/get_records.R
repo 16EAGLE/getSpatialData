@@ -52,9 +52,9 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   
   # use appropriate clients
   clients <- c(EE = FALSE, CopHub = FALSE, CMR = FALSE)
-  if(grepl("Sentinel", products)) clients["CopHub"] <- TRUE
-  if(any(grepl("Landsat", products), grepl("MODIS", products))) clients["EE"] <- TRUE
-  if(grepl("SRTM", products)) clients["CMR"] <- TRUE
+  if(any(sapply(products, function(x) grepl("Sentinel", x)))) clients["CopHub"] <- TRUE
+  if(any(sapply(products, function(x) any(grepl("Landsat", x), grepl("MODIS", x))))) clients["EE"] <- TRUE
+  if(any(sapply(products, function(x) grepl("SRTM", x)))) clients["CMR"] <- TRUE
   if(all(!clients)) out("Could not find appropriate client(s) for this/these product(s).", type = 3) else clients <- names(clients[clients])
   
   

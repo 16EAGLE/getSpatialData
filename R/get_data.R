@@ -73,8 +73,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   # get credendtial info
   records$gSD.cred <- NA
   records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
-    if(x$product_group == "Sentinel"){
-      list(.CopHub_select(x = extras$hub, p = x$product, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
+    if(x["product_group"] == "Sentinel"){
+      list(.CopHub_select(x = extras$hub, p = if(isTRUE(as.logical(x[["is_gnss"]]))) "GNSS" else x[["product"]], user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
     } else NA
   })
   
@@ -83,11 +83,14 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   if(isTRUE(md5_check)){
     out("Receiving MD5 checksums...")
     records[sub,]$md5_checksum <- unlist(.apply(records[sub,], MARGIN = 1, function(x){
-      if(x$product_group == "Sentinel"){
+      
+      if(x["product_group"] == "Sentinel"){
         cred <- unlist(x$gSD.cred)
         if(!is.null(x$md5_url)) content(.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
-      } else if(x$product_group == "Landsat" & x$level != "l1"){
+      
+      } else if(x["product_group"] == "Landsat" & x$level != "l1"){
         strsplit(content(.get(x$gSD.espa_item$cksum_download_ur), as = "text", encoding = "UTF-8"), " ")[[1]][1]
+      
       } else NA
     }, verbose = F))
   }
@@ -116,17 +119,26 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
     if(isTRUE(x$download_available)){
       dataset_url <- unlist(x$dataset_url, recursive = T)
       dataset_file <- unlist(x$dataset_file, recursive = T)
+      cred <- unlist(x$gSD.cred)
       if(any(is.na(dataset_url), is.na(dataset_file))) NA else {
         
         # attempt download
         download <- .sapply(1:length(dataset_url), function(i){
           file.head <- gsub("]", paste0(" | File ", i, "/", length(dataset_url), "]"), x$gSD.head)
-          .retry(.download, url = dataset_url[i],
+          .retry(.download,
+                 url = dataset_url[i],
                  file = dataset_file[i],
                  name = paste0(x$record_id, if(!is.na(x$level)) paste0(" (", x$level, ")") else NULL), 
-                 head = file.head, type = "dataset", md5 = x$md5_checksum, prog = if(isTRUE(verbose)) TRUE else FALSE,
+                 head = file.head,
+                 type = "dataset",
+                 md5 = x$md5_checksum,
+                 prog = if(isTRUE(verbose)) TRUE else FALSE,
                  fail = expression(out(paste0("Attempts to download '", name, "' failed.", type = 2))),
-                 retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)), delay = 0, value = T)
+                 retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)),
+                 delay = 0,
+                 value = T,
+                 username = if(x$product_group == "Sentinel") cred[1] else NULL,
+                 password = if(x$product_group == "Sentinel") cred[2] else NULL)
         })
         
         # return downloaded files

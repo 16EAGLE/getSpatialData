@@ -113,7 +113,7 @@
     file <- paste0(x$gSD.dir, "/", x$record_id)
     
     if(x$product_group == "Sentinel"){
-      if(x$product == "GNSS"){
+      if(grepl("GNSS", x$product)){
         paste0(file, ".TGZ")
       } else if(x$product == "Sentinel-5P"){
         paste0(file, ".nc")
@@ -261,7 +261,7 @@
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   v <- content(x)$data
-  if(is.null(v)) out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)
+  if(is.null(v)) out("Login failed. Please retry later or call services() to check if USGS services are currently unavailable.", type = 3)
   return(v)
 }
 

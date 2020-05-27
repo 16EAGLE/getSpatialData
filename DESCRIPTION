@@ -25,7 +25,7 @@ Imports:
   cli,
   RStoolbox,
   ggplot2,
-  cowplot,
+  patchwork,
   pbapply,
   tools,
   stats,

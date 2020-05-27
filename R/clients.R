@@ -31,6 +31,7 @@
   } else{
     out("AOI is ignored, since the requested product is of type GNSS. GNSS records are AOI-independent, as they are only referenced by mission time using argument time_range.", type = 2)
     aoi <- NULL
+    product_name_orig <- product_name
     product_name <- gsub("_GNSS", "", product_name)
   }
   
@@ -109,6 +110,17 @@
     # translate record column names
     if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
     records$is_gnss <- gnss
+    
+    # remove non-functional preview url if records are GNSS
+    if(gnss){
+      records$preview_url <- NULL
+      records$product <- product_name_orig
+      #records$md5_url <- NULL
+    }
+    
+    if(product_name == "Sentinel-5P"){
+      records$preview_url <- NULL
+    }
     
     if(!is.null(records$footprint)) records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     return(records)
@@ -225,6 +237,8 @@
   
   # get collection from concept id
   id <- .getCMR_id(product_name)
+  out(paste0("Searching records for product name '", product_name, "'..."))
+  if(grepl("SRTM", product_name)) out("'time_range' is ignored, since the requested product is monotemporal.", type = 2)
   #url.query <- paste0(url, "collections?concept_id=", id)
   #response <- content(GET(url.query))
   #response <- response$feed$entry
@@ -235,7 +249,7 @@
   # sort coordinates counter-clockwise
   aoi.points <- st_cast(aoi, "POINT")
   aoi.points <- aoi.points[!duplicated(aoi.points)]
-  azimuth <- sapply(1:length(aoi.points), function(i, center = quiet(st_centroid(aoi))) st_geod_azimuth(c(aoi.points[i], center)))
+  azimuth <- sapply(1:length(aoi.points), function(i, center = quiet(st_centroid(aoi))) suppressPackageStartupMessages(st_geod_azimuth(c(aoi.points[i], center))))
   aoi.points <- aoi.points[rev(order(azimuth))]
   aoi.matrix <- st_coordinates(aoi.points[rev(order(azimuth))])
   

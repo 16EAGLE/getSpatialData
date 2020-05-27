@@ -25,15 +25,20 @@ check_availability <- function(records, verbose = TRUE){
   records$download_available <- NA
   
   # Sentinel
-  if("Sentinel" %in% records$product_group){
-    out("Checking instant availability for Sentinel records...")
-    records.sentinel <- records[records$product_group == "Sentinel",]
-    records.sentinel$cred <- .lapply(records.sentinel$product, function(x){
-      .CopHub_select(x = "auto", p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
-    })
-    records[records$product_group == "Sentinel",]$download_available <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
-      as.logical(toupper(unlist(.get_odata(x$entity_id, x$cred, field = "Online/$value"))))
-    })
+  if(any(records$product_group == "Sentinel")){
+    if(any(!records$is_gnss)){
+      out("Checking instant availability for Sentinel records...")
+      records.sentinel <- records[records$product_group == "Sentinel" & !records$is_gnss,]
+      records.sentinel$cred <- .lapply(records.sentinel$product, function(x){
+        .CopHub_select(x = "auto", p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
+      })
+      records[records$product_group == "Sentinel" & !records$is_gnss,]$download_available <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
+        as.logical(toupper(unlist(.get_odata(x$entity_id, x$cred, field = "Online/$value"))))
+      })
+    }
+    if(any(records$is_gnss)){
+      records[records$is_gnss,]$download_available <- TRUE
+    }
   }
   
   # Landsat

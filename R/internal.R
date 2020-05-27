@@ -969,7 +969,7 @@ rbind.different <- function(x) {
   
   # get ...
   extras <- list(...)
-  if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
+  #if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
   
   # initial evaluation
   if(!is.null(ini)) eval(ini)

@@ -93,7 +93,7 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
     gg.list[[1]] <- cf(gg.list[[1]])
     gg <- gg.list[[1]]
     
-    if(length(map.list) > 1) for(i in 2:length(gg.list)) gg <- "+"(gg, gg.list[[i]])
+    if(length(gg.list) > 1) for(i in 2:length(gg.list)) gg <- "+"(gg, gg.list[[i]])
     if(isTRUE(show_aoi)) gg <- aoi(gg)
     
   } else{

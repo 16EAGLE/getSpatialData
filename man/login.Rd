@@ -4,14 +4,15 @@
 \alias{login}
 \alias{login_CopHub}
 \alias{login_USGS}
+\alias{login_earthdata}
 \alias{services}
 \title{Session-wide login}
 \usage{
-login_CopHub(username = NULL, password = NULL, n_retry = 3,
-  verbose = TRUE)
+login_CopHub(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
 
-login_USGS(username = NULL, password = NULL, n_retry = 3,
-  verbose = TRUE)
+login_USGS(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
+
+login_earthdata(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
 
 services(value = F, verbose = T)
 }
@@ -30,11 +31,13 @@ services(value = F, verbose = T)
 Functions to login to services supported by \code{getSpatialData} once for the running session and to recieve their current status.
 }
 \details{
-\code{login_CopHub} defines login credentials for the Copernicus Open Access Hub (register on \url{https://scihub.copernicus.eu/})
+\code{login_CopHub} logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 
-\code{login_USGS} defines login credentials to the USGS EROS Registration System (ERS). Register on \url{https://ers.cr.usgs.gov/register/}.
+\code{login_USGS} logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
 
-\code{services_avail} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
+\code{login_earthdata} logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new
+
+\code{services} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
 }
 \note{
 Login credentials will be saved and made available for all \code{getSpatialData} functions during the whole session. They will be erased when quitting the session. Alternatively, login credentials can be set individually with each \code{get*} function call.
@@ -50,7 +53,7 @@ login_CopHub(username = "my_user_name", password = "my_password")
 login_USGS(username = "my_user_name", password = "my_password")
 
 ## get status of all services
-services_avail()
+services()
 }
 }
 \seealso{

@@ -1,6 +1,6 @@
 #' Order datasets
 #' 
-#' \code{orde_data} oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download. Use \link{check_availability} to see which datasets need to be ordered before download.
+#' \code{order_data} oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download. Use \link{check_availability} to see which datasets need to be ordered before download.
 #'
 #' @inheritParams get_data
 #' @param wait_for_order logical, whether to wait until all datasets have been successfully ordered and are ready for download (default) or not. If \code{FALSE}, orders are only placed.
@@ -13,7 +13,7 @@
 #' @importFrom httr HEAD authenticate
 #' @export
 
-order_data <- function(records, wait_for_order = TRUE, ..., verbose = TRUE){
+order_data <- function(records, wait_for_order = FALSE, ..., verbose = TRUE){
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -50,7 +50,9 @@ order_data <- function(records, wait_for_order = TRUE, ..., verbose = TRUE){
     records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
       if(x$product_group == "Sentinel"){
         list(.CopHub_select(x = extras$hub, p = x$product, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
-      } else NA
+      } else if(x$product_group == "Landsat"){
+        list(user = getOption("gSD.usgs_user"), pw = getOption("gSD.usgs_pass"))
+      }
     })
     
     # get URLs
@@ -64,40 +66,92 @@ order_data <- function(records, wait_for_order = TRUE, ..., verbose = TRUE){
     
     # order/restore items
     if(is.null(records$ordered)) records$ordered <- FALSE
-    dt_nextorder <- Sys.time()
+    #dt_nextorder <- Sys.time()
+    records$order_id <- NA
     
-    
-    
-    records[sub,]$ordered <- .apply(records[sub,], MARGIN = 1, function(x){
+    records[sub,] <- do.call(rbind, .lapply(1:nrow(records[sub,]), function(i){
+      x <- records[i,]
+      
       if(isFALSE(x$ordered)){
-        
         if(x$product_group == "Sentinel"){
-          if(dt_nextorder < Sys.time()){
-            out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
+          out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
           
-            # get head first
-            request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
-            if(!inherits(request_head, "try-error")){
-              if(request_head$status_code == 200) return(TRUE)
-              if(request_head$status_code == 202) request <- try(gSD.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+          out("Assembling dataset URLs...")
+          x$gSD.dataset_url <- NA
+          x$gSD.dataset_url <- .get_ds_urls(x)
+          
+          # get head first
+          request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
+          if(!inherits(request_head, "try-error")){
+            if(request_head$status_code == 200) x$ordered <- TRUE
+            if(request_head$status_code == 202){
+              request <- try(.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+              x$ordered <- TRUE
             }
-            if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
-              out(paste0(x$gSD.head, "Restoring of '", x$record_id, "' failed. You may have exceeded the quota of allowed LTA requests."), type = 2)
-              return(FALSE)
-            } else dt_nextorder <- Sys.time()+(30*60)
+          }
+          if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
+            out(paste0(x$gSD.head, "Restoring of '", x$record_id, "' failed. You may have exceeded the quota of allowed LTA requests."), type = 2)
+            x$ordered <- FALSE
           }
         }
         
         if(x$product_group == "Landsat"){
-          FALSE
+          out(paste0(x$gSD.head, "Requesting order of '", x$record_id, "' at ESPA..."))
+          
+          request <- try(.ESPA_order(id = x$record_id, level = x$level,
+                                     username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2],
+                                     format = "gtiff", verbose = verbose))
+          if(!inherits(request, "try-error")){
+            x$ordered <- TRUE
+            x$order_id <- request
+          } else x$ordered <- FALSE
         }
       } else{
         out(paste0(x$gSD.head, "Skipping '", x$record_id, "', since it already has been ordered..."))
-        return(TRUE)
+        x$ordered <- TRUE
       }
-    })
+      x$gSD.cred <- NULL
+      return(x)
+    }))
+    
     if(any(!records[sub,]$ordered)) out("Some datasets could not be ordered succesfully. Check column 'ordered' and retry later for those records that are FALSE.", type = 2)
   }
   
+  if(isTRUE(wait_for_order)){
+    out("Waiting for orders to be completed, since 'wait_for_order' has been set to 'TRUE' (you may abort any time and check manually using 'check_availability()')...")
+    recheck <- TRUE
+    while(isTRUE(recheck)){
+      records <- check_availability(records)
+      if(all(records[sub,]$download_available)) recheck <- FALSE
+    }
+  }
   return(.column_summary(records, records.names))
 }
+
+# records[sub,] <- do.call(rbind, .lapply(1:nrow(records[sub,]), function(i){
+#   x <- records[i,]
+#   
+#   if(isFALSE(x$ordered)){
+#     if(x$product_group == "Sentinel"){
+#       if(dt_nextorder < Sys.time()){
+#         out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
+#       
+#         out("Assembling dataset URLs...")
+#         x$gSD.dataset_url <- NA
+#         x$gSD.dataset_url <- .get_ds_urls(x)
+#         
+#         # get head first
+#         request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
+#         if(!inherits(request_head, "try-error")){
+#           if(request_head$status_code == 200) return(TRUE)
+#           if(request_head$status_code == 202) request <- try(gSD.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+#         }
+#         if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
+#           out(paste0(x$gSD.head, "Restoring of '", x$record_id, "' failed. You may have exceeded the quota of allowed LTA requests."), type = 2)
+#           return(FALSE)
+#         } else dt_nextorder <- Sys.time()+(30*60)
+# 
+#       
+#       }
+#     }
+        

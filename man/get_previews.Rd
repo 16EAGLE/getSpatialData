@@ -4,8 +4,14 @@
 \alias{get_previews}
 \title{Get previews of records}
 \usage{
-get_previews(records, dir_out = NULL, force = FALSE, ...,
-  verbose = TRUE)
+get_previews(
+  records,
+  dir_out = NULL,
+  force = FALSE,
+  as_sf = TRUE,
+  ...,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
@@ -14,14 +20,14 @@ get_previews(records, dir_out = NULL, force = FALSE, ...,
 
 \item{force}{logical, whether to force download of files already existing or not.}
 
+\item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
+
 \item{...}{additional, sensor-specific arguments:
 \itemize{
-   \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
    \item \code{hub}, character, Copernicus Hub selection for Sentinel queries. Either
 \itemize{
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
    \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.

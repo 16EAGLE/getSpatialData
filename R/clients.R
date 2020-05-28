@@ -16,16 +16,23 @@
   username <- extras$username
   password <- extras$password
   if(!is.null(extras$hub)) hub <- extras$hub else hub <- "auto"
-  if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
   if(is.null(username)) .check_login("Copernicus")
   cred <- .check_credentials(username, password, service = "Copernicus")
+  
+  # GNSS products
+  gnss <- grepl("GNSS", product_name)
+  #if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
+  out(paste0("Searching records for product name '", product_name, "'..."))
   
   ## Global AOI
   if(!isTRUE(gnss)){
     aoi <- st_as_sfc(st_bbox(.check_aoi(aoi, type = "sf"))) # create bounding box instead of checking npts
     aoi <- .check_aoi(aoi, type = "matrix")
   } else{
+    out("AOI is ignored, since the requested product is of type GNSS. GNSS records are AOI-independent, as they are only referenced by mission time using argument time_range.", type = 2)
     aoi <- NULL
+    product_name_orig <- product_name
+    product_name <- gsub("_GNSS", "", product_name)
   }
   
   ## url assembler function
@@ -52,11 +59,10 @@
   row.start <- -100; re.query <- T; give.return <- T
   query.list <- list()
   
-  out(paste0("Searching records for product name '", product_name, "'..."))
   while(is.TRUE(re.query)){
     row.start <- row.start + 100
     
-    query <- gSD.get(url = cop.url(ext.xy = aoi, url.root = cred[3], product_name = product_name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
+    query <- .get(url = cop.url(ext.xy = aoi, url.root = cred[3], product_name = product_name, time.range = time_range, row.start = row.start), username = cred[1], password = cred[2])
     query.xml <- suppressMessages(xml_contents(as_xml_document(content(query, as = "text"))))
     query.list <- c(query.list, .lapply(query.xml[grep("entry", query.xml)], function(x) xml_contents(x)))
     
@@ -105,7 +111,18 @@
     if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
     records$is_gnss <- gnss
     
-    records$footprint <- st_as_sfc(records$footprint, crs = 4326)
+    # remove non-functional preview url if records are GNSS
+    if(gnss){
+      records$preview_url <- NULL
+      records$product <- product_name_orig
+      #records$md5_url <- NULL
+    }
+    
+    if(product_name == "Sentinel-5P"){
+      records$preview_url <- NULL
+    }
+    
+    if(!is.null(records$footprint)) records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     return(records)
   }
 }
@@ -160,7 +177,7 @@
         x <- rbind.data.frame(x, stringsAsFactors = F)
         colnames(x) <- names
         
-        response <- try(gSD.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = cred$username, password = cred$password), silent = T)
+        response <- try(.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = cred$username, password = cred$password), silent = T)
         if(inherits(response, "try-error")) response <- "l1" else{
           response <- if(all(names(content(response)) == "not_implemented")) "'l1'" else unlist(content(response)[[1]]$products) #paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
         }
@@ -207,8 +224,8 @@
 #'
 #' @importFrom getPass getPass
 #' @importFrom httr content
-#' @importFrom sf st_as_sfc st_sf
-#' @importFrom geosphere bearing
+#' @importFrom sf st_as_sfc st_sf st_centroid st_coordinates st_cast
+#' @importFrom lwgeom st_geod_azimuth
 #' 
 #' @return records
 #' @keywords internal
@@ -220,20 +237,29 @@
   
   # get collection from concept id
   id <- .getCMR_id(product_name)
-  url.query <- paste0(url, "collections?concept_id=", id)
-  response <- content(GET(url.query))
-  response <- response$feed$entry
+  out(paste0("Searching records for product name '", product_name, "'..."))
+  if(grepl("SRTM", product_name)) out("'time_range' is ignored, since the requested product is monotemporal.", type = 2)
+  #url.query <- paste0(url, "collections?concept_id=", id)
+  #response <- content(GET(url.query))
+  #response <- response$feed$entry
   
   # check aoi
   aoi <- st_as_sfc(st_bbox(.check_aoi(aoi, type = "sf", quiet = T)))
   
-  aoi.matrix <- .check_aoi(aoi, type = "matrix", quiet = T)
-  aoi.matrix <- aoi.matrix[!duplicated(aoi.matrix),]
+  # sort coordinates counter-clockwise
+  aoi.points <- st_cast(aoi, "POINT")
+  aoi.points <- aoi.points[!duplicated(aoi.points)]
+  azimuth <- sapply(1:length(aoi.points), function(i, center = quiet(st_centroid(aoi))) suppressPackageStartupMessages(st_geod_azimuth(c(aoi.points[i], center))))
+  aoi.points <- aoi.points[rev(order(azimuth))]
+  aoi.matrix <- st_coordinates(aoi.points[rev(order(azimuth))])
+  
+  #aoi.matrix <- .check_aoi(aoi, type = "matrix", quiet = T)
+  #aoi.matrix <- aoi.matrix[!duplicated(aoi.matrix),]
   
   # sort coordinates counter-clockwise
-  aoi.center <- quiet(st_centroid(aoi))
-  cc.angles <- bearing(aoi.matrix, aoi.center[[1]][1:2])
-  aoi.matrix <- aoi.matrix[rev(order(cc.angles)),]
+  #aoi.center <- quiet(st_centroid(aoi))
+  # cc.angles <- geosphere::bearing(aoi.matrix, aoi.center[[1]][1:2])
+  # aoi.matrix <- aoi.matrix[rev(order(cc.angles)),]
   
   # start with most western coordinate
   cc.first <- which.min(aoi.matrix[,1])
@@ -250,11 +276,8 @@
   query.url <- paste0(url, "granules.json?", query.json, "&", query.product, "&", query.sort)
   
   # query API for defined product
-  response <- GET(query.url) %>% content()
+  response <- content(GET(query.url))
   response <- response$feed$entry
-  
-  # number of avialable datasets
-  length(response)
   
   # build a records data.frame containing all returned records
   fields <- names(response[[1]])
@@ -266,53 +289,21 @@
     y$links <- list(links)
     colnames(y) <- fields
     
-    y$download_url <- links[grep("hgt.zip$", links)]
+    #y$dataset_url <- links[grep("hgt.zip$", links)]
+    y$preview_url <- links[grep(".jpg$", links)]
     return(y)
   }))
   
+  if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
+  
+  # convert coordinates to sf
+  if(!is.null(records$footprint)){
+    records$footprint <- st_as_sfc(lapply(records$footprint, function(x){
+      y <- as.numeric(strsplit(x, " ")[[1]])
+      y <- data.frame(x = y[c(2, 4, 4, 2, 2)], y = y[c(1, 1, 3, 3, 1)])
+      st_polygon(list(as.matrix(y)))
+    }), crs = 4326)
+  }
   return(records)
-  
-  # # create file names and attempt download
-  # records$file <- paste0("/home/UNI-WUERZBURG.EU/jas24nx/Downloads/", records$producer_granule_id)
-  # response <- mapply(x = records$download_url, y = records$file, function(x, y){
-  #   GET(x, write_disk(y, overwrite = T), progress())
-  # }, SIMPLIFY = F) # will fail
-  # http_status(response[[1]])
-  # # download fails sicne API requires us to authenticate
-  # 
-  # # CMR as many other NASA APIs use the URS authentication service
-  # # based on OAUTH
-  # # for this, we need a netrc authentification file
-  # file.netrc <- file.path(Sys.getenv("HOME"),'.netrc', fsep = .Platform$file.sep)
-  # con.netrc <- file(file.netrc)
-  # 
-  # # .netrc file is filled with your credentials
-  # writeLines(c("machine urs.earthdata.nasa.gov",
-  #              sprintf("login %s", getPass(msg = "Enter URS username:")),
-  #              sprintf("password %s", getPass(msg = "Enter URS password:"))), con.netrc)
-  # close(con.netrc)
-  # 
-  # # repeat the query, now using the authentificaton file and allowing a sesson cookie
-  # response <- mapply(x = records$download_url, y = records$file, function(x, y){
-  #   GET(x, write_disk(y, overwrite = T),
-  #       progress(), config(netrc = T, netrc_file = file.netrc), set_cookies("LC" = "cookies"))
-  # }, SIMPLIFY = F)
-  # http_status(response[[1]])
-  # 
-  # # unzip all files
-  # records$file_unzipped <- unlist(lapply(records$file, function(x){
-  #   unzip(x, exdir = paste0(head(strsplit(x, "/")[[1]], n=-1), collapse = "/"))
-  # }))
-  # 
-  # # load all files
-  # r <- lapply(records$file_unzipped, raster)
-  # 
-  # # some messy viz (do it better with your functions!)
-  # RStoolbox::ggR(r[[2]], coord_equal = F) + 
-  #   ggplot2::coord_sf(crs = st_crs(r[[1]]), datum = st_crs(r[[1]]))
-  # 
-  # map <- mapview(r[[1]])
-  # mapview(r[[2]], map)
-  
 }
 

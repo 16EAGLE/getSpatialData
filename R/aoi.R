@@ -2,7 +2,6 @@
 #' 
 #' Functions that set, view and get a session-wide area of interest (AOI) that can be used by all \code{getSpatialData} functions.
 #'
-#' @inheritParams getSentinel_records
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. If \code{set_aoi} is called and \code{aoi} is undefined, an interactve \code{mapedit} viewer should open letting you draw an AOI polygon.
 #' @param type character, AOI object type, either "matrix", "sf" or "sp".
 #' @param aoi_colour chracter, AOI colour.

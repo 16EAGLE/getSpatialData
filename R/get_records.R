@@ -11,12 +11,10 @@
 #' @param verbose logical, whether to display details on the function's progress or output on the console.
 #' @param ... additional, sensor-specific arguments:
 #' \itemize{
-#'    \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
 #'    \item \code{hub}, character, Copernicus Hub selection for Sentinel queries. Either
 #' \itemize{
 #'    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
 #'    \item "dhus" to look for operational Open Hub records only,
-#'    \item "s3" to look for Sentinel-3 pre-operational records only,
 #'    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
 #'    \item "GNSS" to look for GNSS RINEX records only,
 #'    \item or a valid API URL.
@@ -27,10 +25,9 @@
 #' 
 #' @details
 #' To use these functions, you need to be logged in at the required services: To query Sentinel records, login with your ESA Copernicus Open Access Hub credentials using \link{login_CopHub}. To query MODIS and Landsat records, login with your USGS EROS Registration System (ERS) credentials using \link{login_USGS}. See \code{\link{login}} for details.
-#' 
-#' @section GNSS:
-#' If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}). 
 #'
+#' @section GNSS:
+#' GNSS products (such as "Sentinel-1_GNSS") retrieved from the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 represent a special type of product, as they are AOI-independent and thus only referenced by mission time (argument \code{time_range}). GNSS data originally have been used only to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
 #' 
 #' @author Jakob Schwalb-Willmann
 #'
@@ -52,23 +49,41 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   .check_verbose(verbose)
   .check_time_range(time_range)
   if(isTRUE(check_products)) .check_products(products, products_available = get_products(update_online = F))
-  is.CopHub <- grepl("Sentinel", products)
+  
+  # use appropriate clients
+  clients <- c(EE = FALSE, CopHub = FALSE, CMR = FALSE)
+  if(any(sapply(products, function(x) grepl("Sentinel", x)))) clients["CopHub"] <- TRUE
+  if(any(sapply(products, function(x) any(grepl("Landsat", x), grepl("MODIS", x))))) clients["EE"] <- TRUE
+  if(any(sapply(products, function(x) grepl("SRTM", x)))) clients["CMR"] <- TRUE
+  if(all(!clients)) out("Could not find appropriate client(s) for this/these product(s).", type = 3) else clients <- names(clients[clients])
+  
   
   # get records
-  records <- mapply(client = c("EE", "CopHub")[as.numeric(is.CopHub)+1], product_name = products, function(client, product_name){
+  records <- mapply(client = clients, product_name = products, function(client, product_name){
     eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, rename_cols = rename_cols, ..., verbose = verbose)")))
   }, USE.NAMES = F, SIMPLIFY = F)
   
   # bind records
   if(length(records) > 1) records <- rbind.different(.gsd_compact(records)) else records <- records[[1]]
   
-  # sort records
-  sub <- sapply(unique(getOption("gSD.clients_dict")$gSD), function(x) x %in% colnames(records))
-  names_sorted <- unique(getOption("gSD.clients_dict")$gSD)[sub]
-  records <- cbind(records[,names_sorted], records[,!sapply(colnames(records), function(x) x %in% names_sorted, USE.NAMES = F)])
-  
-  # convert to sf
-  if(!is.null(records)) return(.check_records(records, as_df = !as_sf))
+  if(!is.null(records)){
+    # fill missing tile IDs
+    records <- .make_tileid(records)
+    if(all(is.na(records$tile_id))) records$tile_id <- NULL
+    
+    # sort records
+    used_names <- sapply(unique(getOption("gSD.clients_dict")$gSD), function(x) x %in% colnames(records))
+    sorted_names <- unique(getOption("gSD.clients_dict")$gSD)[used_names]
+    undefined_names <- colnames(records)[!sapply(colnames(records), function(x) x %in% sorted_names, USE.NAMES = F)]
+    
+    if(length(undefined_names) > 0){
+      records <- cbind(records[, sorted_names], records[, undefined_names])
+      colnames(records) <- c(sorted_names, undefined_names)
+    }
+    
+    # convert to sf
+    return(.check_records(records, as_df = !as_sf))
+  }
 }
 
 #' @rdname get_records

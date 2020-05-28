@@ -16,14 +16,14 @@
 #' @importFrom sf st_transform st_coordinates st_sfc
 #' @export
 
-get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = TRUE){
+get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, ..., verbose = TRUE){
   
   # check hidden arguments
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
   
   # checks
-  records <- .check_records(records, c("product", "product_group", "record_id", "preview_url"))
+  records <- .check_records(records, c("product", "product_group", "record_id", "preview_url"), as_df = F)
   dir_out <- .check_dir_out(dir_out, "previews")
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
@@ -37,6 +37,8 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = 
   # file 
   records$gSD.dir <- paste0(dir_out, "/", records$product, "/")
   catch <- sapply(records$gSD.dir, function(x) if(!dir.exists(x)) dir.create(x, recursive = T))
+  rm(catch)
+
   files <- paste0(records$gSD.dir, records$record_id, "_preview.jpg")
   
   # check login
@@ -57,7 +59,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = 
                                        
     # download
     if(isFALSE(is.url(url))) return(NA) else{
-      download <- gSD.download(url = url, file = file, name = name, head = head, type = "preview", prog = F, force = force,
+      download <- .download(url = url, file = file, name = name, head = head, type = "preview", prog = F, force = force,
                                username = if(!is.na(cred[[1]][1])) cred[[1]][1] else NULL,
                                password = if(!is.na(cred[[1]][1])) cred[[1]][2] else NULL)
       if(isFALSE(download)) return(NA) else return(file)
@@ -75,7 +77,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = 
       return(file.tif)
     }
     
-    # process
+    # process ###### EDIT THIS SECTION: PROJ/WKT, GDAL, raster? #########
     tryCatch({
       out(paste0(head, "Converting '", file.jpg, "' into '", file.tif, "'..."))
       
@@ -84,7 +86,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = 
       v <- values(prev)
       rm.prev <- apply((v == 0), MARGIN = 1, function(x) all(x))
       cc.keep <- xyFromCell(prev, which(rm.prev == F))
-      # check if has non-zeros DNs
+      # check if has non-zeros DNs, it should!
       has_non_zeros <- any(v > 0)
       if (has_non_zeros) {
         prev <- crop(prev, extent(min(cc.keep[,1]), max(cc.keep[,1]), min(cc.keep[,2]), max(cc.keep[,2])))
@@ -96,10 +98,20 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = 
       if(group == "MODIS") footprint <- st_transform(x = footprint, crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
       crs(prev) <- crs(as(footprint, "Spatial"))
       footprint <- st_coordinates(footprint)
-      extent(prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2]))
-      if(group == "MODIS") prev <- projectRaster(prev, crs = crs("+proj=longlat +datum=WGS84 +no_defs"))
-      
+      x_dim <- footprint[, "X"]
+      y_dim <- footprint[, "Y"]
+      extent(prev) <- extent(min(x_dim), max(x_dim), 
+                             min(y_dim), max(y_dim))
+      wgs84 <- "+proj=longlat +datum=WGS84 +no_defs"
+      if(group == "MODIS") {
+        prev <- projectRaster(prev, crs = crs(wgs84))
+        prev[prev<0] <- 0
+      } else {
+        crs(prev) <- wgs84 # ensure preview has its crs
+      }
+
       # write
+      prev <- .ensure_minmax(prev) # sometimes values are above 255 (MODIS), ensure 0-255
       writeRaster(prev, file.tif)
       return(file.tif)
     }, error = function(e){
@@ -108,5 +120,6 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, ..., verbose = 
     })
   }, USE.NAMES = F, SIMPLIFY = F))
   
+  records <- .check_records(records, as_df = !as_sf)
   return(.column_summary(records, records.names))
 }

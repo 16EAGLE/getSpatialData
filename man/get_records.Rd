@@ -7,17 +7,49 @@
 \alias{getMODIS_records}
 \title{Query available product records}
 \usage{
-get_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+get_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 
-getSentinel_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+getSentinel_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 
-getLandsat_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+getLandsat_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 
-getMODIS_records(time_range, products, aoi = NULL, as_sf = TRUE,
-  rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE)
+getMODIS_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{time_range}{character, a vector of two elements: the query's starting date and stopping date, formatted "YYYY-MM-DD", e.g. \code{c("2017-05-15", "2017-06-15")}}
@@ -34,12 +66,10 @@ getMODIS_records(time_range, products, aoi = NULL, as_sf = TRUE,
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{
-   \item \code{gnss}, logical, whether to query for Sentinel GNSS RINEX records instead of remote sensing instrument records. If \code{TRUE}, only records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 are returned and \code{aoi} settings are ignored. If \code{FALSE} (default), remote sensing instrument records, queried including \code{aoi} settings, are returned (see section \code{Sentinel}).
    \item \code{hub}, character, Copernicus Hub selection for Sentinel queries. Either
 \itemize{
    \item "auto" (default) to automatically select a suitable Copernicus hub depending on the selected products
    \item "dhus" to look for operational Open Hub records only,
-   \item "s3" to look for Sentinel-3 pre-operational records only,
    \item "s5p" to look for Sentinel-5P precursor pre-operational records only,
    \item "GNSS" to look for GNSS RINEX records only,
    \item or a valid API URL.
@@ -59,7 +89,7 @@ To use these functions, you need to be logged in at the required services: To qu
 }
 \section{GNSS}{
 
-If you are instead interested in (AOI-independent) GNSS records of the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3, set argument \code{gnss} to \code{TRUE}. GNSS data originally have been only used to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
+GNSS products (such as "Sentinel-1_GNSS") retrieved from the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 represent a special type of product, as they are AOI-independent and thus only referenced by mission time (argument \code{time_range}). GNSS data originally have been used only to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
 }
 
 \author{

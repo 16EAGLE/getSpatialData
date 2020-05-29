@@ -55,12 +55,18 @@ order_data <- function(records, wait_for_order = FALSE, ..., verbose = TRUE){
       }
     })
     
+    # get URLs
+    out("Assembling dataset URLs...")
+    records$gSD.dataset_url <- NA
+    records[sub,]$gSD.dataset_url <- .get_ds_urls(records[sub,])
+    
     # items and head
     records$gSD.item <- 1:nrow(records)
     records$gSD.head <- .sapply(records$gSD.item, function(i, n = nrow(records)) paste0("[Dataset ", toString(i), "/", toString(n), "] "))
     
     # order/restore items
     if(is.null(records$ordered)) records$ordered <- FALSE
+    #dt_nextorder <- Sys.time()
     records$order_id <- NA
     
     records[sub,] <- do.call(rbind, .lapply(1:nrow(records[sub,]), function(i){
@@ -119,6 +125,33 @@ order_data <- function(records, wait_for_order = FALSE, ..., verbose = TRUE){
       if(all(records[sub,]$download_available)) recheck <- FALSE
     }
   }
-  
   return(.column_summary(records, records.names))
 }
+
+# records[sub,] <- do.call(rbind, .lapply(1:nrow(records[sub,]), function(i){
+#   x <- records[i,]
+#   
+#   if(isFALSE(x$ordered)){
+#     if(x$product_group == "Sentinel"){
+#       if(dt_nextorder < Sys.time()){
+#         out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
+#       
+#         out("Assembling dataset URLs...")
+#         x$gSD.dataset_url <- NA
+#         x$gSD.dataset_url <- .get_ds_urls(x)
+#         
+#         # get head first
+#         request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
+#         if(!inherits(request_head, "try-error")){
+#           if(request_head$status_code == 200) return(TRUE)
+#           if(request_head$status_code == 202) request <- try(gSD.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+#         }
+#         if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
+#           out(paste0(x$gSD.head, "Restoring of '", x$record_id, "' failed. You may have exceeded the quota of allowed LTA requests."), type = 2)
+#           return(FALSE)
+#         } else dt_nextorder <- Sys.time()+(30*60)
+# 
+#       
+#       }
+#     }
+        

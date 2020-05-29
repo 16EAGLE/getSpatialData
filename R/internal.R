@@ -269,19 +269,22 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid <- function(records) {
-    
-  TILEID <- name_tile_id()
+  
+  if(is.null(getElement(records, name_tile_id()))) records[name_tile_id()] <- NA_character_
   
   # first, try using the horizontal / vertical columns
-  tileid_not_given <- is.na(records[[name_tile_id()]])
-  vertical_given <- !is.na(records[[name_tile_number_vertical()]])
-  horizontal_given <- !is.na(records[[name_tile_number_horizontal()]])
-  use_tile_num <- which((tileid_not_given * vertical_given * horizontal_given) == 1) 
-  horizontal <- records$tile_number_horizontal[use_tile_num]
-  vertical <- records$tile_number_vertical[use_tile_num]
-  records[use_tile_num, TILEID] <- paste0(horizontal, vertical)
-
-  # in many cases now value is given in horizontal / vertical
+  has_tileid <- !is.na(getElement(records, name_tile_id()))
+  has_vertical <- if(!is.null(getElement(records, name_tile_number_vertical()))) !is.na(getElement(records, name_tile_number_vertical())) else rep(FALSE, nrow(records))
+  has_horizontal <- if(!is.null(getElement(records, name_tile_number_horizontal()))) !is.na(getElement(records, name_tile_number_horizontal())) else rep(FALSE, nrow(records))
+  
+  sub <- !has_tileid & has_vertical & has_horizontal
+  if(any(sub)){
+    horizontal <- getElement(records[sub,], name_tile_number_horizontal())
+    vertical <- getElement(records[sub,], name_tile_number_vertical())
+    records[sub, name_tile_id()] <- paste0(horizontal, vertical)
+  }
+  
+  # in many cases no value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
   records <- .make_tileid_sentinel1(records)
   records <- .make_tileid_sentinel2(records)
@@ -313,7 +316,7 @@ rbind.different <- function(x) {
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid) && !.is_empty_array(footprints)) {
       tileids <- sapply(footprints, function(footprint) {
         tryCatch({
-          footprint <- footprint[[1]][[1]]
+          footprint <- footprint[[1]]#[[1]]
           horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), POINT_SEP)[[1]]
           vertical <- strsplit(as.character(mean(footprint[,2][1:4])), POINT_SEP)[[1]]
           id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),
@@ -358,6 +361,7 @@ rbind.different <- function(x) {
 #' creates tile ids for Sentinel-3 records
 #' @param records data.frame
 #' @return records data.frame with added tile id of Sentinel-3 records
+#' @importFrom utils tail
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel3 <- function(records) {
@@ -479,6 +483,7 @@ rbind.different <- function(x) {
 #' @param dates character vector of dates ("2019-01-01").
 #' @return \code{period} character vector of two dates
 #' @keywords internal
+#' @importFrom utils tail
 #' @noRd
 .identify_period <- function(dates) {
   dates_sorted <- sort(dates)
@@ -543,8 +548,8 @@ rbind.different <- function(x) {
   polygons <- "polygons"
   COORDS_SLOT <- "coords"
   ext <- try(extent(preview))
-  if (inherits(ext, getSpatialData:::TRY_ERROR())) return (preview)
-  poly <- as(ext, getSpatialData:::SPATIAL_POLYGONS())
+  if (inherits(ext, TRY_ERROR())) return (preview)
+  poly <- as(ext, SPATIAL_POLYGONS())
   crs(poly) <- crs(preview)
   # get the vertices of the extent and modify them
   coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
@@ -560,7 +565,7 @@ rbind.different <- function(x) {
   coords[4,2] <- coords[4,2] + val
   coords[5,2] <- coords[5,2] + val
   slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
-  preview_masked <- getSpatialData:::.mask_raster_by_polygon(preview, poly)
+  preview_masked <- .mask_raster_by_polygon(preview, poly)
   extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
   return(preview_masked)
 } 
@@ -964,7 +969,7 @@ rbind.different <- function(x) {
   
   # get ...
   extras <- list(...)
-  if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
+  #if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
   
   # initial evaluation
   if(!is.null(ini)) eval(ini)
@@ -997,9 +1002,9 @@ rbind.different <- function(x) {
   if(isTRUE(verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
 }
 
-#' verbose lapply
+#' verbose sapply
 #'
-#' @importFrom pbapply pblapply
+#' @importFrom pbapply pbsapply
 #' @noRd 
 .sapply <- function(X, FUN, ..., verbose = FALSE){
   if(isTRUE(verbose)) pbsapply(X, FUN, ...) else sapply(X, FUN, ...)
@@ -1028,19 +1033,25 @@ rbind.different <- function(x) {
                                     c("displayId", "record_id"),
                                     c("uuid", "entity_id"),
                                     c("entityId", "entity_id"),
+                                    c("id", "entity_id"),
                                     c("summary", "summary"),
+                                    c("dataset_id", "summary"),
                                     c("beginposition", "date_acquisition"),
                                     c("acquisitionDate", "date_acquisition"),
                                     c("beginposition", "start_time"),
                                     c("StartTime", "start_time"),
                                     c("AcquisitionStartDate", "start_time"),
+                                    c("time_start", "start_time"),
                                     c("endposition", "stop_time"),
                                     c("StopTime", "stop_time"),
                                     c("AcquisitionEndDate", "stop_time"),
+                                    c("time_end", "stop_time"),
                                     c("ingestiondate", "date_ingestion"),
                                     c("modifiedDate", "date_modified"),
+                                    c("updated", "date_modified"),
                                     c("creationdate", "date_creation"),
                                     c("footprint", "footprint"),
+                                    c("boxes", "footprint"),
                                     c("tileid", "tile_id"),
                                     c("WRSPath", "tile_number_horizontal"),
                                     c("WRSRow", "tile_number_vertical"),
@@ -1101,7 +1112,8 @@ rbind.different <- function(x) {
                                     c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
                                     c("ScienceQualityFlag", "flag_sciencequality"),
                                     c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
-                                    c("MissingDataPercentage", "missingdata"), stringsAsFactors = F)
+                                    c("MissingDataPercentage", "missingdata"),
+                                    c("collection_concept_id", "product_id"), stringsAsFactors = F)
   colnames(clients_dict) <- c("clients", "gSD")
   
   op <- options()

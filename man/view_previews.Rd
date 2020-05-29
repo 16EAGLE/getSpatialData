@@ -9,6 +9,7 @@ view_previews(
   records,
   show_aoi = TRUE,
   aoi_colour = "deepskyblue",
+  maxpixels = 1e+05,
   verbose = TRUE
 )
 
@@ -18,7 +19,7 @@ plot_previews(
   aoi_colour = "deepskyblue",
   separate = FALSE,
   maxcol = 3,
-  value = FALSE,
+  maxpixels = 1e+05,
   verbose = TRUE
 )
 }
@@ -28,6 +29,8 @@ plot_previews(
 \item{show_aoi}{logical, whether the session AOI defined with \link{set_aoi} should be drawn on the map or plot(s) (\code{TRUE}) or not.}
 
 \item{aoi_colour}{character, colour of the AOI. Ignored, if \code{show_aoi = FALSE}.}
+
+\item{maxpixels}{numeric, maximum number of pixels to be displayed}
 
 \item{verbose}{logical, whether to display details on the function's progress or output on the console.}
 

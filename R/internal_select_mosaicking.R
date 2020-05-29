@@ -406,8 +406,6 @@
   # print selection summary
   out("Summary by timestamp")
   .select_final_info_table(ts_seq, coverage_vector, n_records_vector, params$sep)
-  
-  rm(each_timestamp)
   return(records)
   
 }

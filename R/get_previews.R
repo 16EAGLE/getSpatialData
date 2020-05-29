@@ -77,7 +77,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
       return(file.tif)
     }
     
-    # process
+    # process ###### EDIT THIS SECTION: PROJ/WKT, GDAL, raster? #########
     tryCatch({
       out(paste0(head, "Converting '", file.jpg, "' into '", file.tif, "'..."))
       

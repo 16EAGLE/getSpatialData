@@ -124,7 +124,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
 #' @param water_mask RasterLayer
 #' @return RasterLayer hot layer
 #' @importFrom raster values 
-#' @importFrom stats na.omit
+#' @importFrom stats na.omit lm
+#' @importFrom utils tail
 #' @keywords internal
 #' @noRd
 .cloudcov_calc_hot <- function(preview, water_mask) {

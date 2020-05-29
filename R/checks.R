@@ -153,8 +153,7 @@
 #'
 #' @param aoi aoi
 #' @keywords internal
-#' @importFrom sp SpatialPolygons
-#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
+#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial st_zm
 #' @noRd
 .check_aoi <- function(aoi, type = "matrix", quiet = F){
   
@@ -205,7 +204,6 @@
 #' @param username character username.
 #' @param password character password.
 #' @return nothing. In case of failed login: error.
-#' @importFrom R.utils withTimeout
 #' @keywords internal
 #' @noRd
 .check_http_error <- function(response, record, username = NULL, password = NULL, verbose = FALSE) {
@@ -231,9 +229,9 @@
       # login
       out("Renewing login..",msg=T,verbose=verbose)
       if (service=="usgs") {
-        login <- try(withTimeout(login_USGS(username,password),onTimeout="silent",timeout=30))
+        login <- try(login_USGS(username,password))
       } else {
-        login <- try(withTimeout(login_CopHub(username,password),onTimeout="silent",timeout=30))
+        login <- try(login_CopHub(username,password))
       }
       
       if (inherits(login,"try-error")) {
@@ -515,12 +513,21 @@
   }
 }
 
+<<<<<<< HEAD
 # #' checks if input is numeric
 # #' @param input variable of any type
 # #' @param character arg_name the name as it will appear in error message if raised
 # #' @return nothing, raises error if input is not numeric
 # #' @keywords internal
 # #' @noRd
+=======
+#' checks if input is numeric
+#' @param input variable of any type
+#' @param character arg_name the name as it will appear in error message if raised
+#' @return nothing, raises error if input is not numeric
+#' @keywords internal
+#' @noRd
+>>>>>>> 3a08a0c070e7d5d4c3a1e40230ccb4a2f65002a2
 .check_numeric <- function(input, arg_name) {
   .check_type(input, arg_name, NUMERIC())
 }

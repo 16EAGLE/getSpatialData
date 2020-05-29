@@ -8,7 +8,7 @@ Authors@R: c(
   person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de", role = c("aut", "cre")),
   person("Henrik", "Fisser", role = c("aut"))
   )
-Description: Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.
+Description: Homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.
 License: GPL-3 | file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -16,23 +16,21 @@ Imports:
   getPass,
   httr,
   xml2,
-  tools,
   raster,
   sf,
-  sp,
+  lwgeom,
   gdalUtils,
   mapview,
   mapedit,
   cli,
   RStoolbox,
   ggplot2,
-  cowplot,
-  processx,
+  patchwork,
+  pbapply,
+  tools,
   stats,
   methods,
-  readr,
-  pbapply,
-  R.utils
+  grDevices
 RoxygenNote: 7.1.0
 Suggests: 
   testthat

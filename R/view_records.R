@@ -12,6 +12,7 @@
 #' @author Jakob Schwalb-Willmann
 #' 
 #' @importFrom mapview mapview viewRGB
+#' @importFrom grDevices hcl.colors
 #' 
 #' @name view_records
 #' @export
@@ -38,7 +39,7 @@ view_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nro
   map.list <- lapply(1:nrow(records), function(i) mapview(records$footprint[i], layer.name = records$record_id[i], label = records$record_id[i],
                                                           homebutton = FALSE, color = line_colours[i], col.regions = fill_colours[i], alpha.regions = fill_alpha))
   map <- map.list[[1]]
-  for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
+  if(length(map.list) > 1) for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
   
   # add aoi
   if(isTRUE(show_aoi)) map <- .add_aoi(map, aoi_colour)
@@ -46,9 +47,10 @@ view_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nro
 }
 
 #' @rdname view_records
-#' @importFrom ggplot2 coord_sf xlab ylab theme theme_bw geom_sf aes_string scale_colour_identity scale_fill_identity
+#' @importFrom ggplot2 ggplot coord_sf xlab ylab theme theme_bw geom_sf aes_string scale_colour_identity scale_fill_identity
+#' @importFrom grDevices hcl.colors
 #' @export
-plot_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nrow(records)), fill_colours = hcl.colors(nrow(records)), fill_alpha = 0.3, aoi_colour = "deepskyblue", value = FALSE, verbose = TRUE){
+plot_records <- function(records, show_aoi = TRUE, line_colours = hcl.colors(nrow(records)), fill_colours = hcl.colors(nrow(records)), fill_alpha = 0.3, aoi_colour = "deepskyblue", verbose = TRUE){
   
   # checks
   .check_verbose(verbose)

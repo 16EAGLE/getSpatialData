@@ -48,6 +48,7 @@
 #' 
 #' @importFrom xml2 xml_children xml_contents
 #' @importFrom httr content http_error
+#' @importFrom utils tail head
 #' @noRd 
 .get_ds_urls <- function(records){
   .apply(records, MARGIN = 1, function(x){
@@ -91,7 +92,10 @@
         # redefine URL and file
         return(paste0(paste0(head(strsplit(url, "/")[[1]], n=-1), collapse = "/"), "/", fn))
       } else return(url)
-      
+    
+    # SRTM CMR  
+    } else if(x$product_group == "SRTM"){
+      x$links[grep("hgt.zip$", x$links)]
     } else NA
   })
 }
@@ -102,13 +106,14 @@
 #' @param records records data.frame
 #' @return character vector
 #' @importFrom pbapply pbapply
+#' @importFrom utils tail
 #' @noRd 
 .get_ds_filenames <- function(records){
   .apply(records, MARGIN = 1, function(x){
     file <- paste0(x$gSD.dir, "/", x$record_id)
     
     if(x$product_group == "Sentinel"){
-      if(isTRUE(x$is_gnss)){
+      if(grepl("GNSS", x$product)){
         paste0(file, ".TGZ")
       } else if(x$product == "Sentinel-5P"){
         paste0(file, ".nc")
@@ -124,7 +129,7 @@
       } else{
         paste0(file, "_LEVEL_", x$level, ".tar.gz")
       } 
-    } else if(x$product_group == "MODIS"){
+    } else if(any(x$product_group == "MODIS", x$product_group == "SRTM")){
       paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
     } else NA
   })
@@ -174,6 +179,7 @@
 #' @param prog logical
 #' @param force logical
 #' @importFrom tools md5sum
+#' @importFrom utils tail
 #' @keywords internal
 #' @noRd
 .download <- function(url, file, name, head, type = "dataset", md5 = NA, prog = T, force = F, ...){
@@ -255,7 +261,7 @@
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   v <- content(x)$data
-  if(is.null(v)) out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)
+  if(is.null(v)) out("Login failed. Please retry later or call services() to check if USGS services are currently unavailable.", type = 3)
   return(v)
 }
 

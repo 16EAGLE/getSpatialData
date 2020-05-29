@@ -872,7 +872,7 @@ rbind.different <- function(x) {
   }
   # assign footprints
   records[[name_footprint]] <- st_sfc(footprints, crs = 4326)
-  return(.check_records(records, as_df = !as_sf))
+  return(.check_records(records, as_sf = as_sf))
 }
 
 #' generate file name according to date time

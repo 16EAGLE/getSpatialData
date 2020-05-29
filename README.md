@@ -70,9 +70,12 @@ This approach is implemented by the following functions (sorted by the order in 
 
 Automatic remote sensing records selection is possible both for optical and SAR products.
 `select_*` functionalities also support fusion of multiple optical products.
-* `select_unitemporal()` selects remote sensing records *uni-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
-* `select_bitemporal()` selects remote sensing records *bi-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
-* `select_timeseries()` selects remote sensing records for a *time series* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+The selection is based on aoi cloud cover of optical records and temporal characterstics.
+For optical records `select_*` uses preview cloud masks from `calc_cloudcov()` to create timestamp-wise mosaics.
+It aims at cloud-free mosaics while ensuring user-defined temporal and product constraints.
+* `select_unitemporal()` selects remote sensing records *uni-temporally*
+* `select_bitemporal()` selects remote sensing records *bi-temporally*
+* `select_timeseries()` selects remote sensing records for a *time series*
 * `is.*()`, such as `is.sentinel()`, `is.landsat()`, `is.modis()` and more to simplify filtering of records.
 
 #### Checking, ordering and downloading records

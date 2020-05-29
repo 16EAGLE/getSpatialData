@@ -9,7 +9,7 @@
 
 `getSpatialData` is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyze, select, order and download various kinds of spatial datasets from open sources.
 
-The package enables generic access to different data distributors with a common syntax for **159** products.
+The package enables generic access to multiple data distributors with a common syntax for **159** products.
 
 Among others, these products are: *Sentinel-1*, *Sentinel-2*, *Sentinel-3*, *Sentinel-5P*, *Landsat 8 OLI*, *Landsat ETM*, *Landsat TM*, *Landsat MSS*, *MODIS (Terra & Aqua)* and *SRTM DEMs*. For this, `getSpatialData` facilitates access to multiple services implementing clients to public APIs of *ESA Copernicus Open Access Hub*, *USGS EarthExplorer*, *USGS EROS ESPA*, *Amazon Web Services (AWS)*, *NASA DAAC LAADS* and *NASA CMR search*. A full list of all supported products can be found below.
 

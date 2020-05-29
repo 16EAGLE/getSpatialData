@@ -273,9 +273,9 @@ rbind.different <- function(x) {
   TILEID <- name_tile_id()
   
   # first, try using the horizontal / vertical columns
-  tileid_not_given <- is.na(records$tile_id)
-  vertical_given <- !is.na(records$tile_number_vertical)
-  horizontal_given <- !is.na(records$tile_number_horizontal)
+  tileid_not_given <- is.na(records[[name_tile_id()]])
+  vertical_given <- !is.na(records[[name_tile_number_vertical()]])
+  horizontal_given <- !is.na(records[[name_tile_number_horizontal()]])
   use_tile_num <- which((tileid_not_given * vertical_given * horizontal_given) == 1) 
   horizontal <- records$tile_number_horizontal[use_tile_num]
   vertical <- records$tile_number_vertical[use_tile_num]

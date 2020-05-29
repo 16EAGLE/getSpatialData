@@ -7,9 +7,16 @@
 
 ## Introduction
 
-`getSpatialData` is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.
+`getSpatialData` is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyze, select, order and download various kinds of spatial datasets from open sources.
 
-Currently, `getSpatialData` supports **159** products, including *Sentinel-1*, *Sentinel-2*, *Sentinel-3*, *Sentinel-5P*, *Landsat 8 OLI*, *Landsat ETM*, *Landsat TM*, *Landsat MSS*, *MODIS (Terra & Aqua)* and *SRTM DEMs*. For this, `getSpatialData` facilitates access to multiple services implementing clients to public APIs of *ESA Copernicus Open Access Hub*, *USGS EarthExplorer*, *USGS EROS ESPA*, *Amazon Web Services (AWS)*, *NASA DAAC LAADS* and *NASA CMR search*. A full list of all supported products can be found below.
+The package enables generic access to different data distributors with a common syntax for **159** products.
+
+Among others, these products are: *Sentinel-1*, *Sentinel-2*, *Sentinel-3*, *Sentinel-5P*, *Landsat 8 OLI*, *Landsat ETM*, *Landsat TM*, *Landsat MSS*, *MODIS (Terra & Aqua)* and *SRTM DEMs*. For this, `getSpatialData` facilitates access to multiple services implementing clients to public APIs of *ESA Copernicus Open Access Hub*, *USGS EarthExplorer*, *USGS EROS ESPA*, *Amazon Web Services (AWS)*, *NASA DAAC LAADS* and *NASA CMR search*. A full list of all supported products can be found below.
+
+`getSpatialData` offers to quickly overview the data catalogues for a custom place and time period.
+For an efficient handling of available earth observation data, it specifically calculates the cloud coverage of records
+in an area of interest based on light preview images. Furthermore, `getSpatialData` is able
+to automatically select records based on cloud cover and temporal user requirements.
 
 ## Installation
 
@@ -61,9 +68,11 @@ This approach is implemented by the following functions (sorted by the order in 
 
 #### Selecting records
 
-* `select_unitemporal()` selects remote sensing records (both optical and SAR across different products) *uni-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
-* `select_bitemporal()` selects remote sensing records (both optical and SAR across different products) *bi-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
-* `select_timeseries()` selects remote sensing records (both optical and SAR across different products) for a *time series* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+Automatic remote sensing records selection is possible both for optical and SAR products.
+`select_*` functionalities also support fusion of multiple optical products.
+* `select_unitemporal()` selects remote sensing records *uni-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+* `select_bitemporal()` selects remote sensing records *bi-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+* `select_timeseries()` selects remote sensing records for a *time series* according to AOI cloud cover (in case of optical data) and temporal characteristics.
 * `is.*()`, such as `is.sentinel()`, `is.landsat()`, `is.modis()` and more to simplify filtering of records.
 
 #### Checking, ordering and downloading records

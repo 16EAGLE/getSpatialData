@@ -88,10 +88,10 @@
     })
     rm(catch)
   }
-  if(as_sf || !name_footprint() %in% names(records)) {
-    records <- as.data.frame(records) 
-  } else {
+  if (as_sf) {
     records <- st_sf(records, sfc_last = F)
+  } else if (!as_sf || !name_footprint() %in% names(records)) {
+    records <- as.data.frame(records) 
   }
   return(records)
 }

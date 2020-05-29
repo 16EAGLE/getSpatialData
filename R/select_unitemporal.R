@@ -28,7 +28,7 @@ select_unitemporal <- function(records,
                                aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   #### Pre-checks
   # columns are checked in .select_checks() due to SAR
-  records <- .check_records(records, col.names = NULL, as_df = TRUE)
+  records <- .check_records(records, col.names = NULL, as_sf = FALSE)
   .check_numeric(max_sub_period, "max_sub_period")
   .check_numeric(max_cloudcov_tile, "max_cloudcov_tile")
   .check_numeric(satisfaction_value, "satisfaction_value")
@@ -62,7 +62,7 @@ select_unitemporal <- function(records,
                           params,
                           cols_initial)
   
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   return(records)
   
 }

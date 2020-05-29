@@ -30,7 +30,7 @@ select_bitemporal <- function(records,
   
   #### Pre-checks
   # columns are checked in .select_checks() due to SAR
-  records <- .check_records(records, col.names = NULL, as_df = TRUE)
+  records <- .check_records(records, col.names = NULL, as_sf = FALSE)
   .check_numeric(min_distance, "min_distance")
   .check_numeric(max_sub_period, "max_sub_period")
   .check_numeric(max_cloudcov_tile, "max_cloudcov_tile")
@@ -65,7 +65,7 @@ select_bitemporal <- function(records,
                           params,
                           cols_initial)
 
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   return(records)
 
 }

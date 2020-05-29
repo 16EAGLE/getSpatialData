@@ -80,7 +80,7 @@
 #'
 #' @keywords internal
 #' @noRd
-.check_records <- function(records, col.names = NULL, as_df = FALSE){
+.check_records <- function(records, col.names = NULL, as_sf = TRUE){
   .check_records_type(records)
   if(!is.null(col.names)){
     catch <- .lapply(col.names, function(x) if(!(x %in% colnames(records))) {
@@ -88,7 +88,7 @@
     })
     rm(catch)
   }
-  if(as_df || !name_footprint() %in% names(records)) {
+  if(as_sf || !name_footprint() %in% names(records)) {
     records <- as.data.frame(records) 
   } else {
     records <- st_sf(records, sfc_last = F)
@@ -513,21 +513,12 @@
   }
 }
 
-<<<<<<< HEAD
-# #' checks if input is numeric
-# #' @param input variable of any type
-# #' @param character arg_name the name as it will appear in error message if raised
-# #' @return nothing, raises error if input is not numeric
-# #' @keywords internal
-# #' @noRd
-=======
 #' checks if input is numeric
 #' @param input variable of any type
 #' @param character arg_name the name as it will appear in error message if raised
 #' @return nothing, raises error if input is not numeric
 #' @keywords internal
 #' @noRd
->>>>>>> 3a08a0c070e7d5d4c3a1e40230ccb4a2f65002a2
 .check_numeric <- function(input, arg_name) {
   .check_type(input, arg_name, NUMERIC())
 }

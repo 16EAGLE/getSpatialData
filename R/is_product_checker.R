@@ -1,11 +1,11 @@
-#' ---------------------------------------------------------------------
-#' name: is_product_checker
-#' description: These are check utils for product and product group and
-#' work in same manner as is.na(). Apart from product and product group
-#' some methods target more specific types that are identified from 
-#' the record ids. All methods return logical vectors of the same length as NROW(records).
-#' author: Henrik Fisser, 2020
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: is_product_checker
+# description: These are check utils for product and product group and
+# work in same manner as is.na(). Apart from product and product group
+# some methods target more specific types that are identified from 
+# the record ids. All methods return logical vectors of the same length as NROW(records).
+# author: Henrik Fisser, 2020
+# ---------------------------------------------------------------------
 
 #' Returns TRUE for records that are of the specified product group
 #' @description \code{is.product_group_} checks which records are of product group \code{product_group}
@@ -15,7 +15,7 @@
 #' @author Henrik Fisser, 2020
 #' @export
 is.product_group_ <- function(records, product_group) {
-  records <- .check_records(records, col.names = c(name_product_group()), as_df = TRUE)
+  records <- .check_records(records, col.names = c(name_product_group()), as_sf = FALSE)
   product_groups <- records[[name_product_group()]]
   return(product_groups == product_group)
 }
@@ -29,7 +29,7 @@ is.product_group_ <- function(records, product_group) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.product_ <- function(records, product) {
-  records <- .check_records(records, col.names = c(name_product()), as_df = TRUE)
+  records <- .check_records(records, col.names = c(name_product()), as_sf = FALSE)
   products <- records[[name_product()]]
   return(products == product)
 }

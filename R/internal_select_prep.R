@@ -1,3 +1,10 @@
+# ---------------------------------------------------------------------
+# name: internal_select_prep
+# These are internal functions used during the preparation phase of
+# select functionalities.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
+
 #' get column names needed for running select_*
 #' @return character vector needed_cols
 #' @keywords internal

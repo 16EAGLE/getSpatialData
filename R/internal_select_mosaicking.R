@@ -1,9 +1,9 @@
-#' ---------------------------------------------------------------------
-#' name: internal_select_mosaicking
-#' description: These are the functions that conduct the spatial selection
-#' process and everything related to cloud mask and preview mosaicking within select.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select_mosaicking
+# description: These are the functions that conduct the spatial selection
+# process and everything related to cloud mask and preview mosaicking within select.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' bridge to .make_mosaic
 #' @param paths character paths to rasters to be mosaicked.

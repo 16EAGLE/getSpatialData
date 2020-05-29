@@ -65,7 +65,7 @@ select_timeseries <- function(records,
   
   #### Pre-checks
   # columns are checked in .select_checks() due to SAR
-  records <- .check_records(records, col.names = NULL, as_df = TRUE) 
+  records <- .check_records(records, col.names = NULL, as_sf = FALSE) 
   .check_as_sf(as_sf)
   .check_numeric(n_timestamps, "n_timestamps")
   .check_numeric(min_distance, "min_distance")
@@ -105,7 +105,7 @@ The minimum number for select_timeseries is: 3"), 3)
                           params,
                           cols_initial)
   
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   return(records)
   
 }

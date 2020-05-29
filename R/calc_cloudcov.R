@@ -8,7 +8,7 @@
 #' 
 #' @details Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the 
 #' red and blue information of the input RGB. HOT procedure is applied to the red and blue bands [1-3]. 
-#' Orignally, the base computation was introduced by Zhang et al. (2002) [2]. 
+#' Originally, the base computation was introduced by Zhang et al. (2002) [2]. 
 #' The computation done in \code{calc_cloudcov} includes the following steps:
 #' \enumerate{
 #' \item Binning: extract low red values and their highest blue values
@@ -20,7 +20,7 @@
 #' cloud mask.
 #' }
 #' 
-#' HOT seperates clear-sky 
+#' HOT separates clear-sky 
 #' pixels first from a threshold, calculates a linear regression from these pixels and exposes 
 #' cloud pixels by the deviation of all pixels from this clear-sky line.
 #' 
@@ -150,7 +150,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
   dir_out <- .check_dir_out(dir_out, which="cloud_masks")
   .check_character(username, "username")
   .check_character(password, "password")
-  records <- .check_records(records, .cloudcov_get_needed_cols(), as_df=T)
+  records <- .check_records(records, .cloudcov_get_needed_cols(), as_sf=FALSE)
   # additional args to be passed to write_records
   dots <- list(...)
   driver <- dots$driver
@@ -301,7 +301,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
 
   # ensure spatial footprints
   records <- .eval_records_footprints(records, as_sf = as_sf)
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   out(paste0(sep(),"\nFinished aoi cloud cover calculation",
              sep(),"\n"))
   records <- .column_summary(records, cols_initial)

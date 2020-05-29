@@ -120,6 +120,6 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
     })
   }, USE.NAMES = F, SIMPLIFY = F))
   
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   return(.column_summary(records, records.names))
 }

@@ -42,6 +42,7 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
     n_records <- NROW(records)
     out(paste0("Read ", 
                n_records, ifelse(n_records > 1, " records", " record")), msg=F, type=1)
+    records <- .check_records(records, as_sf = as_sf)
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

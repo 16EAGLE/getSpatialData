@@ -1,9 +1,9 @@
-#' ---------------------------------------------------------------------
-#' name: internal_cloudcov
-#' description: This is the main backend of the cloudcov functionality.
-#' Frontend and processing (incl. reload actions) are located in calc_cloudcov.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_cloudcov
+# description: This is the main backend of the cloudcov functionality.
+# Frontend and processing (incl. reload actions) are located in calc_cloudcov.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' checks if a record is supported by calc_cloudcov() or not
 #' @param record with one row

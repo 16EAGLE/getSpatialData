@@ -1,16 +1,16 @@
-#' ---------------------------------------------------------------------
-#' name: internal_select_sub
-#' description: These functions do the temporal selection of SAR (Sentinel-1) records.
-#' They create a temporary tile id for each record, according to which they can be
-#' selected. As they are cloud-free no further spatial selection is necessary. These
-#' records are thus only selected according to their tile and temporal characteristics.
-#' This can be done in accordance with previously selected optical records. The sub-periods
-#' selected for optical records are handed over to the SAR selection. Selection of optical
-#' records has priority due to cloud cover constraints. SAR selection is hence temporally
-#' guided by the optical selection in case there is one. Otherwise, SAR selection is
-#' conducted independently.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select_sub
+# description: These functions do the temporal selection of SAR (Sentinel-1) records.
+# They create a temporary tile id for each record, according to which they can be
+# selected. As they are cloud-free no further spatial selection is necessary. These
+# records are thus only selected according to their tile and temporal characteristics.
+# This can be done in accordance with previously selected optical records. The sub-periods
+# selected for optical records are handed over to the SAR selection. Selection of optical
+# records has priority due to cloud cover constraints. SAR selection is hence temporally
+# guided by the optical selection in case there is one. Otherwise, SAR selection is
+# conducted independently.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' select timestamps for SAR data according to num_timestamps, min_distance and max_sub_period.
 #' @param records data.frame.
@@ -170,7 +170,7 @@
     optical_ids <- selected[[ts]][[ids]]
     selected[[ts]][[ids]] <- append(optical_ids, ts_SAR[[ids]])
     selected[[ts]][[period]] <- .identify_period(c(selected[[ts]]$period,ts_SAR[[period]]))
+    .select_completed_statement(ts)
   }
-  .select_completed_statement(timestamp)
   return(selected)
 }

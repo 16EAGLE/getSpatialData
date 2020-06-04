@@ -251,7 +251,7 @@
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors, records) {
   if (!.is_empty_array(prio_sensors)) {
-    .check_type(prio_sensors, "prio_sensors", CHARACTER())
+    .check_type(prio_sensors, "prio_products", CHARACTER())
     # check if prio products are given in records at all
     not_in_product_group <- !any(prio_sensors %in% records[[name_product_group()]])
     not_in_product <- !any(prio_sensors %in% records[[name_product()]])
@@ -265,8 +265,7 @@
     }))
     if (name_product_sentinel1() %in% prio_sensors) out(paste0(name_product_sentinel1(), " cannot be handled in 'prio_products'"))
     if (!all_valid) {
-      out("Argument 'prio_products' has to be provided with sensor names in the 
-        same format as returned by get_select_supported()", 3)
+      out("Argument 'prio_products' has to be provided with sensor names in the same format as returned by get_select_supported()", 3)
     }
   }
 }
@@ -288,8 +287,8 @@
   } else {
     number_not_found <- which(!exist)
     out(
-      paste0("All files in '", item_name, "' have to be saved at the location as indicated
-             in the paths. ", number_not_found, " of ", length(paths), " files cannot be found"), 2)
+      paste0("All files in '", item_name, "' column have to be saved at the location as indicated in the paths. ", 
+             number_not_found, " of ", length(paths), " files cannot be found\n"), 3)
   }
 }
 
@@ -348,7 +347,7 @@
 #' @param period character vector.
 #' @param num_timestamps numeric.
 #' @param prio_sensors character vector.
-#' @param par list.
+#' @param params list.
 #' @param dir_out character.
 #' @param verbose logical.
 #' @return Throwing an error if a check is positive. Otherwise a list of dir_out
@@ -357,23 +356,31 @@
 #' @keywords internal
 #' @noRd
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
-                           params, dir_out, verbose) {
+                           params, write_preview_mosaic, dir_out, verbose) {
   dir_out <- .check_dir_out(dir_out, "select")
   aoi <- .check_aoi(aoi, SF(), quiet=T)
-  # check if all columns are provided
-  needed_cols <- c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col)
-  if (.has_SAR(records[[name_product()]]) != 100) {
-    checked <- .check_records(records, col.names = needed_cols)
-    rm(checked)
-  }
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors, records)
   .select_check_revisit(unique(unlist(records$product)), period, num_timestamps)
   # check if needed files exist
-  check <- sapply(list(preview_file=records$preview_file,
-                       cloud_mask_file=records$cloud_mask_file),function(x) {
-    .select_check_files(x, names(x))
-  })
-  if (any(!is.na(check))) out("Cannot find (some) files on disk",3)
+  if (write_preview_mosaic) {
+    .select_check_files(records[[name_preview_file()]], name_preview_file())
+  }
+  .select_check_files(records[[name_cloud_mask_file()]], name_cloud_mask_file())
+}
+
+#' wraps the check records due to Sentinel-1 special case
+#' @param records (sf) data.frame
+#' @param as_sf logical
+#' @return records (sf) data.frame
+#' @keywords internal
+#' @noRd
+.select_check_records <- function(records, as_sf = FALSE) {
+  .check_dataframe(records, "records")
+  # check if all columns are provided
+  needed_cols <- .get_needed_cols_select()
+  if (.has_SAR(records[[name_product()]]) == 100) needed_cols <- needed_cols[!needed_cols %in% .cloudcov_colnames()]
+  records <- .check_records(records, col.names = needed_cols, as_sf = as_sf)
+  return(records)
 }
 
 #' checks if a driver name is available
@@ -507,6 +514,7 @@
     if (check_possible) {
       if (!inherits(input, type)) {
         if (is_raster) type <- paste0(raster_classes[1], "' or '")
+        if (arg_name == "records") type <- "data.frame' or 'sf"
         out(paste0("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'"), 3)
       }
     }

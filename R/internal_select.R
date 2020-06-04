@@ -336,7 +336,7 @@ selected <- function(record_ids, base_coverage, records) {
   clean_products <- c()
   for (product in unique(given_products)) {
     name_product <- name_product()
-    is_supported_modis <- .record_is_refl_modis(data.frame(name_product = product))
+    is_supported_modis <- .record_is_refl_modis(data.frame(product = product))
     not_SAR <- product != name_product_sentinel1()
     if (not_SAR && (product %in% get_select_supported() || is_supported_modis)) {
       clean_products <- append(clean_products, product)

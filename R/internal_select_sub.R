@@ -93,7 +93,7 @@
 }
 
 #' selects initial records for a sub-period while ensuring max_cloudcov_tile
-#' @param records data.frame subsetted to a sub-period.
+#' @param records data.frame subseted to a sub-period.
 #' @param tiles character vector of the tile ids.
 #' @param period character vector of start and end date.
 #' @param aoi_cc_col character name of aoi cloud cover column.
@@ -120,8 +120,8 @@
       } else {
         lwst_cc <- unlist(rec_ord[i,][identifier]) # id of i lowest
         # ensure max_cloudcov_tile
-        cc <- rec_ord[i,aoi_cc_col]
-        above_max <- ifelse(is.na(cc) || any(is.null(c(lwst_cc,cc))),TRUE,
+        cc <- rec_ord[i, aoi_cc_col]
+        above_max <- ifelse(is.na(cc) || any(is.null(c(lwst_cc,cc))), TRUE,
                             cc > max_cloudcov_tile)
         if (above_max) {
           lwst_cc <- NA

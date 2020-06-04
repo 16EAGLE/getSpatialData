@@ -46,10 +46,12 @@
 #' it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally 
 #' for all queries within the running session. If \code{aoi} is undefined, the AOI that has been 
 #' set using \link{set_aoi} is used.
+#' @param write_records logical specifies if the records (row by row) shall be written.
+#' @param write_cloud_masks logical specifies if the cloud mask tifs shall be written.
 #' @param max_deviation numeric, the maximum allowed deviation of calculated scene cloud cover 
 #' from the provided scene cloud cover. Use 100 if you do not like to consider the cloud cover 
 #' \% given by the data distributor. Default is 2.
-#' @param dir_out character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
+#' @param dir_out character. If \code{dir_out} is not NULL the given cloud mask rasters and 
 #' a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
 #' \code{dir_out} is used.
 #' If no session \code{dir_out} is set through \link{set_archive} an error is thrown.
@@ -77,65 +79,12 @@
 #' 
 #' @importFrom raster stack
 #' 
-#' @examples
-#' ## Load packages
-#' library(getSpatialData)
-#' library(raster)
-#' library(sf)
-#' library(sp)
-#'
-#' ## Define an AOI (either matrix, sf or sp object)
-#' data("aoi_data") # example aoi
-#'
-#' aoi <- aoi_data[[3]] # AOI as matrix object, or better:
-#' aoi <- aoi_data[[2]] # AOI as sp object, or:
-#' aoi <- aoi_data[[1]] # AOI as sf object
-#' # or, simply call set_aoi() without argument to interactively draw an AOI
-#'
-#' ## set AOI for this session
-#' set_aoi(aoi)
-#' view_aoi() #view AOI in viewer
-#'
-#' ## Define time range and platform
-#' time_range <-  c("2017-08-01", "2017-08-30")
-#' platform <- "Sentinel-2"
-#'
-#' ## set login credentials and an archive directory
-#' \dontrun{
-#' login_CopHub(username = "username") #asks for password or define 'password'
-#' set_archive("/path/to/archive/")
-#'
-#' ## Use getSentinel_query to search for data (using the session AOI)
-#' records <- getSentinel_query(time_range = time_range, platform = platform)
-#'
-#' ## Get an overview of the records
-#' View(records) #get an overview about the search records
-#' colnames(records) #see all available filter attributes
-#' unique(records$processinglevel) #use one of the, e.g. to see available processing levels
-#' 
-#' ## Calculate cloud cover within the aoi
-#' records_cloudcov <- calcSentinel_aoi_cloudcov(records = records, aoi = aoi) # cloud cov. calc.
-#' 
-#' ## Filter the records
-#' records_filtered <- records_cloudcov[which(records_cloudcov$processinglevel == "Level-1C"),]
-#'
-#' ## Preview a single record
-#' getSentinel_preview(record = records_filtered[5,])
-#'
-#' ## Download some datasets
-#' datasets <- getSentinel_data(records = records_filtered[c(4,5,6),])
-#'
-#' ## Make them ready to use
-#' datasets_prep <- prepSentinel(datasets, format = "tiff")
-#'
-#' ## Load them to R
-#' r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
-#' }
-#' 
 #' @export
 
 calc_cloudcov <- function(records, max_deviation = 2,
-                          aoi = NULL, dir_out = NULL,
+                          aoi = NULL,
+                          write_records = TRUE, write_cloud_masks = TRUE,
+                          dir_out = NULL,
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE, ...) {
   
   TRY_ERROR <- TRY_ERROR()
@@ -148,6 +97,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
   aoi <- .check_aoi(aoi, SF())
   .check_numeric(max_deviation, "max_deviation")
   dir_out <- .check_dir_out(dir_out, which="cloud_masks")
+
   .check_character(username, "username")
   .check_character(password, "password")
   records <- .check_records(records, .cloudcov_get_needed_cols(), as_sf=FALSE)
@@ -175,7 +125,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
   ## Do HOT cloud cover assessment
   records <- do.call(rbind, lapply(1:n_records, function(i) {
     
-    out_status <- paste0("[Aoi cloudcov calc ",i,"/",n_records,"] ")
+    out_status <- paste0("[Aoi cloudcov calc ", i, "/", n_records, "] ")
     startTime <- Sys.time()
     record <- records[i,]
     id <- record[[identifier]]
@@ -203,7 +153,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
     } else {
       out(paste0(out_status,"Processing: ",id), msg=T, verbose=v)
     }
-    
+
     # if preview exists not yet: get it. Then run HOT
     if (cloudcov_supported) {
       preview_given <- preview_file %in% names(record)
@@ -219,7 +169,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
       if (!preview_given) {
         .check_login(records=record)
         record_preview <- tryCatch({
-          get_previews(record, dir_out = dir_out, verbose = F)
+          get_previews(record, username = username, password = password, dir_out = dir_out, verbose = F)
         },
         error=function(err) {
           return(err)
@@ -228,10 +178,10 @@ calc_cloudcov <- function(records, max_deviation = 2,
       
       if (inherits(record_preview, ERROR())) {
         record_preview <- tryCatch({
-          get_previews(record, dir_out = dir_out, verbose = F)
+          get_previews(record, username = username, password = password, dir_out = dir_out, verbose = F)
         },
         error=function(err) {
-          return(NULL)
+          return(err)
         })
       }
     } else {
@@ -243,7 +193,8 @@ calc_cloudcov <- function(records, max_deviation = 2,
     
     preview_worked <- inherits(record_preview, DF)
     if (preview_worked && preview_file %in% names(record_preview)) {
-      if (!is.na(record_preview[[preview_file]])) {
+      preview_worked <- !is.na(record_preview[[preview_file]])
+      if (preview_worked) {
         preview_worked <- .check_file_exists(record_preview[[preview_file]])
       }
     }
@@ -255,6 +206,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
                                          aoi = aoi,
                                          max_deviation = max_deviation,
                                          cols = .cloudcov_colnames(),
+                                         write_cmask = write_cloud_masks,
                                          dir_out = dir_out,
                                          verbose = verbose))
     } else {
@@ -267,17 +219,6 @@ calc_cloudcov <- function(records, max_deviation = 2,
       record_cc <- .cloudcov_handle_skip(record_preview)
     }
     
-    endTime <- Sys.time()
-    if (i <= 10) {
-      elapsed <- as.numeric(difftime(endTime, startTime, units="mins"))
-      processingTime <- c(processingTime,elapsed)
-    }
-    if (n_records >= 15 && i == 10) {
-      .calcHOTProcTime(numRecords = n_records,
-                       i = i,
-                       processingTime = processingTime)
-    }
-    
     record_cc <- .unlist_df(record_cc) # ensure no column as a whole is a list before writing
     
     col_names <- names(record_cc)
@@ -286,11 +227,13 @@ calc_cloudcov <- function(records, max_deviation = 2,
     record_cc[[name_footprint]] <- record_cc[[footprint_tmp]]
     record_cc[[footprint_tmp]] <- NULL
     
-    # write record
-    write_records(record_cc, file = record_path, append = append, verbose = FALSE)
+    if (write_records) {
+      # write record
+      write_records(record_cc, file = record_path, append = append, verbose = FALSE)
+    }
     verbose <- v
     .set_verbose(verbose)
-    return(record_cc)
+    return(as.data.frame(record_cc))
     
   }))
   

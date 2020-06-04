@@ -66,32 +66,6 @@ quiet <- function(expr){
 }
 
 # -------------------------------------------------------------
-# calc_cloudcov
-# -------------------------------------------------------------
-
-#' calculate and communicate processing time
-#' 
-#' @param numRecords numRecords
-#' @param i record number in the loop
-#' @param processingTime processingTime
-#' @keywords internal
-#' @noRd
-.calcHOTProcTime <- function(numRecords,i,processingTime) {
-  meanProcessingTime <- mean(processingTime)
-  queue <- numRecords - 5
-  sumProcessingTime <- meanProcessingTime * queue
-  if (sumProcessingTime < 1) {
-    sumProcessingTime <- "less than 1 minute"
-  } else if (round(sumProcessingTime) == 1) {
-    sumProcessingTime <- "1 minute"
-  } else {
-    sumProcessingTime <- paste0(round(as.numeric(sumProcessingTime))," minutes")
-  }
-  out(paste0(sep(),"\n10/", numRecords," records processed.\nRemaining time: ",
-             sumProcessingTime, sep(), "\n"))
-}
-
-# -------------------------------------------------------------
 # select_*
 # -------------------------------------------------------------
 
@@ -142,6 +116,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
 #' @keywords internal
 #' @noRd
 .select_final_info_table <- function(timestamps_seq, coverage_vector, n_records_vector, sep) {
+  coverage_vector <- sapply(coverage_vector, function(x) {return(ifelse(x > 100, 100, x))})
   cov_bars <- .create_numeric_bars(coverage_vector, n = 5, bar_symbol = "/")
   table_sep <- "| "
   summary_df <- data.frame("| Timestamp" = paste0(table_sep, timestamps_seq),
@@ -171,6 +146,9 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   mean_cov <- round(mean(coverages))
   max_cov <- round(max(coverages))
   min_cov <- round(min(coverages))
+  mean_cov <- ifelse(mean_cov > 100, 100, mean_cov)
+  max_cov <- ifelse(max_cov > 100, 100, max_cov)
+  min_cov <- ifelse(min_cov > 100, 100, min_cov)
   cov_metrics <- c(mean_cov, max_cov, min_cov)
   bars <- .create_numeric_bars(cov_metrics, n = 5, bar_symbol = "/")
   empty <- ""
@@ -196,9 +174,9 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   in_ts <- "in selection "
   warn_str <- "This warning is thrown when "
   if (length(selected) > 2) {
-    warn_help <- paste0("\nIf you aim at a selection with consistently low cloud cover: ", arg_help_msg(1))
+    warn_help <- paste0("\nIf you aim at a selection with consistent low cloud cover: ", arg_help_msg(1))
   } else {
-    warn_help <- paste0("\nIf you aim at a selection with consistently low cloud cover: ", arg_help_msg(2))
+    warn_help <- paste0("\nIf you aim at a selection with consistent low cloud cover: ", arg_help_msg(2))
   }
   warn_min <- ifelse(check_min, paste0("The lowest c", cov_pixels, in_ts, "is ", min_cov, percent, "\n", warn_help,
                                       "\n",warn_str,"the lowest coverage amongst all timestamps is below: ", min_thresh, percent,"."), "NULL")
@@ -265,7 +243,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   info <- c()
   for (i in 1:length(covered_tiles_ts_wise)) {
     num_tiles <- covered_tiles_ts_wise[i]
-    info[i] <- paste0("Timestamp ",i," covers: ", num_tiles, ifelse(num_tiles > 1), " Sentinel-1 tiles", " Sentinel-1 tile")
+    info[i] <- paste0("Timestamp ",i," covers: ", num_tiles, ifelse(num_tiles > 1 || num_tiles == 0, " Sentinel-1 tiles", " Sentinel-1 tile"))
   }
   # check if for all timestamps all tiles are covered
   check_tile_cov <- which(covered_tiles_ts_wise != length(params$tileids))
@@ -295,6 +273,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
 #' @noRd
 .select_out_cov <- function(base_coverage, i, le_collection, sensor) {
   cov <- round(base_coverage, 2)
+  cov <- ifelse(cov > 100, 100, cov)
   i <- ifelse(i == 0, 1, i)
   checked_records <- paste0("[",i,"/", le_collection,"] ", sensor)
   bar <- .create_numeric_bars(cov)

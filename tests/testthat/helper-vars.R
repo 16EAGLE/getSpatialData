@@ -50,10 +50,9 @@ COLS$timestamp_col <- "selected_for_timestamp"
 # for file naming
 PREFIX <- list()
 PREFIX$records <- "records"
-PREFIX$previews <- "records_previews"
 PREFIX$cmasks <- "records_cmasks"
 construct_filepath <- function(dir, sensor, prefix) {
-  return(file.path(dir, paste(prefix, paste0(gsub("-", "", sensor), ".geojson"), sep="_")))
+  return(file.path(dir, paste(prefix, paste0(gsub("-", "", tolower(sensor)), ".geojson"), sep="_")))
 }
 
 # HELPERS
@@ -116,7 +115,6 @@ column_error_msg <- function(column) {
   return(paste0("A column of 'records' named '", column, "' is required for this action, but is missing."))
 }
 
-
 # wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
 .read_brick <- function(file_path) {
   return(brick(file_path))
@@ -136,7 +134,7 @@ column_error_msg <- function(column) {
 
 AOI_TYPE_ERROR <- "Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object."
 AOI_UNDEFINED_ERROR <- "Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI."
-RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'."
+RECORDS_TYPE_ERROR <- "Argument 'records' must be of type 'data.frame' or 'sf' but is 'character'"
 
 # TEST VARIABLES
 # -----------------

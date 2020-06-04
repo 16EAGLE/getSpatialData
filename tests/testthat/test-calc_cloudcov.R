@@ -29,14 +29,40 @@ clean_test_calc_cloudcov <- function(dir_records, aoi_test, sensor, tt, PREFIX, 
   records_previews <- set_null_cloudcov_cols(records)
   records <- set_null_preview_cols(records_previews)
   length_base_records <- length(records)
+  
+  # -------
+  # process without writing cloud mask
+  records_cloudcov <- expect_is(calc_cloudcov(records[nrows,],
+                                              aoi = aoi_test, write_cloud_masks = FALSE,
+                                              dir_out = tt$tmp, as_sf = FALSE), DATAFRAME)
+  id <- records_cloudcov[[getSpatialData:::name_record_id()]]
+  cloud_mask_path <- file.path(tt$tmp, paste0(id, "_cloud_mask.tif"))
+  record_path <- file.path(tt$tmp, paste0(id, ".geojson"))
+  expect_false(any(file.exists(cloud_mask_path)))
+  expect_true(all(file.exists(record_path)))
+  
+  if (!is_mixed && sensor != "Sentinel-1") {
+    # -------
+    # process without writing records
+    finish_dir(tt$tmp)
+    initialize_dir(tt$tmp)
+    records_cloudcov <- expect_is(calc_cloudcov(records[nrows,], 
+                                                aoi = aoi_test, write_records = FALSE,
+                                                dir_out = tt$tmp, as_sf = FALSE), DATAFRAME)
+    expect_false(any(file.exists(record_path)))
+    cloud_mask_files <- records_cloudcov[[getSpatialData:::name_cloud_mask_file()]]
+    expect_true(all(file.exists(cloud_mask_files[which(cloud_mask_files != "NONE")])))
+  }
   # -------
   # no reload, return as data.frame
+  finish_dir(tt$tmp)
+  initialize_dir(tt$tmp)
   records_no_reload_df <- expect_is(calc_cloudcov(records[nrows,], 
                                                   aoi = aoi_test, dir_out = tt$tmp, as_sf = FALSE), DATAFRAME)
   expect_length(names(records_no_reload_df), length_base_records + ADDED_COLS_PREVIEWS_CLOUDCOV)
   result_valid_test_calc_cloudcov(records_no_reload_df)
-  # cleanup
   if (!is_mixed) {
+    # cleanup
     finish_dir(tt$tmp)
     initialize_dir(tt$tmp)
     # no reload, return as sf
@@ -131,12 +157,14 @@ cloud_masks_test_calc_cloudcov <- function(records_cc) {
     expect_true(is.na(aoi_cloudcov))
   } else {
     expect_true(is_tif || is_none) # can be NONE
-    cloud_mask <- .read_brick(cloud_mask_file)
-    values <- values(cloud_mask)
-    values <- values[!is.na(values)]
-    expect_true(!is.null(values))
-    expect_true(all(values <= 1))
-    expect_true(all(values >= 0))
+    if (!is_none) {
+      cloud_mask <- .read_brick(cloud_mask_file)
+      values <- values(cloud_mask)
+      values <- values[!is.na(values)]
+      expect_true(!is.null(values))
+      expect_true(all(values <= 1))
+      expect_true(all(values >= 0))
+    }
     expect_is(cloudcov, NUMERIC)
     expect_true(cloudcov >= 0)
     expect_true(cloudcov <= 100 || cloudcov == 9999)

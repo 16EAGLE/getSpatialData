@@ -50,6 +50,8 @@ selected <- function(record_ids, base_coverage, records) {
                          max_cloudcov_tile,
                          satisfaction_value,
                          prio_sensors,
+                         save_cmos,
+                         save_pmos,
                          dir_out,
                          params,
                          cols_initial) {
@@ -58,6 +60,7 @@ selected <- function(record_ids, base_coverage, records) {
   if (has_SAR == 100) {
     records <- .select_all_SAR(records, max_sub_period,
                                min_distance, num_timestamps, params)
+    records[[name_sub_period()]] <- NULL
     records <- .column_summary(records,cols_initial)
     return(records)
   }
@@ -69,9 +72,13 @@ selected <- function(record_ids, base_coverage, records) {
   
   if (is.null(prio_sensors)) {
     given_products <- records[[name_product()]]
-    given_products <- given_products[which(given_products != name_product_sentinel1())]
-    if (length(given_products) > 1) out("No 'prio_products' specified, generating random product priorities", msg=T)
-    prio_sensors <- .generate_random_prio_prods(records)
+    given_products <- unique(given_products[which(given_products != name_product_sentinel1())])
+    if (length(given_products) > 1) {
+      out("No 'prio_products' specified, generating random product priorities", msg=T)
+      prio_sensors <- .generate_random_prio_prods(records)
+    } else {
+      prio_sensors <- given_products[1]
+    }
     out(paste0("Random priority product order: ", paste(prio_sensors, collapse=", "), "\n", sep()), msg=F)
   }
   
@@ -126,7 +133,7 @@ selected <- function(record_ids, base_coverage, records) {
   out(sep, msg=F)
   # create final mosaics for each timestamp and summary message per timestamp
   records <- try(.select_save_mosaics(records, selected=selected, aoi=aoi,
-                                      params=params, dir_out=dir_out))
+                                      params=params, dir_out=dir_out, save_cmos, save_pmos))
   if (inherits(records, TRY_ERROR())) {
     out("Selection error", 3)
   }
@@ -201,7 +208,7 @@ selected <- function(record_ids, base_coverage, records) {
     if (length(sensor_match) == 0) { # no records for sensor s at timestamp
       .select_catch_empty_records(data.frame(), timestamp, s)
       if (single_prio_product) break else next
-    } 
+    }
     
     tstamp <- list()
     tstamp$records <- records[sensor_match,]

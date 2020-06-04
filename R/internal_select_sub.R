@@ -56,10 +56,9 @@
   }
   
   # this step enforces max_sub_period. It returns a list of vectors of indices 
-  # pointing to records in records. The list is ordererd according to aoi cloud cover
+  # pointing to records in records. The list is ordered according to aoi cloud cover
   sub_within <- .select_force_period(records, sub, period, max_sub_period, period_new=period_new,
                                      date_col=params$date_col, aoi_cc_col=params$aoi_cc_col)
-  
   sub_within <- .check_compact_list(sub_within)
   if (!inherits(sub_within, LIST()) || .is_empty_array(sub)) {
     return(NA)

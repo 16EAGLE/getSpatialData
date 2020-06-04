@@ -42,7 +42,7 @@
   # from this date. Exclude records consecutively until max_sub_period is reached
   selected_SAR <- list() # to be filled with the selected lists of selected ids and sub-periods
   
-  for (timestamp in 1:length(subperiods)) {
+  for (timestamp in 1:max(subperiods)) {
     
     # sensor_match are all Sentinel-1 records of this sub-period
     sensor_match <- intersect(s_match, which(records$sub_period == timestamp))
@@ -97,25 +97,30 @@
         
         if (!is.na(best_period)) {
           incl <- .select_subset_to_best_period(dates_s, best_period)
-          ids <- records_in_s[incl,params$identifier] # ids of selected records in upated sub-period
+          ids <- records_in_s[incl,params$identifier] # ids of selected records in updated sub-period
         }
       } else {
         ids <- records_in_s[[params$identifier]] # all ids of records in sub-period
       }
-      dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]),params$date_col]
+      if (!is.null(ids)) {
+        selected_tile_ids <- records_in_s[which(ids %in% records_in_s[[params$identifier]]), name_tile_id()]
+        ids_subset <- sapply(unique(selected_tile_ids), function(tile) {
+          return(which(selected_tile_ids == tile)[1]) # take one available record of tile id
+        })
+        ids <- ids[ids_subset]
+      }
+      dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]), params$date_col]
       period <- .identify_period(dates_sel)
     }
     
     no_SAR_period <- is.null(period)
     if (no_SAR_period && is.null(period_new_all[[timestamp]])) {
       period <- .calc_default_sub_period(params$period, num_timestamps, timestamp)
-    } else if (no_SAR_period) {
-      
     }
     selected_SAR[[timestamp]] <- list("ids"=ids,
                                       "period"=period,
                                       "timestamp"=timestamp)
-    .select_SAR_timestamp_status(timestamp, selected_SAR[[timestamp]], NROW(records_in_s))
+    .select_SAR_timestamp_status(timestamp, selected_SAR[[timestamp]], length(ids))
   }
   
   return(selected_SAR)

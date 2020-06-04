@@ -2,8 +2,7 @@
 % Please edit documentation in R/is_product_checker.R
 \name{is.landsatMSS}
 \alias{is.landsatMSS}
-\title{Returns TRUE for records that are of product group 'MODIS'
-Returns TRUE for records that are of product 'LANDSAT_MSS_C1'}
+\title{Returns TRUE for records that are of product 'LANDSAT_MSS_C1'}
 \usage{
 is.landsatMSS(records)
 }

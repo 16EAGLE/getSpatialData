@@ -54,7 +54,27 @@ is.modis <- function(records) {
   return(is.product_group_(records, name_product_group_modis()))
 }
 
-#' Returns TRUE for records that are of product group 'MODIS'
+#' Returns TRUE for records that are of product group 'MODIS' and sensor Terra
+#' @description \code{is.modis_terra} checks which records are MODIS Terra records ('MOD')
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.modis_terra <- function(records) {
+  records <- .check_records(records, as_sf = FALSE)
+  return(startsWith(tolower(records[[name_record_id()]]), "mod"))
+}
+
+#' Returns TRUE for records that are of product group 'MODIS' and sensor Aqua
+#' @description \code{is.modis_aqua} checks which records are MODIS Aqua records ('MYD')
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @author Henrik Fisser, 2020
+#' @export
+is.modis_aqua <- function(records) {
+  records <- .check_records(records, as_sf = FALSE)
+  return(startsWith(tolower(records[[name_record_id()]]), "myd"))
+}
 
 #' Returns TRUE for records that are of product 'LANDSAT_MSS_C1'
 #' @description \code{is.landsatMSS} checks which records are Landsat MSS records.
@@ -124,6 +144,7 @@ is.sentinel1 <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_iw_slc <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "slc"))
 }
 
@@ -135,6 +156,7 @@ is.sentinel1_iw_slc <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_iw_grdh <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "grdh"))
 }
 
@@ -146,6 +168,7 @@ is.sentinel1_iw_grdh <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_iw_raw <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "raw"))
 }
 
@@ -157,6 +180,7 @@ is.sentinel1_iw_raw <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_iw_ocn <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "ocn"))
 }
 
@@ -167,6 +191,7 @@ is.sentinel1_iw_ocn <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_level0 <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_level(records, level = "0"))
 }
 
@@ -177,6 +202,7 @@ is.sentinel1_level0 <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_level1 <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_level(records, level = "1"))
 }
 
@@ -187,6 +213,7 @@ is.sentinel1_level1 <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel1_level2 <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_level(records, level = "2"))
 }
 
@@ -207,6 +234,7 @@ is.sentinel2 <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel2_L2A <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
@@ -224,6 +252,7 @@ is.sentinel2_L2A <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel2_S2A <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
@@ -241,6 +270,7 @@ is.sentinel2_S2A <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel2_S2B <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
@@ -258,6 +288,7 @@ is.sentinel2_S2B <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @export
 is.sentinel2_L1C <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {

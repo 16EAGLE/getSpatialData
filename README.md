@@ -92,6 +92,27 @@ It aims at cloud-free mosaics while ensuring user-defined temporal and product c
 * `read_previews()` reads georeferences preview images downloaded using `get_previews()`.
 
 ## Get started
+```R
+library(getSpatialData)
+set_aoi(aoi_data[[1]]) # use example aoi
+view_aoi()
+set_archive(file.path("C:", "my", "dir"))
+products <- c("Sentinel-2", "LANDSAT_8_C1")
+login_CopHub() # login Copernicus Open Access Hub
+login_USGS() # login USGS
+# get available records
+records <- get_records(c("2020-05-01", "2020-05-15"), products = products) 
+# for Sentinel-2 use only Level 2A
+sub <- c(which(is.sentinel2_L2A(records)), which(is.landsat8())) 
+records_sub <- records[sub, ] # subset
+# get preview images
+records_previews <- get_previews(records_sub) 
+# view previews with basemap
+view_previews(records_previews) 
+# calc cloudcov in your aoi
+records_cloudcov <- calc_cloudcov(records_previews) 
+records_selected <- select_unitemporal(records_cloudcov) # select records for single timestamp
+```
 
 ## Supported products
 

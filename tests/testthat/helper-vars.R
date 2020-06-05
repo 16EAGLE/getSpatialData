@@ -1,11 +1,13 @@
 # TEST DIRECTORIES
 # -----------------
 tt <- list()
-tt$home <- getwd() # testthat directory
 
 ###### CAUTION: THIS IS FOR PRELIMINARY LOCAL TESTING .... hf
-tt$home <- file.path(tt$home, "tests", "testthat")
+#tt$home <- getwd() # testthat directory
+#tt$home <- file.path(tt$home, "tests", "testthat")
+############################
 
+tt$home <- system.file("resources", ..., package = "getSpatialData")
 tt$tmp <- file.path(tt$home, "tmp") # tmp dir that can be created for tests (and deleted!)
 tt$resources$home <- file.path(tt$home, "resources")
 tt$resources$records <- file.path(tt$resources$home, "records")

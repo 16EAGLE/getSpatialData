@@ -76,7 +76,7 @@
 #'
 #' @param records object.
 #' @param col.names character vector.
-#' @param as_df logical.
+#' @param as_sf logical.
 #'
 #' @keywords internal
 #' @noRd

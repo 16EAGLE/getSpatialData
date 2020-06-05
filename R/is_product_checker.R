@@ -7,34 +7,6 @@
 # author: Henrik Fisser, 2020
 # ---------------------------------------------------------------------
 
-#' Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection
-#' @description These functions check which records are records of the referred product group, product or sub-selection.
-#' @inheritParams is.landsat
-#' @inherit is.landsat return
-#' @param records sf data.frame
-#' @param product_group character specifies the product group to be checked on.
-#' @return logical vector
-#' @author Henrik Fisser, 2020
-#' @name is.modis
-#' @export
-is.modis <- function(records) {
-  return(is.product_group_(records, name_product_group_modis()))
-}
-
-#' @rdname is.modis
-#' @export
-is.modis_terra <- function(records) {
-  records <- .check_records(records, as_sf = FALSE)
-  return(startsWith(tolower(records[[name_record_id()]]), "mod"))
-}
-
-#' @rdname is.modis
-#' @export
-is.modis_aqua <- function(records) {
-  records <- .check_records(records, as_sf = FALSE)
-  return(startsWith(tolower(records[[name_record_id()]]), "myd"))
-}
-
 #' Returns TRUE for records that are of product group 'Landsat' or the referred sub-selection
 #' @description These functions check which records are records of the referred product group, product or sub-selection.
 #' @inheritParams calc_cloudcov
@@ -81,6 +53,34 @@ is.landsat7 <- function(records) {
 is.landsat8 <- function(records) {
   return(is.product_(records, name_product_landsat8()))
 }
+
+
+#' Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection
+#' @description These functions check which records are records of the referred product group, product or sub-selection.
+#' @inheritParams is.landsat
+#' @inherit is.landsat return
+#' @return logical vector
+#' @author Henrik Fisser, 2020
+#' @name is.modis
+#' @export
+is.modis <- function(records) {
+  return(is.product_group_(records, name_product_group_modis()))
+}
+
+#' @rdname is.modis
+#' @export
+is.modis_terra <- function(records) {
+  records <- .check_records(records, as_sf = FALSE)
+  return(startsWith(tolower(records[[name_record_id()]]), "mod"))
+}
+
+#' @rdname is.modis
+#' @export
+is.modis_aqua <- function(records) {
+  records <- .check_records(records, as_sf = FALSE)
+  return(startsWith(tolower(records[[name_record_id()]]), "myd"))
+}
+
 
 #' Returns TRUE for records that are of product group 'Sentinel' or the referred sub-selection
 #' @description These functions check which records are records of the referred product group, product or sub-selection.
@@ -344,7 +344,7 @@ is.sentinel5p <- function(records) {
 #' @author Henrik Fisser, 2020
 #' @noRd
 is.product_group_ <- function(records, product_group) {
-  records <- .check_records(records, col.names = c(name_product_group()), as_df = TRUE)
+  records <- .check_records(records, col.names = c(name_product_group()), as_sf = FALSE)
   product_groups <- records[[name_product_group()]]
   return(product_groups == product_group)
 }
@@ -352,18 +352,16 @@ is.product_group_ <- function(records, product_group) {
 #' Returns TRUE for records that are of the specified product
 #' @description \code{is.product_} checks which records are of product \code{product}.
 #' @details Check \link{get_products} for available product names.
-#' @param product character specifies the product to be checked on.
 #' @param records sf data.frame
+#' @param product character specifies the product to be checked on.
 #' @inherit is.product_group_ return
 #' @author Henrik Fisser, 2020
 #' @noRd
 is.product_ <- function(records, product) {
-  records <- .check_records(records, col.names = c(name_product()), as_df = TRUE)
+  records <- .check_records(records, col.names = c(name_product()), as_sf = FALSE)
   products <- records[[name_product()]]
   return(products == product)
 }
-
-
 
 #' helper for identifying the Sentinel-1 processing level
 #' @param records sf data.frame

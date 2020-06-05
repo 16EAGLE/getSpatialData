@@ -8,6 +8,8 @@ calc_cloudcov(
   records,
   max_deviation = 2,
   aoi = NULL,
+  write_records = TRUE,
+  write_cloud_masks = TRUE,
   dir_out = NULL,
   username = NULL,
   password = NULL,
@@ -32,7 +34,11 @@ it is reprojected to the latter. Use \link{set_aoi} instead to once define an AO
 for all queries within the running session. If \code{aoi} is undefined, the AOI that has been 
 set using \link{set_aoi} is used.}
 
-\item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
+\item{write_records}{logical specifies if the records (row by row) shall be written.}
+
+\item{write_cloud_masks}{logical specifies if the cloud mask tifs shall be written.}
+
+\item{dir_out}{character. If \code{dir_out} is not NULL the given cloud mask rasters and 
 a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
 \code{dir_out} is used.
 If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}

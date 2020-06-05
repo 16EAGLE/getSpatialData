@@ -28,7 +28,7 @@ Check for available drivers and extensions through \link{get_records_drivers}.}
 \item{driver}{character specifies the writer. Options are all thise returned by
 \link{get_records_drivers}. Will be ignored in case a fully qualified \code{file} path is provided. Default is "GeoJSON".}
 
-\item{dir_out}{character, optional. If \code{dir_out} is not NULL the given cloud mask rasters and 
+\item{dir_out}{character. If \code{dir_out} is not NULL the given cloud mask rasters and 
 a record file for each record will be saved in \code{dir_out}. If it is NULL, the session 
 \code{dir_out} is used.
 If no session \code{dir_out} is set through \link{set_archive} an error is thrown.}

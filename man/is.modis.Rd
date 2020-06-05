@@ -2,19 +2,25 @@
 % Please edit documentation in R/is_product_checker.R
 \name{is.modis}
 \alias{is.modis}
-\title{Returns TRUE for records that are of product group 'MODIS'.}
+\alias{is.modis_terra}
+\alias{is.modis_aqua}
+\title{Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection}
 \usage{
 is.modis(records)
+
+is.modis_terra(records)
+
+is.modis_aqua(records)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is 
 returned by \link{get_records}.}
 }
 \value{
-logical vector, same length as number of rows in \code{records}.
+logical vector
 }
 \description{
-These functions check which records are records of the referred product group.
+These functions check which records are records of the referred product group, product or sub-selection.
 }
 \author{
 Henrik Fisser, 2020

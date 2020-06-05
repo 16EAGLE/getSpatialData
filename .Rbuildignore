@@ -3,6 +3,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.travis\.yml$
-^\appveyor\.yml$
 ^\_pkgdown\.yml$
+^\appveyor\.yml$
 ^\.gitignore$

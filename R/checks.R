@@ -1,7 +1,7 @@
 #' check logins
 #'
 #' @param records
-#'
+#' 
 #' @keywords internal
 #' @noRd
 .check_login <- function(services = NULL, records = NULL, verbose = F){
@@ -80,7 +80,7 @@
 #'
 #' @keywords internal
 #' @noRd
-.check_records <- function(records, col.names = NULL, as_df = FALSE){
+.check_records <- function(records, col.names = NULL, as_sf = TRUE){
   .check_records_type(records)
   if(!is.null(col.names)){
     catch <- .lapply(col.names, function(x) if(!(x %in% colnames(records))) {
@@ -88,10 +88,10 @@
     })
     rm(catch)
   }
-  if(as_df || !name_footprint() %in% names(records)) {
-    records <- as.data.frame(records) 
-  } else {
+  if (as_sf) {
     records <- st_sf(records, sfc_last = F)
+  } else if (!as_sf || !name_footprint() %in% names(records)) {
+    records <- as.data.frame(records) 
   }
   return(records)
 }
@@ -238,7 +238,6 @@
         out(paste0("You are not logged in to ",
                    ifelse(service=="usgs","USGS ERS","Copernicus Hub")," (anymore). Please log in first using login_CopHub()."),3)
       }
-      
     }
   }
   
@@ -252,7 +251,7 @@
 #' @noRd
 .select_check_prio_sensors <- function(prio_sensors, records) {
   if (!.is_empty_array(prio_sensors)) {
-    .check_type(prio_sensors, "prio_sensors", CHARACTER())
+    .check_type(prio_sensors, "prio_products", CHARACTER())
     # check if prio products are given in records at all
     not_in_product_group <- !any(prio_sensors %in% records[[name_product_group()]])
     not_in_product <- !any(prio_sensors %in% records[[name_product()]])
@@ -266,8 +265,7 @@
     }))
     if (name_product_sentinel1() %in% prio_sensors) out(paste0(name_product_sentinel1(), " cannot be handled in 'prio_products'"))
     if (!all_valid) {
-      out("Argument 'prio_products' has to be provided with sensor names in the 
-        same format as returned by get_select_supported()", 3)
+      out("Argument 'prio_products' has to be provided with sensor names in the same format as returned by get_select_supported()", 3)
     }
   }
 }
@@ -289,8 +287,8 @@
   } else {
     number_not_found <- which(!exist)
     out(
-      paste0("All files in '", item_name, "' have to be saved at the location as indicated
-             in the paths. Out of ",length(paths)," files ", number_not_found," cannot be located"), 2)
+      paste0("All files in '", item_name, "' column have to be saved at the location as indicated in the paths. ", 
+             number_not_found, " of ", length(paths), " files cannot be found\n"), 3)
   }
 }
 
@@ -327,7 +325,7 @@
   n_spaces <- 4
   one_space <- " "
   spaces1 <- paste(rep(one_space, times = n_spaces), collapse="")
-  spaces2 <- paste(rep(one_space, times=nchar(sel_num_timestamps) + 2 - nchar(s) + n_spaces), collapse="")
+  spaces2 <- paste(rep(one_space, times=nchar(sel_num_timestamps) + 3 - nchar(s) + n_spaces), collapse="")
   out(paste0(sel_num_timestamps, ": ", spaces1, num_timestamps, s, spaces2, paste(sensors, collapse=", ")))
   for (sensor in sensors) {
     r <- min(sapply(sensor,function(x) {revisit_times[[x]]}))
@@ -337,41 +335,11 @@
     if (sub_period < r && not_unitemporal) {
       out(paste0(info,") results in shorter coverage frequency than sensor revisit time (",r," days). Decrease 'num_timestamps'"), 3)
     } else if (sub_period == r && not_unitemporal) {
-      out(paste0(info,") results in coverage frequency equal to revisit time (",r," days) of product '", 
+      out(paste0(info,") results in coverage frequency equal to revisit time (", r, " days) of product '", 
                  sensor, "'"), 2)
     }
   }
 }
-
-# #' checks if columns are given in records and if they have values
-# #' @param records data.frame.
-# #' @param cols character vector of column names to be checked on.
-# #' @return nothing. Console error if column is not given.
-# #' @keywords internal
-# #' @noRd
-# .check_missing_columns <- function(records, cols) {
-#   
-#   missing <- c()
-#   empty <- c()
-#   for (col in cols) {
-#     is_missing <- isFALSE(col %in% names(records))
-#     if (isTRUE(is_missing)) {
-#       missing <- c(missing, col)
-#     } else {
-#       is_empty <- all(is.na(records[[col]]))
-#       if (isTRUE(is_empty)) {
-#         empty <- c(empty,col)
-#       }
-#     }
-#   }
-#   for (fail in unique(c(missing,empty))) {
-#     if (fail %in% missing) out(paste0("Argument 'records' lack needed columns:\n", fail, "\n"), 2)
-#     if (fail %in% empty) out(paste0("Arguent 'records' has empty columns that should have values:\n", fail, "\n"), 2)
-#   }
-#   error <- .sapply(c(missing, empty),function(x) !is.null(x))
-#   if (TRUE %in% error) return(TRUE) else return(FALSE)
-#   
-# }
 
 #' wrapper of all checks in select
 #' @param records data.frame.
@@ -379,7 +347,7 @@
 #' @param period character vector.
 #' @param num_timestamps numeric.
 #' @param prio_sensors character vector.
-#' @param par list.
+#' @param params list.
 #' @param dir_out character.
 #' @param verbose logical.
 #' @return Throwing an error if a check is positive. Otherwise a list of dir_out
@@ -388,25 +356,31 @@
 #' @keywords internal
 #' @noRd
 .select_checks <- function(records, aoi, period, num_timestamps, prio_sensors = NULL,
-                           params, dir_out, verbose) {
-  
+                           params, write_preview_mosaic, dir_out, verbose) {
   dir_out <- .check_dir_out(dir_out, "select")
   aoi <- .check_aoi(aoi, SF(), quiet=T)
-  # check if all columns are provided
-  needed_cols <- c(params$aoi_cc_col, params$preview_col, params$cloud_mask_col)
-  if (.has_SAR(records[[name_product()]]) != 100) {
-    checked <- .check_records(records, col.names = needed_cols)
-    rm(checked)
-  }
   if (!is.null(prio_sensors)) .select_check_prio_sensors(prio_sensors, records)
-  .select_check_revisit(unique(unlist(records$product)), period,num_timestamps)
+  .select_check_revisit(unique(unlist(records$product)), period, num_timestamps)
   # check if needed files exist
-  check <- sapply(list(preview_file=records$preview_file,
-                       cloud_mask_file=records$cloud_mask_file),function(x) {
-    .select_check_files(x, names(x))
-  })
-  if (any(!is.na(check))) out("Cannot find (some) files on disk",3)
-  
+  if (write_preview_mosaic) {
+    .select_check_files(records[[name_preview_file()]], name_preview_file())
+  }
+  .select_check_files(records[[name_cloud_mask_file()]], name_cloud_mask_file())
+}
+
+#' wraps the check records due to Sentinel-1 special case
+#' @param records (sf) data.frame
+#' @param as_sf logical
+#' @return records (sf) data.frame
+#' @keywords internal
+#' @noRd
+.select_check_records <- function(records, as_sf = FALSE) {
+  .check_dataframe(records, "records")
+  # check if all columns are provided
+  needed_cols <- .get_needed_cols_select()
+  if (.has_SAR(records[[name_product()]]) == 100) needed_cols <- needed_cols[!needed_cols %in% .cloudcov_colnames()]
+  records <- .check_records(records, col.names = needed_cols, as_sf = as_sf)
+  return(records)
 }
 
 #' checks if a driver name is available
@@ -540,6 +514,7 @@
     if (check_possible) {
       if (!inherits(input, type)) {
         if (is_raster) type <- paste0(raster_classes[1], "' or '")
+        if (arg_name == "records") type <- "data.frame' or 'sf"
         out(paste0("Argument '", arg_name, "' must be of type '", type, "' but is '", class(input),"'"), 3)
       }
     }
@@ -572,9 +547,9 @@
 # #' @return nothing, raises error if input is not data.frame
 # #' @keywords internal
 # #' @noRd
-# .check_dataframe <- function(input, arg_name) {
-#   .check_type(input, arg_name, DATAFRAME())
-# }
+.check_dataframe <- function(input, arg_name) {
+  .check_type(input, arg_name, DATAFRAME())
+}
 
 # #' checks if input is list
 # #' @param input variable of any type
@@ -582,9 +557,9 @@
 # #' @return nothing, raises error if input is not list
 # #' @keywords internal
 # #' @noRd
-# .check_list <- function(input, arg_name) {
-#   .check_type(input, arg_name, LIST())
-# }
+.check_list <- function(input, arg_name) {
+  .check_type(input, arg_name, LIST())
+}
 
 #' checks if input is RasterBrick or RasterStack
 #' @param input variable of any type
@@ -604,9 +579,9 @@
 # #' @return nothing, raises error if input is not RasterLayer
 # #' @keywords internal
 # #' @noRd
-# .check_raster <- function(input, arg_name) {
-#   .check_type(input, arg_name, RASTER_LAYER())
-# }
+.check_raster <- function(input, arg_name) {
+  .check_type(input, arg_name, RASTER_LAYER())
+}
 
 #' checks if input is logical
 #' @param input variable of any type
@@ -653,31 +628,6 @@
     return(exists)
   }
 }
-
-# #' checks if a file is a csv file and exists
-# #' @param file character file path
-# #' @param out_type integer in case of FALSE: what type of out to be thrown? NA for not out at all.
-# #' @return logical TRUE if file is a csv file
-# #' @keywords internal
-# #' @noRd
-# .is_existing_csv_file <- function(file, out_type = NA) {
-#   exists <- .check_file_exists(file)
-#   is_csv <- any(endsWith(file, c(".csv", ".CSV")))
-#   check <- exists && is_csv
-#   if (check) {
-#     return(check)
-#   } else {
-#     if (is.na(out_type)) {
-#       return(check)
-#     } else {
-#       if (exists && !is_csv) out(paste0("File is not a .csv file: ", file), out_type)
-#       if (!exists && is_csv) out(paste0("csv file does not exist: ", file), out_type)
-#       if (!exists && !is_csv) out(paste0("File is not a .csv file and does not exist: ", file),
-#                                   out_type)
-#       return(check)
-#     }
-#   }
-# }
 
 # logical type checks
 

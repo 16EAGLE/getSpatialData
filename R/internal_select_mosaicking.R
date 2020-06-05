@@ -1,9 +1,9 @@
-#' ---------------------------------------------------------------------
-#' name: internal_select_mosaicking
-#' description: These are the functions that conduct the spatial selection
-#' process and everything related to cloud mask and preview mosaicking within select.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select_mosaicking
+# description: These are the functions that conduct the spatial selection
+# process and everything related to cloud mask and preview mosaicking within select.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' bridge to .make_mosaic
 #' @param paths character paths to rasters to be mosaicked.
@@ -29,111 +29,6 @@
   } else {
     return(NA)
   }
-}
-
-#' creates a mosaic of all used cloud masks and writes it as .tif
-#' @param s list 'selected' of a timestamp holding everything inserted in select_*().
-#' @param aoi aoi.
-#' @param dir_out character directory.
-#' @return \code{save_path_cmos} character path where cloud mask mosaic is saved
-#' @importFrom raster tmpDir
-#' @keywords internal
-#' @noRd
-.select_cmask_mos <- function(s, aoi, dir_out) {
-  
-  save_path_cmos <- file.path(dir_out, paste0(.create_datetime_string(), "_",
-                                              "cloud_mask_mosaic_ts", s$timestamp, ".tif"))
-  cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths, aoi, save_path_cmos)
-  rm(cMask_mosaic)
-  .delete_tmp_files(tmpDir())
-  return(save_path_cmos)
-  
-}
-
-#' creates a cloud-masked preview RGB mosaic and writes it as .tif
-#' @param records data.frame.
-#' @param s list 'selected' of a timestamp holding everything inserted in select_*().
-#' @param aoi aoi.
-#' @param i integer index in the loop.
-#' @param identifier numeric indicating a unique identifier in the records data.frame.
-#' @param dir_out character directory below which to save intermediate product in tmp.
-#' @param cloud_mask_col character name of cloud mask path column.
-#' @param preview_col character name of the preview path column.
-#' @param sensors_given character vector of the product_group given in records.
-#' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
-#' @importFrom raster writeRaster stack mask tmpDir
-#' @keywords internal
-#' @noRd
-#' @author Henrik Fisser
-.select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, 
-                                cloud_mask_col, preview_col, sensors_given) {
-  
-  tmp_dir_orig <- tempdir()
-  tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
-  
-  r <- RASTER_LAYER()
-  id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
-  save_str <- paste0(sample(LETTERS[1:20], 10),"_", collapse = "")
-  save_pmos <- file.path(tmp_dir,paste0(save_str, "preview_mosaic_timestamp", s$timestamp))
-  layers <- c("red", "green", "blue")
-  
-  # cloud mask previews band-wise
-  # this returns a list of paths to each of the three cloud-masked bands per record
-  preview_paths <- lapply(id_sel, function(id_index) {
-    record <- records[id_index,]
-    p_path <- record[[preview_col]]
-    if (is.na(p_path) || !file.exists(p_path)) return(NA)
-    cMask <- raster(records[id_index,cloud_mask_col]) # cloud mask
-    preview <- stack(p_path)
-    cMask <- .check_crs(cMask)
-    preview <- .check_crs(preview)
-
-    # mask NA edges of preview
-    # generically for all
-    na_mask <- .create_preview_na_mask(preview, record)
-    preview <- mask(preview, na_mask, maskvalue=0)
-    # specifically for Landsat and Sentinel-2
-    if (is.landsat(record)) {
-      preview <- .landsat_preview_mask_edges(preview)
-    } else if (is.sentinel2(record)) {
-      preview <- .sentinel2_preview_mask_edges(preview)
-    }
-    preview_cloud_masked <- mask(preview, cMask, maskvalue=NA)
-    preview_save <- file.path(tmp_dir, paste0(records[id_index,identifier], "_cmasked"))
-    
-    paths_sep <- sapply(1:nlayers(preview_cloud_masked),function(j) {
-      layer_save <- paste0(preview_save,"_",id_index,"_",layers[j],".tif")
-      writeRaster(preview_cloud_masked[[j]],layer_save,overwrite=T)
-      return(layer_save)
-    })
-    
-  })
-  
-  preview_paths <- .gsd_compact(preview_paths)
-  
-  # create the mosaic band-wise
-  # this returns a list of band-wise mosaics
-  preview_mos <- lapply(1:length(layers),function(j) {
-    curr_layers <- lapply(preview_paths,function(x) path <- x[j])
-    save_path_pmos <- paste0(save_pmos,"_",layers[j],".grd")
-    pmos <- try(.select_bridge_mosaic(unlist(curr_layers),aoi,save_path_pmos,mode="rgb"))
-    if (!inherits(pmos, r)) return(NA) else return(pmos)
-  })
-  
-  if (any(sapply(preview_mos, class) != r)) out("Could not create preview RGB mosaic", 2)
-  
-  # stack all bands and write to file
-  preview_mos_stack <- stack(preview_mos)
-  save_pmos_final <- file.path(dir_out,paste0(.create_datetime_string(), "_",
-                                              "rgb_preview_mosaic_ts", i,".tif"))
-  writeRaster(preview_mos_stack, save_pmos_final, overwrite=T)
-  
-  # cleanup
-  .delete_tmp_files(tmp_dir)
-  .tmp_dir(dir_out,action=2,TRUE,tmp_dir_orig)
-  
-  return(save_pmos_final)
-  
 }
 
 #' create mosaic consecutively in the order of ordered records (according to aoi cloud cover)
@@ -219,6 +114,7 @@
   
   # add next cloud mask consecutively and check if it decreases the cloud coverage
   not_more_than_base <- le_collection == length(base_records) # base mos includes all available records
+  
   for (i in start:le_collection) {
 
     x <- collection[i] # current cloud mask
@@ -238,16 +134,14 @@
         # in this case there cannot be other records strongly enough improving coverage after base records
         # because base records already include the best on all tiles
         if (file.exists(base_mos_path)) unlink(base_mos_path)
-        return(NULL) # will be caught in select_process()
+        return(selected(NULL, 0, records)) # will be caught in select_process()
       }
     }
     
     # print coverage of base mosaic
     if (i == start) {
       is_last_record <- i == le_collection
-      if (base_coverage == -1000) {
-        base_coverage <- .calc_aoi_coverage(base_mos, aoi, n_pixel_aoi)
-      }
+      base_coverage <- .calc_aoi_coverage(base_mos, aoi, n_pixel_aoi)
       base_coverage_seq <- 0:base_coverage
       last_base <- i - 1
       cov_seq <- split(base_coverage_seq, 
@@ -260,7 +154,7 @@
     }
     
     # if base records includes all available records and add_them was FALSE above: return
-    if (not_more_than_base && base_mos_is_new) return(selected(base_records, base_coverage, records))
+    if (not_more_than_base && base_mos_is_new) break
     
     name_x <- names(x)
     # before calculating the next mosaic, 
@@ -335,7 +229,7 @@
       break
     }
   }
-  out("\n") # get out of the coverage % line
+  out("\n") # leave coverage % line
   
   # return ids of selected records and percentage of valid pixels of final mosaic
   selected <- selected(names(base_records), base_coverage, records)
@@ -353,12 +247,14 @@
 #' @param aoi aoi.
 #' @param params list.
 #' @param dir_out character directory.
+#' @param save_cmos logical if cloud mask mosaic shall be written
+#' @param save_pmos logical if preview mosaic shall be written
 #' @return records with four additional columns: selected_col, timestamp_col, pmos_col, cmos_col. Cloud mask and preview mosaics are saved in dir_out.
 #' @keywords internal
 #' @noRd
 #' @author Henrik Fisser
 .select_save_mosaics <- function(records, selected, aoi, 
-                                 params, dir_out) {
+                                 params, dir_out, save_cmos, save_pmos) {
   
   #console_info <- list()
   cols <- c(params$selected_col, params$timestamp_col, params$pmos_col, params$cmos_col)
@@ -373,21 +269,28 @@
     s <- selected[[i]]
     ids_selected <- s$ids
     
-    if (isFALSE(.is_empty_array(ids_selected))) {
-      #A cloud mask mosaic
-      save_path_cmos <- .select_cmask_mos(s, aoi, dir_out)
-      #B preview mosaic
-      save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
-                                            cloud_mask_col=params$cloud_mask_col,
-                                            preview_col=params$preview_col,
-                                            sensors_given=params$product_group)
-    } else {
+    ids_empty <- .is_empty_array(ids_selected)
+    if (ids_empty) {
       save_path_cmos <- NA
       save_path_pmos <- NA
+    } else {
+      # cloud mask mosaic
+      if (save_cmos) {
+        save_path_cmos <- .select_cmask_mos(s, aoi, dir_out)
+      }
+      if (save_pmos) {
+        # preview mosaic
+        save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
+                                              cloud_mask_col=params$cloud_mask_col,
+                                              preview_col=params$preview_col,
+                                              sensors_given=params$product_group)
+      }
     }
-    
-    #C add columns to records
-    if (!is.na(save_path_cmos)) save_path_pmos <- normalizePath(save_path_pmos)
+    if (!save_cmos) save_path_cmos <- NA
+    if (!save_pmos) save_path_pmos <- NA
+
+    # add columns to records
+    if (!is.na(save_path_pmos)) save_path_pmos <- normalizePath(save_path_pmos)
     if (!is.na(save_path_cmos)) save_path_cmos <- normalizePath(save_path_cmos)
     insert <- c(TRUE, s$timestamp, save_path_pmos, save_path_cmos)
     for (j in 1:length(cols)) {
@@ -395,8 +298,10 @@
               cols[j]] <- ifelse(.char_can_be_int(insert[j]), as.integer(insert[j]), insert[j])  
     }
     
+    if (!save_cmos) records[[params$cmos_col]] <- NULL
+    if (!save_pmos) records[[params$pmos_col]] <- NULL
+    
     # get print info
-    #console_info[[i]] <- .select_final_info(s)
     curr_n_records <- length(s$cMask_paths)
     curr_n_valid_pixels <- s$valid_pixels
     n_records_vector <- append(n_records_vector, curr_n_records)
@@ -408,5 +313,110 @@
   out("Summary by timestamp")
   .select_final_info_table(ts_seq, coverage_vector, n_records_vector, params$sep)
   return(records)
+  
+}
+
+#' creates a mosaic of all used cloud masks and writes it as .tif
+#' @param s list 'selected' of a timestamp holding everything inserted in select_*().
+#' @param aoi aoi.
+#' @param dir_out character directory.
+#' @return \code{save_path_cmos} character path where cloud mask mosaic is saved
+#' @importFrom raster tmpDir
+#' @keywords internal
+#' @noRd
+.select_cmask_mos <- function(s, aoi, dir_out) {
+  
+  save_path_cmos <- file.path(dir_out, paste0(.create_datetime_string(), "_",
+                                              "cloud_mask_mosaic_ts", s$timestamp, ".tif"))
+  cMask_mosaic <- .select_bridge_mosaic(s$cMask_paths, aoi, save_path_cmos)
+  rm(cMask_mosaic)
+  .delete_tmp_files(tmpDir())
+  return(save_path_cmos)
+  
+}
+
+#' creates a cloud-masked preview RGB mosaic and writes it as .tif
+#' @param records data.frame.
+#' @param s list 'selected' of a timestamp holding everything inserted in select_*().
+#' @param aoi aoi.
+#' @param i integer index in the loop.
+#' @param identifier numeric indicating a unique identifier in the records data.frame.
+#' @param dir_out character directory below which to save intermediate product in tmp.
+#' @param cloud_mask_col character name of cloud mask path column.
+#' @param preview_col character name of the preview path column.
+#' @param sensors_given character vector of the product_group given in records.
+#' @return \code{save_pmos_final} character path where preview RGB mosaic is saved
+#' @importFrom raster writeRaster stack mask tmpDir
+#' @keywords internal
+#' @noRd
+#' @author Henrik Fisser
+.select_preview_mos <- function(records, s, aoi, i, identifier, dir_out, 
+                                cloud_mask_col, preview_col, sensors_given) {
+  
+  tmp_dir_orig <- tempdir()
+  tmp_dir <- .tmp_dir(dir_out,action=1,TRUE)
+  
+  r <- RASTER_LAYER()
+  id_sel <- sapply(s$ids,function(x) which(records[[identifier]]==x))
+  save_str <- paste0(sample(LETTERS[1:20], 10),"_", collapse = "")
+  save_pmos <- file.path(tmp_dir,paste0(save_str, "preview_mosaic_timestamp", s$timestamp))
+  layers <- c("red", "green", "blue")
+  
+  # cloud mask previews band-wise
+  # this returns a list of paths to each of the three cloud-masked bands per record
+  preview_paths <- lapply(id_sel, function(id_index) {
+    record <- records[id_index,]
+    p_path <- record[[preview_col]]
+    if (is.na(p_path) || !file.exists(p_path)) return(NA)
+    cMask <- raster(records[id_index,cloud_mask_col]) # cloud mask
+    preview <- stack(p_path)
+    cMask <- .check_crs(cMask)
+    preview <- .check_crs(preview)
+    
+    # mask NA edges of preview
+    # generically for all
+    na_mask <- .create_preview_na_mask(preview, record)
+    preview <- mask(preview, na_mask, maskvalue=0)
+    # specifically for Landsat and Sentinel-2
+    if (is.landsat(record)) {
+      preview <- .landsat_preview_mask_edges(preview)
+    } else if (is.sentinel2(record)) {
+      preview <- .sentinel2_preview_mask_edges(preview)
+    }
+    preview_cloud_masked <- mask(preview, cMask, maskvalue=NA)
+    preview_save <- file.path(tmp_dir, paste0(records[id_index,identifier], "_cmasked"))
+    
+    paths_sep <- sapply(1:nlayers(preview_cloud_masked),function(j) {
+      layer_save <- paste0(preview_save,"_",id_index,"_",layers[j],".tif")
+      writeRaster(preview_cloud_masked[[j]],layer_save,overwrite=T)
+      return(layer_save)
+    })
+    
+  })
+  
+  preview_paths <- .gsd_compact(preview_paths)
+  
+  # create the mosaic band-wise
+  # this returns a list of band-wise mosaics
+  preview_mos <- lapply(1:length(layers),function(j) {
+    curr_layers <- lapply(preview_paths,function(x) path <- x[j])
+    save_path_pmos <- paste0(save_pmos,"_",layers[j],".grd")
+    pmos <- try(.select_bridge_mosaic(unlist(curr_layers),aoi,save_path_pmos,mode="rgb"))
+    if (!inherits(pmos, r)) return(NA) else return(pmos)
+  })
+  
+  if (any(sapply(preview_mos, class) != r)) out("Could not create preview RGB mosaic", 2)
+  
+  # stack all bands and write to file
+  preview_mos_stack <- stack(preview_mos)
+  save_pmos_final <- file.path(dir_out,paste0(.create_datetime_string(), "_",
+                                              "rgb_preview_mosaic_ts", i,".tif"))
+  writeRaster(preview_mos_stack, save_pmos_final, overwrite=T)
+  
+  # cleanup
+  .delete_tmp_files(tmp_dir)
+  .tmp_dir(dir_out,action=2,TRUE,tmp_dir_orig)
+  
+  return(save_pmos_final)
   
 }

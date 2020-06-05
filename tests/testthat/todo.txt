@@ -1,0 +1,9 @@
+1. Tests cloudcov
+2. Tests select
+- unitemporal with all sensors
+- bitemporal with Sentinel-2 , Landsat and mixed
+- timeseries with Senttinel-2, Landsat and mixed
+3. Additional records for Landsat-5 and MSS (earlier)
+- only test cloudov
+
+4. Handling Sentinel-5p in calc_cloudcov and select? - not supported for now

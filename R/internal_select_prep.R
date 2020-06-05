@@ -1,3 +1,10 @@
+# ---------------------------------------------------------------------
+# name: internal_select_prep
+# These are internal functions used during the preparation phase of
+# select functionalities.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
+
 #' get column names needed for running select_*
 #' @return character vector needed_cols
 #' @keywords internal
@@ -5,7 +12,7 @@
 .get_needed_cols_select <- function() {
   needed_cols_cloudcov <- .cloudcov_get_needed_cols()
   needed_cols_cloudcov <- append(needed_cols_cloudcov, .cloudcov_colnames())
-  return(append(needed_cols_cloudcov, c(name_preview_file())))
+  return(unique(unlist(append(needed_cols_cloudcov, c(name_preview_file())))))
 }
 
 #' checks if a record is supported by .select_*() or not

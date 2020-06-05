@@ -71,7 +71,7 @@ they will be reloaded.
 \details{
 Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the 
 red and blue information of the input RGB. HOT procedure is applied to the red and blue bands [1-3]. 
-Orignally, the base computation was introduced by Zhang et al. (2002) [2]. 
+Originally, the base computation was introduced by Zhang et al. (2002) [2]. 
 The computation done in \code{calc_cloudcov} includes the following steps:
 \enumerate{
 \item Binning: extract low red values and their highest blue values
@@ -83,65 +83,9 @@ the provider scene cloud cover.
 cloud mask.
 }
 
-HOT seperates clear-sky 
+HOT separates clear-sky 
 pixels first from a threshold, calculates a linear regression from these pixels and exposes 
 cloud pixels by the deviation of all pixels from this clear-sky line.
-}
-\examples{
-## Load packages
-library(getSpatialData)
-library(raster)
-library(sf)
-library(sp)
-
-## Define an AOI (either matrix, sf or sp object)
-data("aoi_data") # example aoi
-
-aoi <- aoi_data[[3]] # AOI as matrix object, or better:
-aoi <- aoi_data[[2]] # AOI as sp object, or:
-aoi <- aoi_data[[1]] # AOI as sf object
-# or, simply call set_aoi() without argument to interactively draw an AOI
-
-## set AOI for this session
-set_aoi(aoi)
-view_aoi() #view AOI in viewer
-
-## Define time range and platform
-time_range <-  c("2017-08-01", "2017-08-30")
-platform <- "Sentinel-2"
-
-## set login credentials and an archive directory
-\dontrun{
-login_CopHub(username = "username") #asks for password or define 'password'
-set_archive("/path/to/archive/")
-
-## Use getSentinel_query to search for data (using the session AOI)
-records <- getSentinel_query(time_range = time_range, platform = platform)
-
-## Get an overview of the records
-View(records) #get an overview about the search records
-colnames(records) #see all available filter attributes
-unique(records$processinglevel) #use one of the, e.g. to see available processing levels
-
-## Calculate cloud cover within the aoi
-records_cloudcov <- calcSentinel_aoi_cloudcov(records = records, aoi = aoi) # cloud cov. calc.
-
-## Filter the records
-records_filtered <- records_cloudcov[which(records_cloudcov$processinglevel == "Level-1C"),]
-
-## Preview a single record
-getSentinel_preview(record = records_filtered[5,])
-
-## Download some datasets
-datasets <- getSentinel_data(records = records_filtered[c(4,5,6),])
-
-## Make them ready to use
-datasets_prep <- prepSentinel(datasets, format = "tiff")
-
-## Load them to R
-r <- stack(datasets_prep[[1]][[1]][1]) #first dataset, first tile, 10m resoultion
-}
-
 }
 \references{
 [1] Chen, S, Chen, X., Chen, J., Jia, P., 2015. An Iterative Haze Optimized Transformation for 

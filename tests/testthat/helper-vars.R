@@ -1,11 +1,13 @@
 # TEST DIRECTORIES
 # -----------------
 tt <- list()
-tt$home <- getwd() # testthat directory
 
 ###### CAUTION: THIS IS FOR PRELIMINARY LOCAL TESTING .... hf
-tt$home <- file.path(tt$home, "tests", "testthat")
+#tt$home <- getwd() # testthat directory
+#tt$home <- file.path(tt$home, "tests", "testthat")
+############################
 
+tt$home <- system.file("resources", ..., package = "getSpatialData")
 tt$tmp <- file.path(tt$home, "tmp") # tmp dir that can be created for tests (and deleted!)
 tt$resources$home <- file.path(tt$home, "resources")
 tt$resources$records <- file.path(tt$resources$home, "records")
@@ -50,10 +52,9 @@ COLS$timestamp_col <- "selected_for_timestamp"
 # for file naming
 PREFIX <- list()
 PREFIX$records <- "records"
-PREFIX$previews <- "records_previews"
 PREFIX$cmasks <- "records_cmasks"
 construct_filepath <- function(dir, sensor, prefix) {
-  return(file.path(dir, paste(prefix, paste0(gsub("-", "", sensor), ".geojson"), sep="_")))
+  return(file.path(dir, paste(prefix, paste0(gsub("-", "", tolower(sensor)), ".geojson"), sep="_")))
 }
 
 # HELPERS
@@ -116,7 +117,6 @@ column_error_msg <- function(column) {
   return(paste0("A column of 'records' named '", column, "' is required for this action, but is missing."))
 }
 
-
 # wrapper for reading a raster brick via raster::brick(). Mainly for unit tests.
 .read_brick <- function(file_path) {
   return(brick(file_path))
@@ -136,7 +136,7 @@ column_error_msg <- function(column) {
 
 AOI_TYPE_ERROR <- "Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object."
 AOI_UNDEFINED_ERROR <- "Argument 'aoi' is undefined and no session AOI could be obtained. Define aoi or use set_aoi() to define a session AOI."
-RECORDS_TYPE_ERROR <- "Argument 'records' must be of class 'data.frame' or 'sf' 'data.frame'."
+RECORDS_TYPE_ERROR <- "Argument 'records' must be of type 'data.frame' or 'sf' but is 'character'"
 
 # TEST VARIABLES
 # -----------------

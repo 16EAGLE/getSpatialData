@@ -284,7 +284,7 @@ rbind.different <- function(x) {
     records[sub, name_tile_id()] <- paste0(horizontal, vertical)
   }
   
-  # in many cases now value is given in horizontal / vertical
+  # in many cases no value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
   records <- .make_tileid_sentinel1(records)
   records <- .make_tileid_sentinel2(records)
@@ -872,7 +872,7 @@ rbind.different <- function(x) {
   }
   # assign footprints
   records[[name_footprint]] <- st_sfc(footprints, crs = 4326)
-  return(.check_records(records, as_df = !as_sf))
+  return(.check_records(records, as_sf = as_sf))
 }
 
 #' generate file name according to date time

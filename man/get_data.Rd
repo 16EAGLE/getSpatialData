@@ -81,7 +81,7 @@ A data frame of records (as defined with argument \code{records}), extended by a
 \details{
 Sentinel data are downloaded from the *ESA Copernicus Open Access Hubs*.
 
-Landsat data are downloaded from *USGS-EROS ESPA* (on-demand higher-level data) and *Amazon Web Srvices* (Landsat-8 Level 1 data).
+Landsat data are downloaded from *USGS-EROS ESPA* (on-demand higher-level data) and *Amazon Web Services* (Landsat-8 Level 1 data).
 
 MODIS data are downloaded from the Level-1 and Atmosphere Archive & Distribution System (LAADS) of NASA's Distributed Active Archive Center (DAAC) at the Goddard Space Flight Center in Greenbelt, Maryland (\url{https://ladsweb.modaps.eosdis.nasa.gov/}).
 }

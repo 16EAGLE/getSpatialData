@@ -5,6 +5,7 @@
 \alias{getSentinel_records}
 \alias{getLandsat_records}
 \alias{getMODIS_records}
+\alias{getSRTM_records}
 \title{Query available product records}
 \usage{
 get_records(
@@ -41,6 +42,17 @@ getLandsat_records(
 )
 
 getMODIS_records(
+  time_range,
+  products,
+  aoi = NULL,
+  as_sf = TRUE,
+  rename_cols = TRUE,
+  check_products = TRUE,
+  ...,
+  verbose = TRUE
+)
+
+getSRTM_records(
   time_range,
   products,
   aoi = NULL,

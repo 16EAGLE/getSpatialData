@@ -2,9 +2,21 @@
 % Please edit documentation in R/is_product_checker.R
 \name{is.landsat}
 \alias{is.landsat}
-\title{Returns TRUE for records that are of product group 'Landsat'}
+\alias{is.landsatMSS}
+\alias{is.landsat5}
+\alias{is.landsat7}
+\alias{is.landsat8}
+\title{Returns TRUE for records that are of product group 'Landsat' or the referred sub-selection}
 \usage{
 is.landsat(records)
+
+is.landsatMSS(records)
+
+is.landsat5(records)
+
+is.landsat7(records)
+
+is.landsat8(records)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is 
@@ -14,7 +26,18 @@ returned by \link{get_records}.}
 logical vector, same length as number of rows in \code{records}.
 }
 \description{
-\code{is.landsat} checks which records are Landsat records.
+These functions check which records are records of the referred product group, product or sub-selection.
+}
+\details{
+\code{is.landsat} returns TRUE for records that are of product group 'Landsat'.
+
+\code{is.landsatMSS} returns TRUE for records that are of product 'LANDSAT_MSS_C1'.
+
+\code{is.landsat5} returns TRUE for records that are of product 'LANDSAT_TM_C1' (Landsat-5).
+
+\code{is.landsat7} returns TRUE for records that are of product 'LANDSAT_ETM_C1' (Landsat-7).
+
+\code{is.landsat8} returns TRUE for records that are of product 'LANDSAT_8_C1' (Landsat-8).
 }
 \author{
 Henrik Fisser, 2020

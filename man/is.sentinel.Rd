@@ -2,9 +2,81 @@
 % Please edit documentation in R/is_product_checker.R
 \name{is.sentinel}
 \alias{is.sentinel}
-\title{Returns TRUE for records that are of product group 'Sentinel'}
+\alias{is.sentinel1}
+\alias{is.sentinel1_iw_slc}
+\alias{is.sentinel1_iw_grdh}
+\alias{is.sentinel1_iw_raw}
+\alias{is.sentinel1_iw_ocn}
+\alias{is.sentinel1_level0}
+\alias{is.sentinel1_level1}
+\alias{is.sentinel1_level2}
+\alias{is.sentinel2}
+\alias{is.sentinel2_L1C}
+\alias{is.sentinel2_L2A}
+\alias{is.sentinel2_S2A}
+\alias{is.sentinel2_S2B}
+\alias{is.sentinel3}
+\alias{is.sentinel3_S3A}
+\alias{is.sentinel3_S3B}
+\alias{is.sentinel3_S3C}
+\alias{is.sentinel3_S3D}
+\alias{is.sentinel3_synergy}
+\alias{is.sentinel3_slstr}
+\alias{is.sentinel3_sral}
+\alias{is.sentinel3_olci}
+\alias{is.sentinel5}
+\alias{is.sentinel5p}
+\title{Returns TRUE for records that are of product group 'Sentinel' or the referred sub-selection}
 \usage{
 is.sentinel(records)
+
+is.sentinel1(records)
+
+is.sentinel1_iw_slc(records)
+
+is.sentinel1_iw_grdh(records)
+
+is.sentinel1_iw_raw(records)
+
+is.sentinel1_iw_ocn(records)
+
+is.sentinel1_level0(records)
+
+is.sentinel1_level1(records)
+
+is.sentinel1_level2(records)
+
+is.sentinel2(records)
+
+is.sentinel2_L1C(records)
+
+is.sentinel2_L2A(records)
+
+is.sentinel2_S2A(records)
+
+is.sentinel2_S2B(records)
+
+is.sentinel3(records)
+
+is.sentinel3_S3A(records)
+
+is.sentinel3_S3B(records)
+
+is.sentinel3_S3C(records)
+
+is.sentinel3_S3D(records)
+
+is.sentinel3_synergy(records)
+
+is.sentinel3_slstr(records)
+
+is.sentinel3_sral(records)
+
+is.sentinel3_olci(records)
+
+is.sentinel5(records)
+
+is.sentinel5p(records)
 }
 \arguments{
 \item{records}{data.frame, one or multiple records (each represented by one row), as it is 
@@ -14,7 +86,56 @@ returned by \link{get_records}.}
 logical vector, same length as number of rows in \code{records}.
 }
 \description{
-\code{is.sentinel} checks which records are Sentinel records.
+These functions check which records are records of the referred product group, product or sub-selection.
+}
+\details{
+\code{is.sentinel} returns TRUE for records that are of product group 'Sentinel'.
+
+\code{is.sentinel1} returns TRUE for records that are of product 'Sentinel-1'.
+
+\code{is.sentinel1_iw_slc} returns TRUE for records that are of product 'Sentinel-1' IW SLC (Sentinel-1 Interferometric Wideswath Single Look Complex).
+
+\code{is.sentinel1_iw_grdh} returns TRUE for records that are of product 'Sentinel-1' IW GRDH (Interferometric Wideswath Ground Range Detected).
+
+\code{is.sentinel1_iw_raw} returns TRUE for records that are of product 'Sentinel-1' IW RAW (Interferometric Wideswath RAW).
+
+\code{is.sentinel1_iw_ocn} returns TRUE for records that are of product 'Sentinel-1' IW OCN (Interferometric Wideswath OCN).
+
+\code{is.sentinel1_level0} returns TRUE for records that are of product 'Sentinel-1' level 0.
+
+\code{is.sentinel1_level1} returns TRUE for records that are of product 'Sentinel-1' level 1.
+
+\code{is.sentinel1_level2} returns TRUE for records that are of product 'Sentinel-1' level 2.
+
+\code{is.sentinel2} returns TRUE for records that are of product 'Sentinel-2'.
+
+\code{is.sentinel2_L1C} returns TRUE for records that are 'Sentinel-2' Level-1C.
+
+\code{is.sentinel2_L2A} returns TRUE for records that are 'Sentinel-2' Level-2A.
+
+\code{is.sentinel2_S2A} returns TRUE for records that are of product 'Sentinel-2' and platform S2A.
+
+\code{is.sentinel2_S2B} returns TRUE for records that are of product 'Sentinel-2' and platform S2B.
+
+\code{is.sentinel3} returns TRUE for records that are of product 'Sentinel-3'.
+
+\code{is.sentinel3_S3A} returns TRUE for records that are of product 'Sentinel-3' and platform S3A.
+
+\code{is.sentinel3_S3B} returns TRUE for records that are of product 'Sentinel-3' and platform S3B.
+
+\code{is.sentinel3_S3C} returns TRUE for records that are of product 'Sentinel-3' and platform S3C.
+
+\code{is.sentinel3_S3D} returns TRUE for records that are of product 'Sentinel-3' and platform S3D.
+
+\code{is.sentinel3_synergy} returns TRUE for records that 'Sentinel-3' SYNERGY records.
+
+\code{is.sentinel3_slstr} returns TRUE for records that are 'Sentinel-3' SLSTR records.
+
+\code{is.sentinel3_sral} returns TRUE for records that are 'Sentinel-3' SRAL records.
+
+\code{is.sentinel3_olci} returns TRUE for records that are 'Sentinel-3' OLCI records.
+
+\code{is.sentinel5} and \code{is.sentinel5p} return TRUE for records that are 'Sentinel-5' or 'Sentinel-5P'.
 }
 \author{
 Henrik Fisser, 2020

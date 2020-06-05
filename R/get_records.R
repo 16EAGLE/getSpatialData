@@ -101,6 +101,13 @@ getLandsat_records <- get_records
 
 getMODIS_records <- get_records
 
+#' @rdname get_records
+#' @export
+
+getSRTM_records <- get_records
+
+
+
 #' @rdname getSpatialData-deprecated
 #' @export
 getSentinel_query <- function(...){
@@ -121,3 +128,5 @@ getMODIS_query <- function(...){
   .Deprecated("getMODIS_records", "getSpatialData")
   getMODIS_records(...)
 }
+
+

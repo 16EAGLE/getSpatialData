@@ -8,21 +8,29 @@
 
 <title>Function reference • getSpatialData</title>
 
+
 <!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
+
+<!-- bootstrap-toc -->
+<link rel="stylesheet" href="../bootstrap-toc.css">
+<script src="../bootstrap-toc.js"></script>
 
 <!-- Font Awesome icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous" />
 
 <!-- clipboard.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script>
 
-<!-- sticky kit -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script>
+<!-- headroom.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script>
 
 <!-- pkgdown -->
 <link href="../pkgdown.css" rel="stylesheet">
@@ -30,7 +38,9 @@
 
 
 
+
 <meta property="og:title" content="Function reference" />
+
 
 
 
@@ -44,9 +54,10 @@
 <![endif]-->
 
 
+
   </head>
 
-  <body>
+  <body data-spy="scroll" data-target="#toc">
     <div class="container template-reference-index">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -60,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">getSpatialData</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.1.0</span>
       </span>
     </div>
 
@@ -72,20 +83,14 @@
      
   </a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Get Started
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../index.html#sentinel-query-preview-and-download">Sentinel query, preview and download</a>
-    </li>
-    <li>
-      <a href="../index.html#parallelized-download-of-modis-data-user-example">Parallelized download of MODIS data (user example)</a>
-    </li>
-  </ul>
+<li>
+  <a href="../index.html#workflow">Workflow</a>
+</li>
+<li>
+  <a href="../index.html#get-started">Get Started</a>
+</li>
+<li>
+  <a href="../index.html#supported-products">Supported Products</a>
 </li>
 <li>
   <a href="../reference/index.html">Functions</a>
@@ -101,18 +106,17 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="http://www.github.com/bleutner/RStoolbox">RStoolbox</a>
-    </li>
-    <li>
-      <a href="http://www.github.com/RRemelgado/rsmove">rsMove</a>
-    </li>
-    <li>
       <a href="http://movevis.org">moveVis</a>
+    </li>
+    <li>
+      <a href="http://jxsw.de/basemaps">basemaps</a>
+    </li>
+    <li>
+      <a href="http://www.github.com/bleutner/RStoolbox">RStoolbox</a>
     </li>
   </ul>
 </li>
       </ul>
-      
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="http://www.twitter.com/schwalbwillmann">
@@ -139,6 +143,7 @@
 </div><!--/.navbar -->
 
       
+
       </header>
 
 <div class="row">
@@ -158,186 +163,250 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-sentinel" class="hasAnchor"><a href="#section-sentinel" class="anchor"></a>Sentinel</h2>
-          <p class="section-desc"><p>Query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data</p></p>
+          <h2 id="section-logging-in" class="hasAnchor"><a href="#section-logging-in" class="anchor"></a>Logging in</h2>
+          <p class="section-desc"><p>Log in at supported services</p></p>
         </th>
       </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="getSentinel_query.html">getSentinel_query()</a></code> </p>
-        </td>
-        <td><p>Query Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS records</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getSentinel_preview.html">getSentinel_preview()</a></code> </p>
-        </td>
-        <td><p>Preview a Sentinel image</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getSentinel_data.html">getSentinel_data()</a></code> </p>
-        </td>
-        <td><p>Download Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5P or Sentinel GNSS data</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getSentinel_restore.html">getSentinel_restore()</a></code> </p>
-        </td>
-        <td><p>Restore Sentinel datasets from Copernicus LTA</p></td>
-      </tr>
+      
+      
     </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-landsat" class="hasAnchor"><a href="#section-landsat" class="anchor"></a>Landsat</h2>
-          <p class="section-desc"><p>Query, preview and download Landsat data</p></p>
-        </th>
-      </tr>
+      
+      
       <tr>
         
         <td>
-          <p><code><a href="getLandsat_names.html">getLandsat_names()</a></code> </p>
-        </td>
-        <td><p>Get Landsat product names from USGS Earth Explorer</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getLandsat_query.html">getLandsat_query()</a></code> </p>
-        </td>
-        <td><p>Query Landsat records</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getLandsat_preview.html">getLandsat_preview()</a></code> </p>
-        </td>
-        <td><p>Preview a Landsat image</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getLandsat_data.html">getLandsat_data()</a></code> </p>
-        </td>
-        <td><p>Download Landsat data</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-modis" class="hasAnchor"><a href="#section-modis" class="anchor"></a>MODIS</h2>
-          <p class="section-desc"><p>Query, preview and download MODIS data</p></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="getMODIS_names.html">getMODIS_names()</a></code> </p>
-        </td>
-        <td><p>Get MODIS product names from USGS Earth Explorer</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getMODIS_query.html">getMODIS_query()</a></code> </p>
-        </td>
-        <td><p>Query MODIS data</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getMODIS_preview.html">getMODIS_preview()</a></code> </p>
-        </td>
-        <td><p>Preview a MOSIS image</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="getMODIS_data.html">getMODIS_data()</a></code> </p>
-        </td>
-        <td><p>Download MODIS data</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-aoi-cloud-cover" class="hasAnchor"><a href="#section-aoi-cloud-cover" class="anchor"></a>Aoi cloud cover</h2>
-          <p class="section-desc"><p>Calculate cloud cover of Sentinel, Landsat or MODIS within an aoi (pre-download)</p></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="calcSentinel_aoi_cloudcov.html">calcSentinel_aoi_cloudcov()</a></code> </p>
-        </td>
-        <td><p>Calculate the cloud cover of Sentinel data within an aoi</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="calcLandsat_aoi_cloudcov.html">calcLandsat_aoi_cloudcov()</a></code> </p>
-        </td>
-        <td><p>Calculate the cloud cover of Landsat data within an aoi</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="calcMODIS_aoi_cloudcov.html">calcMODIS_aoi_cloudcov()</a></code> </p>
-        </td>
-        <td><p>Calculate the cloud cover of MODIS data within an aoi</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-preprocessing" class="hasAnchor"><a href="#section-preprocessing" class="anchor"></a>Preprocessing</h2>
-          <p class="section-desc"><p>Data preparation and preprocessing</p></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="extractSentinel.html">extractSentinel()</a></code> </p>
-        </td>
-        <td><p>Extract Sentinel zip archives</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="prepSentinel.html">prepSentinel()</a></code> </p>
-        </td>
-        <td><p>Prepare Sentinel data to be ready-to-use (beta)</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="cropFAST.html">cropFAST()</a></code> </p>
-        </td>
-        <td><p>Crop file to a spatial extent (beta)</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-session-login" class="hasAnchor"><a href="#section-session-login" class="anchor"></a>Session Login</h2>
-          <p class="section-desc"><p>Define login credentials that can be used throughout the running session</p></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="gSD_login.html">login_CopHub()</a></code> <code><a href="gSD_login.html">login_USGS()</a></code> </p>
+          <p><code><a href="login.html">login_CopHub()</a></code> <code><a href="login.html">login_USGS()</a></code> <code><a href="login.html">login_earthdata()</a></code> <code><a href="login.html">services()</a></code> </p>
         </td>
         <td><p>Session-wide login</p></td>
       </tr>
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-session-tools" class="hasAnchor"><a href="#section-session-tools" class="anchor"></a>Session Tools</h2>
-          <p class="section-desc"><p>Define settings for the running session and get session information</p></p>
+          <h2 id="section-defining-session-settings" class="hasAnchor"><a href="#section-defining-session-settings" class="anchor"></a>Defining session settings</h2>
+          <p class="section-desc"><p>Set settings that are used by all functions for the current session</p></p>
         </th>
       </tr>
+      
+      
+    </tbody><tbody>
+      
+      
       <tr>
         
         <td>
-          <p><code><a href="gSD_settings.html">set_archive()</a></code> <code><a href="gSD_settings.html">set_aoi()</a></code> <code><a href="gSD_settings.html">view_aoi()</a></code> <code><a href="gSD_settings.html">get_aoi()</a></code> <code><a href="gSD_settings.html">services_avail()</a></code> </p>
+          <p><code><a href="aoi.html">set_aoi()</a></code> <code><a href="aoi.html">view_aoi()</a></code> <code><a href="aoi.html">get_aoi()</a></code> </p>
         </td>
-        <td><p>Session-wide settings and checks</p></td>
+        <td><p>Session-wide area of interest (AOI)</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="archive.html">set_archive()</a></code> <code><a href="archive.html">get_archive()</a></code> </p>
+        </td>
+        <td><p>Session-wide archive directory</p></td>
       </tr>
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-general" class="hasAnchor"><a href="#section-general" class="anchor"></a>General</h2>
+          <h2 id="section-retrieving-and-visualizing-records" class="hasAnchor"><a href="#section-retrieving-and-visualizing-records" class="anchor"></a>Retrieving and visualizing records</h2>
+          <p class="section-desc"><p>Query records for multiple products such as Sentinel, MODIS or Landsat</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="get_products.html">get_products()</a></code> <code><a href="get_products.html">getSentinel_products()</a></code> <code><a href="get_products.html">getLandsat_products()</a></code> <code><a href="get_products.html">getMODIS_products()</a></code> <code><a href="get_products.html">getSRTM_products()</a></code> </p>
+        </td>
+        <td><p>Get product names</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_records.html">get_records()</a></code> <code><a href="get_records.html">getSentinel_records()</a></code> <code><a href="get_records.html">getLandsat_records()</a></code> <code><a href="get_records.html">getMODIS_records()</a></code> <code><a href="get_records.html">getSRTM_records()</a></code> </p>
+        </td>
+        <td><p>Query available product records</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="view_records.html">view_records()</a></code> <code><a href="view_records.html">plot_records()</a></code> </p>
+        </td>
+        <td><p>View footprints of records</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-analysing-previews" class="hasAnchor"><a href="#section-analysing-previews" class="anchor"></a>Analysing previews</h2>
+          <p class="section-desc"><p>Get previews and preview-based calculate AOI cloud cover for Sentinel, Landsat or MODIS</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="get_previews.html">get_previews()</a></code> </p>
+        </td>
+        <td><p>Get previews of records</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="view_previews.html">view_previews()</a></code> <code><a href="view_previews.html">plot_previews()</a></code> </p>
+        </td>
+        <td><p>View or plot previews of records</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_cloudcov_supported.html">get_cloudcov_supported()</a></code> </p>
+        </td>
+        <td><p>Returns product names supported by <code>calc_cloudcov</code></p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="calc_cloudcov.html">calc_cloudcov()</a></code> </p>
+        </td>
+        <td><p>Calculate the cloud cover of optical Sentinel, Landsat or MODIS data in an aoi based on small previews</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-selecting-records" class="hasAnchor"><a href="#section-selecting-records" class="anchor"></a>Selecting records</h2>
+          <p class="section-desc"><p>Select records (semi-)automatically according to temporal needs and cloud cover</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="get_select_supported.html">get_select_supported()</a></code> </p>
+        </td>
+        <td><p>Returns product names supported by <code>select_*</code> functionalities</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="select_unitemporal.html">select_unitemporal()</a></code> </p>
+        </td>
+        <td><p>Selects remote sensing records uni-temporally</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="select_bitemporal.html">select_bitemporal()</a></code> </p>
+        </td>
+        <td><p>Selects remote sensing records bi-temporally</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="select_timeseries.html">select_timeseries()</a></code> </p>
+        </td>
+        <td><p>Selects remote sensing records for a time series</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="is.landsat.html">is.landsat()</a></code> <code><a href="is.landsat.html">is.landsatMSS()</a></code> <code><a href="is.landsat.html">is.landsat5()</a></code> <code><a href="is.landsat.html">is.landsat7()</a></code> <code><a href="is.landsat.html">is.landsat8()</a></code> </p>
+        </td>
+        <td><p>Returns TRUE for records that are of product group 'Landsat' or the referred sub-selection</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="is.modis.html">is.modis()</a></code> </p>
+        </td>
+        <td><p>Returns TRUE for records that are of product group 'MODIS'.</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="is.sentinel.html">is.sentinel()</a></code> <code><a href="is.sentinel.html">is.sentinel1()</a></code> <code><a href="is.sentinel.html">is.sentinel1_iw_slc()</a></code> <code><a href="is.sentinel.html">is.sentinel1_iw_grdh()</a></code> <code><a href="is.sentinel.html">is.sentinel1_iw_raw()</a></code> <code><a href="is.sentinel.html">is.sentinel1_iw_ocn()</a></code> <code><a href="is.sentinel.html">is.sentinel1_level0()</a></code> <code><a href="is.sentinel.html">is.sentinel1_level1()</a></code> <code><a href="is.sentinel.html">is.sentinel1_level2()</a></code> <code><a href="is.sentinel.html">is.sentinel2()</a></code> <code><a href="is.sentinel.html">is.sentinel2_L1C()</a></code> <code><a href="is.sentinel.html">is.sentinel2_L2A()</a></code> <code><a href="is.sentinel.html">is.sentinel2_S2A()</a></code> <code><a href="is.sentinel.html">is.sentinel2_S2B()</a></code> <code><a href="is.sentinel.html">is.sentinel3()</a></code> <code><a href="is.sentinel.html">is.sentinel3_S3A()</a></code> <code><a href="is.sentinel.html">is.sentinel3_S3B()</a></code> <code><a href="is.sentinel.html">is.sentinel3_S3C()</a></code> <code><a href="is.sentinel.html">is.sentinel3_S3D()</a></code> <code><a href="is.sentinel.html">is.sentinel3_synergy()</a></code> <code><a href="is.sentinel.html">is.sentinel3_slstr()</a></code> <code><a href="is.sentinel.html">is.sentinel3_sral()</a></code> <code><a href="is.sentinel.html">is.sentinel3_olci()</a></code> <code><a href="is.sentinel.html">is.sentinel5()</a></code> <code><a href="is.sentinel.html">is.sentinel5p()</a></code> </p>
+        </td>
+        <td><p>Returns TRUE for records that are of product group 'Sentinel' or the referred sub-selection</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-checking-ordering-and-downloading-records" class="hasAnchor"><a href="#section-checking-ordering-and-downloading-records" class="anchor"></a>Checking, ordering and downloading records</h2>
+          <p class="section-desc"><p>Check download availability, order datasets and download them</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="check_availability.html">check_availability()</a></code> </p>
+        </td>
+        <td><p>Check download availability of records</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="order_data.html">order_data()</a></code> </p>
+        </td>
+        <td><p>Order datasets</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="get_data.html">get_data()</a></code> <code><a href="get_data.html">getSentinel_data()</a></code> <code><a href="get_data.html">getLandsat_data()</a></code> <code><a href="get_data.html">getMODIS_data()</a></code> </p>
+        </td>
+        <td><p>Download datasets</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-writing-and-reading" class="hasAnchor"><a href="#section-writing-and-reading" class="anchor"></a>Writing and reading</h2>
+          <p class="section-desc"><p>Write and read getSpatialData outputs</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="get_records_drivers.html">get_records_drivers()</a></code> </p>
+        </td>
+        <td><p>Returns drivers for writing records</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="write_records.html">write_records()</a></code> </p>
+        </td>
+        <td><p>Write records to file</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="read_records.html">read_records()</a></code> </p>
+        </td>
+        <td><p>Read records from file</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="read_previews.html">read_previews()</a></code> </p>
+        </td>
+        <td><p>Read records previews</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-others" class="hasAnchor"><a href="#section-others" class="anchor"></a>Others</h2>
           <p class="section-desc"></p>
         </th>
       </tr>
+      
+      
+    </tbody><tbody>
+      
+      
       <tr>
         
         <td>
@@ -349,40 +418,36 @@
         <td>
           <p><code><a href="getSpatialData-package.html">getSpatialData-package</a></code> </p>
         </td>
-        <td><p>Overview of getSpatialData tools</p></td>
+        <td><p>Overview of getSpatialData</p></td>
       </tr>
     </tbody>
     </table>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
-    <h2>Contents</h2>
-    <ul class="nav nav-pills nav-stacked">
-      <li><a href="#section-sentinel">Sentinel</a></li>
-      <li><a href="#section-landsat">Landsat</a></li>
-      <li><a href="#section-modis">MODIS</a></li>
-      <li><a href="#section-aoi-cloud-cover">Aoi cloud cover</a></li>
-      <li><a href="#section-preprocessing">Preprocessing</a></li>
-      <li><a href="#section-session-login">Session Login</a></li>
-      <li><a href="#section-session-tools">Session Tools</a></li>
-      <li><a href="#section-general">General</a></li>
-    </ul>
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <nav id="toc" data-toggle="toc" class="sticky-top">
+      <h2 data-toc-skip>Contents</h2>
+    </nav>
   </div>
 </div>
 
+
       <footer>
       <div class="copyright">
-  <p>Developed by Jakob Schwalb-Willmann.</p>
+  <p>Developed by Jakob Schwalb-Willmann, Henrik Fisser.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
    </div>
 
   
 
+
   </body>
 </html>
+
 

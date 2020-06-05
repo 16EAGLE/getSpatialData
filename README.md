@@ -46,7 +46,7 @@ This approach is implemented by the following functions (sorted by the order in 
 * `login_CopHub()` logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 * `login_USGS()` logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
 * `login_earthdata()` logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new)
-* `services_avail()` displays the status of all online services used by `getSpatialData`. 
+* `services()` displays the status of all online services used by `getSpatialData`. 
 
 #### Defining session settings
 
@@ -73,6 +73,7 @@ Automatic remote sensing records selection is possible both for optical and SAR 
 The selection is based on aoi cloud cover of optical records and temporal characterstics.
 For optical records `select_*` uses preview cloud masks from `calc_cloudcov()` to create timestamp-wise mosaics.
 It aims at cloud-free mosaics while ensuring user-defined temporal and product constraints.
+* `get_select_supported()` tells you for which products automatic record selection is supported.
 * `select_unitemporal()` selects remote sensing records *uni-temporally*
 * `select_bitemporal()` selects remote sensing records *bi-temporally*
 * `select_timeseries()` selects remote sensing records for a *time series*
@@ -92,23 +93,38 @@ It aims at cloud-free mosaics while ensuring user-defined temporal and product c
 * `read_previews()` reads georeferences preview images downloaded using `get_previews()`.
 
 ## Get started
+
 ```R
 library(getSpatialData)
-set_aoi(aoi_data[[1]]) # use example aoi
+
+ # use example aoi
+set_aoi(aoi_data[[1]])
 view_aoi()
-set_archive(file.path("C:", "my", "dir"))
-products <- c("Sentinel-2", "LANDSAT_8_C1")
+
+# define archive directory
+set_archive("/path/to/archive/dir")
+
+# login
 login_CopHub() # login Copernicus Open Access Hub
 login_USGS() # login USGS
+
+# print available products
+get_products()
+products <- c("Sentinel-2", "LANDSAT_8_C1")
+
 # get available records
 records <- get_records(c("2020-05-01", "2020-05-15"), products = products) 
+
 # for Sentinel-2 use only Level 2A
 sub <- c(which(is.sentinel2_L2A(records)), which(is.landsat8())) 
 records_sub <- records[sub, ] # subset
+
 # get preview images
 records_previews <- get_previews(records_sub) 
+
 # view previews with basemap
 view_previews(records_previews) 
+
 # calc cloudcov in your aoi
 records_cloudcov <- calc_cloudcov(records_previews) 
 records_selected <- select_unitemporal(records_cloudcov) # select records for single timestamp

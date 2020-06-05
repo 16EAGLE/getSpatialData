@@ -11,6 +11,7 @@
 #'   \item \code{getSentinel_preview} has been replaced by \code{\link{get_records}}, \code{\link{view_previews}} and \code{\link{plot_previews}} to download, view or plot previews for different sensors at once."
 #'   \item \code{getLandsat_preview} has been replaced by \code{\link{get_records}}, \code{\link{view_previews}} and \code{\link{plot_previews}} to download, view or plot previews for different sensors at once."
 #'   \item \code{getMODIS_preview} has been replaced by \code{\link{get_records}}, \code{\link{view_previews}} and \code{\link{plot_previews}} to download, view or plot previews for different sensors at once."
+#'   \item \code{getSentinel_restore} has been deprecated: use \code{\link{order_data}} instead.
 #' }
 #' @name getSpatialData-deprecated
 #' @keywords internal

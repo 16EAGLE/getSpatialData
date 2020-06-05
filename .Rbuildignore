@@ -4,4 +4,5 @@
 ^\.Rproj\.user$
 ^\.travis\.yml$
 ^\_pkgdown\.yml$
+^\appveyor\.yml$
 ^\.gitignore$

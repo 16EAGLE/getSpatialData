@@ -1,81 +1,19 @@
 language: R
 r:
-# - oldrel
+  - oldrel
   - release
   - devel
-sudo: required
 
 before_install:
-# - sudo apt-get install gdal-bin # version to old, get updated ppa
-# - sudo add-apt-repository -y ppa:ubuntugis/ppa # ppa contains gdal > 2.0.0 needed for sf # gdal-bin not found
   - sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
-  - sudo apt-get update -qq
-  - sudo aptitude install -y gdal-bin
-  - sudo aptitude install -y libgdal1-dev
-  - sudo aptitude install -y libproj-dev
-# - sudo apt-get install gdal-bin
-# - sudo apt-get install libgdal-dev
-# - sudo apt-get install libproj-dev
-  - sudo apt-get install libudunits2-dev
-  - sudo apt-get install libssh2-1-dev
-  - sudo apt-get install netcdf-bin
+  - sudo apt-get -q update
+  - sudo apt-get -y install libproj-dev libudunits2-dev libgeos-dev libgdal-dev
   - R -e 'install.packages("devtools")'
-  - R -e 'install.packages("covr")'
-
-r_github_packages:
-  - r-lib/covr
 
 install:
   - R -e 'devtools::install_deps(dep = T)'
 
 script:
   - R CMD build .
-  - R CMD check *tar.gz
-
-after_success:
-  - Rscript -e 'covr::codecov()'
-
-
-#language: c
-#sudo: required
-#
-#before_install:
-#  - curl -OL https://raw.githubusercontent.com/metacran/r-builder/master/pkg-build.sh
-#  - chmod 755 pkg-build.sh
-#  - ./pkg-build.sh bootstrap
-#  - sudo apt-get install gdal-bin
-#  - sudo apt-get install libgdal-dev
-#  - sudo apt-get install libproj-dev
-#  - sudo apt-get install libudunits2-dev
-#  - sudo apt-get install libssh2-1-dev
-## - sudo apt-get install libuv1
-## - sudo apt-get install libuv1-dev
-#  - ./pkg-build.sh install_devtools
-#  - ./pkg-build.sh install_r Rcpp
-#  - ./pkg-build.sh install_r httpuv # fails
-## - ./pkg-build.sh install_github rstudio/httpuv
-#  - ./pkg-build.sh install_r shiny
-#  - ./pkg-build.sh install_r rgdal
-#  - ./pkg-build.sh install_r covr
-#
-#install:
-#  - ./pkg-build.sh install_deps
-#
-#script:
-#  - ./pkg-build.sh run_build
-#  - ./pkg-build.sh run_check
-#
-#after_failure:
-#  - ./pkg-build.sh dump_logs
-#
-#notifications:
-#  email:
-#    on_success: change
-#    on_failure: change
-#
-#env:
-#  matrix:
-#    - RVERSION=devel COVERAGE=true
-#
-#after_success:
-#  - Rscript -e 'library(covr); codecov()'
+  - R CMD check *tar.gz --no-tests
+ #- R -e 'devtools::test("/home/travis/build/16EAGLE/basemaps/")'

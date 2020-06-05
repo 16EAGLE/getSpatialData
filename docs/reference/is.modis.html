@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Returns TRUE for records that are of product group 'MODIS'. — is.modis • getSpatialData</title>
+<title>Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection — is.modis • getSpatialData</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Returns TRUE for records that are of product group 'MODIS'. — is.modis" />
-<meta property="og:description" content="These functions check which records are records of the referred product group." />
+<meta property="og:title" content="Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection — is.modis" />
+<meta property="og:description" content="These functions check which records are records of the referred product group, product or sub-selection." />
 
 
 
@@ -150,16 +150,20 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Returns TRUE for records that are of product group 'MODIS'.</h1>
+    <h1>Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection</h1>
     
     <div class="hidden name"><code>is.modis.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>These functions check which records are records of the referred product group.</p>
+    <p>These functions check which records are records of the referred product group, product or sub-selection.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>is.modis</span>(<span class='no'>records</span>)</pre>
+    <pre class="usage"><span class='fu'>is.modis</span>(<span class='no'>records</span>)
+
+<span class='fu'>is.modis_terra</span>(<span class='no'>records</span>)
+
+<span class='fu'>is.modis_aqua</span>(<span class='no'>records</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -173,7 +177,7 @@ returned by <a href='get_records.html'>get_records</a>.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>logical vector, same length as number of rows in <code>records</code>.</p>
+    <p>logical vector</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

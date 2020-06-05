@@ -116,8 +116,10 @@
 <div id="introduction" class="section level2">
 <h2 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h2>
-<p><code>getSpatialData</code> is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.</p>
-<p>Currently, <code>getSpatialData</code> supports <strong>159</strong> products, including <em>Sentinel-1</em>, <em>Sentinel-2</em>, <em>Sentinel-3</em>, <em>Sentinel-5P</em>, <em>Landsat 8 OLI</em>, <em>Landsat ETM</em>, <em>Landsat TM</em>, <em>Landsat MSS</em>, <em>MODIS (Terra &amp; Aqua)</em> and <em>SRTM DEMs</em>. For this, <code>getSpatialData</code> facilitates access to multiple services implementing clients to public APIs of <em>ESA Copernicus Open Access Hub</em>, <em>USGS EarthExplorer</em>, <em>USGS EROS ESPA</em>, <em>Amazon Web Services (AWS)</em>, <em>NASA DAAC LAADS</em> and <em>NASA CMR search</em>. A full list of all supported products can be found below.</p>
+<p><code>getSpatialData</code> is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyze, select, order and download various kinds of spatial datasets from open sources.</p>
+<p>The package enables generic access to multiple data distributors with a common syntax for <strong>159</strong> products.</p>
+<p>Among others <code>getSpatialData</code> supports these products: <em>Sentinel-1</em>, <em>Sentinel-2</em>, <em>Sentinel-3</em>, <em>Sentinel-5P</em>, <em>Landsat 8 OLI</em>, <em>Landsat ETM</em>, <em>Landsat TM</em>, <em>Landsat MSS</em>, <em>MODIS (Terra &amp; Aqua)</em> and <em>SRTM DEMs</em>. For this, <code>getSpatialData</code> facilitates access to multiple services implementing clients to public APIs of <em>ESA Copernicus Open Access Hub</em>, <em>USGS EarthExplorer</em>, <em>USGS EROS ESPA</em>, <em>Amazon Web Services (AWS)</em>, <em>NASA DAAC LAADS</em> and <em>NASA CMR search</em>. A full list of all supported products can be found below.</p>
+<p><code>getSpatialData</code> offers to quickly overview the data catalogues for a custom place and time period. For an efficient handling of available earth observation data, it specifically calculates the cloud coverage of records in an area of interest based on light preview images. Furthermore, <code>getSpatialData</code> is able to automatically select records based on cloud cover and temporal user requirements.</p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -198,15 +200,19 @@
 <div id="selecting-records" class="section level4">
 <h4 class="hasAnchor">
 <a href="#selecting-records" class="anchor"></a>Selecting records</h4>
+<p>Automatic remote sensing records selection is possible both for optical and SAR products. <code>select_*</code> functionalities also support fusion of multiple optical products. The selection is based on aoi cloud cover of optical records and temporal characterstics. For optical records <code>select_*</code> uses preview cloud masks from <code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code> to create timestamp-wise mosaics. It aims at cloud-free mosaics while ensuring user-defined temporal and product constraints.</p>
 <ul>
 <li>
 <code><a href="reference/get_select_supported.html">get_select_supported()</a></code> tells you for which products automatic record selection is supported.</li>
 <li>
-<code><a href="reference/select_unitemporal.html">select_unitemporal()</a></code> selects remote sensing records (both optical and SAR across different products) <em>uni-temporally</em> according to AOI cloud cover (in case of optical data) and temporal characteristics.</li>
+<code><a href="reference/select_unitemporal.html">select_unitemporal()</a></code> selects remote sensing records <em>uni-temporally</em>
+</li>
 <li>
-<code><a href="reference/select_bitemporal.html">select_bitemporal()</a></code> selects remote sensing records (both optical and SAR across different products) <em>bi-temporally</em> according to AOI cloud cover (in case of optical data) and temporal characteristics.</li>
+<code><a href="reference/select_bitemporal.html">select_bitemporal()</a></code> selects remote sensing records <em>bi-temporally</em>
+</li>
 <li>
-<code><a href="reference/select_timeseries.html">select_timeseries()</a></code> selects remote sensing records (both optical and SAR across different products) for a <em>time series</em> according to AOI cloud cover (in case of optical data) and temporal characteristics.</li>
+<code><a href="reference/select_timeseries.html">select_timeseries()</a></code> selects remote sensing records for a <em>time series</em>
+</li>
 <li>
 <code>is.*()</code>, such as <code><a href="reference/is.sentinel.html">is.sentinel()</a></code>, <code><a href="reference/is.landsat.html">is.landsat()</a></code>, <code><a href="reference/is.modis.html">is.modis()</a></code> and more to simplify filtering of records.</li>
 </ul>
@@ -241,6 +247,39 @@
 <div id="get-started" class="section level2">
 <h2 class="hasAnchor">
 <a href="#get-started" class="anchor"></a>Get started</h2>
+<div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">getSpatialData</span>)
+
+ <span class="co"># use example aoi</span>
+<span class="fu"><a href="reference/aoi.html">set_aoi</a></span>(<span class="no">aoi_data</span><span class="kw">[[</span><span class="fl">1</span>]])
+<span class="fu"><a href="reference/aoi.html">view_aoi</a></span>()
+
+<span class="co"># define archive directory</span>
+<span class="fu"><a href="reference/archive.html">set_archive</a></span>(<span class="st">"/path/to/archive/dir"</span>)
+
+<span class="co"># login</span>
+<span class="fu"><a href="reference/login.html">login_CopHub</a></span>() <span class="co"># login Copernicus Open Access Hub</span>
+<span class="fu"><a href="reference/login.html">login_USGS</a></span>() <span class="co"># login USGS</span>
+
+<span class="co"># print available products</span>
+<span class="fu"><a href="reference/get_products.html">get_products</a></span>()
+<span class="no">products</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Sentinel-2"</span>, <span class="st">"LANDSAT_8_C1"</span>)
+
+<span class="co"># get available records</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_records.html">get_records</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"2020-05-01"</span>, <span class="st">"2020-05-15"</span>), <span class="kw">products</span> <span class="kw">=</span> <span class="no">products</span>)
+
+<span class="co"># for Sentinel-2 use only Level 2A</span>
+<span class="no">sub</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/which.html">which</a></span>(<span class="fu"><a href="reference/is.sentinel.html">is.sentinel2_L2A</a></span>(<span class="no">records</span>)), <span class="fu"><a href="https://rdrr.io/r/base/which.html">which</a></span>(<span class="fu"><a href="reference/is.landsat.html">is.landsat8</a></span>()))
+<span class="no">records_sub</span> <span class="kw">&lt;-</span> <span class="no">records</span>[<span class="no">sub</span>, ] <span class="co"># subset</span>
+
+<span class="co"># get preview images</span>
+<span class="no">records_previews</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_previews.html">get_previews</a></span>(<span class="no">records_sub</span>)
+
+<span class="co"># view previews with basemap</span>
+<span class="fu"><a href="reference/view_previews.html">view_previews</a></span>(<span class="no">records_previews</span>)
+
+<span class="co"># calc cloudcov in your aoi</span>
+<span class="no">records_cloudcov</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span>(<span class="no">records_previews</span>)
+<span class="no">records_selected</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_unitemporal.html">select_unitemporal</a></span>(<span class="no">records_cloudcov</span>) <span class="co"># select records for single timestamp</span></pre></div>
 </div>
 <div id="supported-products" class="section level2">
 <h2 class="hasAnchor">
@@ -293,7 +332,7 @@
 <ul class="list-unstyled">
 <li><a href="https://CRAN.R-project.org/package=getSpatialData"><img src="https://www.r-pkg.org/badges/version/getSpatialData" alt="CRAN version"></a></li>
 <li><a href="https://travis-ci.org/16EAGLE/getSpatialData"><img src="https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master" alt="Build Status"></a></li>
-<li><a href="https://codecov.io/gh/16EAGLE/getSpatialData"><img src="https://codecov.io/gh/16eagle/getSpatialData/branch/master/graph/badge.svg" alt="Coverage"></a></li>
+<li><a href="https://ci.appveyor.com/project/16EAGLE/getSpatialData"><img src="https://ci.appveyor.com/api/projects/status/github/16EAGLE/getSpatialData?branch=master&amp;svg=true" alt="AppVeyor build status"></a></li>
 <li><a href="https://www.tidyverse.org/lifecycle/#maturing"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a></li>
 </ul>
 </div>

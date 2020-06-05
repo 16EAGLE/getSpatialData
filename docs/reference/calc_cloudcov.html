@@ -171,6 +171,8 @@ they will be reloaded.</p>
   <span class='no'>records</span>,
   <span class='kw'>max_deviation</span> <span class='kw'>=</span> <span class='fl'>2</span>,
   <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>write_records</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>write_cloud_masks</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dir_out</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>username</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>password</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
@@ -204,8 +206,16 @@ for all queries within the running session. If <code>aoi</code> is undefined, th
 set using <a href='aoi.html'>set_aoi</a> is used.</p></td>
     </tr>
     <tr>
+      <th>write_records</th>
+      <td><p>logical specifies if the records (row by row) shall be written.</p></td>
+    </tr>
+    <tr>
+      <th>write_cloud_masks</th>
+      <td><p>logical specifies if the cloud mask tifs shall be written.</p></td>
+    </tr>
+    <tr>
       <th>dir_out</th>
-      <td><p>character, optional. If <code>dir_out</code> is not NULL the given cloud mask rasters and 
+      <td><p>character. If <code>dir_out</code> is not NULL the given cloud mask rasters and 
 a record file for each record will be saved in <code>dir_out</code>. If it is NULL, the session 
 <code>dir_out</code> is used.
 If no session <code>dir_out</code> is set through <a href='archive.html'>set_archive</a> an error is thrown.</p></td>
@@ -250,7 +260,7 @@ Can be: driver, append.</p></td>
 
     <p>Using the Haze-optimal transformation (HOT), the cloud cover estimation is done on the 
 red and blue information of the input RGB. HOT procedure is applied to the red and blue bands [1-3]. 
-Orignally, the base computation was introduced by Zhang et al. (2002) [2]. 
+Originally, the base computation was introduced by Zhang et al. (2002) [2]. 
 The computation done in <code>calc_cloudcov</code> includes the following steps:</p><ol>
 <li><p>Binning: extract low red values and their highest blue values</p></li>
 <li><p>Regression: calculate linear regression of these values</p></li>
@@ -261,7 +271,7 @@ the provider scene cloud cover.</p></li>
 cloud mask.</p></li>
 </ol>
 
-<p>HOT seperates clear-sky 
+<p>HOT separates clear-sky 
 pixels first from a threshold, calculates a linear regression from these pixels and exposes 
 cloud pixels by the deviation of all pixels from this clear-sky line.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
@@ -276,58 +286,6 @@ Remote Sensing of Environment 82 (2-3), 173-187.</p>
 opticalsatellite image time series in cloudy regions.
 Remote Sensing of Environment 214 (2018), 135-153.</p>
 
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'>## Load packages</span>
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>getSpatialData</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>raster</span>)</div><div class='output co'>#&gt; <span class='message'>Lade nötiges Paket: sp</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>sf</span>)</div><div class='output co'>#&gt; <span class='message'>Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>sp</span>)
-
-<span class='co'>## Define an AOI (either matrix, sf or sp object)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"aoi_data"</span>) <span class='co'># example aoi</span>
-
-<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>3</span>]] <span class='co'># AOI as matrix object, or better:</span>
-<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>2</span>]] <span class='co'># AOI as sp object, or:</span>
-<span class='no'>aoi</span> <span class='kw'>&lt;-</span> <span class='no'>aoi_data</span><span class='kw'>[[</span><span class='fl'>1</span>]] <span class='co'># AOI as sf object</span>
-<span class='co'># or, simply call set_aoi() without argument to interactively draw an AOI</span>
-
-<span class='co'>## set AOI for this session</span>
-<span class='fu'><a href='aoi.html'>set_aoi</a></span>(<span class='no'>aoi</span>)
-<span class='fu'><a href='aoi.html'>view_aoi</a></span>() <span class='co'>#view AOI in viewer</span>
-
-<span class='co'>## Define time range and platform</span>
-<span class='no'>time_range</span> <span class='kw'>&lt;-</span>  <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"2017-08-01"</span>, <span class='st'>"2017-08-30"</span>)
-<span class='no'>platform</span> <span class='kw'>&lt;-</span> <span class='st'>"Sentinel-2"</span>
-
-<span class='co'>## set login credentials and an archive directory</span>
-<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'><a href='login.html'>login_CopHub</a></span>(<span class='kw'>username</span> <span class='kw'>=</span> <span class='st'>"username"</span>) <span class='co'>#asks for password or define 'password'</span>
-<span class='fu'><a href='archive.html'>set_archive</a></span>(<span class='st'>"/path/to/archive/"</span>)
-
-<span class='co'>## Use getSentinel_query to search for data (using the session AOI)</span>
-<span class='no'>records</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='getSpatialData-deprecated.html'>getSentinel_query</a></span>(<span class='kw'>time_range</span> <span class='kw'>=</span> <span class='no'>time_range</span>, <span class='kw'>platform</span> <span class='kw'>=</span> <span class='no'>platform</span>)
-
-<span class='co'>## Get an overview of the records</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/View.html'>View</a></span>(<span class='no'>records</span>) <span class='co'>#get an overview about the search records</span>
-<span class='fu'><a href='https://rdrr.io/r/base/colnames.html'>colnames</a></span>(<span class='no'>records</span>) <span class='co'>#see all available filter attributes</span>
-<span class='fu'><a href='https://rdrr.io/pkg/raster/man/unique.html'>unique</a></span>(<span class='no'>records</span>$<span class='no'>processinglevel</span>) <span class='co'>#use one of the, e.g. to see available processing levels</span>
-
-<span class='co'>## Calculate cloud cover within the aoi</span>
-<span class='no'>records_cloudcov</span> <span class='kw'>&lt;-</span> <span class='fu'>calcSentinel_aoi_cloudcov</span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>records</span>, <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='no'>aoi</span>) <span class='co'># cloud cov. calc.</span>
-
-<span class='co'>## Filter the records</span>
-<span class='no'>records_filtered</span> <span class='kw'>&lt;-</span> <span class='no'>records_cloudcov</span>[<span class='fu'><a href='https://rdrr.io/r/base/which.html'>which</a></span>(<span class='no'>records_cloudcov</span>$<span class='no'>processinglevel</span> <span class='kw'>==</span> <span class='st'>"Level-1C"</span>),]
-
-<span class='co'>## Preview a single record</span>
-<span class='fu'><a href='getSpatialData-deprecated.html'>getSentinel_preview</a></span>(<span class='kw'>record</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fl'>5</span>,])
-
-<span class='co'>## Download some datasets</span>
-<span class='no'>datasets</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='get_data.html'>getSentinel_data</a></span>(<span class='kw'>records</span> <span class='kw'>=</span> <span class='no'>records_filtered</span>[<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='fl'>4</span>,<span class='fl'>5</span>,<span class='fl'>6</span>),])
-
-<span class='co'>## Make them ready to use</span>
-<span class='no'>datasets_prep</span> <span class='kw'>&lt;-</span> <span class='fu'>prepSentinel</span>(<span class='no'>datasets</span>, <span class='kw'>format</span> <span class='kw'>=</span> <span class='st'>"tiff"</span>)
-
-<span class='co'>## Load them to R</span>
-<span class='no'>r</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/raster/man/stack.html'>stack</a></span>(<span class='no'>datasets_prep</span><span class='kw'>[[</span><span class='fl'>1</span>]]<span class='kw'>[[</span><span class='fl'>1</span>]][<span class='fl'>1</span>]) <span class='co'>#first dataset, first tile, 10m resoultion</span>
-}</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

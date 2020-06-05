@@ -173,6 +173,8 @@ combined selection for different products across systems and data providers.</p>
   <span class='kw'>satisfaction_value</span> <span class='kw'>=</span> <span class='fl'>98</span>,
   <span class='kw'>prio_products</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(),
   <span class='kw'>aoi</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>write_cmask_mosaic</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
+  <span class='kw'>write_preview_mosaic</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>dir_out</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>as_sf</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>,
   <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>
@@ -236,8 +238,16 @@ for all queries within the running session. If <code>aoi</code> is undefined, th
 set using <a href='aoi.html'>set_aoi</a> is used.</p></td>
     </tr>
     <tr>
+      <th>write_cmask_mosaic</th>
+      <td><p>logical specifies if the timestamp-wise cloud mask mosaic rasters are written to file.</p></td>
+    </tr>
+    <tr>
+      <th>write_preview_mosaic</th>
+      <td><p>logical specifies if the timestamp-wise preview mosaic rasters are written to file.</p></td>
+    </tr>
+    <tr>
       <th>dir_out</th>
-      <td><p>character, optional. If <code>dir_out</code> is not NULL the given cloud mask rasters and 
+      <td><p>character. If <code>dir_out</code> is not NULL the given cloud mask rasters and 
 a record file for each record will be saved in <code>dir_out</code>. If it is NULL, the session 
 <code>dir_out</code> is used.
 If no session <code>dir_out</code> is set through <a href='archive.html'>set_archive</a> an error is thrown.</p></td>

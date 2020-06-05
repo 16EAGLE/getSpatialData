@@ -69,7 +69,7 @@
       dates_s <- sapply(records_in_s[[params$date_col]], as.Date)
       if (!is.null(period_new)) {
         period_new_dates <- sapply(period_new, as.Date)
-        dates_combined <- c(dates_s, period_new_dates)
+        dates_combined <- unlist(c(dates_s, period_new_dates))
         dates_s <- min(dates_combined, max(dates_combined))
       }
       
@@ -102,7 +102,7 @@
       } else {
         ids <- records_in_s[[params$identifier]] # all ids of records in sub-period
       }
-      if (!is.null(ids)) {
+      if (!.is_empty_array(ids)) {
         selected_tile_ids <- records_in_s[which(ids %in% records_in_s[[params$identifier]]), name_tile_id()]
         ids_subset <- sapply(unique(selected_tile_ids), function(tile) {
           return(which(selected_tile_ids == tile)[1]) # take one available record of tile id

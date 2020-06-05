@@ -92,22 +92,6 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   out(msg, 3)
 }
 
-#' constructs a console message to be given at the end of a selection process
-#' @param selected_i list 'selected' holding for one timestamp: 'ids', 'cMask_paths', 'valid_pixels', 'timestamp'.
-#' @return \code{console_info} character vector holding the message
-#' @keywords internal
-#' @noRd
-.select_final_info <- function(selected_i) {
-  sep <- sep()
-  ts <- selected_i$timestamp
-  n_records <- length(selected_i$cMask_paths)
-  header <- paste0("- Timestamp: ",ts)
-  coverage_info <- paste0("- Coverage of valid pixels in mosaic of selected records: ",round(selected_i$valid_pixels)," %")
-  num_selected_info <- paste0("- Number of selected records: ",n_records)
-  console_info <- c(sep,header,coverage_info,num_selected_info)
-  return(console_info)
-}
-
 #' creates a selection summary per timestamp as a table
 #' @param timestamps_seq integer vector
 #' @param coverage_vector numeric vector
@@ -120,7 +104,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   cov_bars <- .create_numeric_bars(coverage_vector, n = 5, bar_symbol = "/")
   table_sep <- "| "
   summary_df <- data.frame("| Timestamp" = paste0(table_sep, timestamps_seq),
-                           "| Number records" = paste0(table_sep, n_records_vector),
+                           "| Selected records" = paste0(table_sep, n_records_vector),
                            "|    Cloud-free pixels" = paste0("| ", cov_bars, " ", round(coverage_vector, 2), " %"), 
                            check.names = FALSE)
   out(summary_df)
@@ -142,7 +126,7 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   
   sep <- sep()
   num_timestamps <- length(selected)
-  coverages <- sapply(selected,function(x) {x$valid_pixels})
+  coverages <- sapply(selected, function(x) {x$valid_pixels})
   mean_cov <- round(mean(coverages))
   max_cov <- round(max(coverages))
   min_cov <- round(min(coverages))
@@ -152,14 +136,14 @@ With the given 'n_timestamps' these values disable creating a temporally consist
   cov_metrics <- c(mean_cov, max_cov, min_cov)
   bars <- .create_numeric_bars(cov_metrics, n = 5, bar_symbol = "/")
   empty <- ""
-  three_spaces <- "    "
+  some_spaces <- "       "
   one_space <- " "
   table_sep <- "| "
   placeholder <- paste0(table_sep, empty)
   
   summary_df <- data.frame("| Number timestamps" = c(paste0(table_sep, num_timestamps), placeholder, placeholder),
                            "| " = c("| Mean", "| Max", "| Min"),
-                           "     Overall cloud-free pixels" = paste0(three_spaces, bars, one_space, cov_metrics, " %"),
+                           "     Overall cloud-free pixels" = paste0(some_spaces, bars, one_space, cov_metrics, " %"),
                            check.names = FALSE)
   out(summary_df)
   out(sep)

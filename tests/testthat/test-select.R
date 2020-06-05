@@ -29,14 +29,18 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
   # calculate cloud masks
   records <- calc_cloudcov(records_read, aoi = aoi_test, dir_out = tt$tmp)
   # delete a cloud mask and test error
-  unlink(records$cloud_mask_file[1])
+  cloud_mask_files <- records[[getSpatialData:::name_cloud_mask_file()]]
+  unlink(cloud_mask_files[which(file.exists(cloud_mask_files))[1]])
   expect_error(select_unitemporal(records,
                                   max_cloudcov_tile = max_cloudcov_tile,
+                                  prio_products = prio_products,
                                   max_sub_period = max_sub_period,
                                   aoi = aoi_test, dir_out = tt$tmp))
-  unlink(records$preview_file[1])
+  preview_files <- records[[getSpatialData:::name_preview_file()]]
+  unlink(preview_files[which(file.exists(preview_files))[1]])
   expect_error(select_unitemporal(records,
                                   max_cloudcov_tile = max_cloudcov_tile,
+                                  prio_products = prio_products,
                                   max_sub_period = max_sub_period,
                                   aoi = aoi_test, dir_out = tt$tmp))
   records <- calc_cloudcov(records_read, aoi = aoi_test, dir_out = tt$tmp)
@@ -51,6 +55,7 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
       test_unitemporal_without_writing(records, expected_class, max_cloudcov_tile, as_sf, tt, COLS, aoi_test)
       records_unitemporal <- expect_is(select_unitemporal(records,
                                                           max_cloudcov_tile = max_cloudcov_tile,
+                                                          prio_products = prio_products,
                                                           max_sub_period = max_sub_period,
                                                           aoi = aoi_test, dir_out = tt$tmp, as_sf = as_sf), expected_class)
       records_select <- records_unitemporal
@@ -58,6 +63,7 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
       test_bitemporal_without_writing(records, expected_class, max_cloudcov_tile, as_sf, tt, COLS, aoi_test)
       records_bitemporal <- expect_is(select_bitemporal(records, 
                                                         max_cloudcov_tile = max_cloudcov_tile,
+                                                        prio_products = prio_products,
                                                         max_sub_period = max_sub_period,
                                                         min_distance = min_distance,
                                                         aoi = aoi_test, dir_out = tt$tmp, as_sf = as_sf), expected_class)
@@ -67,6 +73,7 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
       records_timeseries <- expect_is(select_timeseries(records,
                                                         n_timestamps = n_timestamps,
                                                         max_cloudcov_tile = max_cloudcov_tile,
+                                                        prio_products = prio_products,
                                                         max_sub_period = max_sub_period,
                                                         min_distance = min_distance,
                                                         aoi = aoi_test, dir_out = tt$tmp, as_sf = as_sf), expected_class)
@@ -87,22 +94,18 @@ clean_test_select <- function(dir_records, aoi_test, sensor, prio_products, tt, 
     expect_is(cmos_col, CHARACTER)
     expect_true(any(inherits(timestamp_col, NUMERIC), inherits(timestamp_col, INTEGER)))
     # check rasters
-    for (file in cmos_col) {
-      if (!is.na(file)) { #  can be
-        expect_true(file.exists(file))
-        loaded_cmos <- test_raster_read(file) 
-        expect_false(is.na(crs(loaded_cmos)) && is.na(st_crs(loaded_cmos)))
-        # values
-        expect_equal(minValue(loaded_cmos), 1) # not 0!
-        expect_equal(maxValue(loaded_cmos), 1)
-      }
+    for (file in cmos_col[!is.na(cmos_col)]) {
+      expect_true(file.exists(file))
+      loaded_cmos <- test_raster_read(file) 
+      expect_false(is.na(crs(loaded_cmos)) && is.na(st_crs(loaded_cmos)))
+      # values
+      expect_equal(minValue(loaded_cmos), 1) # not 0!
+      expect_equal(maxValue(loaded_cmos), 1)
     }
-    for (file in pmos_col) {
-      if (!is.na(file)) { # can be
-        expect_true(file.exists(file))
-        loaded_pmos <- test_stack_read(file)
-        expect_false(is.na(crs(loaded_pmos)) && is.na(st_crs(loaded_pmos)))
-      }
+    for (file in pmos_col[!is.na(pmos_col)]) {
+      expect_true(file.exists(file))
+      loaded_pmos <- test_stack_read(file)
+      expect_false(is.na(crs(loaded_pmos)) && is.na(st_crs(loaded_pmos)))
     }
     is_selected <- !is.na(timestamp_col)
     # check if max_cloudcov_tile is fulfilled
@@ -462,7 +465,9 @@ clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED,
 # TEST 8
 # -------
 # Target: test with mixed sensors with prio_products
-prio_products <- c(getSpatialData:::name_product_sentinel2(), getSpatialData:::name_product_landsat())
+prio_products <- c(getSpatialData:::name_product_sentinel2(), 
+                   getSpatialData:::name_product_group_modis(), 
+                   getSpatialData:::name_product_group_landsat())
 clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED, 
                   prio_products = prio_products, tt = tt, PREFIX = PREFIX, COLS = COLS,
                   DATAFRAME = DATAFRAME, NUMERIC = NUMERIC, CHARACTER = CHARACTER)
@@ -470,7 +475,7 @@ clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED,
 # TEST 9
 # -------
 # Target: test with mixed sensors with prio_products and Sentinel-1
-prio_products <- c(getSpatialData:::name_product_sentinel2(), getSpatialData:::name_product_landsat())
+prio_products <- c(getSpatialData:::name_product_sentinel2(), getSpatialData:::name_product_landsat7())
 clean_test_select(dir_records, aoi_test = aoi_test, sensor = MIXED, 
                   prio_products = prio_products, tt = tt, PREFIX = PREFIX, COLS = COLS,
                   DATAFRAME = DATAFRAME, NUMERIC = NUMERIC, CHARACTER = CHARACTER)

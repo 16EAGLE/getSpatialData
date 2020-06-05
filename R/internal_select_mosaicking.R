@@ -270,13 +270,16 @@
     ids_selected <- s$ids
     
     ids_empty <- .is_empty_array(ids_selected)
-    if (!ids_empty) {
-      #A cloud mask mosaic
+    if (ids_empty) {
+      save_path_cmos <- NA
+      save_path_pmos <- NA
+    } else {
+      # cloud mask mosaic
       if (save_cmos) {
         save_path_cmos <- .select_cmask_mos(s, aoi, dir_out)
       }
       if (save_pmos) {
-        #B preview mosaic
+        # preview mosaic
         save_path_pmos <- .select_preview_mos(records,s,aoi,i,params$identifier,dir_out,
                                               cloud_mask_col=params$cloud_mask_col,
                                               preview_col=params$preview_col,
@@ -286,7 +289,7 @@
     if (!save_cmos) save_path_cmos <- NA
     if (!save_pmos) save_path_pmos <- NA
 
-    #C add columns to records
+    # add columns to records
     if (!is.na(save_path_pmos)) save_path_pmos <- normalizePath(save_path_pmos)
     if (!is.na(save_path_cmos)) save_path_cmos <- normalizePath(save_path_cmos)
     insert <- c(TRUE, s$timestamp, save_path_pmos, save_path_cmos)
@@ -299,7 +302,6 @@
     if (!save_pmos) records[[params$pmos_col]] <- NULL
     
     # get print info
-    #console_info[[i]] <- .select_final_info(s)
     curr_n_records <- length(s$cMask_paths)
     curr_n_valid_pixels <- s$valid_pixels
     n_records_vector <- append(n_records_vector, curr_n_records)

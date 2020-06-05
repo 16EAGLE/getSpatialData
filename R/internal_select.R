@@ -197,11 +197,12 @@ selected <- function(record_ids, base_coverage, records) {
       # in case prio_sensors is not given process all sensors together
       s_match <- which(!is.na(records[[name_product]]))
     } else {
-      # in case prio_sensors is given process sensors in this order
-      s_match <- which(records[[name_product]] == s) # check for the product name
-      # the prio product can also be a product group in case of Landsat and MODIS
+      # the prio product can be a product group in case of Landsat and MODIS
       if (s == name_product_group_landsat() || s == name_product_group_modis()) {
         s_match <- which(records[[name_product_group()]] == s)
+      } else {
+        # in case prio_sensors is given process sensors in this order
+        s_match <- which(records[[name_product]] == s) # check for the product name
       }
     }
     sensor_match <- intersect(which(records$sub_period == timestamp), s_match)
@@ -343,7 +344,5 @@ selected <- function(record_ids, base_coverage, records) {
     }
   }
   prio_products <- sample(clean_products, length(clean_products))
-  prio_products[which(grepl(LANDSAT_GROUP, prio_products))] <- LANDSAT_GROUP
-  prio_products[which(grepl(MODIS_GROUP, prio_products))] <- MODIS_GROUP
   return(unique(prio_products))
 }

@@ -11,14 +11,11 @@ name_footprint <- getSpatialData:::name_footprint()
 drivers <- expect_type(get_records_drivers(), LIST)
 geojson <- ".geojson"
 gpkg <- ".gpkg"
-netcdf <- ".nc"
 expect_true(geojson %in% drivers)
 expect_true(gpkg %in% drivers)
-expect_true(netcdf %in% drivers)
 expect_true(!is.null(names(drivers)))
 expect_true(drivers["GeoJSON"] == geojson)
 expect_true(drivers["GPKG"] == gpkg)
-expect_true(drivers["netCDF"] == netcdf)
 
 # test read_records as sf
 expect_equal(class(expect_message(read_records(records_in)))[1], SF)
@@ -29,7 +26,7 @@ records_sf <-  expect_message(read_records(records_in))
 # test read_records as df
 records_df <- expect_equal(class(expect_message(read_records(records_in, as_sf = FALSE)))[1], DATAFRAME)
 records_df <-  expect_message(read_records(records_in, as_sf = FALSE))
-expect_true(inherits(records_df[[name_footprint]], "sfc"))
+expect_false(inherits(records_df[[name_footprint]], "sfc"))
 # test read_records with error
 input_file <- "this is not valid"
 expect_error(read_records(input_file), paste0("File does not exist: ", input_file))

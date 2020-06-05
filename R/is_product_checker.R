@@ -7,10 +7,13 @@
 # author: Henrik Fisser, 2020
 # ---------------------------------------------------------------------
 
-#' Returns TRUE for records that are of product group 'MODIS'.
-#' @description These functions check which records are records of the referred product group.
+#' Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection
+#' @description These functions check which records are records of the referred product group, product or sub-selection.
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
+#' @param records sf data.frame
+#' @param product_group character specifies the product group to be checked on.
+#' @return logical vector
 #' @author Henrik Fisser, 2020
 #' @name is.modis
 #' @export
@@ -18,6 +21,19 @@ is.modis <- function(records) {
   return(is.product_group_(records, name_product_group_modis()))
 }
 
+#' @rdname is.modis
+#' @export
+is.modis_terra <- function(records) {
+  records <- .check_records(records, as_sf = FALSE)
+  return(startsWith(tolower(records[[name_record_id()]]), "mod"))
+}
+
+#' @rdname is.modis
+#' @export
+is.modis_aqua <- function(records) {
+  records <- .check_records(records, as_sf = FALSE)
+  return(startsWith(tolower(records[[name_record_id()]]), "myd"))
+}
 
 #' Returns TRUE for records that are of product group 'Landsat' or the referred sub-selection
 #' @description These functions check which records are records of the referred product group, product or sub-selection.
@@ -25,7 +41,7 @@ is.modis <- function(records) {
 #' @return logical vector, same length as number of rows in \code{records}.
 #' @author Henrik Fisser, 2020
 #' @name is.landsat
-#' @details 
+#' @details
 #' 
 #' \code{is.landsat} returns TRUE for records that are of product group 'Landsat'.
 #' 
@@ -137,42 +153,49 @@ is.sentinel1 <- function(records) {
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_iw_slc <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "slc"))
 }
 
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_iw_grdh <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "grdh"))
 }
 
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_iw_raw <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "raw"))
 }
 
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_iw_ocn <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_substrings(records, "iw", "ocn"))
 }
 
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_level0 <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_level(records, level = "0"))
 }
 
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_level1 <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_level(records, level = "1"))
 }
 
 #' @rdname is.sentinel
 #' @export
 is.sentinel1_level2 <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(.identify_sentinel1_level(records, level = "2"))
 }
 
@@ -185,6 +208,7 @@ is.sentinel2 <- function(records) {
 #' @rdname is.sentinel
 #' @export
 is.sentinel2_L1C <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
@@ -198,6 +222,7 @@ is.sentinel2_L1C <- function(records) {
 #' @rdname is.sentinel
 #' @export
 is.sentinel2_L2A <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
@@ -211,6 +236,7 @@ is.sentinel2_L2A <- function(records) {
 #' @rdname is.sentinel
 #' @export
 is.sentinel2_S2A <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
@@ -224,6 +250,7 @@ is.sentinel2_S2A <- function(records) {
 #' @rdname is.sentinel
 #' @export
 is.sentinel2_S2B <- function(records) {
+  records <- .check_records(records, col.names = c(name_record_id()), as_sf = FALSE)
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {

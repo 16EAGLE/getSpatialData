@@ -82,7 +82,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
     }
     
     # convert to sf
-    return(.check_records(records, as_df = !as_sf))
+    return(.check_records(records, as_sf = as_sf))
   }
 }
 

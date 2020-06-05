@@ -43,6 +43,8 @@
 #' selection was not fullfilled by previous product. Product names must be provided as returned by \link{get_select_supported}.
 #' Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
 #' If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.
+#' @param write_cmask_mosaic logical specifies if the timestamp-wise cloud mask mosaic rasters are written to file.
+#' @param write_preview_mosaic logical specifies if the timestamp-wise preview mosaic rasters are written to file.
 #' @inheritParams calc_cloudcov
 #'
 #' @return \code{records} data.frame holding four additional columns:
@@ -61,16 +63,24 @@ select_timeseries <- function(records,
                               n_timestamps, min_distance, max_sub_period,
                               min_improvement = 5, max_cloudcov_tile = 80, satisfaction_value = 98,
                               prio_products = c(), 
-                              aoi = NULL, dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
+                              aoi = NULL, 
+                              write_cmask_mosaic = TRUE, write_preview_mosaic = TRUE,
+                              dir_out = NULL, as_sf = TRUE, verbose = TRUE) {
   
   #### Pre-checks
   # columns are checked in .select_checks() due to SAR
+  records <- .select_check_records(records)
   .check_as_sf(as_sf)
+  .check_numeric(n_timestamps, "n_timestamps")
+  .check_numeric(min_distance, "min_distance")
+  .check_numeric(max_sub_period, "max_sub_period")
+  .check_numeric(min_improvement, "min_improvement")
+  .check_numeric(max_cloudcov_tile, "max_cloudcov_tile")
+  .check_numeric(satisfaction_value, "satisfaction_value")
   .check_verbose(verbose)
-  records <- .check_records(records, col.names = NULL, as_df = TRUE) 
   aoi <- .check_aoi(aoi, SF())
   cols_initial <- colnames(records)
-  .check_numeric(n_timestamps, "n_timestamps")
+
   if (n_timestamps < 3) {
     out(paste0("Argument 'n_timestamps' is: ", n_timestamps,". 
 The minimum number for select_timeseries is: 3"), 3)
@@ -82,7 +92,7 @@ The minimum number for select_timeseries is: 3"), 3)
   params <- prep$params
 
   #### Main checks
-  .select_checks(records, aoi, params$period, n_timestamps, prio_products, params, dir_out, verbose)
+  .select_checks(records, aoi, params$period, n_timestamps, prio_products, params, write_preview_mosaic, dir_out, verbose)
   
   #### Main Process
   .select_start_info(mode="Time Series", params$sep)
@@ -96,11 +106,13 @@ The minimum number for select_timeseries is: 3"), 3)
                           max_cloudcov_tile,
                           satisfaction_value,
                           prio_products,
+                          write_cmask_mosaic,
+                          write_preview_mosaic,
                           dir_out,
                           params,
                           cols_initial)
   
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   return(records)
   
 }

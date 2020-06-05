@@ -27,7 +27,7 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
   .check_file_exists(file, 3)
   out(paste0("Reading records from ", file), msg=T, type=1)
   records <- try(suppressWarnings(st_read(file, stringsAsFactors = FALSE, quiet = TRUE)))
-  if (inherits(records, "data.frame")) { # sf dataframe
+  if (inherits(records, DATAFRAME())) { # sf dataframe
     names <- names(records)
     if (any(geoms %in% names)) {
       if (as_sf && endsWith(tolower(file), ".csv")) out("Converting to sf data.frame", msg = T, type = 1)
@@ -42,6 +42,7 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
     n_records <- NROW(records)
     out(paste0("Read ", 
                n_records, ifelse(n_records > 1, " records", " record")), msg=F, type=1)
+    records <- .check_records(records, as_sf = as_sf)
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

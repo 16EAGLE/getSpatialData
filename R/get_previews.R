@@ -23,7 +23,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
   if(is.null(extras$hub)) extras$hub <- "auto"
   
   # checks
-  records <- .check_records(records, c("product", "product_group", "record_id", "preview_url"), as_df = F)
+  records <- .check_records(records, c("product", "product_group", "record_id", "preview_url"), as_sf = TRUE)
   dir_out <- .check_dir_out(dir_out, "previews")
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   
@@ -120,6 +120,6 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
     })
   }, USE.NAMES = F, SIMPLIFY = F))
   
-  records <- .check_records(records, as_df = !as_sf)
+  records <- .check_records(records, as_sf = as_sf)
   return(.column_summary(records, records.names))
 }

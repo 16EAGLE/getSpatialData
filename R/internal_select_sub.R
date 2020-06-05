@@ -1,18 +1,18 @@
-#' ---------------------------------------------------------------------
-#' name: internal_select_sub
-#' description: The selection process is distinguished into a main selection
-#' and a sub selection process. These are functions that conduct the process of a
-#' sub selection. A sub refers to one timestamp. The sub selection consists
-#' of a temporal and a spatial selection. 
-#' The process receives a collection of possible records for a specific timestamp and
-#' its sub-period. This sub-period can still contradict the user parameter
-#' 'max_sub_period' (maximum number of records accepeted to compose one timestamp).
-#' In this case the sub selection process choses records that have to be dumped.
-#' This results in a new temporal sub-period covering fewer dates and agreeing
-#' with 'max_sub_period'. This temporal sub selection process is followed by
-#' the spatial sub selection process, which is done through internal_select_mosaicking.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select_sub
+# description: The selection process is distinguished into a main selection
+# and a sub selection process. These are functions that conduct the process of a
+# sub selection. A sub refers to one timestamp. The sub selection consists
+# of a temporal and a spatial selection. 
+# The process receives a collection of possible records for a specific timestamp and
+# its sub-period. This sub-period can still contradict the user parameter
+# 'max_sub_period' (maximum number of records accepeted to compose one timestamp).
+# In this case the sub selection process choses records that have to be dumped.
+# This results in a new temporal sub-period covering fewer dates and agreeing
+# with 'max_sub_period'. This temporal sub selection process is followed by
+# the spatial sub selection process, which is done through internal_select_mosaicking.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' calls the steps of a selection for a sub-period
 #' this includes enforcement of max_cloudcov_tile and max_sub_period
@@ -56,10 +56,9 @@
   }
   
   # this step enforces max_sub_period. It returns a list of vectors of indices 
-  # pointing to records in records. The list is ordererd according to aoi cloud cover
+  # pointing to records in records. The list is ordered according to aoi cloud cover
   sub_within <- .select_force_period(records, sub, period, max_sub_period, period_new=period_new,
                                      date_col=params$date_col, aoi_cc_col=params$aoi_cc_col)
-  
   sub_within <- .check_compact_list(sub_within)
   if (!inherits(sub_within, LIST()) || .is_empty_array(sub)) {
     return(NA)
@@ -67,7 +66,6 @@
   
   # calculate best mosaic of cloud masks for first timestamp
   if (is.null(base_records)) {
-    out(params$sep)
     out(paste0("Calculating selection of timestamp: ", ts), msg=T)
   }
   
@@ -95,7 +93,7 @@
 }
 
 #' selects initial records for a sub-period while ensuring max_cloudcov_tile
-#' @param records data.frame subsetted to a sub-period.
+#' @param records data.frame subseted to a sub-period.
 #' @param tiles character vector of the tile ids.
 #' @param period character vector of start and end date.
 #' @param aoi_cc_col character name of aoi cloud cover column.
@@ -122,8 +120,8 @@
       } else {
         lwst_cc <- unlist(rec_ord[i,][identifier]) # id of i lowest
         # ensure max_cloudcov_tile
-        cc <- rec_ord[i,aoi_cc_col]
-        above_max <- ifelse(is.na(cc) || any(is.null(c(lwst_cc,cc))),TRUE,
+        cc <- rec_ord[i, aoi_cc_col]
+        above_max <- ifelse(is.na(cc) || any(is.null(c(lwst_cc,cc))), TRUE,
                             cc > max_cloudcov_tile)
         if (above_max) {
           lwst_cc <- NA

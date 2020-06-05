@@ -1,16 +1,16 @@
-#' ---------------------------------------------------------------------
-#' name: internal_select_sub
-#' description: These functions do the temporal selection of SAR (Sentinel-1) records.
-#' They create a temporary tile id for each record, according to which they can be
-#' selected. As they are cloud-free no further spatial selection is necessary. These
-#' records are thus only selected according to their tile and temporal characteristics.
-#' This can be done in accordance with previously selected optical records. The sub-periods
-#' selected for optical records are handed over to the SAR selection. Selection of optical
-#' records has priority due to cloud cover constraints. SAR selection is hence temporally
-#' guided by the optical selection in case there is one. Otherwise, SAR selection is
-#' conducted independently.
-#' author: Henrik Fisser, 2019
-#' ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# name: internal_select_sub
+# description: These functions do the temporal selection of SAR (Sentinel-1) records.
+# They create a temporary tile id for each record, according to which they can be
+# selected. As they are cloud-free no further spatial selection is necessary. These
+# records are thus only selected according to their tile and temporal characteristics.
+# This can be done in accordance with previously selected optical records. The sub-periods
+# selected for optical records are handed over to the SAR selection. Selection of optical
+# records has priority due to cloud cover constraints. SAR selection is hence temporally
+# guided by the optical selection in case there is one. Otherwise, SAR selection is
+# conducted independently.
+# author: Henrik Fisser, 2019
+# ---------------------------------------------------------------------
 
 #' select timestamps for SAR data according to num_timestamps, min_distance and max_sub_period.
 #' @param records data.frame.
@@ -42,7 +42,7 @@
   # from this date. Exclude records consecutively until max_sub_period is reached
   selected_SAR <- list() # to be filled with the selected lists of selected ids and sub-periods
   
-  for (timestamp in 1:length(subperiods)) {
+  for (timestamp in 1:max(subperiods)) {
     
     # sensor_match are all Sentinel-1 records of this sub-period
     sensor_match <- intersect(s_match, which(records$sub_period == timestamp))
@@ -69,7 +69,7 @@
       dates_s <- sapply(records_in_s[[params$date_col]], as.Date)
       if (!is.null(period_new)) {
         period_new_dates <- sapply(period_new, as.Date)
-        dates_combined <- c(dates_s, period_new_dates)
+        dates_combined <- unlist(c(dates_s, period_new_dates))
         dates_s <- min(dates_combined, max(dates_combined))
       }
       
@@ -97,25 +97,30 @@
         
         if (!is.na(best_period)) {
           incl <- .select_subset_to_best_period(dates_s, best_period)
-          ids <- records_in_s[incl,params$identifier] # ids of selected records in upated sub-period
+          ids <- records_in_s[incl,params$identifier] # ids of selected records in updated sub-period
         }
       } else {
         ids <- records_in_s[[params$identifier]] # all ids of records in sub-period
       }
-      dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]),params$date_col]
+      if (!.is_empty_array(ids)) {
+        selected_tile_ids <- records_in_s[which(ids %in% records_in_s[[params$identifier]]), name_tile_id()]
+        ids_subset <- sapply(unique(selected_tile_ids), function(tile) {
+          return(which(selected_tile_ids == tile)[1]) # take one available record of tile id
+        })
+        ids <- ids[ids_subset]
+      }
+      dates_sel <- records_in_s[which(ids %in% records[[params$identifier]]), params$date_col]
       period <- .identify_period(dates_sel)
     }
     
     no_SAR_period <- is.null(period)
     if (no_SAR_period && is.null(period_new_all[[timestamp]])) {
       period <- .calc_default_sub_period(params$period, num_timestamps, timestamp)
-    } else if (no_SAR_period) {
-      
     }
     selected_SAR[[timestamp]] <- list("ids"=ids,
                                       "period"=period,
                                       "timestamp"=timestamp)
-    .select_SAR_timestamp_status(timestamp, selected_SAR[[timestamp]], NROW(records_in_s))
+    .select_SAR_timestamp_status(timestamp, selected_SAR[[timestamp]], length(ids))
   }
   
   return(selected_SAR)
@@ -170,7 +175,7 @@
     optical_ids <- selected[[ts]][[ids]]
     selected[[ts]][[ids]] <- append(optical_ids, ts_SAR[[ids]])
     selected[[ts]][[period]] <- .identify_period(c(selected[[ts]]$period,ts_SAR[[period]]))
+    .select_completed_statement(ts)
   }
-  .select_completed_statement(timestamp)
   return(selected)
 }

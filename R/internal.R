@@ -1,579 +1,1121 @@
-#' Outputs errors, warnings and messages
-#'
-#' @param input character
-#' @param type numeric, 1 = message/cat, 2 = warning, 3 = error and stop
-#' @param msg logical. If \code{TRUE}, \code{message} is used instead of \code{cat}. Default is \code{FALSE}.
-#' @param sign character. Defines the prefix string.
-#'
+# ---------------------------------------------------------------------
+# name: internal
+# description: These are internal functions that rather work as utils.
+# This internal file should only contain generic functions that can be
+# used multiple times within the package.
+# ---------------------------------------------------------------------
+
+#' creates a temp dir (tmp_dir) and/or deletes it
+#' @param dir_out character directory as parent dir.
+#' @param action numeric, 1 for create.
+#' @param change_raster_tmp logical if TRUE the raster tmp dir will be 
+#' changed to the created tmp dir.
+#' @param tmp_orig character directory. If change_raster_tmp == TRUE and action == 2
+#' the raster tmp dir will be changed to this dir.
+#' @importFrom raster rasterOptions
 #' @keywords internal
 #' @noRd
-
-out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = getOption("gSD.verbose")){
-  if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
-  if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
-  else{if(type == 3){stop(input, call. = FALSE)}else{if(ll == 1){
-    if(msg == FALSE){ cat(paste0(sign,input),sep="\n")
-    } else{message(paste0(sign,input))}}}}
-}
-
-#' first character to upper
-#'
-#' @param x character
-#'
-#' #' @keywords internal
-#' @noRd
-
-firstup <- function(x){
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  return(x)
-}
-
-#' Simplifies check of variables being FALSE
-#'
-#' @param evaluate variable or expression to be evaluated
-#'
-#' @keywords internal
-#' @noRd
-is.FALSE <- isFALSE <- function(x) is.logical(x) && length(x) == 1L && !is.na(x) && !x
-
-#' Simplifies check of variables being TRUE
-#'
-#' @param evaluate variable or expression to be evaluated
-#'
-#' @keywords internal
-#' @noRd
-is.TRUE <- isTRUE <- function (x) is.logical(x) && length(x) == 1L && !is.na(x) && x
-
-#' Checks, if specific command is available
-#'
-#' @param cmd command
-#' @importFrom processx process
-#' @keywords internal
-#' @noRd
-check.cmd <- function(cmd){
-  sc <- try(processx::process$new(cmd),silent = TRUE)
-  if(inherits(sc, "try-error")){return(FALSE)}else{return(TRUE)}
-}
-
-
-#' gSD.get
-#' @param url url
-#' @param username user
-#' @param password pass
-#' @param dir.file output file path
-#' @param prog show or not show progress console
-#' @importFrom httr GET stop_for_status warn_for_status message_for_status progress
-#' @keywords internal
-#' @noRd
-gSD.get <- function(url, username = NULL, password = NULL, dir.file = NULL, prog = F){
-
-  x <- NULL # needed due to checks
-  get.str <-"x <- try(GET(url"
-  if(!is.null(username)) get.str <- paste0(get.str, ", authenticate(username, password)")
-  if(!is.null(dir.file)) get.str <- paste0(get.str, ", write_disk(dir.file)")
-  if(isTRUE(prog)) get.str <- paste0(get.str, ", progress()")
-  get.str <- paste0(get.str, "), silent = T)")
-  eval(parse(text = get.str))
-
-  if(inherits(x, "try-error")) out(paste0("Could not process request: ", gsub("  ", "", strsplit(x[[1]], "\n")[[1]][2])), type=3)
-  stop_for_status(x, "process request")
-  warn_for_status(x)
-  #message_for_status(x); cat("\n")
-  return(x)
-}
-
-#' gSD.post
-#' @param url url
-#' @param username user
-#' @param password pass
-#' @param body body
-#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
-#' @keywords internal
-#' @noRd
-gSD.post <- function(url, username = NULL, password = NULL, body = FALSE){
-
-  x <- NULL # needed due to checks
-  post.str <-"x <- POST(url"
-  if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
-  post.str <- paste0(post.str, ", body = body)")
-  #eval(parse(text = post.str))
-
-  if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  #message_for_status(x); cat("\n")}
-  return(x)
-}
-
-#' gSD.download
-#' @param name name
-#' @param url url
-#' @param file file
-#' @importFrom tools md5sum
-#' @keywords internal
-#' @noRd
-gSD.download <- function(name, url.file, file, url.checksum = NULL, head.out = NULL, prog = T){
-
-  out(paste0(if(!is.null(head.out)) head.out else "", "Downloading '", name, "' to '", file, "'..."), msg = T)
-  file.tmp <- tempfile(tmpdir = paste0(head(strsplit(file, "/")[[1]], n=-1), collapse = "/")) #, fileext = ".tar.gz")
-  gSD.get(url.file, dir.file = file.tmp, prog = prog)
-
-  if(!is.null(url.checksum)){
-    md5 <- strsplit(content(gSD.get(url.checksum), as = "text", encoding = "UTF-8"), " ")[[1]][1]
-    if(as.character(md5sum(file.tmp)) == tolower(md5)){ out("Successfull download, MD5 check sums match.", msg = T)
-    } else{
-      out(paste0("Download failed, MD5 check sums do not match. Will retry."), type = 2)
-      file.remove(file.tmp)
-      return(FALSE)
+.tmp_dir <- function(dir_out, action = 2, change_raster_tmp = F, tmp_orig = NULL) {
+  
+  tmp_dir <- file.path(dir_out,"tmp")
+  if (dir.exists(tmp_dir) && action ==2) {unlink(tmp_dir,recursive=T)}
+  if (action == 1) {dir.create(tmp_dir)}
+  if (isTRUE(change_raster_tmp)) {
+    if (action == 1) {
+      rasterOptions(tmpdir=tmp_dir)
+    } else {
+      rasterOptions(tmpdir=tmp_orig)
     }
-  } #else out("Download finished. MD5 check sums not available (file integrity could not be checked).", msg = T)
-
-  file.rename(file.tmp, file)
-  return(TRUE)
-}
-
-#' check if url
-#'
-#' @param url a url
-#' @keywords internal
-#' @noRd
-is.url <- function(url) grepl("www.|http:|https:", url)
-
-#' get Copernicus Hub API url and credentials from user input
-#'
-#' @param x API keyword or URL
-#' @param p platform
-#' @param user user name
-#' @param pw password
-#' @keywords internal
-#' @noRd
-.CopHub_select <- function(x, p, user, pw){ #cophub_api
-  if(is.url(x)){
-    url <- x
-  } else{
-    if(x == "auto"){
-      if(p == "Sentinel-1" | p == "Sentinel-2" | p == "Sentinel-3") x <- "dhus"
-      #if(p == "Sentinel-3") x <- "s3" # decommisioned
-      if(p == "Sentinel-5P" | p == "Sentinel-5 Precursor") x <- "s5p"
-      if(p == "GNSS") x <- "gnss"
-    }
-    if(x == "dhus"){url <- getOption("gSD.api")$dhus}
-    # if(x == "s3"){
-    #   url <- getOption("gSD.api")$s3
-    #   user <- "s3guest"
-    #   pw <- "s3guest"
-    # }
-    if(x == "s5p"){
-      url <- getOption("gSD.api")$s5p
-      user <- "s5pguest"
-      pw <- "s5pguest"
-    }
-    if(x == "gnss"){
-      url <- getOption("gSD.api")$gnss
-      user <- "gnssguest"
-      pw <- "gnssguest"
-    }
+    
   }
-  return(c(user, pw, url, x))
+  return(tmp_dir)
+  
 }
 
-
-#' get odata for uuid
-#'
-#' @param uuid one or multiple uuids
-#' @param cred return of .CopHub_select c(user, password, API ulr)
-#' @param field field to be checked
+#' extracts the grd and gri file path from a raster object and deletes them
+#' @param dir character directory the tmp dir.
+#' @param patterns character vector of file extensions of files to be deleted.
+#' Default are ".gri" and ".grd".
+#' @return nothing. Deletes all files in tmp folder on disk
 #' @keywords internal
 #' @noRd
-.get_odata <- function(uuid, cred, field = ""){
-  lapply(uuid, function(x) content(gSD.get(paste0(cred[3], "/odata/v1/Products('", x, "')/", field),  cred[1], cred[2])))
-}
-
-
-#' get ERS API key from user input
-#'
-#' @param username username
-#' @param password password
-#' @keywords internal
-#' @importFrom httr POST content stop_for_status warn_for_status content_type
-#' @importFrom utils URLencode
-#' @noRd
-.ERS_login <- function(username, password, n_retry = 3){
-  x <- POST(url = paste0(getOption("gSD.api")$ee, "login"),
-            body = URLencode(paste0('jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}')),
-            content_type("application/x-www-form-urlencoded; charset=UTF-8"))
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  v <- content(x)$data
-  if(is.null(v)) out("Login failed. Please retry later or call services_avail() to check if USGS services are currently unavailable.", type = 3)
-  return(v)
-}
-
-#' logout from ERS with API key
-#'
-#' @param api.key api.key
-#' @keywords internal
-#' @noRd
-.ERS_logout <- function(api.key){
-  x <- gSD.get(paste0(getOption("gSD.api")$ee, 'logout?jsonRequest={"apiKey":"', api.key, '"}'))
-  stop_for_status(x, "connect to server.")
-  warn_for_status(x)
-  content(x)$data
-}
-
-#' get EE products
-#'
-#' @param api.key api.key
-#' @param wildcard wildcard
-#' @keywords internal
-#' @noRd
-.EE_ds <- function(api.key, wildcard = NULL){
-  q <- paste0(getOption("gSD.api")$ee, 'datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
-  if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
-  x <- gSD.get(q)
-  sapply(content(x)$data, function(y) y$datasetName, USE.NAMES = F)
-}
-
-
-#' query EE
-#'
-#' @param aoi aoi
-#' @param time_range time_range
-#' @param name name
-#' @param api.key api.key
-#' @param meta.fields meta.fields
-#'
-#' @importFrom sf st_bbox st_as_text
-#' @importFrom xml2 as_list
-#'
-#' @keywords internal
-#' @noRd
-.EE_query <- function(aoi, time_range, name, api.key, meta.fields = NULL){
-
-  spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
-  temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
-
-  out("Searching USGS EarthExplorer for available products...")
-  query <- lapply(name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) gSD.get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
-  query.cont <- lapply(query, content)
-  if(length(name) == 1) if(query.cont[[1]]$error != "") out("Invalid query. This dataset seems to be not available for the specified time range.", type = 3)
-  query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
-  query.cont <- query.cont[query.use]
-  query.names <- name[query.use]
-
-  query.results <- lapply(query.cont, function(x) x$data$results)
-  if(length(query.results) != 0){
-
-    query.df <- unlist(mapply(y = query.results, n = query.names, function(y, n) lapply(y, function(x, ds_name = n){
-      x.names <- names(x)
-      x.char <- as.character(x)
-
-      # Make sf polygon filed from spatialFootprint
-      spf.sub <- grep("spatialFoot", x.names)
-      spf <- unlist(x[spf.sub])
-      spf <- as.numeric(spf[grep("coordinates", names(spf))])
-      spf.sf <- .make_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T)
-
-      df <- rbind.data.frame(x.char, stringsAsFactors = F)
-      colnames(df) <- x.names
-      df[,spf.sub] <- st_as_text(spf.sf)
-      df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
-      colnames(df)[ncol(df)] <- "product"
-      return(df)
-    }), SIMPLIFY = F), recursive = F)
-
-    ## Read out meta data
-    out("Reading meta data of search results from USGS EarthExplorer...")
-    meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) gSD.get(x))
-    meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
-    meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
-      z <- try(y$metadataValue[[1]], silent = T)
-      if(inherits(z, "try-error")) NULL else z
-    }, USE.NAMES = F))
-    meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
-
-    ## Define meta fields that are usefull for the query output
-    if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
-    meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
-    meta.df <- mapply(FUN = function(v, n, i){
-      x <- v[i]
-      x <- lapply(x, function(x) if(is.null(x)) "" else x)
-      x <- rbind.data.frame(x, stringsAsFactors = F)
-      colnames(x) <- gsub(" ", "", n[i])
-      return(x)
-    }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
-
-    query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
-      ## apply meaningful order and replace startTime and endTime with meta outputs
-      x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
-      colnames(x)[1] <- colnames(q)[1]
-      return(x)
-    }, SIMPLIFY = F)
-
-    return.names <- unique(unlist(lapply(query.df, colnames)))
-    return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names), stringsAsFactors = F)
-    return.df <-  do.call(rbind.data.frame, lapply(query.df, function(x, rn = return.names,  rdf = return.df){
-      rdf[1, match(colnames(x), rn)] <- x
-      return(rdf)
-    }))
-    return(return.df)
-  } else{
-    return(NULL)
-  }
-}
-
-
-#' preview EE record
-#'
-#' @param record record
-#' @param preview_crs preview_crs
-#' @param on_map on_map
-#' @param show_aoi show_aoi
-#' @param verbose verbose
-#'
-#' @importFrom getPass getPass
-#' @importFrom httr GET write_disk authenticate
-#' @importFrom raster stack plotRGB crs crs<- extent extent<- NAvalue
-#' @importFrom sf st_as_sfc st_crs as_Spatial st_transform st_coordinates
-#' @importFrom mapview viewRGB addFeatures
-#'
-#' @keywords internal
-#' @noRd
-.EE_preview <- function(record, preview_crs = NULL, on_map = TRUE, show_aoi = TRUE, verbose = TRUE){
-  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
-
-  ## Intercept false inputs and get inputs
-  url.icon <- record$browseUrl
-  if(is.na(url.icon)){out("Argument 'record' is invalid or no preview is available.", type=3)}
-  if(length(url.icon) > 1){out("Argument 'record' must contain only a single record, represented by a single row data.frame.")}
-  char_args <- list(url.icon = url.icon)
-  for(i in 1:length(char_args)) if(!is.character(char_args[[i]])) out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)
-
-  if(length(grep("https", url.icon)) == 0){
-    out("No preview available for this record or product.", msg = T)
-  } else{
-    ## Recieve preview
-    file_dir <- paste0(tempfile(),".jpg")
-    gSD.get(url.icon, dir.file = file_dir)
-    r.prev <- stack(file_dir)
-
-    if(isTRUE(on_map)){
-
-      ## create footprint
-      footprint <- st_as_sfc(list(record$spatialFootprint), crs = 4326)
-      if(!is.null(preview_crs)) footprint <- st_transform(footprint, st_crs(preview_crs))
-
-      crs(r.prev) <- crs(as_Spatial(footprint))
-      footprint <- st_coordinates(footprint)
-
-      extent(r.prev) <- extent(min(footprint[,1]), max(footprint[,1]), min(footprint[,2]), max(footprint[,2])) #extent(footprint)
-
-      ## create map
-      map <- suppressWarnings(viewRGB(r.prev, r=1, g=2, b=3))
-
-      if(isTRUE(show_aoi)){
-        if(isFALSE(getOption("gSD.aoi_set"))){
-          out("Preview without AOI, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
-        } else{
-          aoi.sf <- getOption("gSD.aoi")
-          #aoi.sf <- .make_aoi(aoi.m, type = "sf", quiet = T)
-          map <- addFeatures(map, aoi.sf)
-        }
-      }
-      map # display mapview or leaflet output
-    } else{
-
-      ## create simple RGB plot
-      plotRGB(r.prev)
-    }
-  }
-}
-
-
-#' convert MODIS product names
-#'
-#' @param names names
-#' @keywords internal
-#' @noRd
-.convMODIS_names <- function(names){
-  sapply(names, function(x){
-    y <- strsplit(x, "_")[[1]]
-    y <- y[2:length(y)]
-    if(length(y) > 1) y <- paste0(y[1:(length(y)-1)], collapse = "_")
-    return(y)
-  }, USE.NAMES = F)
-}
-
-
-#' USGS ESPA ordering functon
-#'
-#' @param id id
-#' @param level level
-#' @param username username
-#' @param password password
-#' @param format format
-#' @keywords internal
-#' @importFrom httr content
-#' @noRd
-.ESPA_order <- function(id, level = "sr", username, password, format = "gtiff", verbose){
-
-  ## check query and abort, if not available
-  out("Ordering requested items from ESPA...")
-  checked <- lapply(id , function(x, v = verbose){
-    r <- gSD.get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
-    if(names(content(r)) == "not_implemented") out(paste0("'", x, "': This ID is invalid, as it cannot be found in the ESPA database. Please remove it from input and reexecute."), type = 3)
-    list(x, r)
+.delete_tmp_files <- function(dir, patterns = c(".gri",".grd")) {
+  
+  patterns <- paste0(patterns,"$")
+  files <- unlist(sapply(patterns,function(p) list.files(dir,pattern=p)))
+  paths_del <- file.path(dir,files)
+  del <- sapply(paths_del,function(path) {
+    try <- try(unlink(path))
   })
-
-  ## group request by collection (single or multi order)
-  req.data <- lapply(checked, function(x) c(names(content(x[[2]])), x[[1]]))
-  coll <- sapply(req.data, function(x) x[[1]][[1]], USE.NAMES=F)
-  coll.uni <- unique(coll)
-  out(paste0("Collecting from ", toString(length(coll.uni)), " collection(s) [", paste0(coll.uni, collapse = ", "), "], resulting in ", toString(length(coll.uni)), " order(s)..."))
-  req.coll <- lapply(coll.uni, function(x, c = coll, rd = req.data) rd[which(c == x)])
-
-  reqlevel <- sapply(strsplit(level, '[, ]+'), function(x) toString(paste0('\"', x, '\"')))
-  reqlevel <- paste0(reqlevel, collapse=",")
-
-  ## build request
-  req.body <- lapply(req.coll, function(x, p = reqlevel, f = format){
-    i <- paste0(sapply(x, function(y) y[2], USE.NAMES = F), collapse = '", "')
-    paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": [', p, ']}, "format": "', f, '"}')
-  })
-
-  ## order
-  order <- lapply(req.body, function(x, user = username, pass = password) gSD.post(url = paste0(getOption("gSD.api")$espa, "order/"), username = user, password = pass, body = x))
-  order.list <- sapply(order, function(x) content(x)[[1]], USE.NAMES = F)
-  out(paste0("Products '", paste0(id, collapse = "', '"), "' have been ordered successfully:"))
-  out(paste0("[level = '", level, "', format = '", format, "', order ID(s) '", paste0(order.list, collapse = "', '"), "']."))
-  return(order.list)
+  
 }
 
-
-#' USGS ESPA downloading functon
+#' column summary 
 #'
-#' @param order.list order.list
-#' @param username username
-#' @param password password
-#' @param file.down file.down
-#' @param delay delay
-#'
-#' @importFrom utils head tail
-#'
+#' @param records df
+#' @param records.names character
+#' 
 #' @keywords internal
 #' @noRd
-## check order(s)
-.ESPA_download <- function(order.list, username, password, file.down, delay = 10, dir_out, items.order = NULL, n.item = NULL){
-
-  remain.active = TRUE; ini = TRUE; show.status = TRUE
-  while(remain.active){
-
-    ## get tiems
-    items <- lapply(order.list, function(x, user = username, pass = password){
-      content(gSD.get(paste0(getOption("gSD.api")$espa, "item-status/", x), user, pass))
-    })
-
-    ## get items content
-    items <- lapply(items, function(x) lapply(x[[1]], function(y){
-      r <- unlist(y)
-      names(r) <- names(y)
-      return(r)
-    }))
-
-    ## make items data.frame containing recieve status
-    items <- data.frame(do.call(rbind, lapply(items, function(x) do.call(rbind, lapply(x, function(y) rbind(y))))), row.names = NULL, check.names = F, fix.empty.names = F, stringsAsFactors = F)
-    names.required <- sapply(file.down, function(x) head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_LEVEL_")[[1]], n=1), USE.NAMES = F) #paste0(head(strsplit(tail(strsplit(x, "/")[[1]], n=1), "_")[[1]], n=-1), collapse = "_"), USE.NAMES = F)
-    items <- items[sapply(names.required, function(x, y = items$name) which(y == x), USE.NAMES = F),]
-    items <- cbind(items, items$status == "complete")
-    items <- cbind.data.frame(items, file.down, stringsAsFactors = F) #sapply(as.character(items$name), function(x, l = level) paste0(dir_out, "/", x, "_", toupper(level), ".tar.gz"), USE.NAMES = F), stringsAsFactors = F)
-    colnames(items)[(ncol(items)-1):ncol(items)] <- c("available", "file")
-
-    if(ini){
-      items.df <- cbind.data.frame(items, rep(FALSE, length(items$status)), stringsAsFactors = F)
-      colnames(items.df)[ncol(items.df)] <- "recieved"
-      ini <- FALSE
-    } else{
-      items.df <- cbind.data.frame(items, items.df$recieved, stringsAsFactors = F)
-    }
-    if(isTRUE(force)) emp <- sapply(items.df$file, function(x) if(file.exists(x)) file.remove(x), USE.NAMES = F)
-    items.df$recieved <- sapply(items.df$file, file.exists, USE.NAMES = F)
-
-    ## Items to download
-    if(all(items.df$available) & all(items.df$recieved)){
-      remain.active <- FALSE
-    } else{
-
-      ## Download or wait for status
-      sub.download <- intersect(which(items.df$available == T), which(items.df$recieved == F))
-      if(length(sub.download) > 0){
-
-        items.get <- items.df[sub.download,]
-        out(paste0("Starting download of product(s) '", paste0(items.get$name, collapse = "', "), "'."), msg = T)
-        #items.df$recieved[sub.download] <- apply(items.get, MARGIN = 1, function(x, d = dir_out){
-        items.df$recieved[sub.download] <- mapply(name = items.get$name, uf = items.get$product_dload_url, uc = items.get$cksum_download_url,
-                                                  file = items.get$file, i.item = items.order, function(name, uf, uc, file, i.item){
-
-                                                    # create console index of current item
-                                                    head.out <- paste0("[", i.item, "/", n.item, "] ")
-                                                    gSD.download(name = name, url.file = uf, url.checksum = uc, file = file, head.out = head.out)
-                                                  })
-        show.status <- TRUE
+.column_summary <- function(records, records.names, download_success = F){
+  
+  # remove internal columns
+  gSD.cols <- grep("gSD", colnames(records))
+  if(length(gSD.cols > 0)) records <- records[,-gSD.cols]
+  diff.cols <- setdiff(colnames(records), records.names)
+  if(length(diff.cols) > 0) out(paste0("Columns added to records: '", paste0(diff.cols, collapse = "', '"), "'"))
+  
+  if(isTRUE(download_success)){
+    if(!is.null(records$download_success)){
+      if(any(!records$download_success)){
+        out(paste0("Some downloads have not been succesfull after ", max(records$download_attempts), " attempt(s) (see column 'download_success'). Please retry later."), type = 2)
       } else{
-        if(isTRUE(show.status)){
-          out(paste0("Waiting for product(s) '", paste0(items.df$name[items.df$available == F], collapse = "', "), "' to be ready for download from ESPA (this may take a while)..."))
-          out("Note: It is also possible to terminate the function and call it again later by providing the displayed order ID(s) as input to 'espa_order'.", msg = T)
-        }
-        show.status <- FALSE
+        out(paste0("All downloads have been succesfull after ", max(records$download_attempts), " attempt(s)."), msg = T)
       }
     }
-    Sys.sleep(delay) #wait before reconnecting to ESPA to recheck status
   }
+  return(records)
 }
 
 
-
-#' make aoi
-#'
-#' @param aoi aoi
+#' translate records column names to gSD standard
+#' @param records df as returned by client
+#' @param product_name product name 
 #' @keywords internal
-#' @importFrom sp SpatialPolygons
-#' @importFrom sf st_sfc st_polygon st_crs st_as_sf st_coordinates st_transform st_crs<- as_Spatial
 #' @noRd
-.make_aoi <- function(aoi, type = "matrix", quiet = F){
+.translate_records <- function(records, product_name){
 
-  ## if not sfc, convert to sfc
-  if(!inherits(aoi, c("Spatial", "sfc", "matrix"))) out("Argument 'aoi' needs to be a 'SpatialPolygons' or 'sfc_POLYGON' or 'matrix' object.", type = 3)
-  if(inherits(aoi, "matrix")){
-    if(!all(aoi[1,] == aoi[length(aoi[,1]),])) aoi <- rbind(aoi, aoi[1,])
-    aoi <- st_sfc(st_polygon(list(aoi)), crs = 4326)
-    if(isFALSE(quiet)) out(paste0("Argument 'aoi' is a matrix, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
+  #"relativeorbit_number.1" "sensor_mode.1"          "level.1"
+  # set-up column name dictionary
+  records.names <- colnames(records)
+  dict <- getOption("gSD.clients_dict")
+  
+  # translate
+  records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
+    x <- records[[dict$clients[i]]]
+    if(!is.null(x)){
+      x <- data.frame(x, stringsAsFactors = F)
+      colnames(x) <- dict$gSD[i]
+    }
+    return(x)
+  }))), records[,!sapply(records.names, function(x) x %in% dict$clients, USE.NAMES = F)])
+  
+  # colnames(records) <- sapply(colnames(records), function(x){
+  #   i <- which(x == dict[,which.col])
+  #   if(length(i) > 0) dict$gSD[i] else x
+  # }, USE.NAMES = F)
+  
+  # specific cases: all EE products
+  # if(which(which.col) > 2){
+  #   records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
+  # }
+  
+  records <- records[,!sapply(colnames(records), function(x) x %in%  c("orderUrl", "bulkOrdered", "ordered", "product", "dataAccessUrl", "sceneBounds", "platformshortname", "mission",
+    "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
+    "status", "filename", "format", "url", "downloadUrl", "mode", "productlevel"), USE.NAMES = F)]
+
+  # product groups
+  products <- get_products(grouped = T, update_online = F)
+  records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
+  records$product <- product_name
+  
+  # product-specfic cases
+  if(unique(records$product_group) == "Sentinel"){
+    records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
+    records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
-  if(inherits(aoi, "Spatial")) aoi <- st_as_sf(aoi)
-
-  ## check projection
-  if(is.na(st_crs(aoi))){
-    st_crs(aoi) <- 4326
-    if(isFALSE(quiet)) out(paste0("Argument 'aoi' has no projection, assuming '", st_crs(aoi)$proj4string, "' projection."), type = 2)
-  }
-  if(length(grep("WGS84", grep("longlat", st_crs(aoi)$proj4string, value = T), value = T)) != 1){
-    aoi <- st_transform(aoi, 4326)
-  }
-
-  ## get coordinates
-  aoi.m <- st_coordinates(aoi)[,c(1,2)]
-  aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
-  aoi.sp <- as_Spatial(aoi.sf)
-
-  if(type == "matrix") return(aoi.m)
-  if(type == "sf") return(aoi.sf)
-  if(type == "sp") return(aoi.sp)
+  if(unique(records$product == "Sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
+      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
+  })
+  
+  # sort columns
+  return(records)
 }
+
+
+# -------------------------------------------------------------
+# data.frame utils
+# -------------------------------------------------------------
+
+#' 'unlists' all columns of a data.frame
+#' @param records data.frame.
+#' @param records data.frame with all columns unlisted
+#' @keywords internal
+#' @noRd
+.unlist_df <- function(records) {
+  for (i in 1:NCOL(records)) {
+    column <- records[,i]
+    # when sf we need one more [[1]] to reach
+    not_matrix <- ifelse(inherits(records, SF()), !is.matrix(column[[1]][[1]]), !is.matrix(column[[1]][[1]][[1]]))
+    if (inherits(column, LIST())) {
+      # if it's a matrix it's a footprint thing
+      if (not_matrix) {
+        column <- unlist(column)
+        if (!is.matrix(column) && length(column) == NROW(records)) {
+          records[,i] <- unlist(column)
+        }
+      }
+    }
+  }
+  return(records)
+}
+
+#' rbind different dfs
+#' @param x list of dfs
+#' @keywords internal
+#' @noRd
+rbind.different <- function(x) {
+  
+  if (.is_empty_array(x)) {
+    return(x)
+  } else {
+    x.bind <- x[[1]]
+    for(i in 2:length(x)){
+      x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
+      y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
+      
+      x.bind[, c(as.character(y.diff))] <- NA
+      x[[i]][, c(as.character(x.diff))] <- NA
+      
+      x.bind <- rbind(x.bind, x[[i]])
+    }
+    return(x.bind)
+  }
+}
+
+# -------------------------------------------------------------
+# aoi area and coverage
+# -------------------------------------------------------------
+
+#' calculates area in aoi in km2
+#' @param aoi aoi.
+#' @return aoi_area numeric
+#' @importFrom sf st_area st_as_sf
+#' @keywords internal
+#' @noRd
+.calc_aoi_area <- function(aoi) {
+  if (!.is_sf(aoi)) {
+    aoi <- st_as_sf(aoi)
+  }
+  aoi_area <- st_area(aoi)
+  if (length(aoi_area) > 1) { # in case of multipolygon
+    aoi_area <- sum(aoi_area)
+  }
+  return(as.numeric(aoi_area) / 1000) # km2
+  
+}
+
+#' calculates the number of cells of value 1 covering the aoi
+#' @param x raster for which the percentage of value 1 in aoi shall be calculated.
+#' @param aoi aoi.
+#' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
+#' be provided here.
+#' @return \code{percent} numeric percentage of value 1 covering the aoi
+#' @importFrom raster ncell area getValues
+#' @keywords internal
+#' @noRd
+.calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
+  
+  if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi, x)
+  x_vals <- getValues(x)
+  # calc number of pixels with value 1
+  x_valid <- length(x_vals[!is.na(x_vals)])
+  
+  # calculate percentage of pixels with value 1 in aoi
+  percent <- (x_valid / aoi_ncell) * 100
+  return(percent)
+  
+}
+
+#' calculate aoi correction values for coverage calculation
+#' @param aoi aoi.
+#' @param x raster with the resolution.
+#' @return integer number of pixels in aoi.
+#' @importFrom sf st_bbox
+#' @importFrom raster raster res crs values<-
+#' @keywords internal
+#' @noRd
+.calc_aoi_corr_vals <- function(aoi, x) {
+  # calculate aoi number of cells (calculation is suitable for large areas)
+  e <- as.vector(st_bbox(aoi))
+  # calculate area of aoi in order to get a suitable resolution for percentage cells computations
+  r <- raster(xmn=e[1],xmx=e[3],ymn=e[2],ymx=e[4], crs=crs(x), resolution=res(x))
+  values(r) <- as.integer(1)
+  r <- .mask_raster_by_polygon(r, aoi)
+  r_vals <- getValues(r)
+  aoi_npixels <- length(which(r_vals == 1))
+  return(aoi_npixels)
+}
+
+#' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
+#' @param products character vector of all products in records.
+#' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
+#' @keywords internal
+#' @noRd
+.has_SAR <- function(products) {
+  
+  sentinel1 <- name_product_sentinel1()
+  if (sentinel1 %in% products) {
+    has_SAR <- ifelse(all(products == sentinel1), 100, 1)
+  } else {
+    has_SAR <- 0
+  }
+  
+}
+
+#' creates a tileid where not given, except Sentinel-1
+#' @param records data.frame.
+#' @return \code{records} data.frame with a completely filled tile_id column.
+#' @keywords internal
+#' @noRd
+.make_tileid <- function(records) {
+  
+  if(is.null(getElement(records, name_tile_id()))) records[name_tile_id()] <- NA_character_
+  
+  # first, try using the horizontal / vertical columns
+  has_tileid <- !is.na(getElement(records, name_tile_id()))
+  has_vertical <- if(!is.null(getElement(records, name_tile_number_vertical()))) !is.na(getElement(records, name_tile_number_vertical())) else rep(FALSE, nrow(records))
+  has_horizontal <- if(!is.null(getElement(records, name_tile_number_horizontal()))) !is.na(getElement(records, name_tile_number_horizontal())) else rep(FALSE, nrow(records))
+  
+  sub <- !has_tileid & has_vertical & has_horizontal
+  if(any(sub)){
+    horizontal <- getElement(records[sub,], name_tile_number_horizontal())
+    vertical <- getElement(records[sub,], name_tile_number_vertical())
+    records[sub, name_tile_id()] <- paste0(horizontal, vertical)
+  }
+  
+  # in many cases no value is given in horizontal / vertical
+  # ensure that this is given in all cases, sensor-specifically
+  records <- .make_tileid_sentinel1(records)
+  records <- .make_tileid_sentinel2(records)
+  records <- .make_tileid_sentinel3(records)
+  records <- .make_tileid_landsat(records)
+  records <- .make_tileid_modis(records)
+  
+  return(records)
+}
+
+#' creates tile ids for Sentinel-1 records from its footprints
+#' @param records data.frame
+#' @return records data.frame with added tile id of Sentinel-1 records
+#' @keywords internal
+#' @noRd
+.make_tileid_sentinel1 <- function(records) {
+  
+  TILEID <- name_tile_id()
+  RECORD_ID <- name_record_id()
+  FOOTPRINT <- name_footprint()
+  SENTINEL1 <- "S1"
+  POINT_SEP <- "\\."
+
+  record_ids <- records[[RECORD_ID]]
+  is_sentinel1 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL1)))
+  if (!.is_empty_array(is_sentinel1)) {
+    no_tileid <- is_sentinel1[is.na(records[is_sentinel1, TILEID])]
+    footprints <- records[is_sentinel1, FOOTPRINT]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid) && !.is_empty_array(footprints)) {
+      tileids <- sapply(footprints, function(footprint) {
+        tryCatch({
+          footprint <- footprint[[1]]#[[1]]
+          horizontal <- strsplit(as.character(mean(footprint[,1][1:4])), POINT_SEP)[[1]]
+          vertical <- strsplit(as.character(mean(footprint[,2][1:4])), POINT_SEP)[[1]]
+          id <- paste0("h", horizontal[1], ".", substr(horizontal[2], 1, 1),
+                       "v", vertical[1], ".", substr(vertical[2], 1, 1))
+        }, error = function(err) {
+          return(NA)
+        }) 
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
+  } 
+  return(records)
+}
+
+#' creates tile ids for Sentinel-2 records
+#' @param records data.frame
+#' @return records data.frame with added tile id of Sentinel-2 records
+#' @keywords internal
+#' @noRd
+.make_tileid_sentinel2 <- function(records) {
+  
+  RECORD_ID <- name_record_id()
+  TILEID <- name_tile_id()
+  SENTINEL2 <- "S2"
+  
+  # Sentinel-2
+  record_ids <- records[[RECORD_ID]]
+  is_sentinel2 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL2)))
+  if (!.is_empty_array(is_sentinel2)) {
+    no_tileid <- is_sentinel2[is.na(records[is_sentinel2, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
+        id <- strsplit(x, "_")[[1]][6]
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
+  }
+  return(records)
+  
+}
+
+#' creates tile ids for Sentinel-3 records
+#' @param records data.frame
+#' @return records data.frame with added tile id of Sentinel-3 records
+#' @importFrom utils tail
+#' @keywords internal
+#' @noRd
+.make_tileid_sentinel3 <- function(records) {
+  
+  RECORD_ID <- name_record_id()
+  TILEID <- name_tile_id()
+  SENTINEL3 <- "S3"
+  
+  # Sentinel-3
+  record_ids <- records[[RECORD_ID]]
+  is_sentinel3 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL3)))
+  if (!.is_empty_array(is_sentinel3)) {
+    no_tileid <- is_sentinel3[is.na(records[is_sentinel3, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x){
+        tryCatch({
+          sep <- "______"
+          if (grepl(sep, x)) { # does it contain the "_" separator at the end 
+            splitted <- strsplit(x, sep)[[1]][1]
+            splitted1 <- strsplit(splitted, "_")[[1]]
+            len <- length(splitted1)
+            last <- tail(splitted1, 1)
+            if (grepl("[^0-9]", last)) { # should be chars
+              id <- last
+            } else { # only contains integers
+              id <- paste0(splitted1[len-1], splitted1[len])
+            }
+          } else {
+            splitted <- strsplit(x, "_LN1")[[1]]
+            splitted1 <- strsplit(splitted, "_")[[1]]
+            len <- length(splitted1)
+            if (len == 18) {
+              id <- paste0(splitted1[len-6], splitted1[len-5])
+            } else {
+              id <- paste0(splitted1[len-2], splitted1[len-1])
+            }
+          }
+        }, error = function(err) {
+          return(NA)
+        })
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
+  }
+  return(records)
+}
+
+#' creates tile ids for Landsat records
+#' @param records data.frame
+#' @return records data.frame with added tile id of Landsat records
+#' @keywords internal
+#' @noRd
+.make_tileid_landsat <- function(records) {
+  
+  RECORD_ID <- name_record_id()
+  TILEID <- name_tile_id()
+  LANDSAT <- name_product_group_landsat()
+  
+  record_ids <- records[[RECORD_ID]]
+  is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, LANDSAT)))
+  if (!.is_empty_array(is_landsat)) {
+    no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
+        splitted <- strsplit(x, "_")[[1]][3]
+        id <- paste0(substr(splitted, 1, 3), substr(splitted, 4, 7))
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
+  }
+  return(records)
+  
+}
+
+#' creates tile ids for MODIS records
+#' @param records data.frame
+#' @return records data.frame with added tile id of MODIS records
+#' @keywords internal
+#' @noRd
+.make_tileid_modis <- function(records) {
+  
+  RECORD_ID <- name_record_id()
+  PRODUCT <- name_product()
+  TILEID <- name_tile_id()
+  MODIS <- name_product_group_modis()
+  POINT_SEP <- "\\."
+  h <- "h"
+  v <- "v"
+  
+  product_names <- records[[PRODUCT]]
+  is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, MODIS)))
+  if (!.is_empty_array(is_modis)) {
+    no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
+    if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
+      tileids <- sapply(records[no_tileid, RECORD_ID], function(x) {
+        tryCatch({
+          splitted <- strsplit(x, POINT_SEP)[[1]]
+          splitted1 <- splitted[which(grepl(v, splitted) * grepl(h, splitted) == 1)]
+          splitted2 <- strsplit(splitted1, v)[[1]]
+          is_horizontal <- grepl(h, splitted2)
+          id <- paste0(h, strsplit(splitted2[is_horizontal], h)[[1]][2], v, splitted2[!is_horizontal])
+        }, error = function(err) {
+          return(NA)
+        })
+      })
+      records[no_tileid, TILEID] <- tileids
+    }
+  }
+  return(records)
+  
+}
+
+
+# -------------------------------------------------------------
+# date utils
+# -------------------------------------------------------------
+
+#' returns the smallest and largest date of a character vector of dates.
+#' @param dates character vector of dates ("2019-01-01").
+#' @return \code{period} character vector of two dates
+#' @keywords internal
+#' @importFrom utils tail
+#' @noRd
+.identify_period <- function(dates) {
+  dates_sorted <- sort(dates)
+  period <- c(dates_sorted[1], tail(dates_sorted,1))
+  return(period)
+}
+
+#' calculates the number of days between two dates
+#' @param period character vector of start and end date.
+#' @return \code{days} numeric number of days between.
+#' @keywords internal
+#' @noRd
+.period_days <- function(period) {
+  days <- as.integer(unclass(as.Date(period[2])) - unclass(as.Date(period[1])))
+  return(days)
+}
+
+# -------------------------------------------------------------
+# raster utils
+# -------------------------------------------------------------
+
+#' mask the edges of Landsat preview raster
+#' @param preview raster.
+#' @return \code{preview_masked} masked preview
+#' @importFrom methods as slot slot<-
+#' @importFrom raster crs extent crs<-
+#' @keywords internal
+#' @noRd
+.landsat_preview_mask_edges <- function(preview) {
+  polygons <- "polygons"
+  COORDS_SLOT <- "coords"
+  ext <- try(extent(preview))
+  if (inherits(ext, TRY_ERROR())) return (preview)
+  poly <- as(ext, SPATIAL_POLYGONS())
+  crs(poly) <- crs(preview)
+  # get the vertices of the extent and modify them
+  coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
+  coords[1,1] <- coords[1,1] + 0.08
+  coords[2,1] <- coords[2,1] + 0.42
+  coords[3,1] <- coords[3,1] - 0.08
+  coords[4,1] <- coords[4,1] - 0.42
+  coords[5,1] <- coords[5,1] + 0.08
+  coords[1,2] <- coords[1,2] + 0.38
+  coords[2,2] <- coords[2,2] - 0.06
+  coords[3,2] <- coords[3,2] - 0.38
+  coords[4,2] <- coords[4,2] + 0.05
+  coords[5,2] <- coords[5,2] + 0.38
+  slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
+  preview_masked <- .mask_raster_by_polygon(preview, poly)
+  extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
+  return(preview_masked)
+}
+
+#' mask the edges of Sentinel-2 preview raster
+#' @param preview raster.
+#' @return \code{preview_masked} masked preview
+#' @importFrom methods as slot slot<-
+#' @importFrom raster crs extent crs<-
+#' @keywords internal
+#' @noRd
+.sentinel2_preview_mask_edges <- function(preview) {
+  polygons <- "polygons"
+  COORDS_SLOT <- "coords"
+  ext <- try(extent(preview))
+  if (inherits(ext, TRY_ERROR())) return (preview)
+  poly <- as(ext, SPATIAL_POLYGONS())
+  crs(poly) <- crs(preview)
+  # get the vertices of the extent and modify them
+  coords <- slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT)
+  val <- 0.005
+  coords[1,1] <- coords[1,1] + val
+  coords[2,1] <- coords[2,1] + val
+  coords[3,1] <- coords[3,1] - val
+  coords[4,1] <- coords[4,1] - val
+  coords[5,1] <- coords[5,1] + val
+  coords[1,2] <- coords[1,2] + val
+  coords[2,2] <- coords[2,2] - val
+  coords[3,2] <- coords[3,2] - val
+  coords[4,2] <- coords[4,2] + val
+  coords[5,2] <- coords[5,2] + val
+  slot(slot(slot(poly, polygons)[[1]], "Polygons")[[1]], COORDS_SLOT) <- coords
+  preview_masked <- .mask_raster_by_polygon(preview, poly)
+  extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
+  return(preview_masked)
+} 
+
+#' ensures min/max values of raster, stack or brick are between 0 and 255
+#' @param x raster, stack or brick.
+#' @return raster, stack or brick with all its values between 0 and 255.
+#' @importFrom raster minValue maxValue
+#' @keywords internal
+#' @noRd
+.ensure_minmax <- function(x) {
+  max <- 255
+  min_below_zero <- which(minValue(x) < 0)
+  max_above_255 <- which(maxValue(x) > max)
+  if (!.is_empty_array(min_below_zero)) {
+    
+  }
+  if (!.is_empty_array(min_below_zero)) {
+    for (i in min_below_zero) {
+        x[[i]][x[[i]] < min] <- min
+    }
+  }
+  if (!.is_empty_array(max_above_255)) {
+    for (i in max_above_255) {
+        x[[i]][x[[i]] > max] <- max
+    }
+  }
+  return(x)
+}
+
+#' calculates percentage of a value in a raster or polygon with different modes.
+#' @param x raster.
+#' @param mode character specifies the mode of calculation. Mode "na" calculates
+#' percentage of non-NA values in an aoi. Mode "custom" calculates the percentage
+#' share of a specified value in the collection of two specified values. Mode "aoi"
+#' is a special mode for aoi percentage calculation and only needed in special cases
+#' where the number of values in aoi shall be provided through aoi_ncell. This option
+#' exists to speedup the process especially when it is frequently done for a specific aoi.
+#' It calculates the percentage of value 1 in the aoi.
+#' @param custom numeric vector with two values: 
+#' [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
+#' @param aoi aoi.
+#' @param aoi_ncell integer number of cells in aoi.
+#' @return \code{percent} numeric percentage
+#' @keywords internal
+#' @importFrom raster as.matrix extent res crs
+#' @noRd
+.raster_percent <- function(x, mode = "na", custom = c(), aoi = NULL, aoi_ncell = NULL) {
+  
+  if (mode == "na") {
+    na_mask <- is.na(x)
+    x <- .mask_raster_by_polygon(na_mask, aoi)
+    x_mat <- as.integer(as.matrix(x))
+    # clouds = 1 and clear = 0 here
+    percent <- (length(which(x_mat == 1)) / length(which(!is.na(x_mat)))) * 100
+  } else if (mode == "custom") {
+    x_mat <- as.integer(as.matrix(x))
+    val1 <- length(which(x_mat == custom[[1]]))
+    val2 <- length(which(x_mat == custom[[2]]))
+    percent <- (val1 / sum(val1, val2)) * 100
+  } else if (mode == "aoi") {
+    percent <- .calc_aoi_coverage(x, aoi, aoi_ncell)
+  }
+  # due to the calculation based on pixel values it might happen that percent 
+  # exceeds 100 slightly. In these cases use 100
+  percent <- ifelse(percent > 100, 100, percent)
+  
+}
+
+#' aggregates rasters according to the aoi area size.
+#' @param x character vector of paths to rasters to check on. All have to have
+#' the same resolution.
+#' @param x_names character vector of names refering to x.
+#' @param aoi aoi.
+#' @param factor numeric adjustment for aoi_area resulting in an adjustment 
+#' @param dir_out character directory where to save adjusted rasters if necessary
+#' @return x_adj or x (if nothing modified in data) characer vector of paths to (aggregated) rasters.
+#' @importFrom raster raster aggregate writeRaster res dataType nlayers
+#' @keywords internal
+#' @noRd
+.aggr_rasters <- function(x, x_names, aoi, factor = 750000, dir_out) {
+  
+  aoi_area <- .calc_aoi_area(aoi) # km2
+  adj <- aoi_area / factor
+  res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
+  target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
+  # do not reduce more than the equivalent of double the Sentinel-2 preview resolution
+  if (target_res > 0.0042) target_res <- 0.004 
+  adj <- target_res / res_ref
+  adj <- ifelse(adj < 2 && adj > 1, 2, adj)
+  if (adj > 1) {
+    x_adj <- sapply(1:length(x), function(i) {
+      r_save_path <- file.path(dir_out,paste0(x_names[i],"_aggr.tif"))
+      if (file.exists(r_save_path)) return(r_save_path)
+      r_load <- stack(x[[i]])
+      r_aggr <- aggregate(r_load, adj)
+      writeRaster(r_aggr, r_save_path, overwrite=T, datatype=dataType(r_load))
+      return(r_save_path)
+    })
+  } else {
+    return(x)
+  }
+  return(x_adj)
+  
+}
+
+#' create mosaic
+#' @description The rasters from \code{x} will be mosaicked in a stupid way: everything is mosaicked that is in this list.
+#' @param x list of paths to raster files.
+#' @param save_path character, full path where to save the mosaic (has to end with '.tif').
+#' @param mode character, optional. If mode == "rgb" no masking of the raster to only 1 values is done. 
+#' If mode == "mask" the raster will be returned with 1 and NA. Default is mode == "mask".
+#' @param srcnodata character nodata value in x. Default is for FLT4S.
+#' @return \code{mos} raster mosaic
+#' @keywords internal
+#' @importFrom gdalUtils gdalbuildvrt
+#' @noRd
+.make_mosaic <- function(x, save_path, mode = "mask", 
+                         srcnodata = NULL, datatype = NULL) {
+  
+  write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",
+                                srcnodata=as.character(srcnodata),
+                                vrtnodata="0",
+                                seperate=F,overwrite=T,
+                                datatype=datatype))
+
+  if (inherits(write_mos, TRY_ERROR())) {
+    return(NA)
+  } else {
+    mos <- raster(save_path)
+    if (mode == "rgb") return(mos) else mos <- mos==1
+  }
+  
+}
+
+#' wrapper for masking raster by polygon
+#' @param x RasterLayer, RasterStack or RasterBrick
+#' @param mask sfc or sp
+#' @return x masked
+#' @importFrom raster mask
+#' @importFrom sf as_Spatial
+#' @keywords internal
+#' @noRd
+.mask_raster_by_polygon <- function(x, polygon) {
+  if (!inherits(polygon, SPATIAL_POLYGONS())) {
+    polygon <- as_Spatial(st_zm(polygon))
+  }
+  return(mask(x, polygon))
+}
+
+#' wrapper for cropping raster by polygon
+#' @param x RasterLayer, RasterStack or RasterBrick
+#' @param mask sfc or sp
+#' @return x masked
+#' @importFrom raster mask
+#' @importFrom sf as_Spatial
+#' @keywords internal
+#' @noRd
+.crop_raster_by_polygon <- function(x, polygon) {
+  if (!inherits(polygon, SPATIAL_POLYGONS())) {
+    polygon <- as_Spatial(polygon)
+  }
+  return(crop(x, polygon))
+} 
+
+
+#' calculates the normalized difference of two rasters
+#' @param x RasterLayer
+#' @param y RasterLayer
+#' @return RasterLayer normalized difference of x and y
+#' @keywords internal
+#' @noRd
+.normalized_difference <- function(x, y) {
+  a <- x - y
+  b <- x + y
+  norm_diff <- a / b
+  return(norm_diff)
+}
+
+#' rescales raster to 0-100
+#' @param x RasterLayer
+#' @return RasterLayer rescaled
+#' @importFrom raster minValue maxValue
+#' @keywords internal
+#' @noRd
+.rescale_raster <- function(x) {
+  return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
+}
+
+#' mask NA-like DNs in previews (very low RGB). Only in case of Landsat, Sentinel-2 and Sentinel-3 OLCi
+#' @param preview RasterLayer
+#' @param record sf data.frame
+#' @return na_mask RasterLayer
+#' @importFrom raster mask
+#' @keywords internal
+#' @noRd
+.create_preview_na_mask <- function(preview, record) {
+  product_group <- record[[name_product_group()]]
+  is_olci <- .record_is_olci(record)
+  is_landsat_or_sentinel2 <- product_group %in% c(name_product_group_landsat(), name_product_group_sentinel())
+  is_continental_s3 <- .record_is_s3_continental(record)
+  if (any(is_olci, is_landsat_or_sentinel2, is_continental_s3)) {
+    MIN_DN <- ifelse(is_landsat_or_sentinel2, 3, 0)
+    # mask NA values in preview (considered as RGB DN < MIN_DN here)
+    NA_mask <- ((preview[[1]] > MIN_DN) + (preview[[2]] > MIN_DN) + (preview[[3]] > MIN_DN)) >= 1
+  } else {
+    NA_mask <- preview[[1]] > -100
+  }
+  return(NA_mask)
+}
+
+
+# -------------------------------------------------------------
+# miscellaneous
+# -------------------------------------------------------------
+
+#' add aoi to a mapview map
+#' @param map a mapview object
+#' @param aoi_colour colour of aoi
+#' @param homebutton whether to show layer home buttons or not
+#' @return nothing. runs expression
+#' @keywords internal
+#' @noRd
+.add_aoi <- function(map = NULL, aoi_colour, homebutton = F){
+  if(isFALSE(getOption("gSD.aoi_set"))){
+    out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
+  } else{
+    aoi.sf <- getOption("gSD.aoi")
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
+    if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
+  }
+}
+
+#' removes NULLs and NAs from list or data.frame.
+#' @param x list or vector.
+#' @return x list or vector without NULLs and NAs.
+#' @keywords internal
+#' @noRd
+.gsd_compact <- function(x) {
+  if (inherits(x, LIST()) || length(x) > 1) {
+    not_na <- sapply(x, function(y) {return((!is.na(y) && !is.null(y)))})
+    if (length(x) > 0) {
+      x <- x[not_na]
+    }
+  }
+  return(x)
+}
+
+#' returns TRUE if a vector or list has length 0/is.null() or is.na()
+#' @param x vector/list of any type
+#' @return logical
+#' @keywords internal
+#' @noRd
+.is_empty_array <- function(x) {
+  all_null <- sapply(x, function(element) {
+    return(ifelse(inherits(element, LIST()), FALSE, is.null(element)))
+  })
+  all_na <- sapply(x, function(element) {
+    return(ifelse(inherits(element, LIST()), FALSE, is.na(element)))
+  })
+  return(length(x) == 0 || is.null(x) || is.na(x) || all_null || all_na)
+}
+
+#' checks if a character can be integer
+#' @param x character
+#' @return logical
+#' @keywords internal
+#' @noRd
+.char_can_be_int <- function(x) {
+  return(!grepl("[^0-9]", x))
+}
+
+#' evaluate records footprints after csv read (they get wasted when writing to csv)
+#' @param records sf data.frame
+#' @param as_sf logical if records shall be returned as sf
+#' @return records data.frame sf or data.frame
+#' @importFrom sf st_multipolygon st_sfc
+#' @keywords internal
+#' @noRd
+.eval_records_footprints <- function(records, as_sf = TRUE) {
+  name_footprint <- name_footprint()
+  footprints <- list()
+  for (i in 1:NROW(records)) {
+    record <- records[i,]
+    f <- record[[name_footprint]][[1]]
+    is_sfg <- inherits(f, "sfg")
+    is_sfc <- inherits(f, "sfc")
+    if (is_sfg) {
+      footprints[[i]] <- f
+    } else if (is_sfc) {
+      footprints[[i]] <- f[[1]]
+    } else {
+      footprint_eval <- try(unlist(eval(parse(text = f))))
+      if (inherits(footprint_eval, "try-error")) {
+        out("Could not create footprint", type = 2)
+        footprints[[i]] <- f
+      } else {
+        ncol <- 2
+        nrow <- length(footprint_eval) / ncol
+        m <- matrix(data = footprint_eval, nrow = nrow, ncol = ncol)
+        footprints[[i]] <- st_multipolygon(list(list(m)))
+      }
+    }
+  }
+  # assign footprints
+  records[[name_footprint]] <- st_sfc(footprints, crs = 4326)
+  return(.check_records(records, as_sf = as_sf))
+}
+
+#' generate file name according to date time
+#' @param name character suffix to be used after date time, e.g. 'records'.
+#' @param extension character file format extension, e.g. '.tif'.
+#' @param sep character separator between date, time and name. Default is '_'.
+#' @return file_name character file name
+#' @keywords internal
+#' @noRd
+.generate_datetime_filename <- function(name, extension = "", sep = "_") {
+  return(paste(Sys.Date(), format(Sys.time(), "%Hh%Mm%Ss"), paste0(name, extension), sep = "_"))
+}
+
+#' generate records filename
+#' @param file_name character file basename
+#' @param dir_out character directory
+#' @param driver character driver name as returned by st_drivers() plus "csv"
+#' @keywords internal
+#' @noRd
+.generate_records_filename <- function(file_name = NULL, dir_out = NULL, driver = NULL) {
+  if (is.null(driver)) driver <- "GeoJSON" # be able to provide a NULL driver through ... on higher level
+  ext <- get_records_drivers()[[driver]]
+  if (is.null(file_name)) {
+    file_name <- .generate_datetime_filename("records", extension = ext)
+  } else {
+    file_name <- paste0(file_name, ext)
+  }
+  file <- file.path(dir_out, file_name)
+  return(file)
+}
+
+#' sets the verbose option
+#' @param verbose logical
+#' @keywords internal
+#' @noRd
+.set_verbose <- function(verbose) {
+  options("gSD.verbose" = verbose)
+}
+
+#' convert data.frame characters to their actual class (character, numeric, integer)
+#' @param df (sf) data.frame
+#' @keywords internal
+#' @noRd
+.uncharacter_dataframe <- function(df) {
+  if (inherits(df, "data.frame")) {
+    for (i in 1:NCOL(df)) {
+      column <- df[[i]]
+      column_new <- c()
+      if (inherits(column, "character")) {
+        for (j in 1:length(column)) {
+          element <- column[j]
+          if (is.null(element)) {
+            column_new[j] <- element
+          } else if (is.na(element)) {
+            column_new[j] <- element
+          } else if (is.na(suppressWarnings(try(as.numeric(element))))) {
+            char <- as.character(element)
+            if (char == "NA") char <- NA
+            column_new[j] <- char
+          } else {
+            column_new[j] <- as.numeric(element)
+          }
+        }
+        df[[i]] <- column_new
+      }
+    }
+  }
+  return(df)
+}
+
+#' create a string from date and time
+#' @return character date time string
+#' @keywords internal
+#' @noRd
+.create_datetime_string <- function() {
+  return(gsub(":", "_", gsub(" ", "_", as.character(Sys.time()))))
+}
+
+
+
+#' retry the evaluation of an expression n times, if it fails, evaluate another expression
+#' @param fun function to execute
+#' @param ... arguments to fun
+#' @param fail expression evaluated when fun fails, such as expression(stop("Failure"))
+#' @param ini expression evaluated before caling fun
+#' @param final expression evaluated after success
+#' @param n number of retries
+#' @param delay delay in seconds per retry
+#' @param value whether to return x or not
+#' @return value of test.epxr or nothing
+#' @keywords internal
+#' @noRd
+.retry <- function(fun, ..., fail, ini = NULL, retry = NULL, final = NULL, n = 3, delay = 0, value = TRUE, verbose = T){
+  
+  # get ...
+  extras <- list(...)
+  #if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
+  
+  # initial evaluation
+  if(!is.null(ini)) eval(ini)
+  
+  # retry evluation
+  while(n != 0){
+    x <- try(fun(...), silent = T)
+    if(inherits(x, "try-error")){
+      
+      # retry evluation
+      if(grepl("aborted", as.character(attributes(x)$condition))) out("Operation was aborted by an application callback.", type = 3) else eval(retry)
+      
+      # fail evaluation
+      n <- n-1
+      if(n == 0) x <- eval(fail)
+    } else n <- 0
+    Sys.sleep(delay)
+  }
+  
+  # final evaluation
+  eval(final)
+  if(isTRUE(value)) return(x)
+}
+
+#' verbose lapply
+#'
+#' @importFrom pbapply pblapply
+#' @noRd 
+.lapply <- function(X, FUN, ..., verbose = FALSE){
+  if(isTRUE(verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
+}
+
+#' verbose sapply
+#'
+#' @importFrom pbapply pbsapply
+#' @noRd 
+.sapply <- function(X, FUN, ..., verbose = FALSE){
+  if(isTRUE(verbose)) pbsapply(X, FUN, ...) else sapply(X, FUN, ...)
+}
+
+#' verbose apply
+#'
+#' @importFrom pbapply pbapply
+#' @noRd 
+.apply <- function(X, MARGIN, FUN, ..., verbose = FALSE){
+  if(isTRUE(verbose)) pbapply(X, MARGIN, FUN, ...) else apply(X, MARGIN, FUN, ...)
+}
+
+
 
 #' On package startup
+#' @importFrom pbapply pboptions
 #' @keywords internal
 #' @noRd
 .onLoad <- function(libname, pkgname){
-
+  
+  pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
+  clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
+                                    c("summary", "product"), # place holder
+                                    c("title", "record_id"),
+                                    c("displayId", "record_id"),
+                                    c("uuid", "entity_id"),
+                                    c("entityId", "entity_id"),
+                                    c("id", "entity_id"),
+                                    c("summary", "summary"),
+                                    c("dataset_id", "summary"),
+                                    c("beginposition", "date_acquisition"),
+                                    c("acquisitionDate", "date_acquisition"),
+                                    c("beginposition", "start_time"),
+                                    c("StartTime", "start_time"),
+                                    c("AcquisitionStartDate", "start_time"),
+                                    c("time_start", "start_time"),
+                                    c("endposition", "stop_time"),
+                                    c("StopTime", "stop_time"),
+                                    c("AcquisitionEndDate", "stop_time"),
+                                    c("time_end", "stop_time"),
+                                    c("ingestiondate", "date_ingestion"),
+                                    c("modifiedDate", "date_modified"),
+                                    c("updated", "date_modified"),
+                                    c("creationdate", "date_creation"),
+                                    c("footprint", "footprint"),
+                                    c("boxes", "footprint"),
+                                    c("tileid", "tile_id"),
+                                    c("WRSPath", "tile_number_horizontal"),
+                                    c("WRSRow", "tile_number_vertical"),
+                                    c("HorizontalTileNumber", "tile_number_horizontal"),
+                                    c("VerticalTileNumber", "tile_number_vertical"),
+                                    c("url.alt", "md5_url"),
+                                    c("browseUrl", "preview_url"),
+                                    c("url.icon", "preview_url"),
+                                    c("metadataUrl", "meta_url"),
+                                    c("fgdcMetadataUrl", "meta_url_fgdc"),
+                                    c("slicenumber", "slice_number"),
+                                    c("orbitnumber", "orbit_number"),
+                                    c("orbitdirection", "orbit_direction"),
+                                    c("lastorbitnumber", "lastorbit_number"),
+                                    c("relativeorbitnumber", "relativeorbit_number"),
+                                    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
+                                    c("passnumber", "pass_number"),
+                                    c("passdirection", "pass_direction"),
+                                    c("relorbitdir", "relativeorbit_direction"),
+                                    c("relpassnumber", "relativepass_number"),
+                                    c("relpassdirection", "relativepass_direction"),
+                                    c("lastorbitdirection", "lastorbit_direction"),
+                                    c("lastpassnumber", "lastpass_number"),
+                                    c("lastpassdirection", "lastpass_direction"),
+                                    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
+                                    c("lastrelpassnumber", "lastrelativepass_number"),
+                                    c("lastrelpassdirection", "lastrelativepass_direction"),
+                                    c("swathidentifier", "swath_id"),
+                                    c("producttype", "product_type"),
+                                    c("productclass", "product_class"),
+                                    c("productconsolidation", "product_consolidation"),
+                                    c("timeliness", "timeliness"),
+                                    c("platformname", "platform"),
+                                    c("platformidentifier", "platform_id"),
+                                    c("platformserialidentifier", "platform_serial"),
+                                    c("instrumentname", "sensor"),
+                                    c("instrumentshortname", "sensor_id"),
+                                    c("SensorIdentifier", "sensor_id"),
+                                    c("sensoroperationalmode", "sensor_mode"),
+                                    c("polarisationmode", "polarisation_mode"),
+                                    c("acquisitiontype", "aquistion_type"),
+                                    c("size", "size"),
+                                    c("is_gnss", "is_gnss"),
+                                    c("LandCloudCover", "cloudcov_land"),
+                                    c("SceneCloudCover", "cloudcov"),
+                                    c("cloudCover", "cloudcov"),
+                                    c("cloudcoverpercentage", "cloudcov"),
+                                    c("highprobacloudspercentage", "cloudcov_highprob"),
+                                    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
+                                    c("notvegetatedpercentage", "cloudcov_notvegetated"),
+                                    c("snowicepercentage", "snowice"),
+                                    c("unclassifiedpercentage", "unclassified"),
+                                    c("vegetationpercentage", "vegetation"),
+                                    c("waterpercentage", "water"),
+                                    c("processinglevel", "level"),
+                                    c("level", "level"),
+                                    c("AutoQualityFlag", "flag_autoquality"),
+                                    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
+                                    c("ScienceQualityFlag", "flag_sciencequality"),
+                                    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
+                                    c("MissingDataPercentage", "missingdata"),
+                                    c("collection_concept_id", "product_id"), stringsAsFactors = F)
+  colnames(clients_dict) <- c("clients", "gSD")
+  
   op <- options()
   op.gSD <- list(
     gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
@@ -593,28 +1135,41 @@ is.url <- function(url) grepl("www.|http:|https:", url)
                          ee = "USGS EarthExplorer",
                          aws.l8 = "AWS Landsat 8",
                          laads = "NASA DAAC LAADS"),
+    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
+                              api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
     gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
                        mac = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Darwin64.run"),
     gSD.verbose = FALSE,
+    gSD.dhus_session = NULL,
     gSD.dhus_user = FALSE,
     gSD.dhus_pass = FALSE,
     gSD.dhus_set = FALSE,
+    gSD.dhus_time = NULL,
     gSD.usgs_user = FALSE,
     gSD.usgs_pass = FALSE,
     gSD.usgs_set = FALSE,
+    gSD.usgs_time = NULL,
+    gSD.usgs_refresh = 60, # minutes
     gSD.usgs_apikey = FALSE,
+    gSD.ed_user = FALSE,
+    gSD.ed_pass = FALSE,
+    gSD.ed_set = FALSE,
+    gSD.ed_time = NULL,
+    gSD.ed_refresh = 60, # minutes
     gSD.archive = FALSE,
     gSD.archive_set = FALSE,
     gSD.aoi = FALSE,
-    gSD.aoi_set = FALSE
+    gSD.aoi_set = FALSE,
+    gSD.products = NULL,
+    gSD.clients_dict = clients_dict
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
-
+  
   ## allocate gdal on load
-  gdalUtils::gdal_setInstallation(rescan = T)
-
+  #gdalUtils::gdal_setInstallation(rescan = T)
+  
   invisible()
 }
 
@@ -622,7 +1177,7 @@ is.url <- function(url) grepl("www.|http:|https:", url)
 #' @keywords internal
 #' @noRd
 .onUnload <- function(libname, pkgname) {
-
+  
   ## logout from USGS
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }

@@ -1,4 +1,61 @@
-## getSpatialData 0.0.4 (under development)
+## getSpatialData 0.1.0
+An all-new interface, largely compatible to older versions, and new core functionalites shaping the package's capabilties.
+
+This major update introduces a new function interface that allows to query, preview, analyse, select, order and download records of multiple products from different sources at once. Records are represented as spatial `sf data.frames`. A new collection of functions is introduced that calculate AOI cloud cover from preview imagery and facilitate the automatic, reproducible selection of best-quality records in advance of downloading the datasets. Some functions are deprecated, but mostly, the new interface should be compatible with older versions. Please note that records column names are renamed by default, which will break older codes relying on column names. This can be turned off, if needed, which however is not recommended since multi-source queries are then impossible (see argument `rename_cols` of `get_records`).
+
+Please report issues with this version so that they can be rapidly resolved.
+
+#### New functions:
+
+**Session:**
+
+* `login_earthdata()` logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new)
+* `services()` displays the status of all online services used by `getSpatialData`. 
+* `set_archive()` and `get_archive()` set and get a session-wide archive directory that can be used by all `getSpatialData` functions.
+
+
+**Retrieving products and records:**
+* `get_products()` obtains the names of all products available using `getSpatialData`. Currently, `getSpatialData` supports **159** products, including *Sentinel*, *Landsat*, *MODIS* and *SRTM* products.
+* `get_records()` queries a service for available records using basic input search parameters such as product name, AOI and time range and returns an `sf data.frame` containing meta data and the geometries of each record.
+* `view_records()` and `plot_records()` display the footprint geometries of each record on a map.
+
+**Analysing previews:**
+
+* `get_previews()` downloads and georeferences preview images for visual inspection or automatic analysis and saves them to disk.
+* `view_previews()` and `plot_previews()` load and display georeferenced previews acquired using `get_previews()`.
+* `get_cloudcov_supported()` tells you for which products preview-based cloud coverages can be calculated using `calc_cloudcov()`.
+* `calc_cloudcov()` calculates the AOI cloud cover and optionally saves raster cloud masks, all based on preview images.
+
+**Selecting records:**
+
+* `get_select_supported()` tells you for which products automatic record selection is supported.
+* `select_unitemporal()` selects remote sensing records (both optical and SAR across different products) *uni-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+* `select_bitemporal()` selects remote sensing records (both optical and SAR across different products) *bi-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+* `select_timeseries()` selects remote sensing records (both optical and SAR across different products) for a *time series* according to AOI cloud cover (in case of optical data) and temporal characteristics.
+* `is.*()`, such as `is.sentinel()`, `is.landsat()`, `is.modis()` and more to simplify filtering of records.
+
+**Checking, ordering and downloading records:**
+
+* `check_availability()` checks for each record whether it is available for direct download (can be downloaded instantly) or not (and thus must be ordered before download).
+* `order_data()` oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download.
+* `get_data()` downloads the full datasets per records.
+
+**Writing and reading**
+
+* `get_records_drivers()` provides the driver names that can be used in `write_records()`.
+* `write_records()` writes records, e.g. as `GeoJSON`, for later use.
+* `read_records()` reads records that have been written through `write_records()`.
+* `read_previews()` reads georeferences preview images downloaded using `get_previews()`.
+
+#### Deprecated and replaced functions: ####
+
+* `getSentinel_names()`, `getLandsat_names()`, `getMODIS_names()`: These functions still work, but are deprecated. Please switch to using the generic replacement `get_products()` and its platform-specific aliases.
+* `getSentinel_query()`, `getLandsat_query()`, `getMODIS_query()`: These functions still work, but are deprecated. Please switch to using the generic replacement `get_records()` and its platform-specific aliases.
+* `getSentinel_restore()`: This function is deprecated. Please switch to using the generic replacement `order_data()`.
+* `services_avail()`: This function is deprecated. Please switch to using `services()`.
+* `getSentinel_preview()`, `getLandsat_preview()`, `getMODIS_preview()`: These functions still work, but are deprecated. Please switch to using the generic replacements `get_previews()` for downloading previews and `view_previews()` for displaying previews.
+
+## getSpatialData 0.0.4
 Introduction of functions for data preparation, feature enhancements, bug fixes
 
 

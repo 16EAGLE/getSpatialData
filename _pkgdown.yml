@@ -1,3 +1,5 @@
+url: http://jxsw.de/getSpatialData
+
 development:
   mode: unreleased
 
@@ -13,24 +15,25 @@ navbar:
   left:
     - icon: fa-home fa-lg
       href: index.html
+    - text: "Workflow"
+      href: index.html#workflow
     - text: "Get Started"
-      menu:
-      -  text: Sentinel query, preview and download
-         href: index.html#sentinel-query-preview-and-download
-      -  text: Parallelized download of MODIS data (user example)
-         href: index.html#parallelized-download-of-modis-data-user-example
+      href: index.html#get-started
+    - text: "Supported Products"
+      href: index.html#supported-products
     - text: "Functions"
       href: reference/index.html
     - text: "Changelog"
       href: news/index.html
     - text: "Other packages"
       menu:
-      -  text: "RStoolbox"
-         href: http://www.github.com/bleutner/RStoolbox
-      -  text: "rsMove"
-         href: http://www.github.com/RRemelgado/rsmove
       -  text: "moveVis"
          href: http://movevis.org
+      -  text: "basemaps"
+         href: http://jxsw.de/basemaps
+      -  text: "RStoolbox"
+         href: http://www.github.com/bleutner/RStoolbox
+      
 
   right:
     - icon: fa-twitter fa-lg
@@ -40,69 +43,52 @@ navbar:
     - icon: fa-globe fa-lg
       href: http://remote-sensing.eu
 
-#template:
-#  params:
-#    docsearch:
-#      api_key: API_KEY
-#      index_name: INDEX_NAME
 
 reference:
-- title: Sentinel
-  desc:  Query, preview and download Sentinel-1, Sentinel-2 and Sentinel-3 data
+- title: Logging in
+  desc:  Log in at supported services
   contents:
-  - getSentinel_query
-  - getSentinel_preview
-  - getSentinel_data
-  - getSentinel_restore
-- title: Landsat
-  desc:  Query, preview and download Landsat data
+  - starts_with("login")
+- title: Defining session settings
+  desc:  Set settings that are used by all functions for the current session
   contents:
-  - getLandsat_names
-  - getLandsat_query
-  - getLandsat_preview
-  - getLandsat_data
-- title: MODIS
-  desc:  Query, preview and download MODIS data
+  - set_aoi
+  - set_archive
+- title: Retrieving and visualizing records
+  desc:  Query records for multiple products such as Sentinel, MODIS or Landsat
   contents:
-  - getMODIS_names
-  - getMODIS_query
-  - getMODIS_preview
-  - getMODIS_data
-- title: Aoi cloud cover
-  desc: Calculate cloud cover of Sentinel, Landsat or MODIS within an aoi (pre-download)
+  - get_products
+  - get_records
+  - view_records
+- title: Analysing previews
+  desc: Get previews and preview-based calculate AOI cloud cover for Sentinel, Landsat or MODIS
   contents:
-  - calc_cloudcov
+  - get_previews 
+  - view_previews
   - get_cloudcov_supported
-- title: Records selection
-  desc: Select records automatically according to temporal needs and cloud cover
+  - calc_cloudcov
+- title: Selecting records
+  desc: Select records (semi-)automatically according to temporal needs and cloud cover
+  contents:
+  - get_select_supported
   - select_unitemporal
   - select_bitemporal
   - select_timeseries
-  - get_select_supported
-- title: records I/O
-  desc: Write and read records
+  - starts_with("is.")
+- title: Checking, ordering and downloading records
+  desc: Check download availability, order datasets and download them
   contents:
+  - check_availability
+  - order_data
+  - get_data
+- title: Writing and reading
+  desc: Write and read getSpatialData outputs
+  contents:
+  - get_records_drivers
   - write_records
   - read_records
-- title: Preprocessing
-  desc: Data preparation and preprocessing
-  contents:
-  - extractSentinel
-  - prepSentinel
-  - cropFAST
-- title: Session Login
-  desc:  Define login credentials that can be used throughout the running session
-  contents:
-  - starts_with("login")
-- title: Session Tools
-  desc:  Define settings for the running session and get session information
-  contents:
-  - set_archive
-  - set_aoi
-  - view_aoi
-  - get_aoi
-  - services_avail
-- title: General
+  - read_previews
+- title: Others
   contents:
   - aoi_data
   - getSpatialData-package

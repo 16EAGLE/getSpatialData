@@ -6,18 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Get different kinds of freely available spatial datasets • getSpatialData</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
+<script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="Get different kinds of freely available spatial datasets">
-<meta property="og:description" content="Provides bundles of functions to query, download, prepare and transform various kinds of spatial datasetes from open sources, e.g. Satellite data, environmental data products etc.">
-<meta name="twitter:card" content="summary">
+<meta property="og:description" content="Homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
-<body>
+<body data-spy="scroll" data-target="#toc">
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -30,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">getSpatialData</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.5</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.1.0</span>
       </span>
     </div>
 
@@ -42,20 +43,14 @@
      
   </a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Get Started
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="index.html#sentinel-query-preview-and-download">Sentinel query, preview and download</a>
-    </li>
-    <li>
-      <a href="index.html#parallelized-download-of-modis-data-user-example">Parallelized download of MODIS data (user example)</a>
-    </li>
-  </ul>
+  <a href="index.html#workflow">Workflow</a>
+</li>
+<li>
+  <a href="index.html#get-started">Get Started</a>
+</li>
+<li>
+  <a href="index.html#supported-products">Supported Products</a>
 </li>
 <li>
   <a href="reference/index.html">Functions</a>
@@ -71,13 +66,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="http://www.github.com/bleutner/RStoolbox">RStoolbox</a>
-    </li>
-    <li>
-      <a href="http://www.github.com/RRemelgado/rsmove">rsMove</a>
-    </li>
-    <li>
       <a href="http://movevis.org">moveVis</a>
+    </li>
+    <li>
+      <a href="http://jxsw.de/basemaps">basemaps</a>
+    </li>
+    <li>
+      <a href="http://www.github.com/bleutner/RStoolbox">RStoolbox</a>
     </li>
   </ul>
 </li>
@@ -110,6 +105,7 @@
 <!--/.navbar -->
 
       
+
       </header><div class="row">
   <div class="contents col-md-9">
 <div id="getspatialdata" class="section level1">
@@ -120,428 +116,140 @@
 <div id="introduction" class="section level2">
 <h2 class="hasAnchor">
 <a href="#introduction" class="anchor"></a>Introduction</h2>
-<p><code>getSpatialData</code> is an R package in an early development stage that ultimately aims to provide homogeneous function bundles to query, download, prepare and transform various kinds of spatial datasets from open sources, e.g. Satellite sensor data, higher-level environmental data products etc. It supports both <code>sf</code> and <code>sp</code> classes as AOI inputs (see <code>set_aoi</code> in <a href="http://jxsw.de/getSpatialData/#available-functions">available functions</a>). Due to the early development stage, the included functions and their concepts could be removed or changed in some cases.</p>
-<p>For all public functions <a href="http://jxsw.de/getSpatialData">documentation is available</a>. See also the <a href="http://jxsw.de/getSpatialData/#products">list of data sources</a> that are or will be implemented.</p>
+<p><code>getSpatialData</code> is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.</p>
+<p>Currently, <code>getSpatialData</code> supports <strong>159</strong> products, including <em>Sentinel-1</em>, <em>Sentinel-2</em>, <em>Sentinel-3</em>, <em>Sentinel-5P</em>, <em>Landsat 8 OLI</em>, <em>Landsat ETM</em>, <em>Landsat TM</em>, <em>Landsat MSS</em>, <em>MODIS (Terra &amp; Aqua)</em> and <em>SRTM DEMs</em>. For this, <code>getSpatialData</code> facilitates access to multiple services implementing clients to public APIs of <em>ESA Copernicus Open Access Hub</em>, <em>USGS EarthExplorer</em>, <em>USGS EROS ESPA</em>, <em>Amazon Web Services (AWS)</em>, <em>NASA DAAC LAADS</em> and <em>NASA CMR search</em>. A full list of all supported products can be found below.</p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>To install the current beta version, use <code>devtools</code>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">devtools<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/devtools/topics/reexports">install_github</a></span>(<span class="st">"16EAGLE/getSpatialData"</span>)</code></pre></div>
+<p>To install the current beta version, use <code>devtools</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="r"><span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html">install_github</a></span>(<span class="st">"16EAGLE/getSpatialData"</span>)</pre></div>
 </div>
-<div id="available-functions" class="section level2">
+<div id="workflow" class="section level2">
 <h2 class="hasAnchor">
-<a href="#available-functions" class="anchor"></a>Available Functions</h2>
-<p>The following functions are publicly available and tested on Linux (Ubuntu 16.04 LTS, 17.10, 18.04 LTS) and Windows 10.</p>
-<div id="sentinel" class="section level4">
+<a href="#workflow" class="anchor"></a>Workflow</h2>
+<p>The <code>getSpatialData</code> workflow to query, preview, analyse, select, order and download spatial data is designed to be as reproducible as possible and is made of six steps:</p>
+<ol>
+<li>
+<strong>querying</strong> products of interest (see <code><a href="reference/get_products.html">get_products()</a></code>) for available records by an area of interest (AOI) and time (see <code><a href="reference/get_records.html">get_records()</a></code>),</li>
+<li>
+<strong>previewing</strong> geometries and previews of the obtained records (see <code><a href="reference/get_previews.html">get_previews()</a></code>, <code><a href="reference/view_records.html">view_records()</a></code> and <code><a href="reference/view_previews.html">view_previews()</a></code>),</li>
+<li>
+<strong>analysing</strong> records by deriving scene and AOI cloud distribution and coverage directly from preview imagery (see <code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code>),</li>
+<li>
+<strong>selecting</strong> records based on user-defined measures (see <code><a href="reference/select_unitemporal.html">select_unitemporal()</a></code>, <code><a href="reference/select_bitemporal.html">select_bitemporal()</a></code> and <code><a href="reference/select_timeseries.html">select_timeseries()</a></code>),</li>
+<li>
+<strong>ordering</strong> datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download (see <code><a href="reference/check_availability.html">check_availability()</a></code> and <code><a href="reference/order_data.html">order_data()</a></code>), and lastly</li>
+<li>
+<strong>downloading</strong> the full datasets for those records that have been selected in the process, solely based on meta and preview-dervied data.</li>
+</ol>
+<p>For all steps, <code>getSpatialData</code> supports local chaching to reduce bandwith usage and uneccasary downloads.</p>
+<p>This approach is implemented by the following functions (sorted by the order in which they would be typically used):</p>
+<div id="logging-in" class="section level4">
 <h4 class="hasAnchor">
-<a href="#sentinel" class="anchor"></a>Sentinel</h4>
+<a href="#logging-in" class="anchor"></a>Logging in</h4>
 <ul>
 <li>
-<code><a href="reference/getSentinel_query.html">getSentinel_query()</a></code> – querys the Copernicus Open Access Hubs for Sentinel-1, Sentinel-2, Sentinel-3, Sentinel-5 Precursor and Sentinel GNSS data and returns a data frame containing the found records (rows) and their attributes (columns).</li>
+<code><a href="reference/login.html">login_CopHub()</a></code> logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at <a href="https://scihub.copernicus.eu/" class="uri">https://scihub.copernicus.eu/</a>).</li>
 <li>
-<code><a href="reference/getSentinel_restore.html">getSentinel_restore()</a></code> requests to restore Setninel datasets that have been archived by ESA to the Copernicus Long-Term Archive (LTA) (see argument <code>check_avail</code> of <code>getSentinel_query</code>).</li>
+<code><a href="reference/login.html">login_USGS()</a></code> logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at <a href="https://ers.cr.usgs.gov/register/" class="uri">https://ers.cr.usgs.gov/register/</a>).</li>
 <li>
-<code><a href="reference/getSentinel_preview.html">getSentinel_preview()</a></code> – uses the output of <code><a href="reference/getSentinel_query.html">getSentinel_query()</a></code> to preview (quick-look) a user-selected record even before downloading it. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.</li>
+<code><a href="reference/login.html">login_earthdata()</a></code> logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at <a href="https://urs.earthdata.nasa.gov/users/new" class="uri">https://urs.earthdata.nasa.gov/users/new</a>)</li>
 <li>
-<code><a href="reference/getSentinel_data.html">getSentinel_data()</a></code> – uses the output of <code><a href="reference/getSentinel_query.html">getSentinel_query()</a></code> to download Sentinel data.</li>
+<code><a href="reference/login.html">services()</a></code> displays the status of all online services used by <code>getSpatialData</code>.</li>
 </ul>
 </div>
-<div id="landsat" class="section level4">
+<div id="defining-session-settings" class="section level4">
 <h4 class="hasAnchor">
-<a href="#landsat" class="anchor"></a>Landsat</h4>
+<a href="#defining-session-settings" class="anchor"></a>Defining session settings</h4>
 <ul>
 <li>
-<code><a href="reference/getLandsat_names.html">getLandsat_names()</a></code> – obtains available Landsat product names from USGS Earth Explorer, which can be optionally used with getLandsat_query() to narrow the search.</li>
+<code><a href="reference/aoi.html">set_aoi()</a></code>, <code><a href="reference/aoi.html">view_aoi()</a></code> and <code><a href="reference/aoi.html">get_aoi()</a></code> set, view and get a session-wide area of interest (AOI) that can be used by all <code>getSpatialData</code> functions.</li>
 <li>
-<code><a href="reference/getLandsat_query.html">getLandsat_query()</a></code> – querys USGS Earth Explorer for Landsat data and returns a data frame containing the found records (rows) and their attributes (columns).</li>
-<li>
-<code><a href="reference/getLandsat_preview.html">getLandsat_preview()</a></code> – uses the output of <code><a href="reference/getLandsat_query.html">getLandsat_query()</a></code> to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.</li>
-<li>
-<code><a href="reference/getLandsat_data.html">getLandsat_data()</a></code> – uses the output of getLandsat_query() to order and download Landsat data.
-<ul>
-<li>supports order (on-demand processing) and download of higher-level products (all Landsat products), e.g. top-of-atmosphere (TOA), surface reflectance (SR) or different indices, from USGS-EROS ESPA.</li>
-<li>supports direct download of Level-1 products (Landsat-8 only) via Amazon Web Services (AWS).</li>
-<li>will support direct download of Level-1 products (all Landsat products) via USGS EarthExplorer (requires a USGS user profile with machine-to-machine download permission)</li>
-</ul>
-</li>
+<code><a href="reference/archive.html">set_archive()</a></code> and <code><a href="reference/archive.html">get_archive()</a></code> set and get a session-wide archive directory that can be used by all <code>getSpatialData</code> functions.</li>
 </ul>
 </div>
-<div id="modis" class="section level4">
+<div id="retrieving-and-visualizing-records" class="section level4">
 <h4 class="hasAnchor">
-<a href="#modis" class="anchor"></a>MODIS</h4>
+<a href="#retrieving-and-visualizing-records" class="anchor"></a>Retrieving and visualizing records</h4>
 <ul>
 <li>
-<code><a href="reference/getMODIS_names.html">getMODIS_names()</a></code> – obtains available MODIS product names from USGS Earth Explorer, which can be optionally used with getMODIS_query() to narrow the search.</li>
+<code><a href="reference/get_products.html">get_products()</a></code> obtains the names of all products available using <code>getSpatialData</code>. Currently, <code>getSpatialData</code> supports <strong>159</strong> products, including <em>Sentinel</em>, <em>Landsat</em>, <em>MODIS</em> and <em>SRTM</em> products.</li>
 <li>
-<code><a href="reference/getMODIS_query.html">getMODIS_query()</a></code> – querys USGS Earth Explorer for MODIS data and returns a data frame containing the found records (rows) and their attributes (columns).</li>
+<code><a href="reference/get_records.html">get_records()</a></code> queries a service for available records using basic input search parameters such as product name, AOI and time range and returns an <code>sf data.frame</code> containing meta data and the geometries of each record.</li>
 <li>
-<code><a href="reference/getMODIS_preview.html">getMODIS_preview()</a></code> – uses the output of <code><a href="reference/getMODIS_query.html">getMODIS_query()</a></code> to preview (quick-look) a user-selected record. By default, the preview is displayed corner-georeferenced in a map viewer in relation to the session AOI.</li>
-<li>
-<code><a href="reference/getMODIS_data.html">getMODIS_data()</a></code> – uses the output of getMODIS_query() to order and download MODIS data from LAADS.</li>
+<code><a href="reference/view_records.html">view_records()</a></code> and <code><a href="reference/view_records.html">plot_records()</a></code> display the footprint geometries of each record on a map.</li>
 </ul>
 </div>
-<div id="aoi-cloud-cover" class="section level4">
+<div id="analysing-previews" class="section level4">
 <h4 class="hasAnchor">
-<a href="#aoi-cloud-cover" class="anchor"></a>Aoi cloud cover</h4>
+<a href="#analysing-previews" class="anchor"></a>Analysing previews</h4>
 <ul>
 <li>
-<code><a href="reference/calcSentinel_aoi_cloudcov.html">calcSentinel_aoi_cloudcov()</a></code> - calculates the cloud cover of Sentinel-2 or Sentinel-3 records (returned by <code><a href="reference/getSentinel_query.html">getSentinel_query()</a></code>) within an area of interest (aoi) using preview thumbnails. The cloud detection is performed through the haze-optimal transformation (HOT) based on the red and blue band.</li>
+<code><a href="reference/get_previews.html">get_previews()</a></code> downloads and georeferences preview images for visual inspection or automatic analysis and saves them to disk.</li>
 <li>
-<code><a href="reference/calcLandsat_aoi_cloudcov.html">calcLandsat_aoi_cloudcov()</a></code> - calculates the cloud cover of Landsat records (returned by <code><a href="reference/getLandsat_query.html">getLandsat_query()</a></code>) within an area of interest (aoi) using preview thumbnails. The cloud detection is performed through the haze-optimal transformation (HOT) based on the red and blue band.</li>
+<code><a href="reference/view_previews.html">view_previews()</a></code> and <code><a href="reference/view_previews.html">plot_previews()</a></code> load and display georeferenced previews acquired using <code><a href="reference/get_previews.html">get_previews()</a></code>.</li>
 <li>
-<code><a href="reference/calcMODIS_aoi_cloudcov.html">calcMODIS_aoi_cloudcov()</a></code> calculates the cloud cover of MODIS records (returned by <code><a href="reference/getMODIS_query.html">getMODIS_query()</a></code>) within an area of interest (aoi) using preview thumbnails. The cloud detection is performed through the haze-optimal transformation (HOT) based on the red and blue band.</li>
+<code><a href="reference/get_cloudcov_supported.html">get_cloudcov_supported()</a></code> tells you for which products preview-based cloud coverages can be calculated using <code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code>.</li>
+<li>
+<code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code> calculates the AOI cloud cover and optionally saves raster cloud masks, all based on preview images.</li>
 </ul>
 </div>
-<div id="preprocessing" class="section level4">
+<div id="selecting-records" class="section level4">
 <h4 class="hasAnchor">
-<a href="#preprocessing" class="anchor"></a>Preprocessing</h4>
+<a href="#selecting-records" class="anchor"></a>Selecting records</h4>
 <ul>
 <li>
-<code><a href="reference/prepSentinel.html">prepSentinel()</a></code> <strong>beta</strong> – makes downloaded Sentinel datasets ready-to-use by automatically inspecting, extracting, sorting and converting the relevant contents of the datasets to a user-defined format.</li>
+<code><a href="reference/get_select_supported.html">get_select_supported()</a></code> tells you for which products automatic record selection is supported.</li>
 <li>
-<code><a href="reference/cropFAST.html">cropFAST()</a></code> <strong>beta</strong> – crops a raster file to a spatial extent using GDAL. It is useful when working with large-scale, memory-intensive datasets.</li>
+<code><a href="reference/select_unitemporal.html">select_unitemporal()</a></code> selects remote sensing records (both optical and SAR across different products) <em>uni-temporally</em> according to AOI cloud cover (in case of optical data) and temporal characteristics.</li>
+<li>
+<code><a href="reference/select_bitemporal.html">select_bitemporal()</a></code> selects remote sensing records (both optical and SAR across different products) <em>bi-temporally</em> according to AOI cloud cover (in case of optical data) and temporal characteristics.</li>
+<li>
+<code><a href="reference/select_timeseries.html">select_timeseries()</a></code> selects remote sensing records (both optical and SAR across different products) for a <em>time series</em> according to AOI cloud cover (in case of optical data) and temporal characteristics.</li>
+<li>
+<code>is.*()</code>, such as <code><a href="reference/is.sentinel.html">is.sentinel()</a></code>, <code><a href="reference/is.landsat.html">is.landsat()</a></code>, <code><a href="reference/is.modis.html">is.modis()</a></code> and more to simplify filtering of records.</li>
 </ul>
 </div>
-<div id="session-login" class="section level4">
+<div id="checking-ordering-and-downloading-records" class="section level4">
 <h4 class="hasAnchor">
-<a href="#session-login" class="anchor"></a>Session Login</h4>
+<a href="#checking-ordering-and-downloading-records" class="anchor"></a>Checking, ordering and downloading records</h4>
 <ul>
 <li>
-<code><a href="reference/gSD_login.html">login_CopHub()</a></code> – define your Copernicus Open Access login credentials once for the present R session to be able to call each <code>getSentinel*</code> function without defining login arguments each time you use them.</li>
+<code><a href="reference/check_availability.html">check_availability()</a></code> checks for each record whether it is available for direct download (can be downloaded instantly) or not (and thus must be ordered before download).</li>
 <li>
-<code><a href="reference/gSD_login.html">login_USGS()</a></code> – define your USGS login credentials once for the present R session to be able to call each <code>get*</code> function that connects to a USGS service without defining login arguments each time you use them.</li>
+<code><a href="reference/order_data.html">order_data()</a></code> oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download.</li>
+<li>
+<code><a href="reference/get_data.html">get_data()</a></code> downloads the full datasets per records.</li>
 </ul>
 </div>
-<div id="session-settings" class="section level4">
+<div id="writing-and-reading" class="section level4">
 <h4 class="hasAnchor">
-<a href="#session-settings" class="anchor"></a>Session Settings</h4>
+<a href="#writing-and-reading" class="anchor"></a>Writing and reading</h4>
 <ul>
 <li>
-<code><a href="reference/gSD_settings.html">set_archive()</a></code> – define a <code>getSpatialData</code> archive directory to which all <code>*_data</code> functions will download data.</li>
+<code><a href="reference/get_records_drivers.html">get_records_drivers()</a></code> provides the driver names that can be used in <code><a href="reference/write_records.html">write_records()</a></code>.</li>
 <li>
-<code><a href="reference/gSD_settings.html">set_aoi()</a></code> - draw or define an AOI as sf, sp or matrix object for the running session that can be used by all query functions.</li>
+<code><a href="reference/write_records.html">write_records()</a></code> writes records, e.g. as <code>GeoJSON</code>, for later use.</li>
 <li>
-<code><a href="reference/gSD_settings.html">view_aoi()</a></code> - display the session AOI in an interactive <code>mapview</code>/<code>leaflet</code> map viewer.</li>
+<code><a href="reference/read_records.html">read_records()</a></code> reads records that have been written through <code><a href="reference/write_records.html">write_records()</a></code>.</li>
 <li>
-<code><a href="reference/gSD_settings.html">get_aoi()</a></code> - get the session AOI you have defined or drawn before as <code>sf</code>, <code>sp</code> or <code>matrix</code> object.</li>
+<code><a href="reference/read_previews.html">read_previews()</a></code> reads georeferences preview images downloaded using <code><a href="reference/get_previews.html">get_previews()</a></code>.</li>
 </ul>
 </div>
-</div>
-<div id="semantics" class="section level2">
-<h2 class="hasAnchor">
-<a href="#semantics" class="anchor"></a>Semantics</h2>
-<p>The following universal semantics on data are used by <code>getSpatialData</code> (from smallest to biggest entity):</p>
-<ul>
-<li>
-<code>image</code>: An image of a specific time and spatial extent.</li>
-<li>
-<code>record</code>: A set of meta fields identifying and describing a specific <code>image</code>, being part of multiple records in a <code>query</code>.</li>
-<li>
-<code>dataset</code>: Smallest entity that is delivered by a service. Might consist of multiple files, including meta data and bandwise imagery. Covers a specific time and spatial extent.</li>
-<li>
-<code>product</code>: A data product offered by a specific service, consisting of multiple datasets over a period of time and a wide spatial extent. Might be differentiated by:
-<ul>
-<li>
-<code>platform</code>: A general platform design (e.g. “Landsat” or “Sentinel”).</li>
-<li>
-<code>sensor</code>: Type of sensor which acquired the data from which the product originates (e.g. “MODIS”, “MSI” or “OLI”).</li>
-<li>
-<code>collection</code>: A product version.</li>
-<li>
-<code>level</code>: Processing level of the product (e.g. “Level 2A” or “Surface Reflectance”).</li>
-<li>
-<code>source</code>: The service acquiring, processing or distributing the product (e.g. “ESA Copernicus” or “USGS”).</li>
-</ul>
-</li>
-</ul>
-<p>The following universal semantics on computational steps are used by <code>getSpatialData</code>:</p>
-<ul>
-<li>
-<code>get</code>: Recieve data from different sources, named either by <code>sensor</code> or <code>platform</code> (whichever is used by the scientific community to referr to the derived products)
-<ul>
-<li>
-<code>names</code>: Result of searching available products (differs by <code>source</code> and <code>platform</code>), which might be differentiated further later on (e.g. by <code>level</code>).</li>
-<li>
-<code>query</code>: Result of searching a <code>source</code> for data <code>records</code> of a specific or multiple <code>products</code>.</li>
-<li>
-<code>preview</code>: Preview a <code>record</code>.</li>
-<li>
-<code>data</code>: Result of recieving one or multiple <code>dataset</code> from a <code>source</code>.</li>
-</ul>
-</li>
-<li>
-<code>prep</code>: Prepare/preprocess data obtained with <code>get</code>
-</li>
-</ul>
 </div>
 <div id="get-started" class="section level2">
 <h2 class="hasAnchor">
-<a href="#get-started" class="anchor"></a>Get Started</h2>
-<div id="sentinel-query-preview-and-download" class="section level4">
-<h4 class="hasAnchor">
-<a href="#sentinel-query-preview-and-download" class="anchor"></a>Sentinel query, preview and download</h4>
-<p>The following code represents a working chain for querying, filtering, previewing and downloading Sentinel-2 data within R. The procedure can be done for Sentinel-1, Sentinel-2, Sentinel-3 or Sentinel-5P. The workflow for dealing with MODIS and Landsat data using <code>getSpatialData</code> is very similar. See the <a href="http://jxsw.de/getSpatialData/reference/index.html">function reference</a> for detailed examples.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Load packages
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(getSpatialData)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(raster)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(sf)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(sp)
-
-## Define an AOI (either matrix, sf or sp object)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/data">data</a></span>(<span class="st">"aoi_data"</span>) <span class="co"># example aoi</span>
-
-aoi &lt;-<span class="st"> </span>aoi_data[[<span class="dv">3</span>]] <span class="co"># AOI as matrix object, or better:</span>
-aoi &lt;-<span class="st"> </span>aoi_data[[<span class="dv">2</span>]] <span class="co"># AOI as sp object, or:</span>
-aoi &lt;-<span class="st"> </span>aoi_data[[<span class="dv">1</span>]] <span class="co"># AOI as sf object</span>
-<span class="co">#instead, you could define an AOI yourself, e.g. as simple matrix</span>
-
-## set AOI for this session
-<span class="kw"><a href="reference/gSD_settings.html">set_aoi</a></span>(aoi)
-<span class="kw"><a href="reference/gSD_settings.html">view_aoi</a></span>() <span class="co">#view AOI in viewer, which will look like this:</span></code></pre></div>
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_view_aoi.png"></p>
-<p align="center"><sub>Figure 1: Screenshot of the RStudio Viewer, displaying the previously defined session AOI using view_aoi()</sub></p>
-<p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#instead of using an existing AOI, you can simply draw one:</span>
-<span class="kw"><a href="reference/gSD_settings.html">set_aoi</a></span>() <span class="co">#call set_aoi() without argument, which opens a mapedit editor:</span></code></pre></div>
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_create_aoi.png"></p>
-<p align="center"><sub>Figure 2: Screenshot of the RStudio Viewer, displaying the mapedit editor allowing the user to draw a session AOI</sub></p>
-<p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## set login credentials and archive directory
-<span class="kw"><a href="reference/gSD_login.html">login_CopHub</a></span>(<span class="dt">username =</span> <span class="st">"your_username"</span>) <span class="co">#asks you for password</span>
-<span class="kw"><a href="reference/gSD_settings.html">set_archive</a></span>(<span class="st">"/path/to/archive/"</span>)
-
-## Use getSentinel_query to search for data (using the session AOI)
-records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSentinel_query.html">getSentinel_query</a></span>(<span class="dt">time_range =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"2017-08-01"</span>, <span class="st">"2017-08-30"</span>), 
-                             <span class="dt">platform =</span> <span class="st">"Sentinel-2"</span>) <span class="co">#or "Sentinel-1" or "Sentinel-3"</span>
-
-## Filter the records
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/colnames">colnames</a></span>(records) <span class="co">#see all available filter attributes</span>
-<span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/unique">unique</a></span>(records<span class="op">$</span>processinglevel) <span class="co">#use one of the, e.g. to see available processing levels</span>
-
-records_filtered &lt;-<span class="st"> </span>records[<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/which">which</a></span>(records<span class="op">$</span>processinglevel <span class="op">==</span><span class="st"> "Level-1C"</span>),] <span class="co">#filter by Level</span>
-records_filtered &lt;-<span class="st"> </span>records_filtered[<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">as.numeric</a></span>(records_filtered<span class="op">$</span>cloudcoverpercentage) <span class="op">&lt;=</span><span class="st"> </span><span class="dv">30</span>, ] <span class="co">#filter by clouds</span>
-
-## View records table
-<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/View">View</a></span>(records)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/View">View</a></span>(records_filtered)
-<span class="co">#browser records or your filtered records</span></code></pre></div>
-<p align="center"><img width="100%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_query_table.png"></p>
-<p align="center"><sub>Figure 3: Screenshot of the View() display in RStudio, displaying a filtered records table produced by getSentinel_query()</sub></p>
-<p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Preview a single record on a mapview map with session AOI
-<span class="kw"><a href="reference/getSentinel_preview.html">getSentinel_preview</a></span>(<span class="dt">record =</span> records_filtered[<span class="dv">9</span>,])</code></pre></div>
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview.png"></p>
-<p align="center"><sub>Figure 4: Screenshot of the RStudio viewer, displaying a corner-georeferenced Sentinel-2 preview and the session AOI using getSentinel_preview()</sub></p>
-<p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Preview a single record on a mapview map without session AOI
-<span class="kw"><a href="reference/getSentinel_preview.html">getSentinel_preview</a></span>(<span class="dt">record =</span> records_filtered[<span class="dv">9</span>,], <span class="dt">show_aoi =</span> <span class="ot">FALSE</span>)</code></pre></div>
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_no_aoi.png"></p>
-<p align="center"><sub>Figure 5: Screenshot of the RStudio viewer, displaying a corner-georeferenced Sentinel-2 preview using getSentinel_preview()</sub></p>
-<p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Preview a single record as RGB plot
-<span class="kw"><a href="reference/getSentinel_preview.html">getSentinel_preview</a></span>(<span class="dt">record =</span> records_filtered[<span class="dv">9</span>,], <span class="dt">on_map =</span> <span class="ot">FALSE</span>)</code></pre></div>
-<p align="center"><img width="60%" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_preview_plotRGB.png"></p>
-<p align="center"><sub>Figure 6: Screenshot of the RStudio viewer, displaying a simple Sentinel-2 RGB plot preview using getSentinel_preview()</sub></p>
-<p><br></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Download some datasets to your archive directory
-datasets &lt;-<span class="st"> </span><span class="kw"><a href="reference/getSentinel_data.html">getSentinel_data</a></span>(<span class="dt">records =</span> records_filtered[<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">4</span>,<span class="dv">7</span>,<span class="dv">9</span>), ])
-
-## Finally, define an output format and make them ready-to-use
-datasets_prep &lt;-<span class="st"> </span><span class="kw"><a href="reference/prepSentinel.html">prepSentinel</a></span>(datasets, <span class="dt">format =</span> <span class="st">"tiff"</span>)
-<span class="co"># or use VRT to not store duplicates of different formats</span>
-datasets_prep &lt;-<span class="st"> </span><span class="kw"><a href="reference/prepSentinel.html">prepSentinel</a></span>(datasets, <span class="dt">format =</span> <span class="st">"vrt"</span>)
-
-## View the files
-datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>] <span class="co">#first dataset, first tile, 10 m resolution</span>
-datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">2</span>] <span class="co">#first dataset, first tile, 20 m resolution</span>
-datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">3</span>] <span class="co">#first dataset, first tile, 60 m resolution</span>
-
-## Load them directly into R
-r &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/stack">stack</a></span>(datasets_prep[[<span class="dv">1</span>]][[<span class="dv">1</span>]][<span class="dv">1</span>])</code></pre></div>
+<a href="#get-started" class="anchor"></a>Get started</h2>
 </div>
-<div id="parallelized-download-of-modis-data-user-example" class="section level4">
-<h4 class="hasAnchor">
-<a href="#parallelized-download-of-modis-data-user-example" class="anchor"></a>Parallelized download of MODIS data (user example)</h4>
-<p>The following example shows how to query and then download MODIS imagery in parallel. This increases the overall download speed if enough bandwith is available to the client. The example has been contributed by <a href="https://twitter.com/CarinaKuebert">Carina Kuebert</a>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Load packages for working on multi-core
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(parallel)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(doParallel)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(foreach)
-
-## getSpatialData
-<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(getSpatialData)
-
-
-#### specify which files to download ####
-<span class="co"># specify outdir (where files will be downloaded to)</span>
-outdir &lt;-<span class="st"> "/path/to/download/directory/"</span>
-
-<span class="co"># load example aoi</span>
-<span class="kw"><a href="https://www.rdocumentation.org/packages/utils/topics/data">data</a></span>(<span class="st">"aoi_data"</span>)
-<span class="kw"><a href="reference/gSD_settings.html">set_aoi</a></span>(aoi_data[[<span class="dv">1</span>]]) 
-<span class="kw"><a href="reference/gSD_settings.html">view_aoi</a></span>()
-
-<span class="co"># check, if service is available</span>
-<span class="kw"><a href="reference/gSD_settings.html">services_avail</a></span>()
-
-## USGS login
-<span class="kw"><a href="reference/gSD_login.html">login_USGS</a></span>(<span class="dt">username =</span> <span class="st">"your_username"</span>)
-
-<span class="co"># get available products </span>
-product_names &lt;-<span class="st"> </span><span class="kw"><a href="reference/getMODIS_names.html">getMODIS_names</a></span>()
-
-<span class="co"># query for records for your AOI, time range and product</span>
-time_range &lt;-<span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="st">"2019-01-01"</span>, <span class="st">"2019-01-10"</span>)
-records &lt;-<span class="st"> </span><span class="kw"><a href="reference/getMODIS_query.html">getMODIS_query</a></span>(<span class="dt">time_range =</span> time_range, <span class="dt">name =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/grep">grep</a></span>(<span class="st">"MOD09GA"</span>, product_names, <span class="dt">value =</span> T))
-
-
-#### initiate cluster for paralell download ####
-no_cores &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/parallel/topics/detectCores">detectCores</a></span>() <span class="op">-</span><span class="st"> </span><span class="dv">1</span>
-cl &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/parallel/topics/makeCluster">makeCluster</a></span>(no_cores, <span class="dt">type =</span> <span class="st">"PSOCK"</span>)
-<span class="kw"><a href="https://www.rdocumentation.org/packages/doParallel/topics/registerDoParallel">registerDoParallel</a></span>(cl)
-
-files &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/foreach/topics/foreach">foreach</a></span>(<span class="dt">i =</span> <span class="dv">1</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/ncell">nrow</a></span>(records[]), 
-                 <span class="dt">.combine=</span>c, 
-                 <span class="dt">.packages=</span><span class="st">'getSpatialData'</span>) <span class="op">%dopar%</span><span class="st"> </span>{
-                   <span class="kw"><a href="reference/getMODIS_data.html">getMODIS_data</a></span>(records[i, ], <span class="dt">dir_out =</span> outdir)
-                 }
-
-
-#### stop cluster ####
-<span class="kw"><a href="https://www.rdocumentation.org/packages/parallel/topics/makeCluster">stopCluster</a></span>(cl)</code></pre></div>
-</div>
-</div>
-<div id="products" class="section level2">
+<div id="supported-products" class="section level2">
 <h2 class="hasAnchor">
-<a href="#products" class="anchor"></a>Products</h2>
-<p>The following products are being evaluated to be implemented within the package. This also includes sources which can be already accessed through existing packages that could be wrapped behind an standardized R function interface. Please feel free to contribute to the list, e. g. through a pull request:</p>
-<table class="table">
-<colgroup>
-<col width="15%">
-<col width="22%">
-<col width="5%">
-<col width="11%">
-<col width="16%">
-</colgroup>
-<thead><tr class="header">
-<th>Product(s)</th>
-<th>Source</th>
-<th>Access</th>
-<th>Status</th>
-<th>Client(s)</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Sentinel (-1/-2/-3,-5P, GNSS)</td>
-<td>ESA Copernicus</td>
-<td><a target="_blank" href="https://scihub.copernicus.eu/userguide/5APIsAndBatchScripting">Copernicus Open Access Hub API</a></td>
-<td>implemented</td>
-<td>native</td>
-</tr>
-<tr class="even">
-<td>MODIS</td>
-<td>NASA/USGS</td>
-<td>
-<a target="_blank" href="https://modis.ornl.gov/data/modis_webservice.html">ORNL DAAC SOAP MODIS web service</a>, <a target="_blank" href="https://ladsweb.modaps.eosdis.nasa.gov/tools-and-services/lws-classic/api.php"> LAADS DAAC SOAP/REST web service</a>
-</td>
-<td>implemented</td>
-<td>native</td>
-</tr>
-<tr class="odd">
-<td>Landsat</td>
-<td>USGS</td>
-<td>
-<a target="_blank" href="https://earthexplorer.usgs.gov/inventory/documentation/json-api">USGS EarthExplorer json API</a>, <a target="_blank" href="https://landsat.usgs.gov/landsat-data-access">USGS-EROS ESPA</a>, <a target="_blank" href="https://registry.opendata.aws/landsat-8/">AWS</a>
-</td>
-<td>implemented</td>
-<td>native</td>
-</tr>
-<tr class="even">
-<td>Global Forest Change</td>
-<td>Hansen et al.</td>
-<td><a href="http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis" class="uri">http://azvoleff.com/articles/analyzing-forest-change-with-gfcanalysis</a></td>
-<td>evaluated</td>
-<td>R: <code>gfcanalysis</code>?</td>
-</tr>
-<tr class="odd">
-<td>CMIP5/PMIP3 Global Climate</td>
-<td>ecoClimate</td>
-<td><a href="http://ecoclimate.org/about/" class="uri">http://ecoclimate.org/about/</a></td>
-<td>evaluated</td>
-<td>R: <code>ecoClimate</code>?</td>
-</tr>
-<tr class="even">
-<td>Copernicus Global Land Products</td>
-<td>ESA Copernicus</td>
-<td><a href="http://land.copernicus.eu/" class="uri">http://land.copernicus.eu/</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>CHELSA Global Land Climate</td>
-<td>Karger et al.</td>
-<td><a href="http://chelsa-climate.org/" class="uri">http://chelsa-climate.org/</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Global Forest Cover</td>
-<td>EU-JRC</td>
-<td><a href="http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/" class="uri">http://remote-sensing-biodiversity.org/forest-cover-and-forest-cover-pattern-data-by-jrc/</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Global Surface Dynamics</td>
-<td>EU-JRC</td>
-<td><a href="http://remote-sensing-biodiversity.org/global-water-dynamics-data/" class="uri">http://remote-sensing-biodiversity.org/global-water-dynamics-data/</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Global Soil Grids</td>
-<td>Hengl et al.</td>
-<td><a href="http://remote-sensing-biodiversity.org/global-soil-data-soilgrids/" class="uri">http://remote-sensing-biodiversity.org/global-soil-data-soilgrids/</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Global Urban Footprint</td>
-<td>Esch et al.</td>
-<td>
-<a href="https://urban-tep.eo.esa.int/geobrowser/?id=portfolio#" class="uri">https://urban-tep.eo.esa.int/geobrowser/?id=portfolio#</a>!&amp;context=GUF%2FGUF2012-12m</td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>UK Urban Areas LiDAR</td>
-<td>UK Environment Agency</td>
-<td><a href="http://remote-sensing-biodiversity.org/free-lidar-data-for-some-uk-cities/" class="uri">http://remote-sensing-biodiversity.org/free-lidar-data-for-some-uk-cities/</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Global Human Built-up And Settlement Extent (HBASE)</td>
-<td>Wang et al.</td>
-<td><a href="http://sedac.ciesin.columbia.edu/data/set/ulandsat-hbase-v1" class="uri">http://sedac.ciesin.columbia.edu/data/set/ulandsat-hbase-v1</a></td>
-<td>evaluated</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>GIMMS NDVI3g</td>
-<td>NASA</td>
-<td><a href="https://nex.nasa.gov/nex/projects/1349/" class="uri">https://nex.nasa.gov/nex/projects/1349/</a></td>
-<td>evaluated</td>
-<td>R: <code>GIMMS</code>?</td>
-</tr>
-</tbody>
-</table>
+<a href="#supported-products" class="anchor"></a>Supported products</h2>
 </div>
 <div id="contribution" class="section level2">
 <h2 class="hasAnchor">
 <a href="#contribution" class="anchor"></a>Contribution</h2>
-<p>Contribute! I’m happy about any kind of contribution, from feature ideas, ideas on possible data sources, technical ideas or other to bug fixes, code suggestions or larger code contributions! Open an issue to start a discussion: <a href="https://github.com/16eagle/getSpatialData/issues" class="uri">https://github.com/16eagle/getSpatialData/issues</a></p>
+<p>We are happy about any kind of contribution, from feature ideas, ideas on possible data sources, technical ideas or other to bug fixes, code suggestions or larger code contributions! Open an issue to start a discussion: <a href="https://github.com/16eagle/getSpatialData/issues" class="uri">https://github.com/16eagle/getSpatialData/issues</a></p>
 </div>
 <div id="mentioned" class="section level2">
 <h2 class="hasAnchor">
@@ -552,7 +260,7 @@ files &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocum
 </div>
   </div>
 
-  <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
 <h2>Links</h2>
 <ul class="list-unstyled">
@@ -576,7 +284,7 @@ files &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocum
 <h2>Developers</h2>
 <ul class="list-unstyled">
 <li>Jakob Schwalb-Willmann <br><small class="roles"> Author, maintainer </small>  </li>
-<li><a href="authors.html">All authors...</a></li>
+<li>Henrik Fisser <br><small class="roles"> Author </small>  </li>
 </ul>
 </div>
 
@@ -592,17 +300,20 @@ files &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocum
 </div>
 </div>
 
+
       <footer><div class="copyright">
-  <p>Developed by Jakob Schwalb-Willmann.</p>
+  <p>Developed by Jakob Schwalb-Willmann, Henrik Fisser.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.3.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
 </div>
+
       </footer>
 </div>
 
   
+
 
   </body>
 </html>

@@ -4,12 +4,10 @@
 \alias{order_data}
 \title{Order datasets}
 \usage{
-order_data(records, wait_for_order = FALSE, ..., verbose = TRUE)
+order_data(records, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
-
-\item{wait_for_order}{logical, whether to wait until all datasets have been successfully ordered and are ready for download (default) or not. If \code{FALSE}, orders are only placed.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{

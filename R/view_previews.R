@@ -118,12 +118,13 @@ plot_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
 getSentinel_preview <- function(records = NULL, ...){
   .Deprecated("view_previews", "getSpatialData", "This function is deprecated. Use get_previews, view_previews and plot_previews to download, view or plot previews for different sensors at once.")
   
-  if(missing(records)){
+  if(is.null(records)){
     extras <- list(...)
     records <- extras$record
   }
   
-  view_previews(...)
+  records <- get_previews(records, ...)
+  view_previews(records = records, ...)
 }
 
 

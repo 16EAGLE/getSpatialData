@@ -100,6 +100,8 @@ check_availability <- function(records, verbose = TRUE){
     records[records$product_group == "SRTM",]$download_available <- TRUE
   }
   
-  out(paste0(as.character(length(which(records$download_available))), "/", nrow(records), " records are currently available for download (this includes past completed orders that are still available for download)."), type = 1)
+  n_avail <- length(which(records$download_available))
+  out(paste0(as.character(n_avail), "/", nrow(records), " records are currently available for download (this includes past completed orders that are still available for download)."), type = 1)
+  if(n_avail < nrow(records)) out("Use order_data() to order/restore records that are not available for download.")
   return(.column_summary(records, records.names))
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/is_product_checker.R
 \name{is.modis}
 \alias{is.modis}
-\title{Returns TRUE for records that are of product group 'MODIS'}
+\title{Returns TRUE for records that are of product group 'MODIS'.}
 \usage{
 is.modis(records)
 }
@@ -14,7 +14,7 @@ returned by \link{get_records}.}
 logical vector, same length as number of rows in \code{records}.
 }
 \description{
-\code{is.modis} checks which records are MODIS records.
+These functions check which records are records of the referred product group.
 }
 \author{
 Henrik Fisser, 2020

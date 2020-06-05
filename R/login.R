@@ -180,3 +180,10 @@ services <- function(value = F, verbose = T){
   }
   if(isTRUE(value)) return(df[c("service", "status", "remark", "category", "reason", "message", "code")])
 }
+
+#' @rdname getSpatialData-deprecated
+#' @export
+services_avail <- function(...){
+  .Deprecated("services", "getSpatialData")
+  services(...)
+}

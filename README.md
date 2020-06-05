@@ -39,7 +39,7 @@ This approach is implemented by the following functions (sorted by the order in 
 * `login_CopHub()` logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 * `login_USGS()` logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
 * `login_earthdata()` logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new)
-* `services_avail()` displays the status of all online services used by `getSpatialData`. 
+* `services()` displays the status of all online services used by `getSpatialData`. 
 
 #### Defining session settings
 
@@ -61,6 +61,7 @@ This approach is implemented by the following functions (sorted by the order in 
 
 #### Selecting records
 
+* `get_select_supported()` tells you for which products automatic record selection is supported.
 * `select_unitemporal()` selects remote sensing records (both optical and SAR across different products) *uni-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
 * `select_bitemporal()` selects remote sensing records (both optical and SAR across different products) *bi-temporally* according to AOI cloud cover (in case of optical data) and temporal characteristics.
 * `select_timeseries()` selects remote sensing records (both optical and SAR across different products) for a *time series* according to AOI cloud cover (in case of optical data) and temporal characteristics.

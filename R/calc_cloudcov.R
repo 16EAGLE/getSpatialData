@@ -206,7 +206,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
                                          aoi = aoi,
                                          max_deviation = max_deviation,
                                          cols = .cloudcov_colnames(),
-                                         write_cmask = write_cloud_masks,
+                                         write_cmasks = write_cloud_masks,
                                          dir_out = dir_out,
                                          verbose = verbose))
     } else {

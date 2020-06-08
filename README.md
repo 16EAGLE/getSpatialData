@@ -96,8 +96,6 @@ It aims at cloud-free mosaics while ensuring user-defined temporal and product c
 
 The following example demonstrates a workflow for querying, previewing, analysing, selecting, ordering and downloading optical data from multiple sources at once (in this case Sentinel-2 L2A and Landsat 8 OLI Surface Reflectances).
 
-#### Defining session settings
-
 ``` r
 library(getSpatialData)
 data("aoi_data")
@@ -114,8 +112,6 @@ view_aoi()
 
 ![gsd_view_aoi](https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png)
 
-
-#### Logging in
 
 ```R
 # There are three services to login at:
@@ -136,11 +132,6 @@ services()
 #> ● AWS Landsat 8:            'available'     'Connection successfully established.'
 #> ● NASA DAAC LAADS:          'available'     'Connection successfully established.'
 
-```
-
-#### Retrieving and visualizing records
-
-```R
 # First, print all available products:
 get_products()
 #>   [1] "Sentinel-1"            "Sentinel-2"            "Sentinel-3"           
@@ -233,8 +224,6 @@ plot_records(records)
 ![gsd_plot_records](https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png)
 
 
-#### Analysing previews
-
 ```R
 # Download and georeference the previews for all records:
 records <- get_previews(records) 
@@ -257,11 +246,8 @@ plot_previews(records[21:24,])
 ```R
 # Use the previews to calculate the cloud coverage in your AOI for all records:
 records <- calc_cloudcov(records) 
-```
 
-#### Selecting records
 
-```R
 # With the result, getSpatiaData can automatically select the most usable records,
 # for a single timestamp:
 records <- select_unitemporal(records)
@@ -269,11 +255,8 @@ records <- select_unitemporal(records)
 records <- select_bitemporal(records)
 # or for a series of timestamps:
 records <- select_timeseries(records)
-```
 
-#### Checking, ordering and downloading records
 
-```R
 # Once, you came to a selection (manually or automatically), check for availability:
 records <- check_availability(records)
 #> Checking instant availability for Sentinel records...

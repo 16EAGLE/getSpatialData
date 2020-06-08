@@ -28,7 +28,7 @@ devtools::install_github("16EAGLE/getSpatialData")
 
 ## Workflow
 
-The `getSpatialData` workflow to query, preview, analyse, select, order and download spatial data is designed to be as reproducible as possible and is made of six steps: 
+The `getSpatialData` workflow is designed to be as reproducible as possible and is made of six steps: 
 
 1. **querying** products of interest (see `get_products()`) for available records by an area of interest (AOI) and time (see `get_records()`),
 2. **previewing** geometries and previews of the obtained records (see `get_previews()`, `view_records()` and `view_previews()`),
@@ -41,17 +41,17 @@ For all steps, `getSpatialData` supports local chaching to reduce bandwith usage
 
 This approach is implemented by the following functions (sorted by the order in which they would be typically used):
 
+#### Defining session settings
+
+* `set_aoi()`, `view_aoi()` and `get_aoi()` set, view and get a session-wide area of interest (AOI) that can be used by all `getSpatialData` functions.
+* `set_archive()` and `get_archive()` set and get a session-wide archive directory that can be used by all `getSpatialData` functions.
+
 #### Logging in
 
 * `login_CopHub()` logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 * `login_USGS()` logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
 * `login_earthdata()` logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new)
 * `services()` displays the status of all online services used by `getSpatialData`. 
-
-#### Defining session settings
-
-* `set_aoi()`, `view_aoi()` and `get_aoi()` set, view and get a session-wide area of interest (AOI) that can be used by all `getSpatialData` functions.
-* `set_archive()` and `get_archive()` set and get a session-wide archive directory that can be used by all `getSpatialData` functions.
 
 #### Retrieving and visualizing records
 
@@ -94,10 +94,18 @@ It aims at cloud-free mosaics while ensuring user-defined temporal and product c
 
 ## Get started
 
+The following example demonstrates a workflow for querying, previewing, analysing, selecting, ordering and downloading optical data from multiple sources at once (in this case Sentinel-2 L2A and Landsat 8 OLI Surface Reflectances).
+
+#### Defining session settings
+
 ``` r
 library(getSpatialData)
 data("aoi_data")
 
+# Define an archive directory:
+set_archive("/path/to/your/archive/directory/")
+
+# Define an area of interest (AOI):
 # Use the example AOI or draw an AOI by calling set_aoi():
 set_aoi(aoi_data[[1]])
 # View the AOI:
@@ -106,10 +114,10 @@ view_aoi()
 
 ![gsd_view_aoi](https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png)
 
-```R
-# Define an archive directory:
-set_archive("/path/to/your/archive/directory/")
 
+#### Logging in
+
+```R
 # There are three services to login at:
 login_CopHub(username = "yourusername")
 #> Login successfull. ESA Copernicus credentials have been saved for the current session.
@@ -128,7 +136,12 @@ services()
 #> ● AWS Landsat 8:            'available'     'Connection successfully established.'
 #> ● NASA DAAC LAADS:          'available'     'Connection successfully established.'
 
-# Print all available products:
+```
+
+#### Retrieving and visualizing records
+
+```R
+# First, print all available products:
 get_products()
 #>   [1] "Sentinel-1"            "Sentinel-2"            "Sentinel-3"           
 #>   [4] "Sentinel-5P"           "Sentinel-1_GNSS"       "Sentinel-2_GNSS"      
@@ -219,6 +232,9 @@ plot_records(records)
 
 ![gsd_plot_records](https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png)
 
+
+#### Analysing previews
+
 ```R
 # Download and georeference the previews for all records:
 records <- get_previews(records) 
@@ -241,7 +257,11 @@ plot_previews(records[21:24,])
 ```R
 # Use the previews to calculate the cloud coverage in your AOI for all records:
 records <- calc_cloudcov(records) 
+```
 
+#### Selecting records
+
+```R
 # With the result, getSpatiaData can automatically select the most usable records,
 # for a single timestamp:
 records <- select_unitemporal(records)
@@ -249,7 +269,11 @@ records <- select_unitemporal(records)
 records <- select_bitemporal(records)
 # or for a series of timestamps:
 records <- select_timeseries(records)
+```
 
+#### Checking, ordering and downloading records
+
+```R
 # Once, you came to a selection (manually or automatically), check for availability:
 records <- check_availability(records)
 #> Checking instant availability for Sentinel records...

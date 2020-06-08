@@ -130,7 +130,7 @@
 <div id="workflow" class="section level2">
 <h2 class="hasAnchor">
 <a href="#workflow" class="anchor"></a>Workflow</h2>
-<p>The <code>getSpatialData</code> workflow to query, preview, analyse, select, order and download spatial data is designed to be as reproducible as possible and is made of six steps:</p>
+<p>The <code>getSpatialData</code> workflow is designed to be as reproducible as possible and is made of six steps:</p>
 <ol>
 <li>
 <strong>querying</strong> products of interest (see <code><a href="reference/get_products.html">get_products()</a></code>) for available records by an area of interest (AOI) and time (see <code><a href="reference/get_records.html">get_records()</a></code>),</li>
@@ -147,6 +147,16 @@
 </ol>
 <p>For all steps, <code>getSpatialData</code> supports local chaching to reduce bandwith usage and uneccasary downloads.</p>
 <p>This approach is implemented by the following functions (sorted by the order in which they would be typically used):</p>
+<div id="defining-session-settings" class="section level4">
+<h4 class="hasAnchor">
+<a href="#defining-session-settings" class="anchor"></a>Defining session settings</h4>
+<ul>
+<li>
+<code><a href="reference/aoi.html">set_aoi()</a></code>, <code><a href="reference/aoi.html">view_aoi()</a></code> and <code><a href="reference/aoi.html">get_aoi()</a></code> set, view and get a session-wide area of interest (AOI) that can be used by all <code>getSpatialData</code> functions.</li>
+<li>
+<code><a href="reference/archive.html">set_archive()</a></code> and <code><a href="reference/archive.html">get_archive()</a></code> set and get a session-wide archive directory that can be used by all <code>getSpatialData</code> functions.</li>
+</ul>
+</div>
 <div id="logging-in" class="section level4">
 <h4 class="hasAnchor">
 <a href="#logging-in" class="anchor"></a>Logging in</h4>
@@ -159,16 +169,6 @@
 <code><a href="reference/login.html">login_earthdata()</a></code> logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at <a href="https://urs.earthdata.nasa.gov/users/new" class="uri">https://urs.earthdata.nasa.gov/users/new</a>)</li>
 <li>
 <code><a href="reference/login.html">services()</a></code> displays the status of all online services used by <code>getSpatialData</code>.</li>
-</ul>
-</div>
-<div id="defining-session-settings" class="section level4">
-<h4 class="hasAnchor">
-<a href="#defining-session-settings" class="anchor"></a>Defining session settings</h4>
-<ul>
-<li>
-<code><a href="reference/aoi.html">set_aoi()</a></code>, <code><a href="reference/aoi.html">view_aoi()</a></code> and <code><a href="reference/aoi.html">get_aoi()</a></code> set, view and get a session-wide area of interest (AOI) that can be used by all <code>getSpatialData</code> functions.</li>
-<li>
-<code><a href="reference/archive.html">set_archive()</a></code> and <code><a href="reference/archive.html">get_archive()</a></code> set and get a session-wide archive directory that can be used by all <code>getSpatialData</code> functions.</li>
 </ul>
 </div>
 <div id="retrieving-and-visualizing-records" class="section level4">
@@ -247,18 +247,27 @@
 <div id="get-started" class="section level2">
 <h2 class="hasAnchor">
 <a href="#get-started" class="anchor"></a>Get started</h2>
+<p>The following example demonstrates a workflow for querying, previewing, analysing, selecting, ordering and downloading optical data from multiple sources at once (in this case Sentinel-2 L2A and Landsat 8 OLI Surface Reflectances).</p>
+<div id="defining-session-settings-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#defining-session-settings-1" class="anchor"></a>Defining session settings</h4>
 <div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">getSpatialData</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span>(<span class="st">"aoi_data"</span>)
 
+<span class="co"># Define an archive directory:</span>
+<span class="fu"><a href="reference/archive.html">set_archive</a></span>(<span class="st">"/path/to/your/archive/directory/"</span>)
+
+<span class="co"># Define an area of interest (AOI):</span>
 <span class="co"># Use the example AOI or draw an AOI by calling set_aoi():</span>
 <span class="fu"><a href="reference/aoi.html">set_aoi</a></span>(<span class="no">aoi_data</span><span class="kw">[[</span><span class="fl">1</span>]])
 <span class="co"># View the AOI:</span>
 <span class="fu"><a href="reference/aoi.html">view_aoi</a></span>()</pre></div>
 <p><img src="https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png" alt="gsd_view_aoi"></p>
-<div class="sourceCode" id="cb3"><pre class="r"><span class="co"># Define an archive directory:</span>
-<span class="fu"><a href="reference/archive.html">set_archive</a></span>(<span class="st">"/path/to/your/archive/directory/"</span>)
-
-<span class="co"># There are three services to login at:</span>
+</div>
+<div id="logging-in-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#logging-in-1" class="anchor"></a>Logging in</h4>
+<div class="sourceCode" id="cb3"><pre class="r"><span class="co"># There are three services to login at:</span>
 <span class="fu"><a href="reference/login.html">login_CopHub</a></span>(<span class="kw">username</span> <span class="kw">=</span> <span class="st">"yourusername"</span>)
 <span class="co">#&gt; Login successfull. ESA Copernicus credentials have been saved for the current session.</span>
 <span class="fu"><a href="reference/login.html">login_USGS</a></span>(<span class="kw">username</span> <span class="kw">=</span> <span class="st">"yourusername"</span>)
@@ -274,9 +283,12 @@
 <span class="co">#&gt; ● USGS-EROS ESPA:           'available'     'Connection successfully established.'</span>
 <span class="co">#&gt; ● USGS EarthExplorer:       'available'     'Connection successfully established.'</span>
 <span class="co">#&gt; ● AWS Landsat 8:            'available'     'Connection successfully established.'</span>
-<span class="co">#&gt; ● NASA DAAC LAADS:          'available'     'Connection successfully established.'</span>
-
-<span class="co"># Print all available products:</span>
+<span class="co">#&gt; ● NASA DAAC LAADS:          'available'     'Connection successfully established.'</span></pre></div>
+</div>
+<div id="retrieving-and-visualizing-records-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#retrieving-and-visualizing-records-1" class="anchor"></a>Retrieving and visualizing records</h4>
+<div class="sourceCode" id="cb4"><pre class="r"><span class="co"># First, print all available products:</span>
 <span class="fu"><a href="reference/get_products.html">get_products</a></span>()
 <span class="co">#&gt;   [1] "Sentinel-1"            "Sentinel-2"            "Sentinel-3"           </span>
 <span class="co">#&gt;   [4] "Sentinel-5P"           "Sentinel-1_GNSS"       "Sentinel-2_GNSS"      </span>
@@ -345,40 +357,50 @@
 <span class="co"># Have a look at the returned records table:</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/View.html">View</a></span>(<span class="no">records</span>)</pre></div>
 <p><img src="https://user-images.githubusercontent.com/23257860/84061417-2a7df680-a9be-11ea-982b-8d954f85370c.png" alt="gSD_records"></p>
-<div class="sourceCode" id="cb4"><pre class="r"><span class="co"># Filter records, e.g. to contain only Level 2A/surface reflectance records:</span>
+<div class="sourceCode" id="cb5"><pre class="r"><span class="co"># Filter records, e.g. to contain only Level 2A/surface reflectance records:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="no">records</span>[<span class="no">records</span>$<span class="no">level</span> <span class="kw">==</span> <span class="st">"Level-2A"</span> <span class="kw">|</span> <span class="no">records</span>$<span class="no">level</span> <span class="kw">==</span> <span class="st">"sr"</span>,]
 
 <span class="co"># Display the records footprints interactively:</span>
 <span class="fu"><a href="reference/view_records.html">view_records</a></span>(<span class="no">records</span>)
 <span class="co">#&gt; Composing records map...</span></pre></div>
 <p><img src="https://user-images.githubusercontent.com/23257860/84061407-27830600-a9be-11ea-8249-7914d77ded0e.png" alt="gsd_view_records"></p>
-<div class="sourceCode" id="cb5"><pre class="r"><span class="co"># ...or plot them:</span>
+<div class="sourceCode" id="cb6"><pre class="r"><span class="co"># ...or plot them:</span>
 <span class="fu"><a href="reference/view_records.html">plot_records</a></span>(<span class="no">records</span>)
 <span class="co">#&gt; Composing records plot...</span></pre></div>
 <p><img src="https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png" alt="gsd_plot_records"></p>
-<div class="sourceCode" id="cb6"><pre class="r"><span class="co"># Download and georeference the previews for all records:</span>
+</div>
+<div id="analysing-previews-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#analysing-previews-1" class="anchor"></a>Analysing previews</h4>
+<div class="sourceCode" id="cb7"><pre class="r"><span class="co"># Download and georeference the previews for all records:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_previews.html">get_previews</a></span>(<span class="no">records</span>)
 
 <span class="co"># Display the previews interactively (all or just a selection):</span>
 <span class="fu"><a href="reference/view_previews.html">view_previews</a></span>(<span class="no">records</span>[<span class="fl">21</span>:<span class="fl">24</span>,])
 <span class="co">#&gt; Composing preview map...</span></pre></div>
 <p><img src="https://user-images.githubusercontent.com/23257860/84061411-294cc980-a9be-11ea-9457-60461469e70b.png" alt="gsd_view_previews"></p>
-<div class="sourceCode" id="cb7"><pre class="r"><span class="co"># ...or plot them:</span>
+<div class="sourceCode" id="cb8"><pre class="r"><span class="co"># ...or plot them:</span>
 <span class="fu"><a href="reference/view_previews.html">plot_previews</a></span>(<span class="no">records</span>[<span class="fl">21</span>:<span class="fl">24</span>,])
 <span class="co">#&gt; Composing preview plot...</span></pre></div>
 <p><img src="https://user-images.githubusercontent.com/23257860/84061405-2651d900-a9be-11ea-8038-075efe9a3f36.png" alt="gsd_plot_previews"></p>
-<div class="sourceCode" id="cb8"><pre class="r"><span class="co"># Use the previews to calculate the cloud coverage in your AOI for all records:</span>
-<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span>(<span class="no">records</span>)
-
-<span class="co"># With the result, getSpatiaData can automatically select the most usable records,</span>
+<div class="sourceCode" id="cb9"><pre class="r"><span class="co"># Use the previews to calculate the cloud coverage in your AOI for all records:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span>(<span class="no">records</span>)</pre></div>
+</div>
+<div id="selecting-records-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#selecting-records-1" class="anchor"></a>Selecting records</h4>
+<div class="sourceCode" id="cb10"><pre class="r"><span class="co"># With the result, getSpatiaData can automatically select the most usable records,</span>
 <span class="co"># for a single timestamp:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_unitemporal.html">select_unitemporal</a></span>(<span class="no">records</span>)
 <span class="co"># for a two timestamps:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_bitemporal.html">select_bitemporal</a></span>(<span class="no">records</span>)
 <span class="co"># or for a series of timestamps:</span>
-<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_timeseries.html">select_timeseries</a></span>(<span class="no">records</span>)
-
-<span class="co"># Once, you came to a selection (manually or automatically), check for availability:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_timeseries.html">select_timeseries</a></span>(<span class="no">records</span>)</pre></div>
+</div>
+<div id="checking-ordering-and-downloading-records-1" class="section level4">
+<h4 class="hasAnchor">
+<a href="#checking-ordering-and-downloading-records-1" class="anchor"></a>Checking, ordering and downloading records</h4>
+<div class="sourceCode" id="cb11"><pre class="r"><span class="co"># Once, you came to a selection (manually or automatically), check for availability:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/check_availability.html">check_availability</a></span>(<span class="no">records</span>)
 <span class="co">#&gt; Checking instant availability for Sentinel records...</span>
 <span class="co">#&gt; Checking availability for Landsat records...</span>
@@ -402,6 +424,7 @@
 
 <span class="co"># Finally, download records available for download:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_data.html">get_data</a></span>(<span class="no">records</span>)</pre></div>
+</div>
 </div>
 <div id="supported-products" class="section level2">
 <h2 class="hasAnchor">

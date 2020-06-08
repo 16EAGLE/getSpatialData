@@ -212,7 +212,7 @@ is.sentinel2_L1C <- function(records) {
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
-      return(strsplit(record[[name_record_id()]], "_")[[1]][2] == name_sentinel2_L1C())
+      return(endsWith(strsplit(record[[name_record_id()]], "_")[[1]][2], "1C"))
     } else {
       return(FALSE)
     }
@@ -226,7 +226,7 @@ is.sentinel2_L2A <- function(records) {
   return(sapply(1:NROW(records), function(i) {
     record <- records[i,]
     if (is.sentinel2(record)) {
-      return(strsplit(records[i,][[name_record_id()]], "_")[[1]][2] == name_sentinel2_L2A())
+      return(endsWith(strsplit(records[i,][[name_record_id()]], "_")[[1]][2], "2A"))
     } else {
       return(FALSE)
     }

@@ -51,16 +51,19 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   if(isTRUE(check_products)) .check_products(products, products_available = get_products(update_online = F))
   
   # use appropriate clients
-  clients <- c(EE = FALSE, CopHub = FALSE, CMR = FALSE)
-  if(any(sapply(products, function(x) grepl("Sentinel", x)))) clients["CopHub"] <- TRUE
-  if(any(sapply(products, function(x) any(grepl("Landsat", x), grepl("MODIS", x))))) clients["EE"] <- TRUE
-  if(any(sapply(products, function(x) grepl("SRTM", x)))) clients["CMR"] <- TRUE
-  if(all(!clients)) out("Could not find appropriate client(s) for this/these product(s).", type = 3) else clients <- names(clients[clients])
-  
+  clients <- sapply(products, function(x){
+    if(grepl("Sentinel", x)) return("CopHub")
+    if(grepl("LANDSAT", x)) return("EE")
+    if(grepl("MODIS", x)) return("EE")
+    if(grepl("SRTM", x)) return("CMR")
+  })
+  if(is.null(unlist(clients))) out("Could not find appropriate client(s) for this/these product(s). This/these product(s) is/are not supported.", type = 3)
   
   # get records
   records <- mapply(client = clients, product_name = products, function(client, product_name){
-    eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, rename_cols = rename_cols, ..., verbose = verbose)")))
+    if(is.null(client)) out(paste0("Could not find appropriate client for product '", product_name, "'. This product is not supported."), type = 2) else{
+      eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, rename_cols = rename_cols, ..., verbose = verbose)"))) 
+    }
   }, USE.NAMES = F, SIMPLIFY = F)
   
   # bind records

@@ -253,9 +253,9 @@
 <span class="co"># Use the example AOI or draw an AOI by calling set_aoi():</span>
 <span class="fu"><a href="reference/aoi.html">set_aoi</a></span>(<span class="no">aoi_data</span><span class="kw">[[</span><span class="fl">1</span>]])
 <span class="co"># View the AOI:</span>
-<span class="fu"><a href="reference/aoi.html">view_aoi</a></span>()
-
-<span class="co"># Define an archive directory:</span>
+<span class="fu"><a href="reference/aoi.html">view_aoi</a></span>()</pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png" alt="gsd_view_aoi"></p>
+<div class="sourceCode" id="cb3"><pre class="r"><span class="co"># Define an archive directory:</span>
 <span class="fu"><a href="reference/archive.html">set_archive</a></span>(<span class="st">"/path/to/your/archive/directory/"</span>)
 
 <span class="co"># There are three services to login at:</span>
@@ -343,31 +343,31 @@
 <span class="co">#&gt; Recieving available product levels from USGS-EROS ESPA...</span>
 
 <span class="co"># Have a look at the returned records table:</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/View.html">View</a></span>(<span class="no">records</span>)
-
-<span class="co"># Filter records, e.g. to contain only Level 2A/surface reflectance records:</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/View.html">View</a></span>(<span class="no">records</span>)</pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061417-2a7df680-a9be-11ea-982b-8d954f85370c.png" alt="gSD_records"></p>
+<div class="sourceCode" id="cb4"><pre class="r"><span class="co"># Filter records, e.g. to contain only Level 2A/surface reflectance records:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="no">records</span>[<span class="no">records</span>$<span class="no">level</span> <span class="kw">==</span> <span class="st">"Level-2A"</span> <span class="kw">|</span> <span class="no">records</span>$<span class="no">level</span> <span class="kw">==</span> <span class="st">"sr"</span>,]
 
-<span class="co"># Download and georeference the previews for all records:</span>
+<span class="co"># Display the records footprints interactively:</span>
+<span class="fu"><a href="reference/view_records.html">view_records</a></span>(<span class="no">records</span>)
+<span class="co">#&gt; Composing records map...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061407-27830600-a9be-11ea-8249-7914d77ded0e.png" alt="gsd_view_records"></p>
+<div class="sourceCode" id="cb5"><pre class="r"><span class="co"># ...or plot them:</span>
+<span class="fu"><a href="reference/view_records.html">plot_records</a></span>(<span class="no">records</span>)
+<span class="co">#&gt; Composing records plot...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png" alt="gsd_plot_records"></p>
+<div class="sourceCode" id="cb6"><pre class="r"><span class="co"># Download and georeference the previews for all records:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_previews.html">get_previews</a></span>(<span class="no">records</span>)
 
 <span class="co"># Display the previews interactively (all or just a selection):</span>
 <span class="fu"><a href="reference/view_previews.html">view_previews</a></span>(<span class="no">records</span>[<span class="fl">21</span>:<span class="fl">24</span>,])
-<span class="co">#&gt; Composing preview map...</span>
-
-<span class="co"># ...or plot them:</span>
+<span class="co">#&gt; Composing preview map...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061411-294cc980-a9be-11ea-9457-60461469e70b.png" alt="gsd_view_previews"></p>
+<div class="sourceCode" id="cb7"><pre class="r"><span class="co"># ...or plot them:</span>
 <span class="fu"><a href="reference/view_previews.html">plot_previews</a></span>(<span class="no">records</span>[<span class="fl">21</span>:<span class="fl">24</span>,])
-<span class="co">#&gt; Composing preview plot...</span>
-
-<span class="co"># You can also just display the records footprints interactively:</span>
-<span class="fu"><a href="reference/view_records.html">view_records</a></span>(<span class="no">records</span>)
-<span class="co">#&gt; Composing records map...</span>
-
-<span class="co"># ...or plot them:</span>
-<span class="fu"><a href="reference/view_records.html">plot_records</a></span>(<span class="no">records</span>)
-<span class="co">#&gt; Composing records plot...</span>
-
-<span class="co"># Use the previews to calculate the cloud coverage in your AOI for all records:</span>
+<span class="co">#&gt; Composing preview plot...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061405-2651d900-a9be-11ea-8038-075efe9a3f36.png" alt="gsd_plot_previews"></p>
+<div class="sourceCode" id="cb8"><pre class="r"><span class="co"># Use the previews to calculate the cloud coverage in your AOI for all records:</span>
 <span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span>(<span class="no">records</span>)
 
 <span class="co"># With the result, getSpatiaData can automatically select the most usable records,</span>

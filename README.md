@@ -102,7 +102,11 @@ data("aoi_data")
 set_aoi(aoi_data[[1]])
 # View the AOI:
 view_aoi()
+```
 
+![gsd_view_aoi](https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png)
+
+```R
 # Define an archive directory:
 set_archive("/path/to/your/archive/directory/")
 
@@ -192,29 +196,49 @@ records <- get_records(time_range = c("2020-05-15", "2020-05-30"),
 
 # Have a look at the returned records table:
 View(records)
+```
 
+![gSD_records](https://user-images.githubusercontent.com/23257860/84061417-2a7df680-a9be-11ea-982b-8d954f85370c.png)
+
+```R
 # Filter records, e.g. to contain only Level 2A/surface reflectance records:
 records <- records[records$level == "Level-2A" | records$level == "sr",]
 
+# Display the records footprints interactively:
+view_records(records)
+#> Composing records map...
+```
+
+![gsd_view_records](https://user-images.githubusercontent.com/23257860/84061407-27830600-a9be-11ea-8249-7914d77ded0e.png)
+
+```R
+# ...or plot them:
+plot_records(records)
+#> Composing records plot...
+```
+
+![gsd_plot_records](https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png)
+
+```R
 # Download and georeference the previews for all records:
 records <- get_previews(records) 
 
 # Display the previews interactively (all or just a selection):
 view_previews(records[21:24,])
 #> Composing preview map...
+```
 
+![gsd_view_previews](https://user-images.githubusercontent.com/23257860/84061411-294cc980-a9be-11ea-9457-60461469e70b.png)
+
+```R
 # ...or plot them:
 plot_previews(records[21:24,])
 #> Composing preview plot...
+```
 
-# You can also just display the records footprints interactively:
-view_records(records)
-#> Composing records map...
+![gsd_plot_previews](https://user-images.githubusercontent.com/23257860/84061405-2651d900-a9be-11ea-8038-075efe9a3f36.png)
 
-# ...or plot them:
-plot_records(records)
-#> Composing records plot...
-
+```R
 # Use the previews to calculate the cloud coverage in your AOI for all records:
 records <- calc_cloudcov(records) 
 

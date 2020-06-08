@@ -126,7 +126,7 @@
   
   ## Check output directory
   if(archive_set){
-    if(is.null(dir_out)) dir_out <- getOption(paste0("gSD.archive", if(!is.null(which)) paste0("_", which)))
+    if(is.null(dir_out)) dir_out <- paste0(getOption("gSD.archive"), if(!is.null(which)) "_", which)
     if(!dir.exists(dir_out)) dir.create(dir_out, recursive = T)
   }
   

@@ -159,7 +159,7 @@
     <p><code>order_data</code> oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download. Use <a href='check_availability.html'>check_availability</a> to see which datasets need to be ordered before download.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>order_data</span>(<span class='no'>records</span>, <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
+    <pre class="usage"><span class='fu'>order_data</span>(<span class='no'>records</span>, <span class='kw'>wait_to_complete</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>, <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -167,6 +167,10 @@
     <tr>
       <th>records</th>
       <td><p>records data frame, containing one or multiple records (each represented by one row), as returned by <a href='get_records.html'>get_records</a></p></td>
+    </tr>
+    <tr>
+      <th>wait_to_complete</th>
+      <td><p>logical, whether to wait until all successful orders are complete and available for download. This is useful if you want to automatize subsequent downloads of placed orders.</p></td>
     </tr>
     <tr>
       <th>...</th>

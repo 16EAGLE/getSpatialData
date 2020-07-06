@@ -11,9 +11,10 @@
 #' @author Jakob Schwalb-Willmann
 #' 
 #' @importFrom httr HEAD authenticate
+#' @importFrom cli get_spinner
 #' @export
 
-order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){ #wait_for_order = FALSE, #' @param wait_for_order logical, whether to wait until all datasets have been successfully ordered and are ready for download (default) or not. If \code{FALSE}, orders are only placed.
+order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){ 
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -170,15 +171,16 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){ 
     while(isTRUE(wait_to_complete)){
       download_available <- check_availability(records[records$ordered,], verbose = F)$download_available
       if(all(download_available)){
-        wait_to_complete <- FALSE
         out("All placed orders are now available for download.")
+        wait_to_complete <- FALSE
       } else{
-        frames <- c("🌍 ", "🌎 ", "🌏 ")
-        cycles <- ceiling(wait_interval/(length(frames)*0.18))
+        spinner <- get_spinner("earth")
+        frames <- spinner$frames
+        cycles <- ceiling(wait_interval/(length(frames)*(spinner$interval/1000)))
         for(i in 1:(length(frames) * cycles)-1){
           fr <- unclass(frames[i%%length(frames) + 1])
           cat("\r", fr, "Waiting for orders to be completed, since 'wait_to_complete' was set to 'TRUE'...", sep = "")
-          Sys.sleep(0.18)
+          Sys.sleep(spinner$interval/1000)
         }
       }
     }

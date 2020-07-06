@@ -64,7 +64,7 @@ check_availability <- function(records, verbose = TRUE){
       order_ids <- order_ids[sapply(order_dates, function(x) difftime(Sys.time(), x, units = "days")) <= 7]
       
       # if there is something, digg deeper
-      if(length(order_ids) > 0){
+      if(!is.na(order_ids[1])){
         
         # get item ids for each order
         item_ids <- lapply(order_ids, function(x){

@@ -18,11 +18,14 @@ check_availability <- function(records, verbose = TRUE){
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+  #extras <- list(...)
+  #if(is.null(extras$return_status)) return_status <- FALSE else return_status <- extras$return_status
   .check_login(records)
   
   # create new colunm
   records.names <- colnames(records)
   records$download_available <- NA
+  records$order_status <- "unknown"
   
   # Sentinel
   if(any(records$product_group == "Sentinel")){
@@ -49,7 +52,7 @@ check_availability <- function(records, verbose = TRUE){
     records[sub,]$download_available <- records[sub,]$level == "l1"
     records$gSD.order_id <- if(is.null(records$order_id)) NA else records[sub,]$order_id
     
-    if(any(is.na(records[sub,]$gSD.order_id))){
+    if(any(is.na(records[sub,]$gSD.order_id) & !records[sub,]$download_available)){
       
       out("Investigating matching ESPA orders in the past...")
       # get all order ids of user
@@ -73,18 +76,22 @@ check_availability <- function(records, verbose = TRUE){
         # extract order ids that match records and are still hot for download
         records[sub,]$gSD.order_id <- order_ids[sapply(records[sub,]$record_id, function(x) which(x == item_ids)[1])]
       }
-      
-      # check for order column
-      if(any(!is.na(records[sub,]$gSD.order_id))){
-        status <- sapply(records[sub,]$gSD.order_id[!is.na(records[sub,]$gSD.order_id)], function(id){
-          sapply(content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
-        }, USE.NAMES = F)
-        if(any(status[status != "complete"])) status[status != "complete"] <- "FALSE"
-        status <- gsub("complete", "TRUE", status)
-        records[sub,]$download_available[!is.na(records[sub,]$gSD.order_id)] <- as.logical(status)
-        if(any(as.logical(status))) out("--> Found matching ESPA orders available for download.")
-      }
     }
+    
+    # check for order column
+    if(any(!is.na(records[sub,]$gSD.order_id))){
+      status <- sapply(records[sub,]$gSD.order_id[!is.na(records[sub,]$gSD.order_id)], function(id){
+        sapply(content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
+      }, USE.NAMES = F)
+      #if(isTRUE(return_status)){
+      records[sub,]$order_status <- status
+      #}
+      if(any(status != "complete")) status[status != "complete"] <- "FALSE"
+      status <- gsub("complete", "TRUE", status)
+      records[sub,]$download_available[!is.na(records[sub,]$gSD.order_id)] <- as.logical(status)
+      if(any(as.logical(status))) out("--> Found completed ESPA orders available for download.")
+    }
+    
     records$order_id <- records$gSD.order_id
     records$ordered <- NA
     records$ordered[!is.na(records$gSD.order_id)] <- TRUE

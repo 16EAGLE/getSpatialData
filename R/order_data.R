@@ -184,9 +184,9 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
         }
       }
     }
-  } else{
-    out("All placed orders are now available for download.")
   }
+  
+  if(all(records[records$ordered,]$download_available)) out("All placed orders are now available for download.")
   
   return(.column_summary(records, records.names))
 }

@@ -103,7 +103,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
           
           out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
           
-          out("Assembling dataset URLs...")
+          #out("Assembling dataset URLs...")
           x$gSD.dataset_url <- NA
           x$gSD.dataset_url <- .get_ds_urls(x)
           
@@ -171,7 +171,9 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
     while(isTRUE(wait_to_complete)){
       download_available <- check_availability(records[records$ordered,], verbose = F)$download_available
       if(all(download_available)){
+        cat("\n")
         out("All placed orders are now available for download.")
+        records[records$ordered,]$download_available <- download_available
         wait_to_complete <- FALSE
       } else{
         spinner <- get_spinner("earth")

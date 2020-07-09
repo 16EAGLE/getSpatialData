@@ -3,12 +3,15 @@
 \name{login}
 \alias{login}
 \alias{login_CopHub}
+\alias{login_codede}
 \alias{login_USGS}
 \alias{login_earthdata}
 \alias{services}
 \title{Session-wide login}
 \usage{
 login_CopHub(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
+
+login_codede(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
 
 login_USGS(username = NULL, password = NULL, n_retry = 3, verbose = TRUE)
 
@@ -33,9 +36,11 @@ Functions to login to services supported by \code{getSpatialData} once for the r
 \details{
 \code{login_CopHub} logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 
+\code{login_codede} logs you in at CODE-DE using your credentials (register once at https://code-de.org/).
+
 \code{login_USGS} logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
 
-\code{login_earthdata} logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new
+\code{login_earthdata} logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new/)
 
 \code{services} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
 }

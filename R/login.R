@@ -12,9 +12,11 @@
 #' 
 #' \code{login_CopHub} logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at https://scihub.copernicus.eu/).
 #' 
+#' \code{login_codede} logs you in at CODE-DE using your credentials (register once at https://code-de.org/).
+#' 
 #' \code{login_USGS} logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at https://ers.cr.usgs.gov/register/).
 #' 
-#' \code{login_earthdata} logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new
+#' \code{login_earthdata} logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at https://urs.earthdata.nasa.gov/users/new/)
 #' 
 #' \code{services} displays the status of all online services used by \code{getSpatialData}. Services that are operating as usual are labeled "available". Returns a \code{data.frame} containing the service status, if argument \code{value} is set to \code{TRUE}.
 #'
@@ -66,6 +68,31 @@ login_CopHub <- function(username = NULL, password = NULL, n_retry = 3, verbose 
 
 #' @rdname login
 #' @export
+login_codede <- function(username = NULL, password = NULL, n_retry = 3, verbose = TRUE){
+  
+  if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
+  if(is.null(username)) username <- getPass("Username (CODE-DE):")
+  if(is.null(password)) password <- getPass("Password (CODE-DE):")
+  char_args <- list(username = username, password = password)
+  for(i in 1:length(char_args)){
+    if(!is.character(char_args[[i]])){out(paste0("Argument '", names(char_args[i]), "' needs to be of type 'character'."), type = 3)}
+  }
+  
+  # get token
+  response <- .retry(.post, url = getOption("gSD.api")$codede$auth, 
+                     body = list(client_id="FINDER", username = username, password = password, grant_type = "password"),
+                     encode = "form", value = T,
+                     fail = out("Login failed. Please retry later or call services() to check if CODE-DE services are currently unavailable.", type=3),
+                     n = n_retry)
+  token <- content(response)$access_token
+  
+  # save credentials
+  options(gSD.codede_token = token, gSD.codede_user = username, gSD.codede_pass = password, gSD.codede_set = TRUE, gSD.codede_time = Sys.time())
+  out("Login successfull. CODE-DE credentials have been saved for the current session.")
+}
+
+#' @rdname login
+#' @export
 login_USGS <- function(username = NULL, password = NULL, n_retry = 3, verbose = TRUE){
   
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
@@ -97,10 +124,12 @@ login_earthdata <- function(username = NULL, password = NULL, n_retry = 3, verbo
   }
   
   # verify credentials
+  error_msg <- "Login failed. Please retry later or call services() to check if LAADS is currently unavailable."
   x <- .retry(httr::GET, url = gsub("allData", "README", getOption("gSD.api")$laads), 
-         config = httr::authenticate(username, password),
-         fail = out("Login failed. Please retry later or call services() to check if LAADS is currently unavailable.", type=3),
-         n = n_retry)
+              config = httr::authenticate(username, password),
+              fail = out(error_msg, type=3),
+              n = n_retry)
+  if(x$status_code != 200) out(error_msg, type=3)
 
   # save credentials
   options(gSD.ed_user = username, gSD.ed_pass = password, gSD.ed_set = TRUE, gSD.ed_time = Sys.time())
@@ -117,7 +146,7 @@ services <- function(value = F, verbose = T){
   
   # get service URLs
   urls <- getOption("gSD.api")
-  urls <- urls[names(urls) != "aws.l8.sl"]
+  urls <- urls[names(urls) != "aws.l8.sl" & names(urls) != "codede"]
   urls$aws.l8 <- gsub("c1/L8/", "", urls$aws.l8)
   
   # get service status (login for ESPA)

@@ -151,21 +151,21 @@
 #' @param url url
 #' @param username user
 #' @param password pass
-#' @param body body
+#' @param ... body
 #' 
-#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
+#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress authenticate
 #' 
 #' @keywords internal
 #' @noRd
-.post <- function(url, username = NULL, password = NULL, body = FALSE){
+.post <- function(url, username = NULL, password = NULL, ...){
   
-  x <- NULL # needed due to checks
-  post.str <-"x <- POST(url"
-  if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
-  post.str <- paste0(post.str, ", body = body)")
+  # x <- NULL # needed due to checks
+  # post.str <-"x <- POST(url"
+  # if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
+  # post.str <- paste0(post.str, ", body = body)")
   #eval(parse(text = post.str))
   
-  if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
+  if(!is.null(username)) x <- POST(url, authenticate(username, password), ...) else x <- POST(url, ...)
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   #message_for_status(x); cat("\n")}

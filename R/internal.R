@@ -128,6 +128,8 @@
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
   
+  records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
+  
   # sort columns
   return(records)
 }

@@ -308,6 +308,7 @@
       st_polygon(list(as.matrix(y)))
     }), crs = 4326)
   }
+  
   return(records)
 }
 

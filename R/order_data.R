@@ -165,30 +165,31 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
   #   }
   # }
   
-  if(any(!records[records$ordered,]$download_available) & isTRUE(wait_to_complete)){
-    
-    cat("\n")
-    while(isTRUE(wait_to_complete)){
-      download_available <- check_availability(records[records$ordered,], verbose = F)$download_available
-      if(all(download_available)){
-        cat("\n")
-        out("All placed orders are now available for download.")
-        records[records$ordered,]$download_available <- download_available
-        wait_to_complete <- FALSE
-      } else{
-        spinner <- get_spinner("earth")
-        frames <- spinner$frames
-        cycles <- ceiling(wait_interval/(length(frames)*(spinner$interval/1000)))
-        for(i in 1:(length(frames) * cycles)-1){
-          fr <- unclass(frames[i%%length(frames) + 1])
-          cat("\r", fr, "Waiting for orders to be completed, since 'wait_to_complete' was set to 'TRUE'...", sep = "")
-          Sys.sleep(spinner$interval/1000)
+  if(!all(is.na(records$ordered))){
+    if(any(!records[records$ordered,]$download_available) & isTRUE(wait_to_complete)){
+      
+      cat("\n")
+      while(isTRUE(wait_to_complete)){
+        download_available <- check_availability(records[records$ordered,], verbose = F)$download_available
+        if(all(download_available)){
+          cat("\n")
+          out("All placed orders are now available for download.")
+          records[records$ordered,]$download_available <- download_available
+          wait_to_complete <- FALSE
+        } else{
+          spinner <- get_spinner("earth")
+          frames <- spinner$frames
+          cycles <- ceiling(wait_interval/(length(frames)*(spinner$interval/1000)))
+          for(i in 1:(length(frames) * cycles)-1){
+            fr <- unclass(frames[i%%length(frames) + 1])
+            cat("\r", fr, "Waiting for orders to be completed, since 'wait_to_complete' was set to 'TRUE'...", sep = "")
+            Sys.sleep(spinner$interval/1000)
+          }
         }
       }
     }
+    if(all(records[records$ordered,]$download_available)) out("All placed orders are now available for download.")
   }
-  
-  if(all(records[records$ordered,]$download_available)) out("All placed orders are now available for download.")
   
   return(.column_summary(records, records.names))
 }

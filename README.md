@@ -250,11 +250,11 @@ records <- calc_cloudcov(records)
 
 # With the result, getSpatiaData can automatically select the most usable records,
 # for a single timestamp:
-records <- select_unitemporal(records)
+records <- select_unitemporal(records, max_sub_period=12)
 # for two timestamps:
-records <- select_bitemporal(records)
+records <- select_bitemporal(records, min_distance=3, max_sub_period=7)
 # or for a series of timestamps:
-records <- select_timeseries(records)
+records <- select_timeseries(records, n_timestamps=3, min_distance=2, max_sub_period=5)
 
 
 # Once, you came to a selection (manually or automatically), check for availability:

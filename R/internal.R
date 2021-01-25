@@ -8,7 +8,7 @@
 #' creates a temp dir (tmp_dir) and/or deletes it
 #' @param dir_out character directory as parent dir.
 #' @param action numeric, 1 for create.
-#' @param change_raster_tmp logical if TRUE the raster tmp dir will be 
+#' @param change_raster_tmp logical if TRUE the raster tmp dir will be
 #' changed to the created tmp dir.
 #' @param tmp_orig character directory. If change_raster_tmp == TRUE and action == 2
 #' the raster tmp dir will be changed to this dir.
@@ -16,7 +16,7 @@
 #' @keywords internal
 #' @noRd
 .tmp_dir <- function(dir_out, action = 2, change_raster_tmp = F, tmp_orig = NULL) {
-  
+
   tmp_dir <- file.path(dir_out,"tmp")
   if (dir.exists(tmp_dir) && action ==2) {unlink(tmp_dir,recursive=T)}
   if (action == 1) {dir.create(tmp_dir)}
@@ -26,10 +26,10 @@
     } else {
       rasterOptions(tmpdir=tmp_orig)
     }
-    
+
   }
   return(tmp_dir)
-  
+
 }
 
 #' extracts the grd and gri file path from a raster object and deletes them
@@ -40,31 +40,31 @@
 #' @keywords internal
 #' @noRd
 .delete_tmp_files <- function(dir, patterns = c(".gri",".grd")) {
-  
+
   patterns <- paste0(patterns,"$")
   files <- unlist(sapply(patterns,function(p) list.files(dir,pattern=p)))
   paths_del <- file.path(dir,files)
   del <- sapply(paths_del,function(path) {
     try <- try(unlink(path))
   })
-  
+
 }
 
-#' column summary 
+#' column summary
 #'
 #' @param records df
 #' @param records.names character
-#' 
+#'
 #' @keywords internal
 #' @noRd
 .column_summary <- function(records, records.names, download_success = F){
-  
+
   # remove internal columns
   gSD.cols <- grep("gSD", colnames(records))
   if(length(gSD.cols > 0)) records <- records[,-gSD.cols]
   diff.cols <- setdiff(colnames(records), records.names)
   if(length(diff.cols) > 0) out(paste0("Columns added to records: '", paste0(diff.cols, collapse = "', '"), "'"))
-  
+
   if(isTRUE(download_success)){
     if(!is.null(records$download_success)){
       if(any(!records$download_success)){
@@ -80,7 +80,7 @@
 
 #' translate records column names to gSD standard
 #' @param records df as returned by client
-#' @param product_name product name 
+#' @param product_name product name
 #' @keywords internal
 #' @noRd
 .translate_records <- function(records, product_name){
@@ -89,7 +89,7 @@
   # set-up column name dictionary
   records.names <- colnames(records)
   dict <- getOption("gSD.clients_dict")
-  
+
   # translate
   records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
     x <- records[[dict$clients[i]]]
@@ -99,37 +99,37 @@
     }
     return(x)
   }))), records[,!sapply(records.names, function(x) x %in% dict$clients, USE.NAMES = F)])
-  
+
   # colnames(records) <- sapply(colnames(records), function(x){
   #   i <- which(x == dict[,which.col])
   #   if(length(i) > 0) dict$gSD[i] else x
   # }, USE.NAMES = F)
-  
+
   # specific cases: all EE products
   # if(which(which.col) > 2){
   #   records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
   # }
-  
+
   records <- records[,!sapply(colnames(records), function(x) x %in%  c("orderUrl", "bulkOrdered", "ordered", "product", "dataAccessUrl", "sceneBounds", "platformshortname", "mission",
-    "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
-    "status", "filename", "format", "url", "downloadUrl", "mode", "productlevel"), USE.NAMES = F)]
+                                                                       "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
+                                                                       "status", "filename", "format", "url", "downloadUrl", "mode", "productlevel"), USE.NAMES = F)]
 
   # product groups
   products <- get_products(grouped = T, update_online = F)
   records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
   records$product <- product_name
-  
+
   # product-specfic cases
   if(unique(records$product_group) == "Sentinel"){
     records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
     records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
   if(unique(records$product == "Sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
-      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
+    gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
-  
+
   records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
-  
+
   # sort columns
   return(records)
 }
@@ -167,7 +167,7 @@
 #' @keywords internal
 #' @noRd
 rbind.different <- function(x) {
-  
+
   if (.is_empty_array(x)) {
     return(x)
   } else {
@@ -175,10 +175,10 @@ rbind.different <- function(x) {
     for(i in 2:length(x)){
       x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
       y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
-      
+
       x.bind[, c(as.character(y.diff))] <- NA
       x[[i]][, c(as.character(x.diff))] <- NA
-      
+
       x.bind <- rbind(x.bind, x[[i]])
     }
     return(x.bind)
@@ -204,7 +204,7 @@ rbind.different <- function(x) {
     aoi_area <- sum(aoi_area)
   }
   return(as.numeric(aoi_area) / 1000) # km2
-  
+
 }
 
 #' calculates the number of cells of value 1 covering the aoi
@@ -217,16 +217,16 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
-  
+
   if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi, x)
   x_vals <- getValues(x)
   # calc number of pixels with value 1
   x_valid <- length(x_vals[!is.na(x_vals)])
-  
+
   # calculate percentage of pixels with value 1 in aoi
   percent <- (x_valid / aoi_ncell) * 100
   return(percent)
-  
+
 }
 
 #' calculate aoi correction values for coverage calculation
@@ -255,14 +255,14 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .has_SAR <- function(products) {
-  
+
   sentinel1 <- name_product_sentinel1()
   if (sentinel1 %in% products) {
     has_SAR <- ifelse(all(products == sentinel1), 100, 1)
   } else {
     has_SAR <- 0
   }
-  
+
 }
 
 #' creates a tileid where not given, except Sentinel-1
@@ -271,21 +271,21 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid <- function(records) {
-  
+
   if(is.null(getElement(records, name_tile_id()))) records[name_tile_id()] <- NA_character_
-  
+
   # first, try using the horizontal / vertical columns
   has_tileid <- !is.na(getElement(records, name_tile_id()))
   has_vertical <- if(!is.null(getElement(records, name_tile_number_vertical()))) !is.na(getElement(records, name_tile_number_vertical())) else rep(FALSE, nrow(records))
   has_horizontal <- if(!is.null(getElement(records, name_tile_number_horizontal()))) !is.na(getElement(records, name_tile_number_horizontal())) else rep(FALSE, nrow(records))
-  
+
   sub <- !has_tileid & has_vertical & has_horizontal
   if(any(sub)){
     horizontal <- getElement(records[sub,], name_tile_number_horizontal())
     vertical <- getElement(records[sub,], name_tile_number_vertical())
     records[sub, name_tile_id()] <- paste0(horizontal, vertical)
   }
-  
+
   # in many cases no value is given in horizontal / vertical
   # ensure that this is given in all cases, sensor-specifically
   records <- .make_tileid_sentinel1(records)
@@ -293,7 +293,7 @@ rbind.different <- function(x) {
   records <- .make_tileid_sentinel3(records)
   records <- .make_tileid_landsat(records)
   records <- .make_tileid_modis(records)
-  
+
   return(records)
 }
 
@@ -303,7 +303,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel1 <- function(records) {
-  
+
   TILEID <- name_tile_id()
   RECORD_ID <- name_record_id()
   FOOTPRINT <- name_footprint()
@@ -325,11 +325,11 @@ rbind.different <- function(x) {
                        "v", vertical[1], ".", substr(vertical[2], 1, 1))
         }, error = function(err) {
           return(NA)
-        }) 
+        })
       })
       records[no_tileid, TILEID] <- tileids
     }
-  } 
+  }
   return(records)
 }
 
@@ -339,11 +339,11 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel2 <- function(records) {
-  
+
   RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   SENTINEL2 <- "S2"
-  
+
   # Sentinel-2
   record_ids <- records[[RECORD_ID]]
   is_sentinel2 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL2)))
@@ -357,7 +357,7 @@ rbind.different <- function(x) {
     }
   }
   return(records)
-  
+
 }
 
 #' creates tile ids for Sentinel-3 records
@@ -367,11 +367,11 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel3 <- function(records) {
-  
+
   RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   SENTINEL3 <- "S3"
-  
+
   # Sentinel-3
   record_ids <- records[[RECORD_ID]]
   is_sentinel3 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL3)))
@@ -381,7 +381,7 @@ rbind.different <- function(x) {
       tileids <- sapply(records[no_tileid, RECORD_ID], function(x){
         tryCatch({
           sep <- "______"
-          if (grepl(sep, x)) { # does it contain the "_" separator at the end 
+          if (grepl(sep, x)) { # does it contain the "_" separator at the end
             splitted <- strsplit(x, sep)[[1]][1]
             splitted1 <- strsplit(splitted, "_")[[1]]
             len <- length(splitted1)
@@ -417,11 +417,11 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid_landsat <- function(records) {
-  
+
   RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
   LANDSAT <- name_product_group_landsat()
-  
+
   record_ids <- records[[RECORD_ID]]
   is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, LANDSAT)))
   if (!.is_empty_array(is_landsat)) {
@@ -435,7 +435,7 @@ rbind.different <- function(x) {
     }
   }
   return(records)
-  
+
 }
 
 #' creates tile ids for MODIS records
@@ -444,7 +444,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .make_tileid_modis <- function(records) {
-  
+
   RECORD_ID <- name_record_id()
   PRODUCT <- name_product()
   TILEID <- name_tile_id()
@@ -452,7 +452,7 @@ rbind.different <- function(x) {
   POINT_SEP <- "\\."
   h <- "h"
   v <- "v"
-  
+
   product_names <- records[[PRODUCT]]
   is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, MODIS)))
   if (!.is_empty_array(is_modis)) {
@@ -473,7 +473,7 @@ rbind.different <- function(x) {
     }
   }
   return(records)
-  
+
 }
 
 
@@ -570,7 +570,7 @@ rbind.different <- function(x) {
   preview_masked <- .mask_raster_by_polygon(preview, poly)
   extent(preview_masked) <- extent(c(coords[1,1], coords[3,1], coords[4,2], coords[2,2]))
   return(preview_masked)
-} 
+}
 
 #' ensures min/max values of raster, stack or brick are between 0 and 255
 #' @param x raster, stack or brick.
@@ -583,16 +583,16 @@ rbind.different <- function(x) {
   min_below_zero <- which(minValue(x) < 0)
   max_above_255 <- which(maxValue(x) > max)
   if (!.is_empty_array(min_below_zero)) {
-    
+
   }
   if (!.is_empty_array(min_below_zero)) {
     for (i in min_below_zero) {
-        x[[i]][x[[i]] < min] <- min
+      x[[i]][x[[i]] < min] <- min
     }
   }
   if (!.is_empty_array(max_above_255)) {
     for (i in max_above_255) {
-        x[[i]][x[[i]] > max] <- max
+      x[[i]][x[[i]] > max] <- max
     }
   }
   return(x)
@@ -607,7 +607,7 @@ rbind.different <- function(x) {
 #' where the number of values in aoi shall be provided through aoi_ncell. This option
 #' exists to speedup the process especially when it is frequently done for a specific aoi.
 #' It calculates the percentage of value 1 in the aoi.
-#' @param custom numeric vector with two values: 
+#' @param custom numeric vector with two values:
 #' [1] are e.g. cloud values [2] are e.g. non-cloud values. Only if mode == "custom".
 #' @param aoi aoi.
 #' @param aoi_ncell integer number of cells in aoi.
@@ -616,7 +616,7 @@ rbind.different <- function(x) {
 #' @importFrom raster as.matrix extent res crs
 #' @noRd
 .raster_percent <- function(x, mode = "na", custom = c(), aoi = NULL, aoi_ncell = NULL) {
-  
+
   if (mode == "na") {
     na_mask <- is.na(x)
     x <- .mask_raster_by_polygon(na_mask, aoi)
@@ -631,10 +631,10 @@ rbind.different <- function(x) {
   } else if (mode == "aoi") {
     percent <- .calc_aoi_coverage(x, aoi, aoi_ncell)
   }
-  # due to the calculation based on pixel values it might happen that percent 
+  # due to the calculation based on pixel values it might happen that percent
   # exceeds 100 slightly. In these cases use 100
   percent <- ifelse(percent > 100, 100, percent)
-  
+
 }
 
 #' aggregates rasters according to the aoi area size.
@@ -642,20 +642,20 @@ rbind.different <- function(x) {
 #' the same resolution.
 #' @param x_names character vector of names refering to x.
 #' @param aoi aoi.
-#' @param factor numeric adjustment for aoi_area resulting in an adjustment 
+#' @param factor numeric adjustment for aoi_area resulting in an adjustment
 #' @param dir_out character directory where to save adjusted rasters if necessary
 #' @return x_adj or x (if nothing modified in data) characer vector of paths to (aggregated) rasters.
 #' @importFrom raster raster aggregate writeRaster res dataType nlayers
 #' @keywords internal
 #' @noRd
 .aggr_rasters <- function(x, x_names, aoi, factor = 750000, dir_out) {
-  
+
   aoi_area <- .calc_aoi_area(aoi) # km2
   adj <- aoi_area / factor
   res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
   target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
   # do not reduce more than the equivalent of double the Sentinel-2 preview resolution
-  if (target_res > 0.0042) target_res <- 0.004 
+  if (target_res > 0.0042) target_res <- 0.004
   adj <- target_res / res_ref
   adj <- ifelse(adj < 2 && adj > 1, 2, adj)
   if (adj > 1) {
@@ -671,23 +671,23 @@ rbind.different <- function(x) {
     return(x)
   }
   return(x_adj)
-  
+
 }
 
 #' create mosaic
 #' @description The rasters from \code{x} will be mosaicked in a stupid way: everything is mosaicked that is in this list.
 #' @param x list of paths to raster files.
 #' @param save_path character, full path where to save the mosaic (has to end with '.tif').
-#' @param mode character, optional. If mode == "rgb" no masking of the raster to only 1 values is done. 
+#' @param mode character, optional. If mode == "rgb" no masking of the raster to only 1 values is done.
 #' If mode == "mask" the raster will be returned with 1 and NA. Default is mode == "mask".
 #' @param srcnodata character nodata value in x. Default is for FLT4S.
 #' @return \code{mos} raster mosaic
 #' @keywords internal
 #' @importFrom gdalUtils gdalbuildvrt
 #' @noRd
-.make_mosaic <- function(x, save_path, mode = "mask", 
+.make_mosaic <- function(x, save_path, mode = "mask",
                          srcnodata = NULL, datatype = NULL) {
-  
+
   write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",
                                 srcnodata=as.character(srcnodata),
                                 vrtnodata="0",
@@ -700,7 +700,7 @@ rbind.different <- function(x) {
     mos <- raster(save_path)
     if (mode == "rgb") return(mos) else mos <- mos==1
   }
-  
+
 }
 
 #' wrapper for masking raster by polygon
@@ -731,7 +731,7 @@ rbind.different <- function(x) {
     polygon <- as_Spatial(polygon)
   }
   return(crop(x, polygon))
-} 
+}
 
 
 #' calculates the normalized difference of two rasters
@@ -791,12 +791,12 @@ rbind.different <- function(x) {
 #' @return nothing. runs expression
 #' @keywords internal
 #' @noRd
-.add_aoi <- function(map = NULL, aoi_colour, homebutton = F){
+.add_aoi <- function(map = NULL, aoi_colour = "Blue", homebutton = F){
   if(isFALSE(getOption("gSD.aoi_set"))){
     out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
   } else{
     aoi.sf <- getOption("gSD.aoi")
-    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, legend = F, homebutton = homebutton)
     if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
   }
 }
@@ -968,29 +968,29 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .retry <- function(fun, ..., fail, ini = NULL, retry = NULL, final = NULL, n = 3, delay = 0, value = TRUE, verbose = T){
-  
+
   # get ...
   extras <- list(...)
   #if(length(extras) > 0) for(i in 1:length(extras)) assign(names(extras)[[i]], extras[[i]])
-  
+
   # initial evaluation
   if(!is.null(ini)) eval(ini)
-  
+
   # retry evluation
   while(n != 0){
     x <- try(fun(...), silent = T)
     if(inherits(x, "try-error")){
-      
+
       # retry evluation
       if(grepl("aborted", as.character(attributes(x)$condition))) out("Operation was aborted by an application callback.", type = 3) else eval(retry)
-      
+
       # fail evaluation
       n <- n-1
       if(n == 0) x <- eval(fail)
     } else n <- 0
     Sys.sleep(delay)
   }
-  
+
   # final evaluation
   eval(final)
   if(isTRUE(value)) return(x)
@@ -999,7 +999,7 @@ rbind.different <- function(x) {
 #' verbose lapply
 #'
 #' @importFrom pbapply pblapply
-#' @noRd 
+#' @noRd
 .lapply <- function(X, FUN, ..., verbose = FALSE){
   if(isTRUE(verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
 }
@@ -1007,7 +1007,7 @@ rbind.different <- function(x) {
 #' verbose sapply
 #'
 #' @importFrom pbapply pbsapply
-#' @noRd 
+#' @noRd
 .sapply <- function(X, FUN, ..., verbose = FALSE){
   if(isTRUE(verbose)) pbsapply(X, FUN, ...) else sapply(X, FUN, ...)
 }
@@ -1015,7 +1015,7 @@ rbind.different <- function(x) {
 #' verbose apply
 #'
 #' @importFrom pbapply pbapply
-#' @noRd 
+#' @noRd
 .apply <- function(X, MARGIN, FUN, ..., verbose = FALSE){
   if(isTRUE(verbose)) pbapply(X, MARGIN, FUN, ...) else apply(X, MARGIN, FUN, ...)
 }
@@ -1027,7 +1027,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .onLoad <- function(libname, pkgname){
-  
+
   pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
   clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
                                     c("summary", "product"), # place holder
@@ -1117,7 +1117,7 @@ rbind.different <- function(x) {
                                     c("MissingDataPercentage", "missingdata"),
                                     c("collection_concept_id", "product_id"), stringsAsFactors = F)
   colnames(clients_dict) <- c("clients", "gSD")
-  
+
   op <- options()
   op.gSD <- list(
     gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
@@ -1175,10 +1175,10 @@ rbind.different <- function(x) {
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])
-  
+
   ## allocate gdal on load
   #gdalUtils::gdal_setInstallation(rescan = T)
-  
+
   invisible()
 }
 
@@ -1186,7 +1186,7 @@ rbind.different <- function(x) {
 #' @keywords internal
 #' @noRd
 .onUnload <- function(libname, pkgname) {
-  
+
   ## logout from USGS
   if(isTRUE(getOption("gSD.usgs_set"))) .ERS_logout(getOption("gSD.usgs_apikey"))
 }

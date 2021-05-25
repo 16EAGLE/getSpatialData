@@ -796,7 +796,7 @@ rbind.different <- function(x) {
     out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
   } else{
     aoi.sf <- getOption("gSD.aoi")
-    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, fill = F, legend = F, homebutton = homebutton)
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, legend = F, homebutton = homebutton)
     if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
   }
 }

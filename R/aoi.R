@@ -62,11 +62,6 @@ set_aoi <- function(aoi){
 #' @export
 view_aoi <- function(aoi = NULL, aoi_colour = "deepskyblue", ...){
   
-  if(missing(aoi_colour)){
-    extras <- list(...)
-    aoi_colour <- extras$color # deprecated argument
-  }
-  
   aoi.sf <- .check_aoi(aoi, type = "sf")
   .add_aoi(aoi_colour = aoi_colour, homebutton = T)
 }

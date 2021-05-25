@@ -33,6 +33,7 @@ Imports:
   grDevices
 RoxygenNote: 7.1.0
 Suggests: 
-  testthat
+  testthat,
+  covr
 BugReports: http://www.github.com/16eagle/getSpatialData/issues
 URL: http://www.github.com/16eagle/getSpatialData/

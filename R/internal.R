@@ -128,6 +128,8 @@
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
   
+  records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
+  
   # sort columns
   return(records)
 }
@@ -1119,6 +1121,7 @@ rbind.different <- function(x) {
   op <- options()
   op.gSD <- list(
     gSD.api = list(dhus = 'https://scihub.copernicus.eu/dhus/',
+                   codede = list(auth = 'https://auth.cloud.code-de.org/auth/realms/code-de/protocol/openid-connect/token'),
                    #s3 = 'https://scihub.copernicus.eu/s3/',
                    s5p = 'https://s5phub.copernicus.eu/',
                    gnss = 'https://scihub.copernicus.eu/gnss/',
@@ -1128,6 +1131,7 @@ rbind.different <- function(x) {
                    aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
                    laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
     gSD.api.names = list(dhus = "ESA Copernicus Open Hub",
+                         codede = "CODE-DE",
                          #s3 = "ESA Copernicus S3 Hub",
                          s5p = "ESA Copernicus S5P Hub",
                          gnss = "ESA Copernicus GNSS Hub",
@@ -1146,6 +1150,11 @@ rbind.different <- function(x) {
     gSD.dhus_pass = FALSE,
     gSD.dhus_set = FALSE,
     gSD.dhus_time = NULL,
+    gSD.codede_token = NULL,
+    gSD.codede_user = NULL,
+    gSD.codede_pass = NULL,
+    gSD.codede_set = FALSE,
+    gSD.codede_time = NULL,
     gSD.usgs_user = FALSE,
     gSD.usgs_pass = FALSE,
     gSD.usgs_set = FALSE,

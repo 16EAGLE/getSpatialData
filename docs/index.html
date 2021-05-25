@@ -108,9 +108,9 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="getspatialdata" class="section level1">
+<div id="getspatialdata-" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#getspatialdata" class="anchor"></a>getSpatialData <a href="http://jxsw.de/getSpatialData"><img align="right" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_hex.png"></a>
+<a href="#getspatialdata-" class="anchor"></a>getSpatialData <a href="http://jxsw.de/getSpatialData"><img align="right" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_hex.png"></a>
 </h1></div>
 
 <div id="introduction" class="section level2">
@@ -130,7 +130,7 @@
 <div id="workflow" class="section level2">
 <h2 class="hasAnchor">
 <a href="#workflow" class="anchor"></a>Workflow</h2>
-<p>The <code>getSpatialData</code> workflow to query, preview, analyse, select, order and download spatial data is designed to be as reproducible as possible and is made of six steps:</p>
+<p>The <code>getSpatialData</code> workflow is designed to be as reproducible as possible and is made of six steps:</p>
 <ol>
 <li>
 <strong>querying</strong> products of interest (see <code><a href="reference/get_products.html">get_products()</a></code>) for available records by an area of interest (AOI) and time (see <code><a href="reference/get_records.html">get_records()</a></code>),</li>
@@ -147,6 +147,16 @@
 </ol>
 <p>For all steps, <code>getSpatialData</code> supports local chaching to reduce bandwith usage and uneccasary downloads.</p>
 <p>This approach is implemented by the following functions (sorted by the order in which they would be typically used):</p>
+<div id="defining-session-settings" class="section level4">
+<h4 class="hasAnchor">
+<a href="#defining-session-settings" class="anchor"></a>Defining session settings</h4>
+<ul>
+<li>
+<code><a href="reference/aoi.html">set_aoi()</a></code>, <code><a href="reference/aoi.html">view_aoi()</a></code> and <code><a href="reference/aoi.html">get_aoi()</a></code> set, view and get a session-wide area of interest (AOI) that can be used by all <code>getSpatialData</code> functions.</li>
+<li>
+<code><a href="reference/archive.html">set_archive()</a></code> and <code><a href="reference/archive.html">get_archive()</a></code> set and get a session-wide archive directory that can be used by all <code>getSpatialData</code> functions.</li>
+</ul>
+</div>
 <div id="logging-in" class="section level4">
 <h4 class="hasAnchor">
 <a href="#logging-in" class="anchor"></a>Logging in</h4>
@@ -159,16 +169,6 @@
 <code><a href="reference/login.html">login_earthdata()</a></code> logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at <a href="https://urs.earthdata.nasa.gov/users/new" class="uri">https://urs.earthdata.nasa.gov/users/new</a>)</li>
 <li>
 <code><a href="reference/login.html">services()</a></code> displays the status of all online services used by <code>getSpatialData</code>.</li>
-</ul>
-</div>
-<div id="defining-session-settings" class="section level4">
-<h4 class="hasAnchor">
-<a href="#defining-session-settings" class="anchor"></a>Defining session settings</h4>
-<ul>
-<li>
-<code><a href="reference/aoi.html">set_aoi()</a></code>, <code><a href="reference/aoi.html">view_aoi()</a></code> and <code><a href="reference/aoi.html">get_aoi()</a></code> set, view and get a session-wide area of interest (AOI) that can be used by all <code>getSpatialData</code> functions.</li>
-<li>
-<code><a href="reference/archive.html">set_archive()</a></code> and <code><a href="reference/archive.html">get_archive()</a></code> set and get a session-wide archive directory that can be used by all <code>getSpatialData</code> functions.</li>
 </ul>
 </div>
 <div id="retrieving-and-visualizing-records" class="section level4">
@@ -247,43 +247,170 @@
 <div id="get-started" class="section level2">
 <h2 class="hasAnchor">
 <a href="#get-started" class="anchor"></a>Get started</h2>
+<p>The following example demonstrates a workflow for querying, previewing, analysing, selecting, ordering and downloading optical data from multiple sources at once (in this case Sentinel-2 L2A and Landsat 8 OLI Surface Reflectances).</p>
 <div class="sourceCode" id="cb2"><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">getSpatialData</span>)
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span>(<span class="st">"aoi_data"</span>)
 
- <span class="co"># use example aoi</span>
+<span class="co"># Define an archive directory:</span>
+<span class="fu"><a href="reference/archive.html">set_archive</a></span>(<span class="st">"/path/to/your/archive/directory/"</span>)
+
+<span class="co"># Define an area of interest (AOI):</span>
+<span class="co"># Use the example AOI or draw an AOI by calling set_aoi():</span>
 <span class="fu"><a href="reference/aoi.html">set_aoi</a></span>(<span class="no">aoi_data</span><span class="kw">[[</span><span class="fl">1</span>]])
-<span class="fu"><a href="reference/aoi.html">view_aoi</a></span>()
+<span class="co"># View the AOI:</span>
+<span class="fu"><a href="reference/aoi.html">view_aoi</a></span>()</pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png" alt="gsd_view_aoi"></p>
+<div class="sourceCode" id="cb3"><pre class="r"><span class="co"># There are three services to login at:</span>
+<span class="fu"><a href="reference/login.html">login_CopHub</a></span>(<span class="kw">username</span> <span class="kw">=</span> <span class="st">"yourusername"</span>)
+<span class="co">#&gt; Login successfull. ESA Copernicus credentials have been saved for the current session.</span>
+<span class="fu"><a href="reference/login.html">login_USGS</a></span>(<span class="kw">username</span> <span class="kw">=</span> <span class="st">"yourusername"</span>)
+<span class="co">#&gt; Login successfull. USGS ERS credentials have been saved for the current session.</span>
+<span class="fu"><a href="reference/login.html">login_earthdata</a></span>(<span class="kw">username</span> <span class="kw">=</span> <span class="st">"yourusername"</span>)
+<span class="co">#&gt; Login successfull. NASA URS EarthData credentials have been saved for the current session.</span>
 
-<span class="co"># define archive directory</span>
-<span class="fu"><a href="reference/archive.html">set_archive</a></span>(<span class="st">"/path/to/archive/dir"</span>)
+<span class="co"># Print the status of all services:</span>
+<span class="fu"><a href="reference/login.html">services</a></span>()
+<span class="co">#&gt; ● ESA Copernicus Open Hub:  'available'     'Connection successfully established.'</span>
+<span class="co">#&gt; ● ESA Copernicus S5P Hub:   'available'     'Connection successfully established.'</span>
+<span class="co">#&gt; ● ESA Copernicus GNSS Hub:  'available'     'Connection successfully established.'</span>
+<span class="co">#&gt; ● USGS-EROS ESPA:           'available'     'Connection successfully established.'</span>
+<span class="co">#&gt; ● USGS EarthExplorer:       'available'     'Connection successfully established.'</span>
+<span class="co">#&gt; ● AWS Landsat 8:            'available'     'Connection successfully established.'</span>
+<span class="co">#&gt; ● NASA DAAC LAADS:          'available'     'Connection successfully established.'</span>
 
-<span class="co"># login</span>
-<span class="fu"><a href="reference/login.html">login_CopHub</a></span>() <span class="co"># login Copernicus Open Access Hub</span>
-<span class="fu"><a href="reference/login.html">login_USGS</a></span>() <span class="co"># login USGS</span>
-
-<span class="co"># print available products</span>
+<span class="co"># First, print all available products:</span>
 <span class="fu"><a href="reference/get_products.html">get_products</a></span>()
-<span class="no">products</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Sentinel-2"</span>, <span class="st">"LANDSAT_8_C1"</span>)
+<span class="co">#&gt;   [1] "Sentinel-1"            "Sentinel-2"            "Sentinel-3"           </span>
+<span class="co">#&gt;   [4] "Sentinel-5P"           "Sentinel-1_GNSS"       "Sentinel-2_GNSS"      </span>
+<span class="co">#&gt;   [7] "Sentinel-3_GNSS"       "LANDSAT_ETM_C1"        "LANDSAT_MSS_C1"       </span>
+<span class="co">#&gt;  [10] "LANDSAT_TM_C1"         "LANDSAT_8_C1"          "MODIS_MCD43D28_V6"    </span>
+<span class="co">#&gt;  [13] "MODIS_MYD21A1N_V6"     "MODIS_MCD43A1_V6"      "MODIS_MCD43A2_V6"     </span>
+<span class="co">#&gt;  [16] "MODIS_MCD43A3_V6"      "MODIS_MCD43A4_V6"      "MODIS_MCD43C1_V6"     </span>
+<span class="co">#&gt;  [19] "MODIS_MCD43C2_V6"      "MODIS_MCD43C3_V6"      "MODIS_MCD43C4_V6"     </span>
+<span class="co">#&gt;  [22] "MODIS_MCD43D01_V6"     "MODIS_MCD43D02_V6"     "MODIS_MCD43D03_V6"    </span>
+<span class="co">#&gt;  [25] "MODIS_MCD43D04_V6"     "MODIS_MCD43D05_V6"     "MODIS_MCD43D06_V6"    </span>
+<span class="co">#&gt;  [28] "MODIS_MCD43D07_V6"     "MODIS_MCD43D08_V6"     "MODIS_MCD43D09_V6"    </span>
+<span class="co">#&gt;  [31] "MODIS_MCD43D10_V6"     "MODIS_MCD43D11_V6"     "MODIS_MCD43D12_V6"    </span>
+<span class="co">#&gt;  [34] "MODIS_MCD43D13_V6"     "MODIS_MCD43D14_V6"     "MODIS_MCD43D15_V6"    </span>
+<span class="co">#&gt;  [37] "MODIS_MCD43D16_V6"     "MODIS_MCD43D17_V6"     "MODIS_MCD43D18_V6"    </span>
+<span class="co">#&gt;  [40] "MODIS_MCD43D19_V6"     "MODIS_MCD43D20_V6"     "MODIS_MCD43D21_V6"    </span>
+<span class="co">#&gt;  [43] "MODIS_MCD43D22_V6"     "MODIS_MCD43D23_V6"     "MODIS_MCD43D24_V6"    </span>
+<span class="co">#&gt;  [46] "MODIS_MCD43D25_V6"     "MODIS_MCD43D26_V6"     "MODIS_MCD43D27_V6"    </span>
+<span class="co">#&gt;  [49] "MODIS_MCD43D29_V6"     "MODIS_MCD43D30_V6"     "MODIS_MCD43D31_V6"    </span>
+<span class="co">#&gt;  [52] "MODIS_MCD43D32_V6"     "MODIS_MCD43D33_V6"     "MODIS_MCD43D34_V6"    </span>
+<span class="co">#&gt;  [55] "MODIS_MCD43D35_V6"     "MODIS_MCD43D36_V6"     "MODIS_MCD43D37_V6"    </span>
+<span class="co">#&gt;  [58] "MODIS_MCD43D38_V6"     "MODIS_MCD43D39_V6"     "MODIS_MCD43D40_V6"    </span>
+<span class="co">#&gt;  [61] "MODIS_MCD43D41_V6"     "MODIS_MCD43D42_V6"     "MODIS_MCD43D43_V6"    </span>
+<span class="co">#&gt;  [64] "MODIS_MCD43D44_V6"     "MODIS_MCD43D45_V6"     "MODIS_MCD43D46_V6"    </span>
+<span class="co">#&gt;  [67] "MODIS_MCD43D47_V6"     "MODIS_MCD43D48_V6"     "MODIS_MCD43D49_V6"    </span>
+<span class="co">#&gt;  [70] "MODIS_MCD43D50_V6"     "MODIS_MCD43D51_V6"     "MODIS_MCD43D52_V6"    </span>
+<span class="co">#&gt;  [73] "MODIS_MCD43D53_V6"     "MODIS_MCD43D54_V6"     "MODIS_MCD43D55_V6"    </span>
+<span class="co">#&gt;  [76] "MODIS_MCD43D56_V6"     "MODIS_MCD43D57_V6"     "MODIS_MCD43D58_V6"    </span>
+<span class="co">#&gt;  [79] "MODIS_MCD43D59_V6"     "MODIS_MCD43D60_V6"     "MODIS_MCD43D61_V6"    </span>
+<span class="co">#&gt;  [82] "MODIS_MCD43D62_V6"     "MODIS_MCD43D63_V6"     "MODIS_MCD43D64_V6"    </span>
+<span class="co">#&gt;  [85] "MODIS_MCD43D65_V6"     "MODIS_MCD43D66_V6"     "MODIS_MCD43D67_V6"    </span>
+<span class="co">#&gt;  [88] "MODIS_MCD43D68_V6"     "MODIS_MYD09A1_V6"      "MODIS_MYD09CMG_V6"    </span>
+<span class="co">#&gt;  [91] "MODIS_MYD09GA_V6"      "MODIS_MYD09GQ_V6"      "MODIS_MYD09Q1_V6"     </span>
+<span class="co">#&gt;  [94] "MODIS_MYD13A1_V6"      "MODIS_MYD13A2_V6"      "MODIS_MYD13A3_V6"     </span>
+<span class="co">#&gt;  [97] "MODIS_MYD13C1_V6"      "MODIS_MYD13C2_V6"      "MODIS_MYD13Q1_V6"     </span>
+<span class="co">#&gt; [100] "MODIS_MYD14_V6"        "MODIS_MYD14A1_V6"      "MODIS_MYD14A2_V6"     </span>
+<span class="co">#&gt; [103] "MODIS_MYD15A2H_V6"     "MODIS_MYD17A2H_V6"     "MODIS_MYD21A2_V6"     </span>
+<span class="co">#&gt; [106] "MODIS_MYD21_V6"        "MODIS_MYD21A1D_V6"     "MODIS_MYD11A1_V6"     </span>
+<span class="co">#&gt; [109] "MODIS_MYD11A2_V6"      "MODIS_MYD11B1_V6"      "MODIS_MYD11C1_V6"     </span>
+<span class="co">#&gt; [112] "MODIS_MYD11C2_V6"      "MODIS_MYD11C3_V6"      "MODIS_MYD11_L2_V6"    </span>
+<span class="co">#&gt; [115] "MODIS_MYD16A2_V6"      "MODIS_MCD15A2H_V6"     "MODIS_MCD15A3H_V6"    </span>
+<span class="co">#&gt; [118] "MODIS_MOD11A1_V6"      "MODIS_MOD09A1_V6"      "MODIS_MOD09CMG_V6"    </span>
+<span class="co">#&gt; [121] "MODIS_MOD09GA_V6"      "MODIS_MOD09GQ_V6"      "MODIS_MOD09Q1_V6"     </span>
+<span class="co">#&gt; [124] "MODIS_MOD11A2_V6"      "MODIS_MOD11B1_V6"      "MODIS_MOD11B2_V6"     </span>
+<span class="co">#&gt; [127] "MODIS_MOD11B3_V6"      "MODIS_MOD11C1_V6"      "MODIS_MOD11C2_V6"     </span>
+<span class="co">#&gt; [130] "MODIS_MOD11C3_V6"      "MODIS_MOD11_L2_V6"     "MODIS_MOD13A1_V6"     </span>
+<span class="co">#&gt; [133] "MODIS_MOD13A2_V6"      "MODIS_MOD13A3_V6"      "MODIS_MOD13C1_V6"     </span>
+<span class="co">#&gt; [136] "MODIS_MOD13C2_V6"      "MODIS_MOD13Q1_V6"      "MODIS_MOD14_V6"       </span>
+<span class="co">#&gt; [139] "MODIS_MOD14A1_V6"      "MODIS_MOD14A2_V6"      "MODIS_MOD15A2H_V6"    </span>
+<span class="co">#&gt; [142] "MODIS_MOD17A2H_V6"     "MODIS_MYD11B2_V6"      "MODIS_MYD11B3_V6"     </span>
+<span class="co">#&gt; [145] "MODIS_MOD44W_V6"       "MODIS_MOD16A2_V6"      "MODIS_MOD44B_V6"      </span>
+<span class="co">#&gt; [148] "MODIS_MCD12C1_V6"      "MODIS_MCD12Q1_V6"      "MODIS_MCD19A3_V6"     </span>
+<span class="co">#&gt; [151] "MODIS_MCD19A2_V6"      "MODIS_MCD19A1_V6"      "MODIS_MCD64A1_V6"     </span>
+<span class="co">#&gt; [154] "MODIS_MODOCGA_V6"      "MODIS_MODTBGA_V6"      "MODIS_MYDOCGA_V6"     </span>
+<span class="co">#&gt; [157] "MODIS_MYDTBGA_V6"      "EMODIS_GLOBAL_LST_V6"  "EMODIS_NDVI_V6"       </span>
+<span class="co">#&gt; [160] "EMODIS_PHEN_METRICS"   "SRTM_global_3arc_V003" "SRTM_global_1arc_V001"</span>
 
-<span class="co"># get available records</span>
-<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_records.html">get_records</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"2020-05-01"</span>, <span class="st">"2020-05-15"</span>), <span class="kw">products</span> <span class="kw">=</span> <span class="no">products</span>)
+<span class="co"># Query all available records for multiple products and a given time range at once,</span>
+<span class="co"># for example for Sentinel-2 and Landsat 8:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_records.html">get_records</a></span>(<span class="kw">time_range</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"2020-05-15"</span>, <span class="st">"2020-05-30"</span>),
+                       <span class="kw">products</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"Sentinel-2"</span>, <span class="st">"LANDSAT_8_C1"</span>))
+<span class="co">#&gt; Searching records for product name 'Sentinel-2'...</span>
+<span class="co">#&gt; Searching records for product name 'LANDSAT_8_C1'...</span>
+<span class="co">#&gt; Reading meta data of search results from USGS EarthExplorer...</span>
+<span class="co">#&gt; Recieving available product levels from USGS-EROS ESPA...</span>
 
-<span class="co"># for Sentinel-2 use only Level 2A</span>
-<span class="no">sub</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/which.html">which</a></span>(<span class="fu"><a href="reference/is.sentinel.html">is.sentinel2_L2A</a></span>(<span class="no">records</span>)), <span class="fu"><a href="https://rdrr.io/r/base/which.html">which</a></span>(<span class="fu"><a href="reference/is.landsat.html">is.landsat8</a></span>()))
-<span class="no">records_sub</span> <span class="kw">&lt;-</span> <span class="no">records</span>[<span class="no">sub</span>, ] <span class="co"># subset</span>
+<span class="co"># Have a look at the returned records table:</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/View.html">View</a></span>(<span class="no">records</span>)</pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061417-2a7df680-a9be-11ea-982b-8d954f85370c.png" alt="gSD_records"></p>
+<div class="sourceCode" id="cb4"><pre class="r"><span class="co"># Filter records, e.g. to contain only Level 2A/surface reflectance records:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="no">records</span>[<span class="no">records</span>$<span class="no">level</span> <span class="kw">==</span> <span class="st">"Level-2A"</span> <span class="kw">|</span> <span class="no">records</span>$<span class="no">level</span> <span class="kw">==</span> <span class="st">"sr"</span>,]
 
-<span class="co"># get preview images</span>
-<span class="no">records_previews</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_previews.html">get_previews</a></span>(<span class="no">records_sub</span>)
+<span class="co"># Display the records footprints interactively:</span>
+<span class="fu"><a href="reference/view_records.html">view_records</a></span>(<span class="no">records</span>)
+<span class="co">#&gt; Composing records map...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061407-27830600-a9be-11ea-8249-7914d77ded0e.png" alt="gsd_view_records"></p>
+<div class="sourceCode" id="cb5"><pre class="r"><span class="co"># ...or plot them:</span>
+<span class="fu"><a href="reference/view_records.html">plot_records</a></span>(<span class="no">records</span>)
+<span class="co">#&gt; Composing records plot...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png" alt="gsd_plot_records"></p>
+<div class="sourceCode" id="cb6"><pre class="r"><span class="co"># Download and georeference the previews for all records:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_previews.html">get_previews</a></span>(<span class="no">records</span>)
 
-<span class="co"># view previews with basemap</span>
-<span class="fu"><a href="reference/view_previews.html">view_previews</a></span>(<span class="no">records_previews</span>)
+<span class="co"># Display the previews interactively (all or just a selection):</span>
+<span class="fu"><a href="reference/view_previews.html">view_previews</a></span>(<span class="no">records</span>[<span class="fl">21</span>:<span class="fl">24</span>,])
+<span class="co">#&gt; Composing preview map...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061411-294cc980-a9be-11ea-9457-60461469e70b.png" alt="gsd_view_previews"></p>
+<div class="sourceCode" id="cb7"><pre class="r"><span class="co"># ...or plot them:</span>
+<span class="fu"><a href="reference/view_previews.html">plot_previews</a></span>(<span class="no">records</span>[<span class="fl">21</span>:<span class="fl">24</span>,])
+<span class="co">#&gt; Composing preview plot...</span></pre></div>
+<p><img src="https://user-images.githubusercontent.com/23257860/84061405-2651d900-a9be-11ea-8038-075efe9a3f36.png" alt="gsd_plot_previews"></p>
+<div class="sourceCode" id="cb8"><pre class="r"><span class="co"># Use the previews to calculate the cloud coverage in your AOI for all records:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span>(<span class="no">records</span>)
 
-<span class="co"># calc cloudcov in your aoi</span>
-<span class="no">records_cloudcov</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span>(<span class="no">records_previews</span>)
-<span class="no">records_selected</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_unitemporal.html">select_unitemporal</a></span>(<span class="no">records_cloudcov</span>) <span class="co"># select records for single timestamp</span></pre></div>
+
+<span class="co"># With the result, getSpatiaData can automatically select the most usable records,</span>
+<span class="co"># for a single timestamp:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_unitemporal.html">select_unitemporal</a></span>(<span class="no">records</span>)
+<span class="co"># for two timestamps:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_bitemporal.html">select_bitemporal</a></span>(<span class="no">records</span>)
+<span class="co"># or for a series of timestamps:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/select_timeseries.html">select_timeseries</a></span>(<span class="no">records</span>)
+
+
+<span class="co"># Once, you came to a selection (manually or automatically), check for availability:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/check_availability.html">check_availability</a></span>(<span class="no">records</span>)
+<span class="co">#&gt; Checking instant availability for Sentinel records...</span>
+<span class="co">#&gt; Checking availability for Landsat records...</span>
+<span class="co">#&gt; Investigating matching ESPA orders in the past...</span>
+<span class="co">#&gt; --&gt; Found matching ESPA orders available for download.</span>
+<span class="co">#&gt; 23/30 records are currently available for download (this includes past completed orders that are still available for download).</span>
+<span class="co">#&gt; Columns added to records: 'download_available', 'order_id', 'ordered'</span>
+
+<span class="co"># Data sets that are not instantly available for download, e.g. because the have been</span>
+<span class="co"># archived, can be ordered:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/order_data.html">order_data</a></span>(<span class="no">records</span>)
+<span class="co">#&gt; Warning: Please note: The Copernicus LTA quota currently permits users to request a maximum of one LTA dataset per 30 minutes!</span>
+<span class="co">#&gt; Assembling dataset URLs...</span>
+<span class="co">#&gt; Attempting orders...</span>
+<span class="co">#&gt; [Dataset 1/7] Requesting order of 'LC08_L1TP_194025_20200516_20200527_01_T1' at ESPA...</span>
+<span class="co">#&gt; Ordering requested items from ESPA...</span>
+<span class="co">#&gt; Collecting from 1 collection(s) [olitirs8_collection], resulting in 1 order(s)...</span>
+<span class="co">#&gt; Products 'LC08_L1TP_194025_20200516_20200527_01_T1' have been ordered successfully:</span>
+<span class="co">#&gt; [level = 'toa', format = 'gtiff', order ID(s) 'espa-xxx@xxx.de-06082020-113626-xxx'].</span>
+<span class="co">#&gt; ...</span>
+
+<span class="co"># Finally, download records available for download:</span>
+<span class="no">records</span> <span class="kw">&lt;-</span> <span class="fu"><a href="reference/get_data.html">get_data</a></span>(<span class="no">records</span>)</pre></div>
 </div>
 <div id="supported-products" class="section level2">
 <h2 class="hasAnchor">
 <a href="#supported-products" class="anchor"></a>Supported products</h2>
+<p><em>Table to be added</em></p>
 </div>
 <div id="contribution" class="section level2">
 <h2 class="hasAnchor">

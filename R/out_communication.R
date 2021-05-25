@@ -33,6 +33,29 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", flush = FALS
   }
 }
 
+
+#' Outputs spinners for sleep sections
+#'
+#' @param input character
+#' @param sleep numeric, length of sleep in seconds
+#' @param sp spinner
+#'
+#' @importFrom cli get_spinner
+#' @keywords internal
+#' @noRd
+spin <- function(input = "", sleep = 4, sp = get_spinner("earth")){
+  interval <- sp$interval/1000
+  frames <- sp$frames
+  cycles <- ceiling(sleep/(length(frames)*interval))
+  for (i in 1:(length(frames) * cycles) - 1) {
+    fr <- unclass(frames[i%%length(frames) + 1])
+    cat("\r", fr, input, sep = "")
+    Sys.sleep(interval)
+  }
+  cat("\n")
+}
+
+
 #' prints character vectors in console combined into one message in out()
 #' @param x list of character vectors.
 #' @param type numeric as in out().

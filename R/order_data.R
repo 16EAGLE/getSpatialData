@@ -3,6 +3,7 @@
 #' \code{order_data} oders datasets that are not available for immediate download (on-demand) but need to be ordered or restored before download. Use \link{check_availability} to see which datasets need to be ordered before download.
 #'
 #' @inheritParams get_data
+#' @param wait_to_complete logical, whether to wait until all successful orders are complete and available for download. This is useful if you want to automatize subsequent downloads of placed orders.
 #' 
 #' @note To use this function, you must be logged in at the services required for your request. See the examples and \link{login} for details.
 #' @return A data frame of records (as defined with argument \code{records}), extended by additional columns.
@@ -10,14 +11,16 @@
 #' @author Jakob Schwalb-Willmann
 #' 
 #' @importFrom httr HEAD authenticate
+#' @importFrom cli get_spinner
 #' @export
 
-order_data <- function(records, ..., verbose = TRUE){ #wait_for_order = FALSE, #' @param wait_for_order logical, whether to wait until all datasets have been successfully ordered and are ready for download (default) or not. If \code{FALSE}, orders are only placed.
+order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){ 
   
   # checks
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
+  if(is.null(extras$wait_interval)) wait_interval <- 15 else wait_interval <- extras$wait_interval
   records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id", "summary"))
   
   # save names
@@ -39,10 +42,11 @@ order_data <- function(records, ..., verbose = TRUE){ #wait_for_order = FALSE, #
     records <- check_availability(records, verbose = FALSE)
     if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   }
-  if(all(records$download_available)){
-    out("All supplied records are available for download.")
+  if(all(records$download_available | records$order_status == "scheduled")){
+    out("No new orders were placed since the supplied records have been ordered already or are available for download.")
   } else{
-    sub <- which(!records$download_available)
+    # select records that are not available and did not have been ordererd
+    sub <- which(!(records$download_available | records$order_status == "scheduled"))
     
     # get credendtial info
     records$gSD.cred <- NA
@@ -99,7 +103,7 @@ order_data <- function(records, ..., verbose = TRUE){ #wait_for_order = FALSE, #
           
           out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' from Copernicus Long Term Archive (LTA)..."))
           
-          out("Assembling dataset URLs...")
+          #out("Assembling dataset URLs...")
           x$gSD.dataset_url <- NA
           x$gSD.dataset_url <- .get_ds_urls(x)
           
@@ -160,6 +164,33 @@ order_data <- function(records, ..., verbose = TRUE){ #wait_for_order = FALSE, #
   #     Sys.sleep(retry$sleep)
   #   }
   # }
+  
+  if(!all(is.na(records$ordered))){
+    if(any(!records[records$ordered,]$download_available) & isTRUE(wait_to_complete)){
+      
+      cat("\n")
+      while(isTRUE(wait_to_complete)){
+        download_available <- check_availability(records[records$ordered,], verbose = F)$download_available
+        if(all(download_available)){
+          cat("\n")
+          out("All placed orders are now available for download.")
+          records[records$ordered,]$download_available <- download_available
+          wait_to_complete <- FALSE
+        } else{
+          spinner <- get_spinner("earth")
+          frames <- spinner$frames
+          cycles <- ceiling(wait_interval/(length(frames)*(spinner$interval/1000)))
+          for(i in 1:(length(frames) * cycles)-1){
+            fr <- unclass(frames[i%%length(frames) + 1])
+            cat("\r", fr, "Waiting for orders to be completed, since 'wait_to_complete' was set to 'TRUE'...", sep = "")
+            Sys.sleep(spinner$interval/1000)
+          }
+        }
+      }
+    }
+    if(all(records[records$ordered,]$download_available)) out("All placed orders are now available for download.")
+  }
+  
   return(.column_summary(records, records.names))
 }
 

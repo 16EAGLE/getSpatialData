@@ -73,8 +73,11 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   # get credendtial info
   records$gSD.cred <- NA
   records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
+    
     if(x["product_group"] == "Sentinel"){
       list(.CopHub_select(x = extras$hub, p = if(isTRUE(as.logical(x[["is_gnss"]]))) "GNSS" else x[["product"]], user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
+    } else if(x["product_group"] == "SRTM"){
+      list(user = getOption("gSD.ed_user"), pw = getOption("gSD.ed_pass"))
     } else NA
   })
   
@@ -137,8 +140,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
                  retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)),
                  delay = 0,
                  value = T,
-                 username = if(x$product_group == "Sentinel") cred[1] else NULL,
-                 password = if(x$product_group == "Sentinel") cred[2] else NULL)
+                 username = if(any(x$product_group == "Sentinel", x$product_group == "SRTM")) cred[1] else NULL,
+                 password = if(any(x$product_group == "Sentinel", x$product_group == "SRTM")) cred[2] else NULL)
         })
         
         # return downloaded files

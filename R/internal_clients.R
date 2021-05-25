@@ -151,21 +151,21 @@
 #' @param url url
 #' @param username user
 #' @param password pass
-#' @param body body
+#' @param ... body
 #' 
-#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress
+#' @importFrom httr POST stop_for_status warn_for_status message_for_status progress authenticate
 #' 
 #' @keywords internal
 #' @noRd
-.post <- function(url, username = NULL, password = NULL, body = FALSE){
+.post <- function(url, username = NULL, password = NULL, ...){
   
-  x <- NULL # needed due to checks
-  post.str <-"x <- POST(url"
-  if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
-  post.str <- paste0(post.str, ", body = body)")
+  # x <- NULL # needed due to checks
+  # post.str <-"x <- POST(url"
+  # if(!is.null(username)) post.str <- paste0(post.str, ", authenticate(username, password)")
+  # post.str <- paste0(post.str, ", body = body)")
   #eval(parse(text = post.str))
   
-  if(!is.null(username)) x <- POST(url, authenticate(username, password), body = body) else x <- POST(url, body = body)
+  if(!is.null(username)) x <- POST(url, authenticate(username, password), ...) else x <- POST(url, ...)
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   #message_for_status(x); cat("\n")}
@@ -397,7 +397,7 @@
 .ESPA_order <- function(id, level = "sr", username, password, format = "gtiff", verbose){
   
   ## check query and abort, if not available
-  out("Ordering requested items from ESPA...")
+  #out("Ordering requested items from ESPA...")
   checked <- lapply(id , function(x, v = verbose){
     r <- .get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
     if(names(content(r)) == "not_implemented") out(paste0("'", x, "': This ID is invalid, as it cannot be found in the ESPA database. Please remove it from input and reexecute."), type = 3)

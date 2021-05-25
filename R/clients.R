@@ -118,6 +118,10 @@
       #records$md5_url <- NULL
     }
     
+    if(is.null(records$level)){
+      records$level <- NA
+    }
+    
     if(product_name == "Sentinel-5P"){
       records$preview_url <- NULL
     }
@@ -304,6 +308,7 @@
       st_polygon(list(as.matrix(y)))
     }), crs = 4326)
   }
+  
   return(records)
 }
 

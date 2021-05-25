@@ -4,10 +4,12 @@
 \alias{order_data}
 \title{Order datasets}
 \usage{
-order_data(records, ..., verbose = TRUE)
+order_data(records, wait_to_complete = FALSE, ..., verbose = TRUE)
 }
 \arguments{
 \item{records}{records data frame, containing one or multiple records (each represented by one row), as returned by \link{get_records}}
+
+\item{wait_to_complete}{logical, whether to wait until all successful orders are complete and available for download. This is useful if you want to automatize subsequent downloads of placed orders.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{

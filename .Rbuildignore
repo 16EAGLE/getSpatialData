@@ -7,3 +7,4 @@
 ^\_pkgdown\.yml$
 ^appveyor\.yml$
 ^\.gitignore$
+^\.github$

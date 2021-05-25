@@ -37,7 +37,7 @@
 #' @keywords internal
 #' @noRd
 .get_odata <- function(uuid, cred, field = ""){
-  lapply(uuid, function(x) content(.get(paste0(cred[3], "/odata/v1/Products('", x, "')/", field),  cred[1], cred[2])))
+  lapply(uuid, function(x) content(.get(paste0(cred[3], "odata/v1/Products('", x, "')/", field),  cred[1], cred[2])))
 }
 
 

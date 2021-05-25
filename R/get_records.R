@@ -70,6 +70,8 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   if(length(records) > 1) records <- rbind.different(.gsd_compact(records)) else records <- records[[1]]
   
   if(!is.null(records)){
+    out(paste0("Found a total of ", nrow(records), " records."))
+    
     # fill missing tile IDs
     records <- .make_tileid(records)
     if(all(is.na(records$tile_id))) records$tile_id <- NULL

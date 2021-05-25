@@ -113,7 +113,7 @@
     
     # remove non-functional preview url if records are GNSS
     if(gnss){
-      records$preview_url <- NULL
+      records$preview_url <- NA
       records$product <- product_name_orig
       #records$md5_url <- NULL
     }
@@ -123,7 +123,7 @@
     }
     
     if(product_name == "Sentinel-5P"){
-      records$preview_url <- NULL
+      records$preview_url <- NA
     }
     
     if(!is.null(records$footprint)) records$footprint <- st_as_sfc(records$footprint, crs = 4326)

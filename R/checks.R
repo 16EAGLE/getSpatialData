@@ -188,7 +188,7 @@
   ## get coordinates
   aoi.m <- st_coordinates(aoi)[,c(1,2)]
   #aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
-  aoi.sf <- st_union(st_zm(aoi))
+  aoi.sf <- quiet(st_union(st_zm(aoi)))
   st_crs(aoi.sf) <- st_crs(4326)
   aoi.sp <- as_Spatial(aoi.sf) # st_zm drops z dim if given
   

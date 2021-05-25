@@ -24,6 +24,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
   
   # checks
   records <- .check_records(records, c("product", "product_group", "record_id", "preview_url"), as_sf = TRUE)
+  if(all(is.na(records$preview_url))) out(paste0("No previews are available for ", nrow(records), "/", nrow(records), " of the supplied records."), type = 3)
   dir_out <- .check_dir_out(dir_out, "previews")
   if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   

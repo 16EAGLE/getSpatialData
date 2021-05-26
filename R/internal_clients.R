@@ -142,8 +142,8 @@
 #' @keywords internal
 #' @noRd
 .getCMR_id <- function(products = NULL){
-  srtm_names <- list("SRTM_global_3arc_V003" = "C204582034-LPDAAC_ECS",
-                     "SRTM_global_1arc_V001" = "C1000000240-LPDAAC_ECS")
+  srtm_names <- list("srtm_global_3arc_v003" = "C204582034-LPDAAC_ECS",
+                     "srtm_global_1arc_v001" = "C1000000240-LPDAAC_ECS")
   if(is.null(products)) unlist(srtm_names) else unlist(srtm_names[products])
 }
 
@@ -251,13 +251,14 @@
 #' @param username username
 #' @param password password
 #' @keywords internal
-#' @importFrom httr POST content stop_for_status warn_for_status content_type
-#' @importFrom utils URLencode
+#' @importFrom httr POST content stop_for_status warn_for_status content_type user_agent
 #' @noRd
 .ERS_login <- function(username, password, n_retry = 3){
-  x <- POST(url = paste0(getOption("gSD.api")$ee, "login"),
-            body = URLencode(paste0('jsonRequest={"username":"', username, '","password":"', password, '","authType":"EROS","catalogId":"EE"}')),
-            content_type("application/x-www-form-urlencoded; charset=UTF-8"))
+  x <- .post(url = paste0(getOption("gSD.api")$ee, "login"),
+             username = NULL, password = NULL,
+             body = list(username = username, password = password),
+             encode = "json",
+             user_agent("httr"))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   v <- content(x)$data
@@ -271,7 +272,12 @@
 #' @keywords internal
 #' @noRd
 .ERS_logout <- function(api.key){
-  x <- .get(paste0(getOption("gSD.api")$ee, 'logout?jsonRequest={"apiKey":"', api.key, '"}'))
+  x <- .post(url = paste0(getOption("gSD.api")$ee, "logout"),
+             username = NULL, password = NULL,
+             add_headers('X-Auth-Token' = api.key),
+             encode = "json",
+             user_agent("httr"))
+  #x <- .get(paste0(getOption("gSD.api")$ee, 'logout?jsonRequest={"apiKey":"', api.key, '"}'))
   stop_for_status(x, "connect to server.")
   warn_for_status(x)
   content(x)$data
@@ -283,12 +289,17 @@
 #' @param api.key api.key
 #' @param wildcard wildcard
 #' @keywords internal
+#' @importFrom httr add_headers
 #' @noRd
 .EE_ds <- function(api.key, wildcard = NULL){
-  q <- paste0(getOption("gSD.api")$ee, 'datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
-  if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
-  x <- .get(q)
-  sapply(content(x)$data, function(y) y$datasetName, USE.NAMES = F)
+  x <- .post(url = paste0(getOption("gSD.api")$ee, 'dataset-search'), 
+             username = NULL, password = NULL,
+             add_headers('X-Auth-Token' = api.key),
+             body = list(datasetName = wildcard), encode = "json")
+  sapply(content(x)$data, function(y) y$datasetAlias, USE.NAMES = F)
+  #q <- paste0(getOption("gSD.api")$ee, 'datasets?jsonRequest={"apiKey":"', api.key, '"}') #, if(is.null(wildcard)) '}' else  ',"datasetName":"', wildcard, '"}')
+  #if(!is.null(wildcard)) q <- gsub("}", paste0(',"datasetName":"', wildcard, '"}'), q)
+  #x <- .get(q)
 }
 
 
@@ -307,17 +318,53 @@
 #' @noRd
 .EE_query <- function(aoi, time_range, product_name, api.key, meta.fields = NULL){
   
-  spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
-  temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
+  # assemble request body with a few default fields
+  req_body <- list(
+    datasetName = product_name,
+    sceneFilter = list(
+      spatialFilter = list(
+        filterType = "mbr",
+        lowerLeft = list(
+          latitude = st_bbox(aoi)$ymin,
+          longitude = st_bbox(aoi)$xmin
+        ),
+        upperRight = list(
+          latitude = st_bbox(aoi)$ymax,
+          longitude = st_bbox(aoi)$xmax
+        )
+      ),
+      acquisitionFilter = list(
+        end = time_range[2],
+        start = time_range[1]
+      )
+    ),
+    startingNumber = 1,
+    maxResults = 50000,
+    sortDirection = "ASC",
+    metadataType = "full"
+  )
+  
+  #spatialFilter <- paste0('"spatialFilter":{"filterType":"mbr","lowerLeft":{"latitude":', st_bbox(aoi)$ymin, ',"longitude":', st_bbox(aoi)$xmin, '},"upperRight":{"latitude":', st_bbox(aoi)$ymax, ',"longitude":', st_bbox(aoi)$xmax, '}}')
+  #temporalFilter <- paste0('"temporalFilter":{"startDate":"', time_range[1], '","endDate":"', time_range[2], '"}')
   
   out(paste0("Searching records for product name '", product_name, "'..."))
-  query <- lapply(product_name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) .get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
+  #query <- lapply(product_name, function(x, ak = api.key, sf = spatialFilter, tf = temporalFilter) .get(paste0(getOption("gSD.api")$ee, 'search?jsonRequest={"apiKey":"', ak,'","datasetName":"', x,'",',sf,',', tf, ',"startingNumber":1,"sortOrder":"ASC","maxResults":50000}')))
+  query <- lapply(product_name, function(x){
+    .post(
+      url = paste0(getOption("gSD.api")$ee, "scene-search?"),
+      username = NULL, password = NULL, 
+      add_headers('X-Auth-Token' = api.key),
+      body = req_body,
+      encode = "json",
+      user_agent("httr")
+    )
+  })
   query.cont <- lapply(query, content)
-  if(all(c(length(product_name) == 1), query.cont[[1]]$error != "")){
+  if(all(c(length(product_name) == 1), !is.null(query.cont[[1]]$errorCode))){
     out("No results could be obtained for this product, time range and AOI.", msg = T)
   } else{
     
-    query.use <- sapply(query.cont, function(x) if(x$error == "" & length(x$data$results) != 0) T else F, USE.NAMES = F)
+    query.use <- sapply(query.cont, function(x) if(is.null(x$error) & length(x$data$results) != 0) T else F, USE.NAMES = F)
     query.cont <- query.cont[query.use]
     query.names <- product_name[query.use]
     
@@ -326,52 +373,73 @@
       
       query.df <- unlist(mapply(y = query.results, n = query.names, function(y, n) lapply(y, function(x, ds_name = n){
         x.names <- names(x)
-        x.char <- as.character(x)
+        fields.expl <- c("browse", "metadata", "spatialCoverage", "spatialBounds")
         
-        df <- rbind.data.frame(x.char, stringsAsFactors = F)
-        colnames(df) <- x.names
+        # fields that can be parsed generically
+        x.nonexpl <- x[!(x.names %in% fields.expl)]
+        x.nonexpl <- unlist(x.nonexpl, recursive = T, use.names = T)
         
-        # Make sf polygon filed from spatialFootprint
-        spf.sub <- grep("spatialFoot", x.names)
-        spf <- unlist(x[spf.sub])
-        spf <- as.numeric(spf[grep("coordinates", names(spf))])
-        df[,spf.sub] <- st_as_text(.check_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
+        # populate data.frame
+        df <- rbind.data.frame(x.nonexpl, stringsAsFactors = F)
+        colnames(df) <- names(x.nonexpl)
         
-        df <- cbind.data.frame(df, ds_name, stringsAsFactors = F)
-        colnames(df)[ncol(df)] <- "product"
+        # handle some fields explicitely
+        # metadata
+        x.metadata <- rbind.data.frame(sapply(x$metadata, function(z) z$value, USE.NAMES = F), stringsAsFactors = F)
+        colnames(x.metadata) <- sapply(x$metadata, function(z) z$fieldName, USE.NAMES = F)
+        
+        # browse
+        x.browse <- unlist(mapply(xb = x$browse, xn = 1:length(x$browse), function(xb, xn){
+          xb <- unlist(xb)
+          names(xb) <- paste0(names(xb), "_", xn)
+          return(xb)
+        }, SIMPLIFY = F))
+        x.browse.names <- names(x.browse)
+        x.browse <- rbind.data.frame(x.browse, stringsAsFactors = F)
+        colnames(x.browse) <- x.browse.names
+        
+        # spatialCoverage
+        x.spf.sub <- grep("spatialCoverage", x.names)
+        x.spf <- unlist(x[x.spf.sub])
+        x.spf <- as.numeric(x.spf[grep("coordinates", names(x.spf))])
+        x.spf <- st_as_text(.check_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
+        # drop spatialBounds as it would return the same Polygon
+        
+        # assemble df
+        df <- cbind.data.frame(df, x.metadata, x.browse, spatialFootprint = x.spf, product = ds_name, stringsAsFactors = F)
         return(df)
       }), SIMPLIFY = F), recursive = F)
       
       ## Read out meta data
-      out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
-      meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) .get(x))
-      meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
-      meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
-        z <- try(y$metadataValue[[1]], silent = T)
-        if(inherits(z, "try-error")) NULL else z
-      }, USE.NAMES = F))
-      meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
-      
-      ## Define meta fields that are usefull for the query output
-      if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
-      meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
-      meta.df <- mapply(FUN = function(v, n, i){
-        x <- v[i]
-        x <- lapply(x, function(x) if(is.null(x)) "" else x)
-        x <- rbind.data.frame(x, stringsAsFactors = F)
-        colnames(x) <- gsub(" ", "", n[i])
-        return(x)
-      }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
-      
-      query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
-        ## apply meaningful order and replace startTime and endTime with meta outputs
-        x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
-        colnames(x)[1] <- colnames(q)[1]
-        return(x)
-      }, SIMPLIFY = F)
+      # out("Reading meta data of search results from USGS EarthExplorer...", msg = T)
+      # meta <- lapply(sapply(query.df, function(x) x$metadataUrl, USE.NAMES = F), function(x) .get(x))
+      # meta.list <- lapply(meta, function(x) as_list(xml_contents(xml_contents(content(x))[1])))
+      # meta.val <- lapply(meta.list, function(x) sapply(x, function(y){
+      #   z <- try(y$metadataValue[[1]], silent = T)
+      #   if(inherits(z, "try-error")) NULL else z
+      # }, USE.NAMES = F))
+      # meta.name <- lapply(meta.list, function(x) sapply(x, function(y) attributes(y)$name))
+      # 
+      # ## Define meta fields that are usefull for the query output
+      # if(is.null(meta.fields)) meta.fields <- unique(unlist(meta.name))
+      # meta.subs <- lapply(meta.name, function(mnames, mf = meta.fields) unlist(lapply(mf, function(x, mn = mnames) which(x == mn))))
+      # meta.df <- mapply(FUN = function(v, n, i){
+      #   x <- v[i]
+      #   x <- lapply(x, function(x) if(is.null(x)) "" else x)
+      #   x <- rbind.data.frame(x, stringsAsFactors = F)
+      #   colnames(x) <- gsub(" ", "", n[i])
+      #   return(x)
+      # }, v = meta.val, n = meta.name, i = meta.subs, SIMPLIFY = F)
+      # 
+      # query.df <- mapply(q = query.df, m = meta.df, FUN = function(q, m){
+      #   ## apply meaningful order and replace startTime and endTime with meta outputs
+      #   x <- cbind.data.frame(q$acquisitionDate, m, q[,-(1:3)], stringsAsFactors = F)
+      #   colnames(x)[1] <- colnames(q)[1]
+      #   return(x)
+      # }, SIMPLIFY = F)
       
       return.names <- unique(unlist(lapply(query.df, colnames)))
-      return.df <- as.data.frame(stats::setNames(replicate(length(return.names),numeric(0), simplify = F), return.names), stringsAsFactors = F)
+      return.df <- as.data.frame(stats::setNames(replicate(length(return.names), numeric(0), simplify = F), return.names), stringsAsFactors = F)
       return.df <-  do.call(rbind.data.frame, lapply(query.df, function(x, rn = return.names,  rdf = return.df){
         rdf[1, match(colnames(x), rn)] <- x
         return(rdf)

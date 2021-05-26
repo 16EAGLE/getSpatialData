@@ -45,6 +45,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
     products <- extras$name
     if(is.null(products)) products <- extras$platform
   }
+  products <- tolower(products)
   
   .check_verbose(verbose)
   .check_time_range(time_range)
@@ -52,10 +53,10 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   
   # use appropriate clients
   clients <- sapply(products, function(x){
-    if(grepl("Sentinel", x)) return("CopHub")
-    if(grepl("LANDSAT", x)) return("EE")
-    if(grepl("MODIS", x)) return("EE")
-    if(grepl("SRTM", x)) return("CMR")
+    if(grepl("sentinel", x)) return("CopHub")
+    if(grepl("landsat", x)) return("EE")
+    if(grepl("modis", x)) return("EE")
+    if(grepl("srtm", x)) return("CMR")
   })
   if(is.null(unlist(clients))) out("Could not find appropriate client(s) for this/these product(s). This/these product(s) is/are not supported.", type = 3)
   

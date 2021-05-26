@@ -85,11 +85,14 @@
 #' @noRd
 .translate_records <- function(records, product_name){
 
-  #"relativeorbit_number.1" "sensor_mode.1"          "level.1"
-  # set-up column name dictionary
-  records.names <- colnames(records)
-  dict <- getOption("gSD.clients_dict")
+  # standardize
+  records.names <- colnames(records) <- gsub("[.]", "", tolower(colnames(records)))
   
+  # set-up column name dictionary
+  dict <- getOption("gSD.clients_dict")
+  dict$clients <- gsub("[.]", "", tolower(dict$clients))
+  
+  ## CONTINUE HERE
   # translate
   records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
     x <- records[[dict$clients[i]]]
@@ -1040,6 +1043,7 @@ rbind.different <- function(x) {
                                     c("dataset_id", "summary"),
                                     c("beginposition", "date_acquisition"),
                                     c("acquisitionDate", "date_acquisition"),
+                                    c("AcquisitionStartDate", "date_acquisition"),
                                     c("beginposition", "start_time"),
                                     c("StartTime", "start_time"),
                                     c("AcquisitionStartDate", "start_time"),
@@ -1126,7 +1130,8 @@ rbind.different <- function(x) {
                    s5p = 'https://s5phub.copernicus.eu/',
                    gnss = 'https://scihub.copernicus.eu/gnss/',
                    espa = 'https://espa.cr.usgs.gov/api/v1/',
-                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/',
+                   #ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/', #deprecated
+                   ee = 'https://m2m.cr.usgs.gov/api/api/json/stable/',
                    aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',
                    aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
                    laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
@@ -1139,7 +1144,7 @@ rbind.different <- function(x) {
                          ee = "USGS EarthExplorer",
                          aws.l8 = "AWS Landsat 8",
                          laads = "NASA DAAC LAADS"),
-    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
+    gSD.copnames = data.frame(name = c("sentinel-1", "sentinel-2", "sentinel-3", "sentinel-5P", "gnss"),
                               api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
     gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",

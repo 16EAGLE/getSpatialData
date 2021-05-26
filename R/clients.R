@@ -156,11 +156,11 @@
   # check aoi
   aoi <- .check_aoi(aoi, type = "sf", quiet = T)
   
-  if(grepl("LANDSAT", product_name)){
+  if(grepl("landsat", product_name)){
     meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
       "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
   }
-  if(grepl("MODIS", product_name)){
+  if(grepl("modis", product_name)){
     meta.fields <- c("Acquisition Start Date", "Acquisition End Date", "Horizontal Tile Number", "Vertical Tile Number",
                      "Auto Quality Flag", "Auto Quality Flag Explanation", "Science Quality Flag",
                      "Science Quality Flag Expln","Missing Data Percentage")
@@ -173,7 +173,7 @@
     out("No results could be obtained for this product, time range and AOI.", msg = T)
   }else{
     
-    if(grepl("LANDSAT", product_name)){
+    if(grepl("landsat", product_name)){
       ## Connect to ESPA to retrieve available products for (no use of entityId, displayId instead)
       out("Recieving available product levels from USGS-EROS ESPA...", msg = T)
       records <- do.call(rbind.data.frame, .apply(records, MARGIN = 1, function(x, names = colnames(records)){
@@ -202,8 +202,8 @@
       fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
     }
     
-    if(grepl("MODIS", product_name)){
-      fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("HorizontalTileNumber", "VerticalTileNumber", "MissingDataPercentage")) x %in% y, USE.NAMES = F)]
+    if(grepl("modis", product_name)){
+      fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("Horizontal.Tile.Number", "Vertical.Tile.Number", "Missing.Data.Percentage")) x %in% y, USE.NAMES = F)]
     }
     
     # convert fields

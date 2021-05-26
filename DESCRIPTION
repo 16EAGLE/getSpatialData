@@ -5,7 +5,7 @@ Version: 0.1.0
 Date: 2020-05-19
 Depends: R (>= 3.5)
 Authors@R: c(
-  person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de", role = c("aut", "cre")),
+  person("Jakob", "Schwalb-Willmann", email = "dev@schwalb-willmann.de", role = c("aut", "cre")),
   person("Henrik", "Fisser", role = c("aut"))
   )
 Description: Homogeneous and reproducible workflows to query, preview, analyse, select, order and download various kinds of spatial datasets from open sources.

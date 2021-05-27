@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">getSpatialData</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.1.0</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.1.1</span>
       </span>
     </div>
 
@@ -153,6 +153,32 @@
       
     </div>
 
+    <div id="getspatialdata-011-ongoing-development" class="section level2">
+<h2 class="hasAnchor">
+<a href="#getspatialdata-011-ongoing-development" class="anchor"></a>getSpatialData 0.1.1 (ongoing development)</h2>
+<p>Bug fixes, Landsat Collection 2 support</p>
+<div id="bug-fixes" class="section level4">
+<h4 class="hasAnchor">
+<a href="#bug-fixes" class="anchor"></a>Bug fixes:</h4>
+<ul>
+<li>affects <code><a href="../reference/login.html">login_USGS()</a></code>, <code><a href="../reference/get_products.html">get_products()</a></code>, <code><a href="../reference/get_records.html">get_records()</a></code>, <code><a href="../reference/get_previews.html">get_previews()</a></code>, <code><a href="../reference/get_data.html">get_data()</a></code>: Fixed a bug that caused all request to the EROS Inventory Service API to fail, including login. The client has been updated to support the new EROS API 1.5.0 to query Earth Explorer.</li>
+</ul>
+</div>
+<div id="products" class="section level4">
+<h4 class="hasAnchor">
+<a href="#products" class="anchor"></a>Products:</h4>
+<ul>
+<li>Landsat Collection 2 products are now supported, call <code><a href="../reference/get_products.html">get_products()</a></code> for a list.</li>
+</ul>
+</div>
+<div id="changes" class="section level4">
+<h4 class="hasAnchor">
+<a href="#changes" class="anchor"></a>Changes:</h4>
+<ul>
+<li>All product names and product group names, as returned by <code><a href="../reference/get_products.html">get_products()</a></code> and expected as inputs to several functions, are now case-<strong>insensitive</strong>. It should not matter whether you query <code>"SENTINEL-2"</code> or <code>"sentinel-2"</code>. Since <code><a href="../reference/get_products.html">get_products()</a></code> now returns only lower-case outputs, this change can be breaking for code that searches patterns in these outputs. Legacy inputs should still work.</li>
+</ul>
+</div>
+</div>
     <div id="getspatialdata-010" class="section level2">
 <h2 class="hasAnchor">
 <a href="#getspatialdata-010" class="anchor"></a>getSpatialData 0.1.0</h2>
@@ -356,9 +382,9 @@
 <code><a href="../reference/getSpatialData-deprecated.html">getLandsat_query()</a></code> and <code><a href="../reference/getSpatialData-deprecated.html">getMODIS_query()</a></code>: argument “name” is now optional and set to “all” by default. In this case, all available Landsat datasets are searched and added to the output. The originating dataset name is always indicated by the column “dataset_name”.</li>
 </ul>
 </div>
-<div id="bug-fixes" class="section level4">
+<div id="bug-fixes-1" class="section level4">
 <h4 class="hasAnchor">
-<a href="#bug-fixes" class="anchor"></a>Bug fixes:</h4>
+<a href="#bug-fixes-1" class="anchor"></a>Bug fixes:</h4>
 <ul>
 <li>RGB clouring of preview functions is now correct</li>
 <li>

@@ -388,25 +388,33 @@
         x.metadata <- rbind.data.frame(sapply(x$metadata, function(z) z$value, USE.NAMES = F), stringsAsFactors = F)
         colnames(x.metadata) <- sapply(x$metadata, function(z) z$fieldName, USE.NAMES = F)
         
-        # browse
-        x.browse <- unlist(mapply(xb = x$browse, xn = 1:length(x$browse), function(xb, xn){
-          xb <- unlist(xb)
-          names(xb) <- paste0(names(xb), "_", xn)
-          return(xb)
-        }, SIMPLIFY = F))
-        x.browse.names <- names(x.browse)
-        x.browse <- rbind.data.frame(x.browse, stringsAsFactors = F)
-        colnames(x.browse) <- x.browse.names
-        
         # spatialCoverage
         x.spf.sub <- grep("spatialCoverage", x.names)
         x.spf <- unlist(x[x.spf.sub])
         x.spf <- as.numeric(x.spf[grep("coordinates", names(x.spf))])
-        x.spf <- st_as_text(.check_aoi(cbind(spf[seq(1, length(spf), by = 2)], spf[seq(2, length(spf), by = 2)]), type = "sf", quiet = T))
+        x.spf <- st_as_text(.check_aoi(
+          cbind(
+            x.spf[seq(1, length(x.spf), by = 2)], 
+            x.spf[seq(2, length(x.spf), by = 2)]
+          ), type = "sf", quiet = T)
+        )
         # drop spatialBounds as it would return the same Polygon
         
+        # browse
+        x.preview_url <- list(as.list(sapply(x$browse, function(xb) xb[["browsePath"]], USE.NAMES = F)))
+        # x.browse <- unlist(mapply(xb = x$browse, xn = 1:length(x$browse), function(xb, xn){
+        #   xb <- unlist(xb)
+        #   names(xb) <- paste0(names(xb), "_", xn)
+        #   return(xb)
+        # }, SIMPLIFY = F))
+        # x.browse.names <- names(x.browse)
+        # x.browse <- rbind.data.frame(x.browse, stringsAsFactors = F)
+        # colnames(x.browse) <- x.browse.names
+        
+        
         # assemble df
-        df <- cbind.data.frame(df, x.metadata, x.browse, spatialFootprint = x.spf, product = ds_name, stringsAsFactors = F)
+        df <- cbind.data.frame(df, x.metadata, spatialFootprint = x.spf, product = ds_name, stringsAsFactors = F)
+        df$preview_url <- x.preview_url
         return(df)
       }), SIMPLIFY = F), recursive = F)
       

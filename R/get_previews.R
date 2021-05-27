@@ -59,6 +59,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
                                      function(url, file, name, head, cred){
                                        
     # download
+    if(is.list(url)) url <- url[[1]][[1]]
     if(isFALSE(is.url(url))) return(NA) else{
       download <- .download(url = url, file = file, name = name, head = head, type = "preview", prog = F, force = force,
                                username = if(!is.na(cred[[1]][1])) cred[[1]][1] else NULL,

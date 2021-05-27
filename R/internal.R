@@ -92,7 +92,6 @@
   dict <- getOption("gSD.clients_dict")
   dict$clients <- gsub("[.]", "", tolower(dict$clients))
   
-  ## CONTINUE HERE
   # translate
   records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
     x <- records[[dict$clients[i]]]
@@ -103,21 +102,23 @@
     return(x)
   }))), records[,!sapply(records.names, function(x) x %in% dict$clients, USE.NAMES = F)])
   
-  # colnames(records) <- sapply(colnames(records), function(x){
-  #   i <- which(x == dict[,which.col])
-  #   if(length(i) > 0) dict$gSD[i] else x
-  # }, USE.NAMES = F)
+  # remove unneeded fields
+  records <- records[,-as.numeric(na.omit(
+    match(
+      c("orderurl", "bulkordered", "optionsbulk", "optionsdownload", "optionsorder", "optionssecondary", 
+        "selectedbulk", "selectedcompare", "selectedorder", "localgranuleid", "centerlatitude", "acquisitionenddate",
+        "centerlongitude", "nwcornerlat", "nwcornerlong", "necornerlat", "necornerlong", "secornerlat",
+        "secornerlong", "swcornerlat", "swcornerlong", "centerlatitudedec", "centerlongitudedec", "nwcornerlatdec",
+        "nwcornerlongdec", "necornerlatdec", "necornerlongdec", "secornerlatdec", "secornerlongdec", "swcornerlatdec",
+        "swcornerlongdec", "ordered", "product", "dataaccessUrl", "scenebounds", "platformshortname", "mission",
+        "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
+        "status", "filename", "format", "url", "downloadurl", "mode", "productlevel"),
+      colnames(records)
+    )
+  ))]
   
-  # specific cases: all EE products
-  # if(which(which.col) > 2){
-  #   records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
-  # }
-  
-  records <- records[,!sapply(colnames(records), function(x) x %in%  c("orderUrl", "bulkOrdered", "ordered", "product", "dataAccessUrl", "sceneBounds", "platformshortname", "mission",
-    "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
-    "status", "filename", "format", "url", "downloadUrl", "mode", "productlevel"), USE.NAMES = F)]
 
-  # product groups
+  # add product and product group
   products <- get_products(grouped = T, update_online = F)
   records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
   records$product <- product_name
@@ -131,6 +132,7 @@
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
   
+  # clean records ID
   records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
   
   # sort columns
@@ -1044,15 +1046,19 @@ rbind.different <- function(x) {
                                     c("beginposition", "date_acquisition"),
                                     c("acquisitionDate", "date_acquisition"),
                                     c("AcquisitionStartDate", "date_acquisition"),
+                                    c("daynightindicator", "day_or_night"),
                                     c("beginposition", "start_time"),
                                     c("StartTime", "start_time"),
-                                    c("AcquisitionStartDate", "start_time"),
+                                    c("temporalcoveragestartdate", "start_time"),
                                     c("time_start", "start_time"),
                                     c("endposition", "stop_time"),
                                     c("StopTime", "stop_time"),
-                                    c("AcquisitionEndDate", "stop_time"),
+                                    c("temporalcoverageenddate", "stop_time"),
                                     c("time_end", "stop_time"),
                                     c("ingestiondate", "date_ingestion"),
+                                    c("publishdate", "date_publish"),
+                                    c("dateentered", "date_ingestion"),
+                                    c("dateupdated", "date_modified"),
                                     c("modifiedDate", "date_modified"),
                                     c("updated", "date_modified"),
                                     c("creationdate", "date_creation"),
@@ -1113,6 +1119,8 @@ rbind.different <- function(x) {
                                     c("vegetationpercentage", "vegetation"),
                                     c("waterpercentage", "water"),
                                     c("processinglevel", "level"),
+                                    c("versionnumber", "version_product"),
+                                    c("productgenerationalgorithm", "version_algorithm"),
                                     c("level", "level"),
                                     c("AutoQualityFlag", "flag_autoquality"),
                                     c("AutoQualityFlagExplanation", "flag_autoquality_expl"),

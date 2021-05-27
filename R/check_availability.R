@@ -27,15 +27,15 @@ check_availability <- function(records, verbose = TRUE){
   records$download_available <- NA
   records$order_status <- "unknown"
   
-  # Sentinel
-  if(any(records$product_group == "Sentinel")){
+  # sentinel
+  if(any(records$product_group == "sentinel")){
     if(any(!records$is_gnss, na.rm = T)){
       out("Checking instant availability for Sentinel records...")
-      records.sentinel <- records[records$product_group == "Sentinel" & !records$is_gnss,]
+      records.sentinel <- records[records$product_group == "sentinel" & !records$is_gnss,]
       records.sentinel$cred <- .lapply(records.sentinel$product, function(x){
         .CopHub_select(x = "auto", p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
       })
-      records[records$product_group == "Sentinel" & !records$is_gnss,]$download_available <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
+      records[records$product_group == "sentinel" & !records$is_gnss,]$download_available <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
         as.logical(toupper(unlist(.get_odata(x$entity_id, x$cred, field = "Online/$value"))))
       })
     }
@@ -44,10 +44,10 @@ check_availability <- function(records, verbose = TRUE){
     }
   }
   
-  # Landsat
-  if("Landsat" %in% records$product_group){
+  # landsat
+  if("landsat" %in% records$product_group){
     out("Checking availability for Landsat records...")
-    sub <- records$product_group == "Landsat"
+    sub <- records$product_group == "landsat"
     
     records[sub,]$download_available <- records[sub,]$level == "l1"
     records$gSD.order_id <- if(is.null(records$order_id)) NA else records[sub,]$order_id
@@ -97,16 +97,16 @@ check_availability <- function(records, verbose = TRUE){
     records$ordered[!is.na(records$gSD.order_id)] <- TRUE
   }
   
-  # MODIS
-  if("MODIS" %in% records$product_group){
+  # modis
+  if("modis" %in% records$product_group){
     out("Checking instant availability for MODIS records...")
-    records[records$product_group == "MODIS",]$download_available <- TRUE
+    records[records$product_group == "modis",]$download_available <- TRUE
   }
   
-  # SRTM
-  if("SRTM" %in% records$product_group){
+  # srtm
+  if("srtm" %in% records$product_group){
     out("Checking instant availability for SRTM records...")
-    records[records$product_group == "SRTM",]$download_available <- TRUE
+    records[records$product_group == "srtm",]$download_available <- TRUE
   }
   
   n_avail <- length(which(records$download_available))

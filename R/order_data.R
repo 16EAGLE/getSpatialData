@@ -28,11 +28,11 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
   
   # login check
   groups <- unique(records$product_group)
-  if("Sentinel" %in% groups){
+  if("sentinel" %in% groups){
     .check_login("Copernicus")
     out("Please note: The Copernicus LTA quota currently permits users to request a maximum of one LTA dataset per 30 minutes!", type = 2)
   }
-  if(any("Landsat" %in% groups, "MODIS" %in% groups)){
+  if(any("landsat" %in% groups, "modis" %in% groups)){
     .check_login("USGS")
   }
   
@@ -51,9 +51,9 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
     # get credendtial info
     records$gSD.cred <- NA
     records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
-      if(x$product_group == "Sentinel"){
+      if(x$product_group == "sentinel"){
         list(.CopHub_select(x = extras$hub, p = x$product, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
-      } else if(x$product_group == "Landsat"){
+      } else if(x$product_group == "landsat"){
         list(user = getOption("gSD.usgs_user"), pw = getOption("gSD.usgs_pass"))
       }
     })
@@ -75,7 +75,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
     #dt_nextorder <- Sys.time()
     records$order_id <- NA
     
-    # define quota for Sentinel restoring
+    # define quota for sentinel restoring
     #retry <- list(do = TRUE, sleep = 60*5, quota = 60*31, count = 0, last_LTA_success = NA)
     #while(retry$do){
       
@@ -85,7 +85,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
       request <- NA
       
       if(isFALSE(x$ordered)){
-        if(x$product_group == "Sentinel"){
+        if(x$product_group == "sentinel"){
           #     if(!is.na(retry$last_LTA_success)){
           #       
           #       # calculate how much time went through since the last LTA request
@@ -123,7 +123,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
           }
         }
         
-        if(x$product_group == "Landsat"){
+        if(x$product_group == "landsat"){
           out(paste0(x$gSD.head, "Requesting order of '", x$record_id, "' at ESPA..."))
           
           request <- try(.ESPA_order(id = x$record_id, level = x$level,

@@ -37,7 +37,7 @@
   
   ## url assembler function
   cop.url <- function(ext.xy, url.root, product_name, time.range, row.start){
-    if(product_name == "Sentinel-5P") product_name <- "Sentinel-5"
+    if(product_name == "sentinel-5p") product_name <- "sentinel-5"
     qs <- list(url.root = paste0(url.root, "/"),
                search = c("search?start=", "&rows=100&q="),  #"search?q=", #start=0&rows=1000&
                and = "%20AND%20",
@@ -122,7 +122,7 @@
       records$level <- NA
     }
     
-    if(product_name == "Sentinel-5P"){
+    if(product_name == "sentinel-5p"){
       records$preview_url <- NA
     }
     
@@ -208,6 +208,10 @@
     
     # convert fields
     records[,fields.numeric] <- .sapply(fields.numeric, function(x) as.numeric(records[,x]))
+    
+    if(is.null(records$level)){
+      records$level <- NA
+    }
     
     # cloud cover filter
     if(extras$maxCloudLand < 100 ) records <- records[records$LandCloudCover <= extras$maxCloudLand,]

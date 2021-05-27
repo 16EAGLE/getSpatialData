@@ -92,15 +92,9 @@
   dict <- getOption("gSD.clients_dict")
   dict$clients <- gsub("[.]", "", tolower(dict$clients))
   
-  # translate
-  records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
-    x <- records[[dict$clients[i]]]
-    if(!is.null(x)){
-      x <- data.frame(x, stringsAsFactors = F)
-      colnames(x) <- dict$gSD[i]
-    }
-    return(x)
-  }))), records[,!sapply(records.names, function(x) x %in% dict$clients, USE.NAMES = F)])
+  # match position of names in dictionary and in records
+  pos.names <- match(colnames(records), dict$clients)
+  colnames(records)[which(!is.na(pos.names))] <- dict$gSD[as.numeric(na.omit(pos.names))]
   
   # remove unneeded fields
   records <- records[,-as.numeric(na.omit(
@@ -116,7 +110,6 @@
       colnames(records)
     )
   ))]
-  
 
   # add product and product group
   products <- get_products(grouped = T, update_online = F)

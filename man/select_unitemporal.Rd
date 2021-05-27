@@ -38,7 +38,7 @@ or shadows. Default is 80.}
 \item{prio_products}{character vector optional. Product names ordered by priority. Selection is done in the order
 of prio_products starting with the first product. Following products are included consecutively in case
 selection was not fullfilled by previous product. Product names must be provided as returned by \link{get_select_supported}.
-Landsat and MODIS can be summarized by 'Landsat' respectively 'MODIS' if no further differentiation demanded.
+Landsat and MODIS can be summarized by 'landsat' respectively 'modis' if no further differentiation demanded.
 If prio_products is empty, given products in \code{records} will be selected in random order in case several are given in \code{records}.}
 
 \item{aoi}{sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point 

@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 # name: internal_select_sub
-# description: These functions do the temporal selection of SAR (Sentinel-1) records.
+# description: These functions do the temporal selection of SAR (sentinel-1) records.
 # They create a temporary tile id for each record, according to which they can be
 # selected. As they are cloud-free no further spatial selection is necessary. These
 # records are thus only selected according to their tile and temporal characteristics.
@@ -44,7 +44,7 @@
   
   for (timestamp in 1:max(subperiods)) {
     
-    # sensor_match are all Sentinel-1 records of this sub-period
+    # sensor_match are all sentinel-1 records of this sub-period
     sensor_match <- intersect(s_match, which(records$sub_period == timestamp))
     records_in_s <- records[sensor_match,]
 

@@ -62,10 +62,10 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   sub <- which(records$download_available)
   
   # check for ESPA records
-  if(any(records[sub,][records$product_group == "Landsat",]$level != "l1")){
+  if(any(records[sub,][records$product_group == "landsat",]$level != "l1")){
     records$gSD.espa_item <- NA
-    records[sub,][records$product_group == "Landsat" & records$level != "l1",]$gSD.espa_item <- 
-      .apply(records[sub,][records$product_group == "Landsat" & records$level != "l1",], MARGIN = 1, function(x){
+    records[sub,][records$product_group == "landsat" & records$level != "l1",]$gSD.espa_item <- 
+      .apply(records[sub,][records$product_group == "landsat" & records$level != "l1",], MARGIN = 1, function(x){
       content(.get(paste0(getOption("gSD.api")$espa, "item-status/", x$order_id, "/", x$record_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
     })
   }
@@ -76,7 +76,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
     
     if(x["product_group"] == "sentinel"){
       list(.CopHub_select(x = extras$hub, p = if(isTRUE(as.logical(x[["is_gnss"]]))) "GNSS" else x[["product"]], user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
-    } else if(x["product_group"] == "SRTM"){
+    } else if(x["product_group"] == "srtm"){
       list(user = getOption("gSD.ed_user"), pw = getOption("gSD.ed_pass"))
     } else NA
   })
@@ -91,7 +91,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
         cred <- unlist(x$gSD.cred)
         if(!is.null(x$md5_url)) content(.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
       
-      } else if(x["product_group"] == "Landsat" & x$level != "l1"){
+      } else if(x["product_group"] == "landsat" & x$level != "l1"){
         strsplit(content(.get(x$gSD.espa_item$cksum_download_ur), as = "text", encoding = "UTF-8"), " ")[[1]][1]
       
       } else NA
@@ -140,8 +140,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
                  retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)),
                  delay = 0,
                  value = T,
-                 username = if(any(x$product_group == "sentinel", x$product_group == "SRTM")) cred[1] else NULL,
-                 password = if(any(x$product_group == "sentinel", x$product_group == "SRTM")) cred[2] else NULL)
+                 username = if(any(x$product_group == "sentinel", x$product_group == "srtm")) cred[1] else NULL,
+                 password = if(any(x$product_group == "sentinel", x$product_group == "srtm")) cred[2] else NULL)
         })
         
         # return downloaded files

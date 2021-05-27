@@ -117,11 +117,11 @@
   records$product <- product_name
   
   # product-specfic cases
-  if(unique(records$product_group) == "Sentinel"){
+  if(unique(records$product_group) == "sentinel"){
     records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
     records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
-  if(unique(records$product == "Sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
+  if(unique(records$product == "sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
   
@@ -247,7 +247,7 @@ rbind.different <- function(x) {
   return(aoi_npixels)
 }
 
-#' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
+#' checks if records data.frame has SAR records (sentinel-1) and if all records are SAR
 #' @param products character vector of all products in records.
 #' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
 #' @keywords internal
@@ -263,7 +263,7 @@ rbind.different <- function(x) {
   
 }
 
-#' creates a tileid where not given, except Sentinel-1
+#' creates a tileid where not given, except sentinel-1
 #' @param records data.frame.
 #' @return \code{records} data.frame with a completely filled tile_id column.
 #' @keywords internal
@@ -295,9 +295,9 @@ rbind.different <- function(x) {
   return(records)
 }
 
-#' creates tile ids for Sentinel-1 records from its footprints
+#' creates tile ids for sentinel-1 records from its footprints
 #' @param records data.frame
-#' @return records data.frame with added tile id of Sentinel-1 records
+#' @return records data.frame with added tile id of sentinel-1 records
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel1 <- function(records) {
@@ -331,9 +331,9 @@ rbind.different <- function(x) {
   return(records)
 }
 
-#' creates tile ids for Sentinel-2 records
+#' creates tile ids for sentinel-2 records
 #' @param records data.frame
-#' @return records data.frame with added tile id of Sentinel-2 records
+#' @return records data.frame with added tile id of sentinel-2 records
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel2 <- function(records) {
@@ -342,7 +342,7 @@ rbind.different <- function(x) {
   TILEID <- name_tile_id()
   SENTINEL2 <- "S2"
   
-  # Sentinel-2
+  # sentinel-2
   record_ids <- records[[RECORD_ID]]
   is_sentinel2 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL2)))
   if (!.is_empty_array(is_sentinel2)) {
@@ -358,9 +358,9 @@ rbind.different <- function(x) {
   
 }
 
-#' creates tile ids for Sentinel-3 records
+#' creates tile ids for sentinel-3 records
 #' @param records data.frame
-#' @return records data.frame with added tile id of Sentinel-3 records
+#' @return records data.frame with added tile id of sentinel-3 records
 #' @importFrom utils tail
 #' @keywords internal
 #' @noRd
@@ -370,7 +370,7 @@ rbind.different <- function(x) {
   TILEID <- name_tile_id()
   SENTINEL3 <- "S3"
   
-  # Sentinel-3
+  # sentinel-3
   record_ids <- records[[RECORD_ID]]
   is_sentinel3 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL3)))
   if (!.is_empty_array(is_sentinel3)) {
@@ -409,19 +409,19 @@ rbind.different <- function(x) {
   return(records)
 }
 
-#' creates tile ids for Landsat records
+#' creates tile ids for landsat records
 #' @param records data.frame
-#' @return records data.frame with added tile id of Landsat records
+#' @return records data.frame with added tile id of landsat records
 #' @keywords internal
 #' @noRd
 .make_tileid_landsat <- function(records) {
   
   RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
-  LANDSAT <- name_product_group_landsat()
+  landsat <- name_product_group_landsat()
   
   record_ids <- records[[RECORD_ID]]
-  is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, LANDSAT)))
+  is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, landsat)))
   if (!.is_empty_array(is_landsat)) {
     no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
@@ -436,9 +436,9 @@ rbind.different <- function(x) {
   
 }
 
-#' creates tile ids for MODIS records
+#' creates tile ids for modis records
 #' @param records data.frame
-#' @return records data.frame with added tile id of MODIS records
+#' @return records data.frame with added tile id of modis records
 #' @keywords internal
 #' @noRd
 .make_tileid_modis <- function(records) {
@@ -446,13 +446,13 @@ rbind.different <- function(x) {
   RECORD_ID <- name_record_id()
   PRODUCT <- name_product()
   TILEID <- name_tile_id()
-  MODIS <- name_product_group_modis()
+  modis <- name_product_group_modis()
   POINT_SEP <- "\\."
   h <- "h"
   v <- "v"
   
   product_names <- records[[PRODUCT]]
-  is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, MODIS)))
+  is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, modis)))
   if (!.is_empty_array(is_modis)) {
     no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
@@ -505,7 +505,7 @@ rbind.different <- function(x) {
 # raster utils
 # -------------------------------------------------------------
 
-#' mask the edges of Landsat preview raster
+#' mask the edges of landsat preview raster
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
@@ -537,7 +537,7 @@ rbind.different <- function(x) {
   return(preview_masked)
 }
 
-#' mask the edges of Sentinel-2 preview raster
+#' mask the edges of sentinel-2 preview raster
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
@@ -651,8 +651,8 @@ rbind.different <- function(x) {
   aoi_area <- .calc_aoi_area(aoi) # km2
   adj <- aoi_area / factor
   res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
-  target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
-  # do not reduce more than the equivalent of double the Sentinel-2 preview resolution
+  target_res <- 0.0019 * adj # the sentinel-2 preview resolution * adj is the target res also for landsat, modis
+  # do not reduce more than the equivalent of double the sentinel-2 preview resolution
   if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref
   adj <- ifelse(adj < 2 && adj > 1, 2, adj)
@@ -755,7 +755,7 @@ rbind.different <- function(x) {
   return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
 }
 
-#' mask NA-like DNs in previews (very low RGB). Only in case of Landsat, Sentinel-2 and Sentinel-3 OLCi
+#' mask NA-like DNs in previews (very low RGB). Only in case of landsat, sentinel-2 and sentinel-3 OLCi
 #' @param preview RasterLayer
 #' @param record sf data.frame
 #' @return na_mask RasterLayer

@@ -188,7 +188,7 @@ selected <- function(record_ids, base_coverage, records) {
   
   for (s in prio_products) {
     
-    if (s == name_product_sentinel1()) next # Sentinel-1 gets dedicated handling
+    if (s == name_product_sentinel1()) next # sentinel-1 gets dedicated handling
     # enough records selected, no further need
     if (valid_pixels >= satisfaction_value || round(valid_pixels) == 100) break
     
@@ -197,7 +197,7 @@ selected <- function(record_ids, base_coverage, records) {
       # in case prio_sensors is not given process all sensors together
       s_match <- which(!is.na(records[[name_product]]))
     } else {
-      # the prio product can be a product group in case of Landsat and MODIS
+      # the prio product can be a product group in case of landsat and modis
       if (s == name_product_group_landsat() || s == name_product_group_modis()) {
         s_match <- which(records[[name_product_group()]] == s)
       } else {
@@ -213,7 +213,7 @@ selected <- function(record_ids, base_coverage, records) {
     
     tstamp <- list()
     tstamp$records <- records[sensor_match,]
-    # in case of Sentinel-3 and MODIS we might have non-supported products
+    # in case of sentinel-3 and modis we might have non-supported products
     # since the supported products cannot be identified through the product but the record_id
     tstamp$records <- .select_filter_supported(tstamp$records)
     tstamp$records <- tstamp$records[which(!is.na(tstamp$records[[params$sub_period_col]])),]
@@ -308,8 +308,8 @@ selected <- function(record_ids, base_coverage, records) {
 }
 
 #' filters out products unsupported by select_* from a records data.frame
-#' according to the record_id in case of Sentinel-3 and through a more specific
-#' product name check in case of MODIS
+#' according to the record_id in case of sentinel-3 and through a more specific
+#' product name check in case of modis
 #' @param records data.frame
 #' @return records data.frame without unsupported products
 #' @keywords internal
@@ -331,8 +331,8 @@ selected <- function(record_ids, base_coverage, records) {
 #' @keywords internal
 #' @noRd
 .generate_random_prio_prods <- function(records) {
-  LANDSAT_GROUP <- name_product_group_landsat()
-  MODIS_GROUP <- name_product_group_modis()
+  landsat_group <- name_product_group_landsat()
+  modis_group <- name_product_group_modis()
   given_products <- unique(records[[name_product()]])
   clean_products <- c()
   for (product in unique(given_products)) {

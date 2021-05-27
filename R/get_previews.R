@@ -45,9 +45,9 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
   # check login
   groups_download <- unique(records$product_group[!sapply(files, file.exists)])
   records$gSD.cred <- NA
-  if("Sentinel" %in% groups_download){
+  if("sentinel" %in% groups_download){
     .check_login(services = "Copernicus")
-    records[records$product_group == "Sentinel",]$gSD.cred <- lapply(records[records$product_group == "Sentinel",]$product, function(x){
+    records[records$product_group == "sentinel",]$gSD.cred <- lapply(records[records$product_group == "sentinel",]$product, function(x){
       .CopHub_select(x = extras$hub, p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
     })
   }
@@ -97,7 +97,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
       }
       # assign preview CRS and footprint
       footprint <- st_sfc(footprint, crs = records.crs)
-      if(group == "MODIS") footprint <- st_transform(x = footprint, crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
+      if(group == "modis") footprint <- st_transform(x = footprint, crs = "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs")
       crs(prev) <- crs(as(footprint, "Spatial"))
       footprint <- st_coordinates(footprint)
       x_dim <- footprint[, "X"]
@@ -105,7 +105,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
       extent(prev) <- extent(min(x_dim), max(x_dim), 
                              min(y_dim), max(y_dim))
       wgs84 <- "+proj=longlat +datum=WGS84 +no_defs"
-      if(group == "MODIS") {
+      if(group == "modis") {
         prev <- projectRaster(prev, crs = crs(wgs84))
         prev[prev<0] <- 0
       } else {
@@ -113,7 +113,7 @@ get_previews <- function(records, dir_out = NULL, force = FALSE, as_sf = TRUE, .
       }
 
       # write
-      prev <- .ensure_minmax(prev) # sometimes values are above 255 (MODIS), ensure 0-255
+      prev <- .ensure_minmax(prev) # sometimes values are above 255 (modis), ensure 0-255
       writeRaster(prev, file.tif)
       return(file.tif)
     }, error = function(e){

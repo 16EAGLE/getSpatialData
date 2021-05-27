@@ -246,7 +246,7 @@
   # get collection from concept id
   id <- .getCMR_id(product_name)
   out(paste0("Searching records for product name '", product_name, "'..."))
-  if(grepl("SRTM", product_name)) out("'time_range' is ignored, since the requested product is monotemporal.", type = 2)
+  if(grepl("srtm", product_name)) out("'time_range' is ignored, since the requested product is monotemporal.", type = 2)
   #url.query <- paste0(url, "collections?concept_id=", id)
   #response <- content(GET(url.query))
   #response <- response$feed$entry

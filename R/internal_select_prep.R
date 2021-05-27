@@ -24,7 +24,7 @@
   if (record[[name_product()]] == name_product_sentinel1()) {
     return(TRUE)
   } else {
-    is_supported <- .cloudcov_supported(record) # nearly the same unless: Sentinel-1 (supported in select_*())
+    is_supported <- .cloudcov_supported(record) # nearly the same unless: sentinel-1 (supported in select_*())
     return(is_supported)    
   }
 }

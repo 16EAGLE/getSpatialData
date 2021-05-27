@@ -11,11 +11,11 @@
 #' @keywords internal
 #' @noRd
 .cloudcov_supported <- function(record) {
-  MODIS <- name_product_group_modis()
+  modis <- name_product_group_modis()
   given_product <- record[[name_product()]]
   is_modis <- is.modis(record)
   is_sentinel3 <- is.sentinel3(record)
-  given_product <- ifelse(is_modis, MODIS, given_product)
+  given_product <- ifelse(is_modis, modis, given_product)
   cloudcov_products <- .cloudcov_products()
   if (is_modis) {
     is_supported <- .record_is_refl_modis(record)

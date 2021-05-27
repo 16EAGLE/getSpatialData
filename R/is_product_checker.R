@@ -7,7 +7,7 @@
 # author: Henrik Fisser, 2020
 # ---------------------------------------------------------------------
 
-#' Returns TRUE for records that are of product group 'Landsat' or the referred sub-selection
+#' Returns TRUE for records that are of product group 'landsat' or the referred sub-selection
 #' @description These functions check which records are records of the referred product group, product or sub-selection.
 #' @inheritParams calc_cloudcov
 #' @return logical vector, same length as number of rows in \code{records}.
@@ -15,15 +15,15 @@
 #' @name is.landsat
 #' @details
 #' 
-#' \code{is.landsat} returns TRUE for records that are of product group 'Landsat'.
+#' \code{is.landsat} returns TRUE for records that are of product group 'landsat'.
 #' 
 #' \code{is.landsatMSS} returns TRUE for records that are of product 'LANDSAT_MSS_C1'.
 #' 
-#' \code{is.landsat5} returns TRUE for records that are of product 'LANDSAT_TM_C1' (Landsat-5).
+#' \code{is.landsat5} returns TRUE for records that are of product 'LANDSAT_TM_C1' (landsat-5).
 #' 
-#' \code{is.landsat7} returns TRUE for records that are of product 'LANDSAT_ETM_C1' (Landsat-7).
+#' \code{is.landsat7} returns TRUE for records that are of product 'LANDSAT_ETM_C1' (landsat-7).
 #' 
-#' \code{is.landsat8} returns TRUE for records that are of product 'LANDSAT_8_C1' (Landsat-8).
+#' \code{is.landsat8} returns TRUE for records that are of product 'LANDSAT_8_C1' (landsat-8).
 #' 
 #' @export
 is.landsat <- function(records) {
@@ -55,7 +55,7 @@ is.landsat8 <- function(records) {
 }
 
 
-#' Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection
+#' Returns TRUE for records that are of product group 'modis' or the referred sub-selection
 #' @description These functions check which records are records of the referred product group, product or sub-selection.
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
@@ -82,60 +82,60 @@ is.modis_aqua <- function(records) {
 }
 
 
-#' Returns TRUE for records that are of product group 'Sentinel' or the referred sub-selection
+#' Returns TRUE for records that are of product group 'sentinel' or the referred sub-selection
 #' @description These functions check which records are records of the referred product group, product or sub-selection.
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
 #' @author Henrik Fisser, 2020
 #' @details 
 #' 
-#' \code{is.sentinel} returns TRUE for records that are of product group 'Sentinel'.
+#' \code{is.sentinel} returns TRUE for records that are of product group 'sentinel'.
 #' 
-#' \code{is.sentinel1} returns TRUE for records that are of product 'Sentinel-1'.
+#' \code{is.sentinel1} returns TRUE for records that are of product 'sentinel-1'.
 #' 
-#' \code{is.sentinel1_iw_slc} returns TRUE for records that are of product 'Sentinel-1' IW SLC (Sentinel-1 Interferometric Wideswath Single Look Complex).
+#' \code{is.sentinel1_iw_slc} returns TRUE for records that are of product 'sentinel-1' IW SLC (sentinel-1 Interferometric Wideswath Single Look Complex).
 #' 
-#' \code{is.sentinel1_iw_grdh} returns TRUE for records that are of product 'Sentinel-1' IW GRDH (Interferometric Wideswath Ground Range Detected).
+#' \code{is.sentinel1_iw_grdh} returns TRUE for records that are of product 'sentinel-1' IW GRDH (Interferometric Wideswath Ground Range Detected).
 #' 
-#' \code{is.sentinel1_iw_raw} returns TRUE for records that are of product 'Sentinel-1' IW RAW (Interferometric Wideswath RAW).
+#' \code{is.sentinel1_iw_raw} returns TRUE for records that are of product 'sentinel-1' IW RAW (Interferometric Wideswath RAW).
 #' 
-#' \code{is.sentinel1_iw_ocn} returns TRUE for records that are of product 'Sentinel-1' IW OCN (Interferometric Wideswath OCN).
+#' \code{is.sentinel1_iw_ocn} returns TRUE for records that are of product 'sentinel-1' IW OCN (Interferometric Wideswath OCN).
 #' 
-#' \code{is.sentinel1_level0} returns TRUE for records that are of product 'Sentinel-1' level 0.
+#' \code{is.sentinel1_level0} returns TRUE for records that are of product 'sentinel-1' level 0.
 #' 
-#' \code{is.sentinel1_level1} returns TRUE for records that are of product 'Sentinel-1' level 1.
+#' \code{is.sentinel1_level1} returns TRUE for records that are of product 'sentinel-1' level 1.
 #' 
-#' \code{is.sentinel1_level2} returns TRUE for records that are of product 'Sentinel-1' level 2.
+#' \code{is.sentinel1_level2} returns TRUE for records that are of product 'sentinel-1' level 2.
 #' 
-#' \code{is.sentinel2} returns TRUE for records that are of product 'Sentinel-2'.
+#' \code{is.sentinel2} returns TRUE for records that are of product 'sentinel-2'.
 #' 
-#' \code{is.sentinel2_L1C} returns TRUE for records that are 'Sentinel-2' Level-1C.
+#' \code{is.sentinel2_L1C} returns TRUE for records that are 'sentinel-2' Level-1C.
 #' 
-#' \code{is.sentinel2_L2A} returns TRUE for records that are 'Sentinel-2' Level-2A.
+#' \code{is.sentinel2_L2A} returns TRUE for records that are 'sentinel-2' Level-2A.
 #' 
-#' \code{is.sentinel2_S2A} returns TRUE for records that are of product 'Sentinel-2' and platform S2A.
+#' \code{is.sentinel2_S2A} returns TRUE for records that are of product 'sentinel-2' and platform S2A.
 #' 
-#' \code{is.sentinel2_S2B} returns TRUE for records that are of product 'Sentinel-2' and platform S2B.
+#' \code{is.sentinel2_S2B} returns TRUE for records that are of product 'sentinel-2' and platform S2B.
 #' 
-#' \code{is.sentinel3} returns TRUE for records that are of product 'Sentinel-3'.
+#' \code{is.sentinel3} returns TRUE for records that are of product 'sentinel-3'.
 #' 
-#' \code{is.sentinel3_S3A} returns TRUE for records that are of product 'Sentinel-3' and platform S3A.
+#' \code{is.sentinel3_S3A} returns TRUE for records that are of product 'sentinel-3' and platform S3A.
 #' 
-#' \code{is.sentinel3_S3B} returns TRUE for records that are of product 'Sentinel-3' and platform S3B.
+#' \code{is.sentinel3_S3B} returns TRUE for records that are of product 'sentinel-3' and platform S3B.
 #' 
-#' \code{is.sentinel3_S3C} returns TRUE for records that are of product 'Sentinel-3' and platform S3C.
+#' \code{is.sentinel3_S3C} returns TRUE for records that are of product 'sentinel-3' and platform S3C.
 #' 
-#' \code{is.sentinel3_S3D} returns TRUE for records that are of product 'Sentinel-3' and platform S3D.
+#' \code{is.sentinel3_S3D} returns TRUE for records that are of product 'sentinel-3' and platform S3D.
 #' 
-#' \code{is.sentinel3_synergy} returns TRUE for records that 'Sentinel-3' SYNERGY records.
+#' \code{is.sentinel3_synergy} returns TRUE for records that 'sentinel-3' SYNERGY records.
 #' 
-#' \code{is.sentinel3_slstr} returns TRUE for records that are 'Sentinel-3' SLSTR records.
+#' \code{is.sentinel3_slstr} returns TRUE for records that are 'sentinel-3' SLSTR records.
 #' 
-#' \code{is.sentinel3_sral} returns TRUE for records that are 'Sentinel-3' SRAL records.
+#' \code{is.sentinel3_sral} returns TRUE for records that are 'sentinel-3' SRAL records.
 #' 
-#' \code{is.sentinel3_olci} returns TRUE for records that are 'Sentinel-3' OLCI records.
+#' \code{is.sentinel3_olci} returns TRUE for records that are 'sentinel-3' OLCI records.
 #' 
-#' \code{is.sentinel5} and \code{is.sentinel5p} return TRUE for records that are 'Sentinel-5' or 'Sentinel-5P'.
+#' \code{is.sentinel5} and \code{is.sentinel5p} return TRUE for records that are 'sentinel-5' or 'sentinel-5p'.
 #'
 #' 
 #' @name is.sentinel
@@ -363,7 +363,7 @@ is.product_ <- function(records, product) {
   return(products == product)
 }
 
-#' helper for identifying the Sentinel-1 processing level
+#' helper for identifying the sentinel-1 processing level
 #' @param records sf data.frame
 #' @param level character '0', '1' or '2'
 #' @inherit is.landsat return
@@ -381,7 +381,7 @@ is.product_ <- function(records, product) {
   }))
 }
 
-#' helper for identifying the first two substrings of Sentinel-1 record ids
+#' helper for identifying the first two substrings of sentinel-1 record ids
 #' @param records sf data.frame
 #' @param sub1 character 
 #' @param sub2 character
@@ -399,7 +399,7 @@ is.product_ <- function(records, product) {
   }))
 }
 
-#' identifies the Sentinel-3 sensor (e.g. Sentinel-3A)
+#' identifies the sentinel-3 sensor (e.g. sentinel-3A)
 #' @param sensor character e.g. "S3A"
 #' @inheritParams is.landsat
 #' @inherit is.landsat return
@@ -417,7 +417,7 @@ is.product_ <- function(records, product) {
   }))
 }
 
-#' checks if a record is a Sentinel-3 OLCI record
+#' checks if a record is a sentinel-3 OLCI record
 #' @param record sf data.frame one line
 #' @return logical
 #' @keywords internal
@@ -431,7 +431,7 @@ is.product_ <- function(records, product) {
   }
 }
 
-#' checks if a record is a Sentinel-3 SLSTR record
+#' checks if a record is a sentinel-3 SLSTR record
 #' @param record sf data.frame one line
 #' @inherit .record_is_olci return
 #' @keywords internal
@@ -445,7 +445,7 @@ is.product_ <- function(records, product) {
   }
 }
 
-#' checks if a record is a Sentinel-3 SYN record
+#' checks if a record is a sentinel-3 SYN record
 #' @param record sf data.frame one line
 #' @inherit .record_is_olci return
 #' @keywords internal
@@ -459,7 +459,7 @@ is.product_ <- function(records, product) {
   }
 }
 
-#' checks if a record is a Sentinel-3 SRAL record
+#' checks if a record is a sentinel-3 SRAL record
 #' @param record sf data.frame one line
 #' @inherit .record_is_olci return
 #' @keywords internal
@@ -469,7 +469,7 @@ is.product_ <- function(records, product) {
   return(ifelse(is.na(is_sral), FALSE, is_sral))
 }
 
-#' checks if a record is a Sentinel-3 continental or global tile
+#' checks if a record is a sentinel-3 continental or global tile
 #' @param record sf data.frame one line
 #' @inherit .record_is_olci return
 #' @keywords internal
@@ -489,12 +489,11 @@ is.product_ <- function(records, product) {
 }
 
 
-#' checks if a record is a MODIS reflectance/radiance product
+#' checks if a record is a modis reflectance/radiance product
 #' @param record data.frame one line
 #' @inherit .record_is_olci return
 #' @keywords internal
 #' @noRd
 .record_is_refl_modis <- function(record) {
-  # e.g. 'MODIS_MCD19A1'
   return(any(startsWith(.cloudcov_products(), substr(record[[name_product()]], 1, 13)))) 
 }

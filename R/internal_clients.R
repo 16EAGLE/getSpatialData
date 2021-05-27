@@ -397,23 +397,47 @@
         
         # handle some fields explicitely
         # metadata
-        x.metadata <- rbind.data.frame(sapply(x$metadata, function(z) z$value, USE.NAMES = F), stringsAsFactors = F)
-        colnames(x.metadata) <- sapply(x$metadata, function(z) z$fieldName, USE.NAMES = F)
+        x.metadata <- sapply(x$metadata, function(z) z$value, USE.NAMES = F)
+        sub.valid <- !sapply(x.metadata, is.null)
+        x.metadata <- rbind.data.frame(x.metadata[sub.valid], stringsAsFactors = F)
+        colnames(x.metadata) <- sapply(x$metadata[sub.valid], function(z) z$fieldName, USE.NAMES = F)
         
         # spatialCoverage
         x.spf.sub <- grep("spatialCoverage", x.names)
         x.spf <- unlist(x[x.spf.sub])
-        x.spf <- as.numeric(x.spf[grep("coordinates", names(x.spf))])
-        x.spf <- st_as_text(.check_aoi(
-          cbind(
-            x.spf[seq(1, length(x.spf), by = 2)], 
-            x.spf[seq(2, length(x.spf), by = 2)]
-          ), type = "sf", quiet = T)
-        )
+        if(!is.null(x.spf)){
+          x.spf <- as.numeric(x.spf[grep("coordinates", names(x.spf))])
+          x.spf <- st_as_text(.check_aoi(
+            cbind(
+              x.spf[seq(1, length(x.spf), by = 2)], 
+              x.spf[seq(2, length(x.spf), by = 2)]
+            ), type = "sf", quiet = T)
+          )
+        } else if(nchar(x.metadata$`NW Corner Lat dec`) > 0){
+          x.spf <- cbind(
+            as.numeric(c(x.metadata$`NE Corner Long dec`,
+              x.metadata$`NW Corner Long dec`,
+              x.metadata$`SW Corner Long dec`,
+              x.metadata$`SE Corner Long dec`,
+              x.metadata$`NE Corner Long dec`)),
+            as.numeric(c(
+              x.metadata$`NE Corner Lat dec`,
+              x.metadata$`NW Corner Lat dec`,
+              x.metadata$`SW Corner Lat dec`,
+              x.metadata$`SE Corner Lat dec`,
+              x.metadata$`NE Corner Lat dec`)))
+          x.spf <- st_as_text(.check_aoi(x.spf, type = "sf", quiet = T))
+        } else{
+          NULL
+        }
         # drop spatialBounds as it would return the same Polygon
         
         # browse
-        x.preview_url <- list(as.list(sapply(x$browse, function(xb) xb[["browsePath"]], USE.NAMES = F)))
+        x.preview_url <- sapply(x$browse, function(xb) xb[["browsePath"]], USE.NAMES = F)
+        if(length(x.preview_url) > 1){
+          x.preview_url <- list(as.list(x.preview_url))
+        }
+        if(length(x.preview_url) == 0) x.preview_url <- NA
         # x.browse <- unlist(mapply(xb = x$browse, xn = 1:length(x$browse), function(xb, xn){
         #   xb <- unlist(xb)
         #   names(xb) <- paste0(names(xb), "_", xn)

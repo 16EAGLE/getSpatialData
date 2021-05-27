@@ -207,10 +207,8 @@
     }
     
     # convert fields
-    records[,fields.numeric] <- .sapply(fields.numeric, function(x) as.numeric(records[,x]))
-    
-    if(is.null(records$level)){
-      records$level <- NA
+    if(length(fields.numeric) > 0){
+      records[,fields.numeric] <- .sapply(fields.numeric, function(x) as.numeric(records[,x]))
     }
     
     # cloud cover filter

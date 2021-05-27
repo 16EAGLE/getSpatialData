@@ -96,6 +96,9 @@
   pos.names <- match(colnames(records), dict$clients)
   colnames(records)[which(!is.na(pos.names))] <- dict$gSD[as.numeric(na.omit(pos.names))]
   
+  # remove duplicates, e.g. from meta data
+  records <- records[,!duplicated(colnames(records))]
+  
   # remove unneeded fields
   records <- records[,-as.numeric(na.omit(
     match(
@@ -106,7 +109,8 @@
         "nwcornerlongdec", "necornerlatdec", "necornerlongdec", "secornerlatdec", "secornerlongdec", "swcornerlatdec",
         "swcornerlongdec", "ordered", "product", "dataaccessUrl", "scenebounds", "platformshortname", "mission",
         "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
-        "status", "filename", "format", "url", "downloadurl", "mode", "productlevel"),
+        "status", "filename", "format", "url", "downloadurl", "mode", "productlevel", "mapprojection",
+        "pixelresolution", "begindate", "enddate"),
       colnames(records)
     )
   ))]
@@ -1091,9 +1095,11 @@ rbind.different <- function(x) {
                                     c("productconsolidation", "product_consolidation"),
                                     c("timeliness", "timeliness"),
                                     c("platformname", "platform"),
+                                    c("Platform", "platform"),
                                     c("platformidentifier", "platform_id"),
                                     c("platformserialidentifier", "platform_serial"),
                                     c("instrumentname", "sensor"),
+                                    c("Sensor", "sensor"),
                                     c("instrumentshortname", "sensor_id"),
                                     c("SensorIdentifier", "sensor_id"),
                                     c("sensoroperationalmode", "sensor_mode"),

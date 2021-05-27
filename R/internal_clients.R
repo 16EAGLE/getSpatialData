@@ -54,11 +54,11 @@
   .apply(records, MARGIN = 1, function(x){
     
     # Sentinel Copernicus Hub
-    if(x$product_group == "Sentinel"){
+    if(x$product_group == "sentinel"){
       paste0(unlist(x$gSD.cred)[3], "odata/v1/Products('", x$entity_id, "')/$value")
       
-      # Landsat 8 Level 1A AWS
-    } else if(x$product_group == "Landsat"){
+      # landsat 8 Level 1A AWS
+    } else if(x$product_group == "landsat"){
       
       if(x$level == "l1"){
         # assemble index url
@@ -72,14 +72,26 @@
       } else{
         x[["gSD.espa_item"]][["product_dload_url"]]
       }
-      # MODIS LAADS
-    } else if(x$product_group == "MODIS"){
+      # modis LAADS
+    } else if(x$product_group == "modis"){
       
       # assemble file url
-      fn <- gsub("Entity ID: ", "", strsplit(x$summary, ", ")[[1]][1]) #positional
-      ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
-      url <- paste0(getOption("gSD.api")$laads, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
-                    "/", substr(ydoy, 5, nchar(ydoy)), "/", fn)
+      fn <- strsplit(x$summary, "[.]")[[1]]
+      ydoy <- gsub("A", "", fn[2]) #positional
+      
+      url <- paste0(
+        getOption("gSD.api")$laads,
+        toString(as.numeric(fn[4])), "/",
+        fn[1], "/",
+        substr(ydoy, 1, 4), "/",
+        substr(ydoy, 5, nchar(ydoy)), "/", x$summary
+      )
+      
+      # EROS legacy API 1.4.:
+      # fn <- gsub("Entity ID: ", "", strsplit(x$summary, ", ")[[1]][1]) #positional
+      # ydoy <- gsub("A", "", strsplit(fn, "[.]")[[1]][2]) #positional
+      # url <- paste0(getOption("gSD.api")$laads, toString(as.numeric(strsplit(fn, "[.]")[[1]][4])), "/", strsplit(fn, "[.]")[[1]][1], "/", substr(ydoy, 1, 4),
+      #               "/", substr(ydoy, 5, nchar(ydoy)), "/", fn)
       
       # test url
       if(http_error(url)){
@@ -93,8 +105,8 @@
         return(paste0(paste0(head(strsplit(url, "/")[[1]], n=-1), collapse = "/"), "/", fn))
       } else return(url)
     
-    # SRTM CMR  
-    } else if(x$product_group == "SRTM"){
+    # srtm CMR  
+    } else if(x$product_group == "srtm"){
       x$links[grep("hgt.zip$", x$links)]
     } else NA
   })
@@ -112,16 +124,16 @@
   .apply(records, MARGIN = 1, function(x){
     file <- paste0(x$gSD.dir, "/", x$record_id)
     
-    if(x$product_group == "Sentinel"){
+    if(x$product_group == "sentinel"){
       if(grepl("GNSS", x$product)){
         paste0(file, ".TGZ")
-      } else if(x$product == "Sentinel-5P"){
+      } else if(x$product == "sentinel-5p"){
         paste0(file, ".nc")
       } else{
         paste0(file, ".zip")
       }
       
-    } else if(x$product_group == "Landsat"){
+    } else if(x$product_group == "landsat"){
       
       if(x$level == "l1"){
         if(!dir.exists(file)) catch <- try(dir.create(file, recursive = T), silent = T)
@@ -129,7 +141,7 @@
       } else{
         paste0(file, "_LEVEL_", x$level, ".tar.gz")
       } 
-    } else if(any(x$product_group == "MODIS", x$product_group == "SRTM")){
+    } else if(any(x$product_group == "modis", x$product_group == "srtm")){
       paste0(x$gSD.dir, "/", tail(strsplit(x$dataset_url, "/")[[1]], n=1)[1])
     } else NA
   })

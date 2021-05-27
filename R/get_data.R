@@ -38,16 +38,16 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   
   # login check
   groups <- unique(records$product_group)
-  if("Sentinel" %in% groups){
+  if("sentinel" %in% groups){
     .check_login("Copernicus")
   }
-  if("Landsat" %in% groups){
+  if("landsat" %in% groups){
     .check_login("USGS")
   }
-  if("MODIS" %in% groups){
+  if("modis" %in% groups){
     .check_login(c("USGS", "earthdata"))
   }
-  if("SRTM" %in% groups){
+  if("srtm" %in% groups){
     .check_login(c("earthdata"))
   }
   
@@ -74,7 +74,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   records$gSD.cred <- NA
   records[sub,]$gSD.cred <- .apply(records[sub,], MARGIN = 1, function(x){
     
-    if(x["product_group"] == "Sentinel"){
+    if(x["product_group"] == "sentinel"){
       list(.CopHub_select(x = extras$hub, p = if(isTRUE(as.logical(x[["is_gnss"]]))) "GNSS" else x[["product"]], user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass")))
     } else if(x["product_group"] == "SRTM"){
       list(user = getOption("gSD.ed_user"), pw = getOption("gSD.ed_pass"))
@@ -87,7 +87,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
     out("Receiving MD5 checksums...")
     records[sub,]$md5_checksum <- unlist(.apply(records[sub,], MARGIN = 1, function(x){
       
-      if(x["product_group"] == "Sentinel"){
+      if(x["product_group"] == "sentinel"){
         cred <- unlist(x$gSD.cred)
         if(!is.null(x$md5_url)) content(.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
       
@@ -140,8 +140,8 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
                  retry = expression(out(paste0("[Attempt ", toString(3-n+1), "/3] Reattempting download of '", name, "'..."), msg = T)),
                  delay = 0,
                  value = T,
-                 username = if(any(x$product_group == "Sentinel", x$product_group == "SRTM")) cred[1] else NULL,
-                 password = if(any(x$product_group == "Sentinel", x$product_group == "SRTM")) cred[2] else NULL)
+                 username = if(any(x$product_group == "sentinel", x$product_group == "SRTM")) cred[1] else NULL,
+                 password = if(any(x$product_group == "sentinel", x$product_group == "SRTM")) cred[2] else NULL)
         })
         
         # return downloaded files

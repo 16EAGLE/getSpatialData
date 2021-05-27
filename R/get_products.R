@@ -43,8 +43,8 @@
 get_products <- function(product_groups = "all", grouped = FALSE, update_online = FALSE){
   
   # assemble offline products list
-  products <- list("sentinel" = c(getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "GNSS"], 
-                                  paste0(getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "GNSS" & getOption("gSD.copnames")$name != "Sentinel-5P"], "_GNSS")),
+  products <- list("sentinel" = c(getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "gnss"], 
+                                  paste0(getOption("gSD.copnames")$name[getOption("gSD.copnames")$name != "gnss" & getOption("gSD.copnames")$name != "sentinel-5p"], "_gnss")),
                    "landsat" = c("landsat_8_c1", "lsr_landsat_8_c1", "landsat_ot_c2_l1", "landsat_ot_c2_l2", 
                                  "landsat_etm_c1", "lsr_landsat_etm_c1", "landsat_etm_c2_l1", "landsat_etm_c2_l2", 
                                  "landsat_tm_c1", "lsr_landsat_tm_c1", "landsat_tm_c2_l1", "landsat_tm_c2_l2",

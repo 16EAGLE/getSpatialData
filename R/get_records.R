@@ -6,7 +6,8 @@
 #' @param products character, product name(s). Use \code{\link{get_products}} to get a full list of all available products. If multiple products are supplied, the returned records are combined across products.
 #' @param aoi sfc_POLYGON or SpatialPolygons or matrix, representing a single multi-point (at least three points) polygon of your area-of-interest (AOI). If it is a matrix, it has to have two columns (longitude and latitude) and at least three rows (each row representing one corner coordinate). If its projection is not \code{+proj=longlat +datum=WGS84 +no_defs}, it is reprojected to the latter. Use \link{set_aoi} instead to once define an AOI globally for all queries within the running session. If \code{aoi} is undefined, the AOI that has been set using \link{set_aoi} is used.
 #' @param as_sf logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.
-#' @param rename_cols logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products recieved from different sources.
+#' @param rename_cols logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products received from different sources.
+#' @param simplify_cols logical, whether to simplify the returned records table by removing fields that are not standard across different products.
 #' @param check_products logical, check whether product names (\code{products}) are valid (recommended) or not. If \code{FALSE}, product names are not checked and directly used to attempt a query even if they are not supported or spelled wrong.
 #' @param verbose logical, whether to display details on the function's progress or output on the console.
 #' @param ... additional, sensor-specific arguments:
@@ -35,7 +36,7 @@
 #' 
 #' @name get_records
 #' @export
-get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, check_products = TRUE, ..., verbose = TRUE){
+get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_cols = TRUE, check_products = TRUE, simplify_cols = TRUE, ..., verbose = TRUE){
   
   # check deprecated arguments
   if(missing(products)){
@@ -63,7 +64,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   # get records
   records <- mapply(client = clients, product_name = products, function(client, product_name){
     if(is.null(client)) out(paste0("Could not find appropriate client for product '", product_name, "'. This product is not supported."), type = 2) else{
-      eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, rename_cols = rename_cols, ..., verbose = verbose)"))) 
+      eval(parse(text = paste0(".records_", client, "(time_range = time_range, product_name = product_name, aoi = aoi, rename_cols = rename_cols, simplify_cols = simplify_cols, ..., verbose = verbose)"))) 
     }
   }, USE.NAMES = F, SIMPLIFY = F)
   
@@ -93,6 +94,11 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
     if(length(undefined_names) > 0){
       records <- cbind(records[, sorted_names], records[, undefined_names])
       colnames(records) <- c(sorted_names, undefined_names)
+    }
+    
+    if(is.null(records$footprint)){
+      out("Retrieved records have no spatial footprint and thus argument 'as_sf' is ignored.", type = 2)
+      as_sf <- FALSE
     }
     
     # convert to sf

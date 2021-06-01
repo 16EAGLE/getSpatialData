@@ -9,7 +9,7 @@
 #' @keywords internal
 #' @noRd
 #' 
-.records_CopHub <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, ...){
+.records_CopHub <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, simplify_cols = TRUE, ...){
   
   ## check ... extras
   extras <- list(...)
@@ -19,8 +19,8 @@
   if(is.null(username)) .check_login("Copernicus")
   cred <- .check_credentials(username, password, service = "Copernicus")
   
-  # GNSS products
-  gnss <- grepl("GNSS", product_name)
+  # gnss products
+  gnss <- grepl("gnss", product_name)
   #if(!is.null(extras$gnss)) gnss <- extras$gnss else gnss <- FALSE
   out(paste0("Searching records for product name '", product_name, "'..."))
   
@@ -32,7 +32,7 @@
     out("AOI is ignored, since the requested product is of type GNSS. GNSS records are AOI-independent, as they are only referenced by mission time using argument time_range.", type = 2)
     aoi <- NULL
     product_name_orig <- product_name
-    product_name <- gsub("_GNSS", "", product_name)
+    product_name <- gsub("_gnss", "", product_name)
   }
   
   ## url assembler function
@@ -53,7 +53,7 @@
   }
   
   ## Manage API access
-  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "GNSS" else product_name, user = cred$username, pw = cred$password)
+  cred <- .CopHub_select(x = hub, p = if(isTRUE(gnss)) "gnss" else product_name, user = cred$username, pw = cred$password)
   
   ## query API
   row.start <- -100; re.query <- T; give.return <- T
@@ -108,10 +108,10 @@
     records[,fields.numeric] <- .sapply(fields.numeric, function(x) as.numeric(records[,x]))
     
     # translate record column names
-    if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
+    if(isTRUE(rename_cols)) records <- .translate_records(records, product_name, simplify_cols = simplify_cols)
     records$is_gnss <- gnss
     
-    # remove non-functional preview url if records are GNSS
+    # remove non-functional preview url if records are gnss
     if(gnss){
       records$preview_url <- NA
       records$product <- product_name_orig
@@ -141,7 +141,7 @@
 #' @keywords internal
 #' @noRd
 #' 
-.records_EE <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, ...){
+.records_EE <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, simplify_cols = TRUE, ...){
   
   ## check ... extras
   extras <- list(...)
@@ -155,19 +155,19 @@
   
   # check aoi
   aoi <- .check_aoi(aoi, type = "sf", quiet = T)
-  
-  if(grepl("landsat", product_name)){
-    meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
-      "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
-  }
-  if(grepl("modis", product_name)){
-    meta.fields <- c("Acquisition Start Date", "Acquisition End Date", "Horizontal Tile Number", "Vertical Tile Number",
-                     "Auto Quality Flag", "Auto Quality Flag Explanation", "Science Quality Flag",
-                     "Science Quality Flag Expln","Missing Data Percentage")
-  }
-  
+  # 
+  # if(grepl("landsat", product_name)){
+  #   meta.fields <- c("Start Time", "Stop Time", "WRS Path", "WRS Row", "Land Cloud Cover", "Scene Cloud Cover",
+  #     "Sun Elevation", "Sun Azimuth", "Sensor Identifier", "Image Quality")
+  # }
+  # if(grepl("modis", product_name)){
+  #   meta.fields <- c("Acquisition Start Date", "Acquisition End Date", "Horizontal Tile Number", "Vertical Tile Number",
+  #                    "Auto Quality Flag", "Auto Quality Flag Explanation", "Science Quality Flag",
+  #                    "Science Quality Flag Expln","Missing Data Percentage")
+  # }
+  # 
   ## query
-  records <- .EE_query(aoi, time_range, product_name, cred$api.key, meta.fields)
+  records <- .EE_query(aoi, time_range, product_name, api.key = cred$api.key)
   
   if(is.null(records)){
     out("No results could be obtained for this product, time range and AOI.", msg = T)
@@ -176,20 +176,23 @@
     if(grepl("landsat", product_name)){
       ## Connect to ESPA to retrieve available products for (no use of entityId, displayId instead)
       out("Recieving available product levels from USGS-EROS ESPA...", msg = T)
-      records <- do.call(rbind.data.frame, .apply(records, MARGIN = 1, function(x, names = colnames(records)){
-        
-        x <- rbind.data.frame(x, stringsAsFactors = F)
-        colnames(x) <- names
-        
-        response <- try(.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x$displayId), username = cred$username, password = cred$password), silent = T)
+      
+      # query available levels per record
+      level.list <- lapply(records$displayId, function(x){
+        response <- try(.get(url = paste0(getOption("gSD.api")$espa, "available-products/", x), username = cred$username, password = cred$password), silent = T)
         if(inherits(response, "try-error")) response <- "l1" else{
           response <- if(all(names(content(response)) == "not_implemented")) "'l1'" else unlist(content(response)[[1]]$products) #paste0("'", paste0(content(t)[[1]]$products,  collapse = "', '"), "'")
         }
-        
-        x <- do.call(rbind.data.frame, rep(list(x), length(response)))
-        x$level <- response
-        return(x)
-      }))
+        return(response)
+      })
+      
+      # expand records by available levels
+      records <- do.call(rbind.data.frame, mapply(rec = split(records, seq(nrow(records))), level = level.list, function(rec, level){
+        rec <- do.call(rbind.data.frame, rep(list(rec), length(level)))
+        rec$level <- level
+        return(rec)
+      }, SIMPLIFY = F))
+      
       
       ## Correct WRS fields
       wrs.sub <- grep("WRS", colnames(records))
@@ -199,7 +202,7 @@
       }, USE.NAMES = F))
       
       # convert expected numeric fields
-      fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("WRSPath", "WRSRow", "LandCloudCover", "SceneCloudCover", "ImageQuality")) x %in% y, USE.NAMES = F)]
+      fields.numeric <- names(records)[.sapply(names(records), function(x, y = c("WRS.Path", "WRS.Row", "Land.Cloud.Cover", "Scene.Cloud.Cover", "Image.Quality")) x %in% y, USE.NAMES = F)]
     }
     
     if(grepl("modis", product_name)){
@@ -219,7 +222,7 @@
     records$footprint <- st_as_sfc(records$footprint, crs = 4326)
     
     # translate record column names
-    if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
+    if(isTRUE(rename_cols)) records <- .translate_records(records, product_name, simplify_cols = simplify_cols)
     
     return(records)
   }
@@ -236,7 +239,7 @@
 #' @return records
 #' @keywords internal
 #' @noRd
-.records_CMR <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, ...){
+.records_CMR <- function(time_range, product_name, aoi = NULL, rename_cols = TRUE, simplify_cols = TRUE, ...){
   
   # NASA CMR earth data url
   url <- "https://cmr.earthdata.nasa.gov/search/" # move to options
@@ -300,7 +303,7 @@
     return(y)
   }))
   
-  if(isTRUE(rename_cols)) records <- .translate_records(records, product_name)
+  if(isTRUE(rename_cols)) records <- .translate_records(records, product_name, simplify_cols = simplify_cols)
   
   # convert coordinates to sf
   if(!is.null(records$footprint)){

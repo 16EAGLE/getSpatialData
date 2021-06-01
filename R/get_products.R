@@ -48,8 +48,7 @@ get_products <- function(product_groups = "all", grouped = FALSE, update_online 
                    "landsat" = c("landsat_8_c1", "lsr_landsat_8_c1", "landsat_ot_c2_l1", "landsat_ot_c2_l2", 
                                  "landsat_etm_c1", "lsr_landsat_etm_c1", "landsat_etm_c2_l1", "landsat_etm_c2_l2", 
                                  "landsat_tm_c1", "lsr_landsat_tm_c1", "landsat_tm_c2_l1", "landsat_tm_c2_l2",
-                                 "landsat_mss_c1", "landsat_mss_c2_l1", "landsat_band_files_c2_l1",
-                                 "landsat_band_files_c2_l2"),
+                                 "landsat_mss_c1", "landsat_mss_c2_l1"), #"landsat_band_files_c2_l1", "landsat_band_files_c2_l2"),
                    "modis" = c("modis_mcd64a1_v6", "modis_mod09a1_v6", "modis_mod09cmg_v6", "modis_mod14_v6", 
                                "modis_mod09ga_v6", "modis_mod14a1_v6", "modis_mod09gq_v6", "modis_mod14a2_v6", 
                                "emodis_global_lst_v6", "modis_mod09q1_v6", "modis_modocga_v6", "modis_myd14_v6", 
@@ -102,6 +101,7 @@ get_products <- function(product_groups = "all", grouped = FALSE, update_online 
     if("landsat" %in% product_groups){
       x <- grep("LSR", .EE_ds(api.key, wildcard = "landsat_"), value = T, invert = T) #not show LSR, since higher level products are queried at ESPA directly
       x <- x[grepl("landsat", x)] # CONSIDER REMOVING!
+      x <- x[!grepl("band", x)] # CONSIDER REMOVING!
       if(length(x) == 0) out("Product names could not be accessed, are you (still) logged in? USGS ERS sessions expire after some time, use login_USGS() to (re-)login.", type = 3)
       products[["landsat"]] <-  x
     }

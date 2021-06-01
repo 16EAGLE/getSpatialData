@@ -15,6 +15,7 @@ get_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -26,6 +27,7 @@ getSentinel_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -37,6 +39,7 @@ getLandsat_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -48,6 +51,7 @@ getMODIS_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -59,6 +63,7 @@ getSRTM_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -72,9 +77,11 @@ getSRTM_records(
 
 \item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
-\item{rename_cols}{logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products recieved from different sources.}
+\item{rename_cols}{logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products received from different sources.}
 
 \item{check_products}{logical, check whether product names (\code{products}) are valid (recommended) or not. If \code{FALSE}, product names are not checked and directly used to attempt a query even if they are not supported or spelled wrong.}
+
+\item{simplify_cols}{logical, whether to simplify the returned records table by removing fields that are not standard across different products.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{

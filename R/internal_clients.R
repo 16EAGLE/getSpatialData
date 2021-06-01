@@ -321,14 +321,13 @@
 #' @param time_range time_range
 #' @param product_name name
 #' @param api.key api.key
-#' @param meta.fields meta.fields
 #'
 #' @importFrom sf st_bbox st_as_text
 #' @importFrom xml2 as_list
 #'
 #' @keywords internal
 #' @noRd
-.EE_query <- function(aoi, time_range, product_name, api.key, meta.fields = NULL){
+.EE_query <- function(aoi, time_range, product_name, api.key){
   
   # assemble request body with a few default fields
   req_body <- list(
@@ -398,37 +397,46 @@
         # handle some fields explicitely
         # metadata
         x.metadata <- sapply(x$metadata, function(z) z$value, USE.NAMES = F)
-        sub.valid <- !sapply(x.metadata, is.null)
-        x.metadata <- rbind.data.frame(x.metadata[sub.valid], stringsAsFactors = F)
-        colnames(x.metadata) <- sapply(x$metadata[sub.valid], function(z) z$fieldName, USE.NAMES = F)
-        
-        # spatialCoverage
-        x.spf.sub <- grep("spatialCoverage", x.names)
-        x.spf <- unlist(x[x.spf.sub])
-        if(!is.null(x.spf)){
-          x.spf <- as.numeric(x.spf[grep("coordinates", names(x.spf))])
-          x.spf <- st_as_text(.check_aoi(
-            cbind(
-              x.spf[seq(1, length(x.spf), by = 2)], 
-              x.spf[seq(2, length(x.spf), by = 2)]
-            ), type = "sf", quiet = T)
-          )
-        } else if(nchar(x.metadata$`NW Corner Lat dec`) > 0){
-          x.spf <- cbind(
-            as.numeric(c(x.metadata$`NE Corner Long dec`,
-              x.metadata$`NW Corner Long dec`,
-              x.metadata$`SW Corner Long dec`,
-              x.metadata$`SE Corner Long dec`,
-              x.metadata$`NE Corner Long dec`)),
-            as.numeric(c(
-              x.metadata$`NE Corner Lat dec`,
-              x.metadata$`NW Corner Lat dec`,
-              x.metadata$`SW Corner Lat dec`,
-              x.metadata$`SE Corner Lat dec`,
-              x.metadata$`NE Corner Lat dec`)))
-          x.spf <- st_as_text(.check_aoi(x.spf, type = "sf", quiet = T))
+        if(length(x.metadata) > 0){
+          sub.valid <- !sapply(x.metadata, is.null)
+          x.metadata <- rbind.data.frame(x.metadata[sub.valid], stringsAsFactors = F)
+          colnames(x.metadata) <- sapply(x$metadata[sub.valid], function(z) z$fieldName, USE.NAMES = F)
+          
+          # spatialCoverage
+          x.spf.sub <- grep("spatialCoverage", x.names)
+          x.spf <- unlist(x[x.spf.sub])
+          if(!is.null(x.spf)){
+            x.spf <- as.numeric(x.spf[grep("coordinates", names(x.spf))])
+            x.spf <- st_as_text(.check_aoi(
+              cbind(
+                x.spf[seq(1, length(x.spf), by = 2)], 
+                x.spf[seq(2, length(x.spf), by = 2)]
+              ), type = "sf", quiet = T)
+            )
+          } else if(!is.null(x.metadata$`NW Corner Lat dec`)){
+            if(nchar(x.metadata$`NW Corner Lat dec`) > 0){
+              x.spf <- cbind(
+                as.numeric(c(x.metadata$`NE Corner Long dec`,
+                  x.metadata$`NW Corner Long dec`,
+                  x.metadata$`SW Corner Long dec`,
+                  x.metadata$`SE Corner Long dec`,
+                  x.metadata$`NE Corner Long dec`)),
+                as.numeric(c(
+                  x.metadata$`NE Corner Lat dec`,
+                  x.metadata$`NW Corner Lat dec`,
+                  x.metadata$`SW Corner Lat dec`,
+                  x.metadata$`SE Corner Lat dec`,
+                  x.metadata$`NE Corner Lat dec`)))
+              x.spf <- st_as_text(.check_aoi(x.spf, type = "sf", quiet = T))
+            } else{
+              x.spf <- NA
+            }
+          } else{
+            x.spf <- NA
+          }
         } else{
-          NULL
+          x.spf <- NA
+          x.metadata <- NULL
         }
         # drop spatialBounds as it would return the same Polygon
         
@@ -449,7 +457,9 @@
         
         
         # assemble df
-        df <- cbind.data.frame(df, x.metadata, spatialFootprint = x.spf, product = ds_name, stringsAsFactors = F)
+        if(!is.null(x.metadata)) df <- cbind.data.frame(df, x.metadata, stringsAsFactors = F)
+        df$spatialFootprint <- x.spf
+        df$product <- ds_name
         df$preview_url <- x.preview_url
         return(df)
       }), SIMPLIFY = F), recursive = F)

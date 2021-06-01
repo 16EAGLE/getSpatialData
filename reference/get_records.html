@@ -166,6 +166,7 @@
   as_sf <span class='op'>=</span> <span class='cn'>TRUE</span>,
   rename_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   check_products <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  simplify_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
@@ -177,6 +178,7 @@
   as_sf <span class='op'>=</span> <span class='cn'>TRUE</span>,
   rename_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   check_products <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  simplify_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
@@ -188,6 +190,7 @@
   as_sf <span class='op'>=</span> <span class='cn'>TRUE</span>,
   rename_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   check_products <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  simplify_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
@@ -199,6 +202,7 @@
   as_sf <span class='op'>=</span> <span class='cn'>TRUE</span>,
   rename_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   check_products <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  simplify_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
@@ -210,6 +214,7 @@
   as_sf <span class='op'>=</span> <span class='cn'>TRUE</span>,
   rename_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   check_products <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  simplify_cols <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
@@ -235,11 +240,15 @@
     </tr>
     <tr>
       <th>rename_cols</th>
-      <td><p>logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products recieved from different sources.</p></td>
+      <td><p>logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products received from different sources.</p></td>
     </tr>
     <tr>
       <th>check_products</th>
       <td><p>logical, check whether product names (<code>products</code>) are valid (recommended) or not. If <code>FALSE</code>, product names are not checked and directly used to attempt a query even if they are not supported or spelled wrong.</p></td>
+    </tr>
+    <tr>
+      <th>simplify_cols</th>
+      <td><p>logical, whether to simplify the returned records table by removing fields that are not standard across different products.</p></td>
     </tr>
     <tr>
       <th>...</th>

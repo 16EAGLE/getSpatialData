@@ -83,7 +83,7 @@
 #' @param product_name product name 
 #' @keywords internal
 #' @noRd
-.translate_records <- function(records, product_name){
+.translate_records <- function(records, product_name, simplify_cols = TRUE){
 
   # standardize
   records.names <- colnames(records) <- gsub("[.]", "", tolower(colnames(records)))
@@ -93,28 +93,26 @@
   dict$clients <- gsub("[.]", "", tolower(dict$clients))
   
   # match position of names in dictionary and in records
-  pos.names <- match(colnames(records), dict$clients)
-  colnames(records)[which(!is.na(pos.names))] <- dict$gSD[as.numeric(na.omit(pos.names))]
+  pos.names <- match(dict$clients, colnames(records))
+  records.tr <- records[,as.numeric(na.omit(pos.names))]
+  colnames(records.tr) <- dict$gSD[!is.na(pos.names)]
+  
+  # pos.names <- match(colnames(records), dict$clients)
+  # colnames(records)[which(!is.na(pos.names))] <- dict$gSD[as.numeric(na.omit(pos.names))]
   
   # remove duplicates, e.g. from meta data
-  records <- records[,!duplicated(colnames(records))]
+  # records.tr <- records.tr[,!duplicated(colnames(records.tr))]
   
-  # remove unneeded fields
-  records <- records[,-as.numeric(na.omit(
-    match(
-      c("orderurl", "bulkordered", "optionsbulk", "optionsdownload", "optionsorder", "optionssecondary", 
-        "selectedbulk", "selectedcompare", "selectedorder", "centerlatitude", "acquisitionenddate",
-        "centerlongitude", "nwcornerlat", "nwcornerlong", "necornerlat", "necornerlong", "secornerlat",
-        "secornerlong", "swcornerlat", "swcornerlong", "centerlatitudedec", "centerlongitudedec", "nwcornerlatdec",
-        "nwcornerlongdec", "necornerlatdec", "necornerlongdec", "secornerlatdec", "secornerlongdec", "swcornerlatdec",
-        "swcornerlongdec", "ordered", "product", "dataaccessUrl", "scenebounds", "platformshortname", "mission",
-        "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
-        "status", "filename", "format", "url", "downloadurl", "mode", "productlevel", "mapprojection",
-        "pixelresolution", "begindate", "enddate"),
-      colnames(records)
-    )
-  ))]
-
+  # add disregarded field fields
+  if(isTRUE(simplify_cols)){
+    #keep.cols <- colnames(records) %in% dict$gSD
+    #out(paste0("[DEBUG] Deleted '", paste0(colnames(records)[!keep.cols], collapse = "', '"), "'."), msg = T)
+    #records <- records[,keep.cols]
+    records <- records.tr
+  } else{
+    records <- cbind(records.tr, records[, -as.numeric(na.omit(pos.names))])
+  }
+  
   # add product and product group
   products <- get_products(grouped = T, update_online = F)
   records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
@@ -131,8 +129,6 @@
   
   # clean records ID
   records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
-  
-  # sort columns
   return(records)
 }
 
@@ -1063,13 +1059,14 @@ rbind.different <- function(x) {
                                     c("footprint", "footprint"),
                                     c("boxes", "footprint"),
                                     c("tileid", "tile_id"),
-                                    c("WRSPath", "tile_number_horizontal"),
-                                    c("WRSRow", "tile_number_vertical"),
+                                    c("wrspath", "tile_number_horizontal"),
+                                    c("wrsrow", "tile_number_vertical"),
                                     c("HorizontalTileNumber", "tile_number_horizontal"),
                                     c("VerticalTileNumber", "tile_number_vertical"),
                                     c("url.alt", "md5_url"),
                                     c("browseUrl", "preview_url"),
                                     c("url.icon", "preview_url"),
+                                    c("preview_url", "preview_url"),
                                     c("metadataUrl", "meta_url"),
                                     c("fgdcMetadataUrl", "meta_url_fgdc"),
                                     c("slicenumber", "slice_number"),
@@ -1104,12 +1101,12 @@ rbind.different <- function(x) {
                                     c("SensorIdentifier", "sensor_id"),
                                     c("sensoroperationalmode", "sensor_mode"),
                                     c("polarisationmode", "polarisation_mode"),
-                                    c("acquisitiontype", "aquistion_type"),
+                                    c("acquisitiontype", "acquistion_type"),
                                     c("size", "size"),
                                     c("is_gnss", "is_gnss"),
-                                    c("LandCloudCover", "cloudcov_land"),
-                                    c("SceneCloudCover", "cloudcov"),
-                                    c("cloudCover", "cloudcov"),
+                                    c("landcloudcover", "cloudcov_land"),
+                                    c("scenecloudcover", "cloudcov"),
+                                    c("cloudcover", "cloudcov"),
                                     c("cloudcoverpercentage", "cloudcov"),
                                     c("highprobacloudspercentage", "cloudcov_highprob"),
                                     c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
@@ -1127,7 +1124,10 @@ rbind.different <- function(x) {
                                     c("ScienceQualityFlag", "flag_sciencequality"),
                                     c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
                                     c("MissingDataPercentage", "missingdata"),
-                                    c("collection_concept_id", "product_id"), stringsAsFactors = F)
+                                    c("collectionnumber", "collection"),
+                                    c("collectioncategory", "collection_category"),
+                                    c("collection_concept_id", "product_id"),
+                                    c("product", "product"), stringsAsFactors = F)
   colnames(clients_dict) <- c("clients", "gSD")
   
   op <- options()

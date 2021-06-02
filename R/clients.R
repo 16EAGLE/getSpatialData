@@ -224,6 +224,7 @@
     # translate record column names
     if(isTRUE(rename_cols)) records <- .translate_records(records, product_name, simplify_cols = simplify_cols)
     
+    
     return(records)
   }
 }

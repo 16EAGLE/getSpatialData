@@ -82,9 +82,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
     if(is.null(records$level)){
       records$level <- NA
     }
-    if(is.null(records$date_acquisition)){
-      records$date_acquisition <- as.Date(records$start_time)
-    }
+    
     
     # sort records
     used_names <- sapply(unique(getOption("gSD.clients_dict")$gSD), function(x) x %in% colnames(records))

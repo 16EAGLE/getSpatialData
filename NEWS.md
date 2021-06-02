@@ -4,6 +4,8 @@ Bug fixes, Landsat Collection 2 support
 #### Bug fixes:
 
 * affects `login_USGS()`, `get_products()`, `get_records()`, `get_previews()`, `get_data()`: Fixed a bug that caused all request to the EROS Inventory Service API to fail, including login. The client has been updated to support the new EROS API 1.5.0 to query Earth Explorer.
+* affects `get_records()`: Fixed a bug that caused all Sentinel odata requests to fail
+* affects `get_records()`: Fixed a bug that cause differences in how acquistion times and dates were extracted, parsed and converted
 
 #### Products:
 

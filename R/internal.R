@@ -115,7 +115,7 @@
   
   # add product and product group
   products <- get_products(grouped = T, update_online = F)
-  records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
+  records$product_group <- product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
   records$product <- product_name
   
   # product-specfic cases
@@ -129,6 +129,31 @@
   
   # clean records ID
   records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
+  
+  # tiem and date field conversions
+  if(product_group == "sentinel"){
+    records$start_time <- as.POSIXct(strptime(records$start_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$date_acquisition)
+  }
+  if(product_group == "landsat"){
+    records$start_time <- as.POSIXct(strptime(records$start_time, "%Y:%j:%T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y:%j:%T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$start_time)
+    records$start_date <- records$stop_date <- NULL
+  }
+  if(product_group == "modis"){
+    records$start_time <- as.POSIXct(strptime(records$start_date, "%Y-%m-%d %T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_date, "%Y-%m-%d %T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$date_acquisition)
+    records$start_date <- records$stop_date <- NULL
+  }
+  if(product_group == "srtm"){
+    records$start_time <- as.POSIXct(strptime(records$start_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$start_time)
+  }
+  
   return(records)
 }
 
@@ -1027,108 +1052,109 @@ rbind.different <- function(x) {
 .onLoad <- function(libname, pkgname){
   
   pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
-  clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
-                                    c("summary", "product"), # place holder
-                                    c("title", "record_id"),
-                                    c("displayId", "record_id"),
-                                    c("uuid", "entity_id"),
-                                    c("entityId", "entity_id"),
-                                    c("id", "entity_id"),
-                                    c("summary", "summary"),
-                                    c("dataset_id", "summary"),
-                                    c("localgranuleid", "summary"),
-                                    c("beginposition", "date_acquisition"),
-                                    c("acquisitionDate", "date_acquisition"),
-                                    c("AcquisitionStartDate", "date_acquisition"),
-                                    c("temporalcoveragestartdate", "date_acquisition"),
-                                    c("beginposition", "start_time"),
-                                    c("StartTime", "start_time"),
-                                    c("time_start", "start_time"),
-                                    c("endposition", "stop_time"),
-                                    c("StopTime", "stop_time"),
-                                    #c("temporalcoverageenddate", "stop_time"),
-                                    c("time_end", "stop_time"),
-                                    c("daynightindicator", "day_or_night"),
-                                    c("ingestiondate", "date_ingestion"),
-                                    c("publishdate", "date_publish"),
-                                    c("dateentered", "date_ingestion"),
-                                    c("dateupdated", "date_modified"),
-                                    c("modifiedDate", "date_modified"),
-                                    c("updated", "date_modified"),
-                                    c("creationdate", "date_creation"),
-                                    c("footprint", "footprint"),
-                                    c("boxes", "footprint"),
-                                    c("tileid", "tile_id"),
-                                    c("wrspath", "tile_number_horizontal"),
-                                    c("wrsrow", "tile_number_vertical"),
-                                    c("HorizontalTileNumber", "tile_number_horizontal"),
-                                    c("VerticalTileNumber", "tile_number_vertical"),
-                                    c("url.alt", "md5_url"),
-                                    c("browseUrl", "preview_url"),
-                                    c("url.icon", "preview_url"),
-                                    c("preview_url", "preview_url"),
-                                    c("metadataUrl", "meta_url"),
-                                    c("fgdcMetadataUrl", "meta_url_fgdc"),
-                                    c("slicenumber", "slice_number"),
-                                    c("orbitnumber", "orbit_number"),
-                                    c("orbitdirection", "orbit_direction"),
-                                    c("lastorbitnumber", "lastorbit_number"),
-                                    c("relativeorbitnumber", "relativeorbit_number"),
-                                    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
-                                    c("passnumber", "pass_number"),
-                                    c("passdirection", "pass_direction"),
-                                    c("relorbitdir", "relativeorbit_direction"),
-                                    c("relpassnumber", "relativepass_number"),
-                                    c("relpassdirection", "relativepass_direction"),
-                                    c("lastorbitdirection", "lastorbit_direction"),
-                                    c("lastpassnumber", "lastpass_number"),
-                                    c("lastpassdirection", "lastpass_direction"),
-                                    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
-                                    c("lastrelpassnumber", "lastrelativepass_number"),
-                                    c("lastrelpassdirection", "lastrelativepass_direction"),
-                                    c("swathidentifier", "swath_id"),
-                                    c("producttype", "product_type"),
-                                    c("productclass", "product_class"),
-                                    c("productconsolidation", "product_consolidation"),
-                                    c("timeliness", "timeliness"),
-                                    c("platformname", "platform"),
-                                    c("Platform", "platform"),
-                                    c("platformidentifier", "platform_id"),
-                                    c("platformserialidentifier", "platform_serial"),
-                                    c("instrumentname", "sensor"),
-                                    c("Sensor", "sensor"),
-                                    c("instrumentshortname", "sensor_id"),
-                                    c("SensorIdentifier", "sensor_id"),
-                                    c("sensoroperationalmode", "sensor_mode"),
-                                    c("polarisationmode", "polarisation_mode"),
-                                    c("acquisitiontype", "acquistion_type"),
-                                    c("size", "size"),
-                                    c("is_gnss", "is_gnss"),
-                                    c("landcloudcover", "cloudcov_land"),
-                                    c("scenecloudcover", "cloudcov"),
-                                    c("cloudcover", "cloudcov"),
-                                    c("cloudcoverpercentage", "cloudcov"),
-                                    c("highprobacloudspercentage", "cloudcov_highprob"),
-                                    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
-                                    c("notvegetatedpercentage", "cloudcov_notvegetated"),
-                                    c("snowicepercentage", "snowice"),
-                                    c("unclassifiedpercentage", "unclassified"),
-                                    c("vegetationpercentage", "vegetation"),
-                                    c("waterpercentage", "water"),
-                                    c("processinglevel", "level"),
-                                    c("versionnumber", "version_product"),
-                                    c("productgenerationalgorithm", "version_algorithm"),
-                                    c("level", "level"),
-                                    c("AutoQualityFlag", "flag_autoquality"),
-                                    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
-                                    c("ScienceQualityFlag", "flag_sciencequality"),
-                                    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
-                                    c("MissingDataPercentage", "missingdata"),
-                                    c("collectionnumber", "collection"),
-                                    c("collectioncategory", "collection_category"),
-                                    c("collection_concept_id", "product_id"),
-                                    c("product", "product"), stringsAsFactors = F)
-  colnames(clients_dict) <- c("clients", "gSD")
+  dict <-  rbind.data.frame(
+    c("summary", "product_group"), # place holder
+    c("summary", "product"), # place holder
+    c("title", "record_id"),
+    c("displayId", "record_id"),
+    c("uuid", "entity_id"),
+    c("entityId", "entity_id"),
+    c("id", "entity_id"),
+    c("summary", "summary"),
+    c("dataset_id", "summary"),
+    c("localgranuleid", "summary"),
+    c("beginposition", "start_time"),
+    c("StartTime", "start_time"),
+    c("time_start", "start_time"),
+    c("temporalcoveragestartdate", "start_date"),
+    c("endposition", "stop_time"),
+    c("StopTime", "stop_time"),
+    c("temporalcoverageenddate", "stop_date"),
+    c("time_end", "stop_time"),
+    c("beginposition", "date_acquisition"),
+    c("acquisitionDate", "date_acquisition"),
+    c("AcquisitionStartDate", "date_acquisition"),
+    c("daynightindicator", "day_or_night"),
+    c("ingestiondate", "date_ingestion"),
+    c("publishdate", "date_publish"),
+    c("dateentered", "date_ingestion"),
+    c("dateupdated", "date_modified"),
+    c("modifiedDate", "date_modified"),
+    c("updated", "date_modified"),
+    c("creationdate", "date_creation"),
+    c("footprint", "footprint"),
+    c("boxes", "footprint"),
+    c("tileid", "tile_id"),
+    c("wrspath", "tile_number_horizontal"),
+    c("wrsrow", "tile_number_vertical"),
+    c("HorizontalTileNumber", "tile_number_horizontal"),
+    c("VerticalTileNumber", "tile_number_vertical"),
+    c("url.alt", "md5_url"),
+    c("browseUrl", "preview_url"),
+    c("url.icon", "preview_url"),
+    c("preview_url", "preview_url"),
+    c("metadataUrl", "meta_url"),
+    c("fgdcMetadataUrl", "meta_url_fgdc"),
+    c("slicenumber", "slice_number"),
+    c("orbitnumber", "orbit_number"),
+    c("orbitdirection", "orbit_direction"),
+    c("lastorbitnumber", "lastorbit_number"),
+    c("relativeorbitnumber", "relativeorbit_number"),
+    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
+    c("passnumber", "pass_number"),
+    c("passdirection", "pass_direction"),
+    c("relorbitdir", "relativeorbit_direction"),
+    c("relpassnumber", "relativepass_number"),
+    c("relpassdirection", "relativepass_direction"),
+    c("lastorbitdirection", "lastorbit_direction"),
+    c("lastpassnumber", "lastpass_number"),
+    c("lastpassdirection", "lastpass_direction"),
+    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
+    c("lastrelpassnumber", "lastrelativepass_number"),
+    c("lastrelpassdirection", "lastrelativepass_direction"),
+    c("swathidentifier", "swath_id"),
+    c("producttype", "product_type"),
+    c("productclass", "product_class"),
+    c("productconsolidation", "product_consolidation"),
+    c("timeliness", "timeliness"),
+    c("platformname", "platform"),
+    c("Platform", "platform"),
+    c("platformidentifier", "platform_id"),
+    c("platformserialidentifier", "platform_serial"),
+    c("instrumentname", "sensor"),
+    c("Sensor", "sensor"),
+    c("instrumentshortname", "sensor_id"),
+    c("SensorIdentifier", "sensor_id"),
+    c("sensoroperationalmode", "sensor_mode"),
+    c("polarisationmode", "polarisation_mode"),
+    c("acquisitiontype", "acquistion_type"),
+    c("size", "size"),
+    c("is_gnss", "is_gnss"),
+    c("landcloudcover", "cloudcov_land"),
+    c("scenecloudcover", "cloudcov"),
+    c("cloudcover", "cloudcov"),
+    c("cloudcoverpercentage", "cloudcov"),
+    c("highprobacloudspercentage", "cloudcov_highprob"),
+    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
+    c("notvegetatedpercentage", "cloudcov_notvegetated"),
+    c("snowicepercentage", "snowice"),
+    c("unclassifiedpercentage", "unclassified"),
+    c("vegetationpercentage", "vegetation"),
+    c("waterpercentage", "water"),
+    c("processinglevel", "level"),
+    c("versionnumber", "version_product"),
+    c("productgenerationalgorithm", "version_algorithm"),
+    c("level", "level"),
+    c("AutoQualityFlag", "flag_autoquality"),
+    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
+    c("ScienceQualityFlag", "flag_sciencequality"),
+    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
+    c("MissingDataPercentage", "missingdata"),
+    c("collectionnumber", "collection"),
+    c("collectioncategory", "collection_category"),
+    c("collection_concept_id", "product_id"),
+    c("product", "product"), stringsAsFactors = F)
+  colnames(dict) <- c("clients", "gSD")
   
   op <- options()
   op.gSD <- list(
@@ -1184,7 +1210,7 @@ rbind.different <- function(x) {
     gSD.aoi = FALSE,
     gSD.aoi_set = FALSE,
     gSD.products = NULL,
-    gSD.clients_dict = clients_dict
+    gSD.clients_dict = dict
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])

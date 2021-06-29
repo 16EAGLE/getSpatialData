@@ -207,25 +207,23 @@ rbind.different <- function(x) {
   
 }
 
-#' calculates the number of cells of value 1 covering the aoi
+#' calculates the number of cells of value == 1 covering the aoi
 #' @param x raster for which the percentage of value 1 in aoi shall be calculated.
 #' @param aoi aoi.
 #' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster ncell area getValues
+#' @importFrom raster mask crop cellStats
+#' @importFrom sf st_bbox
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
   
+  x <- .mask_raster_by_polygon(x, aoi)
   if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi, x)
   x_vals <- getValues(x)
-  # calc number of pixels with value 1
-  x_valid <- length(x_vals[!is.na(x_vals)])
-  
-  # calculate percentage of pixels with value 1 in aoi
-  percent <- (x_valid / aoi_ncell) * 100
-  return(percent)
+  # calculate percentage of pixels with value == 1 in aoi
+  return((cellStats(x, "sum") / aoi_ncell) * 100)
   
 }
 
@@ -629,7 +627,7 @@ rbind.different <- function(x) {
     val2 <- length(which(x_mat == custom[[2]]))
     percent <- (val1 / sum(val1, val2)) * 100
   } else if (mode == "aoi") {
-    percent <- .calc_aoi_coverage(x, aoi, aoi_ncell)
+    percent <- 100 - .calc_aoi_coverage(x, aoi, aoi_ncell)
   }
   # due to the calculation based on pixel values it might happen that percent 
   # exceeds 100 slightly. In these cases use 100
@@ -640,7 +638,7 @@ rbind.different <- function(x) {
 #' aggregates rasters according to the aoi area size.
 #' @param x character vector of paths to rasters to check on. All have to have
 #' the same resolution.
-#' @param x_names character vector of names refering to x.
+#' @param x_names character vector of names referring to x.
 #' @param aoi aoi.
 #' @param factor numeric adjustment for aoi_area resulting in an adjustment 
 #' @param dir_out character directory where to save adjusted rasters if necessary

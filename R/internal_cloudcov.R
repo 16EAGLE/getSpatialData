@@ -82,12 +82,12 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
   hot_fail <- inherits(water_mask, try_error)
   
   if (!hot_fail) {
-    hot <- try(getSpatialData:::.cloudcov_calc_hot(preview, water_mask))
+    hot <- try(.cloudcov_calc_hot(preview, water_mask))
     hot_fail <- inherits(hot, try_error)
   }
   
   if (!hot_fail) {
-    mask_list <- getSpatialData:::.cloudcov_calc_cmask(record = record, 
+    mask_list <- .cloudcov_calc_cmask(record = record, 
                                       preview = preview, 
                                       hot = hot,
                                       water_mask = water_mask,
@@ -97,7 +97,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
     hot_fail <- mask_list[[2]]
     if (!hot_fail) {
       # calc scene cc percentage
-      na_mask <- getSpatialData:::.create_preview_na_mask(preview, record)
+      na_mask <- .create_preview_na_mask(preview, record)
       cloud_mask <- mask(cloud_mask, na_mask, maskvalue=0)
       if (is.landsat(record)) {
         cloud_mask <- .landsat_preview_mask_edges(cloud_mask)
@@ -261,8 +261,8 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
                                       mask_path, cols, write_cmasks, reload=F) {
   
   dir_out_exists <- file.exists(dirname(mask_path))
-  aoi_cPercent <- getSpatialData:::.raster_percent(cloud_mask, mode = "aoi", aoi = aoi) # calculate the absolute HOT cloud cover in aoi
-  scene_cPercent <- getSpatialData:::.raster_percent(cloud_mask, mode = "custom", custom = c(0, 1))
+  aoi_cPercent <- .raster_percent(cloud_mask, mode = "aoi", aoi = aoi) # calculate the absolute HOT cloud cover in aoi
+  scene_cPercent <- .raster_percent(cloud_mask, mode = "custom", custom = c(0, 1))
   cloud_mask[cloud_mask == 0] <- NA    # why NA? HF
   if (dir_out_exists && write_cmasks) {
     writeRaster(cloud_mask, mask_path, overwrite=T, datatype = INT2S())

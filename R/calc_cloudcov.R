@@ -201,7 +201,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
     if (preview_worked) {
       # pass preview to HOT function
       preview <- stack(record_preview[[preview_file]])
-      record_cc <- try(getSpatialData:::calc_hot_cloudcov(record = record_preview,
+      record_cc <- try(calc_hot_cloudcov(record = record_preview,
                                          preview = preview,
                                          aoi = aoi,
                                          max_deviation = max_deviation,

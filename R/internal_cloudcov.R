@@ -174,7 +174,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
   intercept <- regr$coefficients[1]
   # calculate HOT layer
   hot <- (sin(slope) * blue - cos(slope) * red + intercept)
-  hot <- .rescale_raster(hot) # rescale to 0-100
+  hot <- hot / 255 * 100  # 0-100    #.rescale_raster(hot) # rescale to 0-100
   return(hot)
 }
 
@@ -249,7 +249,7 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
 #' finalizes the cloud mask and saves it
 #' @param record data.frame.
 #' @param aoi aoi.
-#' @param cMask raster cloud mask.
+#' @param cloud_mask raster cloud mask.
 #' @param scene_cPercent numeric calculated HOT scene cloud cover.
 #' @param maskFilename character file path where to save the cloud mask.
 #' @param cols list of character column names.
@@ -257,15 +257,15 @@ calc_hot_cloudcov <- function(record, preview, aoi = NULL, max_deviation = 2,
 #' @importFrom raster cellStats writeRaster mask
 #' @keywords internal
 #' @noRd
-.cloudcov_record_finalize <- function(record, aoi, cMask,
+.cloudcov_record_finalize <- function(record, aoi, cloud_mask,
                                       mask_path, cols, write_cmasks, reload=F) {
   
   dir_out_exists <- file.exists(dirname(mask_path))
-  aoi_cPercent <- .raster_percent(cMask, aoi = aoi) # calculate the absolute HOT cloud cover in aoi
-  scene_cPercent <- .raster_percent(cMask, mode = "custom", custom = c(0, 1))
-  cMask[cMask == 0] <- NA
+  aoi_cPercent <- .raster_percent(cloud_mask, mode = "aoi", aoi = aoi) # calculate the absolute HOT cloud cover in aoi
+  scene_cPercent <- .raster_percent(cloud_mask, mode = "custom", custom = c(0, 1))
+  cloud_mask[cloud_mask == 0] <- NA    # why NA? HF
   if (dir_out_exists && write_cmasks) {
-    writeRaster(cMask, mask_path, overwrite=T, datatype = INT2S())
+    writeRaster(cloud_mask, mask_path, overwrite=T, datatype = INT2S())
   }
   record[[cols$cloud_mask_path]] <- ifelse(file.exists(mask_path), normalizePath(mask_path), "NONE")
   # add scene, aoi cloud cover percentage and mean aoi cloud cover probability to data.frame

@@ -68,7 +68,7 @@ view_aoi <- function(aoi = NULL, aoi_colour = "deepskyblue", ...){
   }
   
   aoi.sf <- .check_aoi(aoi, type = "sf")
-  .add_aoi(aoi_colour = aoi_colour, homebutton = T)
+  mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, alpha.regions = 0, legend = F, homebutton = T)
 }
 
 #' @rdname aoi

@@ -236,8 +236,7 @@ rbind.different <- function(x) {
 #' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster mask crop cellStats
-#' @importFrom sf st_bbox
+#' @importFrom raster cellStats
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {

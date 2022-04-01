@@ -31,7 +31,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
   if(is.null(records$level)) records$level <- NA
-  records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id", "summary")) # should be product-specific!!!
+  records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id")) # should be product-specific!!!
   
   # save names
   records.names <- colnames(records)

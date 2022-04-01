@@ -87,7 +87,6 @@ calc_cloudcov <- function(records, max_deviation = 2,
                           dir_out = NULL,
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE, ...) {
   
-  TRY_ERROR <- TRY_ERROR()
   DF <- DATAFRAME()
   NONE <- "NONE"
   

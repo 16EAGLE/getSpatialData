@@ -21,7 +21,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
   if(is.null(extras$wait_interval)) wait_interval <- 15 else wait_interval <- extras$wait_interval
-  records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id", "summary"))
+  records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id"))
   
   # save names
   records.names <- colnames(records)

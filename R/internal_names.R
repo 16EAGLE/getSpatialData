@@ -191,12 +191,12 @@ name_sub_period <- function() {
 #' @keywords internal
 #' @noRd
 name_product_sentinel1 <- function() {
-  return("Sentinel-1")
+  return("sentinel-1")
 }
 #' @keywords internal
 #' @noRd
 name_product_sentinel2 <- function() {
-  return("Sentinel-2")
+  return("sentinel-2")
 }
 #' @keywords internal
 #' @noRd
@@ -212,54 +212,54 @@ name_sentinel2_L1C <- function() {
 #' @keywords internal
 #' @noRd
 name_product_sentinel3 <- function() {
-  return("Sentinel-3")
+  return("sentinel-3")
 }
 #' @keywords internal
 #' @noRd
 name_product_sentinel5 <- function() {
-  return("Sentinel-5")
+  return("sentinel-5")
 }
 name_product_sentinel5p <- function() {
-  return("Sentinel-5P")
+  return("sentinel-5p")
 }
 #' @keywords internal
 #' @noRd
 name_product_landsatmss <- function() {
-  return("LANDSAT_MSS_C1")
+  return("landsat_mss_c1")
 }
 #' @keywords internal
 #' @noRd
 name_product_landsat5 <- function() {
-  return("LANDSAT_TM_C1")
+  return("landsat_tm_c1")
 }
 #' @keywords internal
 #' @noRd
 name_product_landsat7 <- function() {
-  return("LANDSAT_ETM_C1")
+  return("landsat_etm_c1")
 }
 #' @keywords internal
 #' @noRd
 name_product_landsat8 <- function() {
-  return("LANDSAT_8_C1")
+  return("landsat_8_c1")
 }
 #' @keywords internal
 #' @noRd
 name_product_group_modis <- function() {
-  return("MODIS")
+  return("modis")
 }
 #' @keywords internal
 #' @noRd
 name_product_group_landsat <- function() {
-  return("Landsat")
+  return("landsat")
 }
 #' @keywords internal
 #' @noRd
 name_product_group_sentinel <- function() {
-  return("Sentinel")
+  return("sentinel")
 }
 #' @keywords internal
 #' @noRd
-# names of continental / global Sentinel-3 tiles
+# names of continental / global sentinel-3 tiles
 names_continental_s3 <- function() {
   return(c("global", "africa", "europe", "australia", "asia", "south_america", "north_america"))
 }
@@ -279,25 +279,25 @@ names_continental_s3 <- function() {
   return(optical_sensors)
 }
 
-#' get the cloudcov-supported MODIS names
-#' @return character vector of MODIS names
+#' get the cloudcov-supported modis names
+#' @return character vector of modis names
 #' @keywords internal
 #' @noRd
 .get_cloudcov_supported_modis <- function() {
-  return(c("MODIS_MCD19A1", "MODIS_MOD09A1", "MODIS_MOD09GA", 
-           "MODIS_MOD09GQ", "MODIS_MOD09Q1", "MODIS_MODOCGA", 
-           "MODIS_MYD09A1", "MODIS_MYD09GA", 
-           "MODIS_MYD09GQ", "MODIS_MYD09Q1", "MODIS_MYDOCGA", 
-           "MODIS_MOD09CMG", "MODIS_MYD09CMG"))
+  return(c("modis_mcd19a1", "modis_mod09a1", "modis_mod09ga", 
+           "modis_mod09gq", "modis_mod09q1", "modis_modocga", 
+           "modis_myd09a1", "modis_myd09ga", 
+           "modis_myd09gq", "modis_myd09q1", "modis_mydocga", 
+           "modis_mod09cmg", "modis_myd09cmg"))
 }
 
-#' get the select-supported MODIS names. CMG not supported due to different gridding
-#' @return character vector of MODIS names
+#' get the select-supported modis names. CMG not supported due to different gridding
+#' @return character vector of modis names
 #' @keywords internal
 #' @noRd
 .get_select_supported_modis <- function() {
   supported <- .get_cloudcov_supported_modis()
-  supported[which(supported %in% c("MODIS_MYD09CMG", "MODIS_MOD09CMG"))] <- NA
+  supported[which(supported %in% c("modis_myd09cmg", "modis_mod09cmg"))] <- NA
   return(.gsd_compact(supported))
 }
 

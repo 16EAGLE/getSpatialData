@@ -15,6 +15,7 @@ get_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -26,6 +27,7 @@ getSentinel_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -37,6 +39,7 @@ getLandsat_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -48,6 +51,7 @@ getMODIS_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -59,6 +63,7 @@ getSRTM_records(
   as_sf = TRUE,
   rename_cols = TRUE,
   check_products = TRUE,
+  simplify_cols = TRUE,
   ...,
   verbose = TRUE
 )
@@ -72,9 +77,11 @@ getSRTM_records(
 
 \item{as_sf}{logical, whether records should be returned as \code{sf} \code{data.frame} or a simple \code{data.frame}. In both cases, spatial geometries are stored in column \code{footprint}.}
 
-\item{rename_cols}{logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products recieved from different sources.}
+\item{rename_cols}{logical, whether to rename columns to a product-independent standard to make it possible to combine records of different products received from different sources.}
 
 \item{check_products}{logical, check whether product names (\code{products}) are valid (recommended) or not. If \code{FALSE}, product names are not checked and directly used to attempt a query even if they are not supported or spelled wrong.}
+
+\item{simplify_cols}{logical, whether to simplify the returned records table by removing fields that are not standard across different products.}
 
 \item{...}{additional, sensor-specific arguments:
 \itemize{
@@ -101,7 +108,7 @@ To use these functions, you need to be logged in at the required services: To qu
 }
 \section{GNSS}{
 
-GNSS products (such as "Sentinel-1_GNSS") retrieved from the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 represent a special type of product, as they are AOI-independent and thus only referenced by mission time (argument \code{time_range}). GNSS data originally have been used only to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
+GNSS products (such as "sentinel-1_gnss") retrieved from the dual-frequency GPS recievers mounted on Sentinel-1, -2, and -3 represent a special type of product, as they are AOI-independent and thus only referenced by mission time (argument \code{time_range}). GNSS data originally have been used only to precisely calculate the satellites' orbits, but then have been released to the scientific public due to their potential scientifc uses (for details, see \url{https://earth.esa.int/web/sentinel/missions/sentinel-3/news/-/article/new-gnss-l1b-rinex-data-release-for-sentinel-1-2-and-3} and \url{https://earth.esa.int/documents/247904/351187/GMES_Sentinels_POD_Service_File_Format_Specification}).
 }
 
 \author{

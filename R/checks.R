@@ -10,9 +10,9 @@
     if(is.null(records)){
       services <- c("USGS", "Copernicus", "earthdata")
     } else{
-      if("Landsat" %in% records$product_group) services <- c(services, "USGS")
-      if("MODIS" %in% records$product_group) services <- c(services, "USGS", "earthdata")
-      if("Sentinel" %in% records$product_group) services <- c(services, "Copernicus")
+      if("landsat" %in% records$product_group) services <- c(services, "USGS")
+      if("modis" %in% records$product_group) services <- c(services, "USGS", "earthdata")
+      if("sentinel" %in% records$product_group) services <- c(services, "Copernicus")
     }
   }
   
@@ -188,7 +188,7 @@
   ## get coordinates
   aoi.m <- st_coordinates(aoi)[,c(1,2)]
   #aoi.sf <- st_sfc(st_polygon(list(aoi.m)), crs = 4326)
-  aoi.sf <- st_union(st_zm(aoi))
+  aoi.sf <- quiet(st_union(st_zm(aoi)))
   st_crs(aoi.sf) <- st_crs(4326)
   aoi.sp <- as_Spatial(aoi.sf) # st_zm drops z dim if given
   
@@ -214,8 +214,8 @@
   
   if (is_http401_err) {
     
-    service <- ifelse("Landsat" %in% record$product_group | "MODIS" %in% record$product_group,"usgs",
-                      ifelse("Sentinel" %in% record$product_group,"dhus",NA))
+    service <- ifelse("landsat" %in% record$product_group | "modis" %in% record$product_group,"usgs",
+                      ifelse("sentinel" %in% record$product_group,"dhus",NA))
     
     valid_input <- ifelse(is.na(service),FALSE,TRUE)
     
@@ -257,11 +257,11 @@
     not_in_product <- !any(prio_sensors %in% records[[name_product()]])
     prio_prods_not_in_records <- not_in_product && not_in_product_group
     if (prio_prods_not_in_records) out("No product name provided in 'prio_products' existing in 'records'", 3)
-    MODIS <- name_product_group_modis()
-    optical_sensors <- get_cloudcov_supported() # because Sentinel-1 is not allowed for prio_products
+    modis <- name_product_group_modis()
+    optical_sensors <- get_cloudcov_supported() # because sentinel-1 is not allowed for prio_products
     all_valid <- all(sapply(prio_sensors, function(x) {
       check <- x %in% optical_sensors || x %in% c(name_product_group_landsat(), name_product_group_modis())
-      check <- ifelse(isTRUE(check), check, startsWith(x, MODIS))
+      check <- ifelse(isTRUE(check), check, startsWith(x, modis))
     }))
     if (name_product_sentinel1() %in% prio_sensors) out(paste0(name_product_sentinel1(), " cannot be handled in 'prio_products'"))
     if (!all_valid) {
@@ -309,16 +309,16 @@
   revisit_times[[name_product_landsat7()]] <- 8
   revisit_times[[name_product_landsat8()]] <- 8
   revisit_times[[name_product_group_modis()]] <- 2
-  revisit_times[["MODIS_MOD09A1_V6"]] <- 8
-  revisit_times[["MODIS_MYD09A1_V6"]] <- 8
-  revisit_times[["MODIS_MOD09Q1_V6"]] <- 8
-  revisit_times[["MODIS_MOD09Q1_V6"]] <- 8
-  revisit_times[["MODIS_MOD09GA_V6"]] <- 1
-  revisit_times[["MODIS_MYD09GA_V6"]] <- 1
-  revisit_times[["MODIS_MOD09GQ_V6"]] <- 1
-  revisit_times[["MODIS_MYD09GQ_V6"]] <- 1
-  revisit_times[["MODIS_MOD09CMG_V6"]] <- 1
-  revisit_times[["MODIS_MYD09CMG_V6"]] <- 1
+  revisit_times[["modis_mod09a1_v6"]] <- 8
+  revisit_times[["modis_myd09a1_v6"]] <- 8
+  revisit_times[["modis_mod09q1_v6"]] <- 8
+  revisit_times[["modis_mod09q1_v6"]] <- 8
+  revisit_times[["modis_mod09ga_v6"]] <- 1
+  revisit_times[["modis_myd09ga_v6"]] <- 1
+  revisit_times[["modis_mod09gq_v6"]] <- 1
+  revisit_times[["modis_myd09gq_v6"]] <- 1
+  revisit_times[["modis_mod09cmg_v6"]] <- 1
+  revisit_times[["modis_myd09cmg_v6"]] <- 1
 
   sel_num_timestamps <- "Number timestamps"
   s <- ifelse(length(sensors)==1,"\nProduct: ","\nProducts: ")
@@ -368,7 +368,7 @@
   .select_check_files(records[[name_cloud_mask_file()]], name_cloud_mask_file())
 }
 
-#' wraps the check records due to Sentinel-1 special case
+#' wraps the check records due to sentinel-1 special case
 #' @param records (sf) data.frame
 #' @param as_sf logical
 #' @return records (sf) data.frame

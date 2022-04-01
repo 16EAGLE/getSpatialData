@@ -1,3 +1,21 @@
+## getSpatialData 0.1.1 (ongoing development)
+Bug fixes, Landsat Collection 2 support
+
+#### Bug fixes:
+
+* affects `login_USGS()`, `get_products()`, `get_records()`, `get_previews()`, `get_data()`: Fixed a bug that caused all request to the EROS Inventory Service API to fail, including login. The client has been updated to support the new EROS API 1.5.0 to query Earth Explorer.
+* affects `get_records()`: Fixed a bug that caused all Sentinel odata requests to fail
+* affects `get_records()`: Fixed a bug that cause differences in how acquistion times and dates were extracted, parsed and converted
+
+#### Products:
+
+* Landsat Collection 2 products are now supported, call `get_products()` for a list.
+
+#### Changes:
+
+* All product names and product group names, as returned by `get_products()` and expected as inputs to several functions, are now case-**insensitive**. It should not matter whether you query `"SENTINEL-2"` or `"sentinel-2"`. Since `get_products()` now returns only lower-case outputs, this change can be breaking for code that searches patterns in these outputs. Legacy inputs should still work.
+
+
 ## getSpatialData 0.1.0
 An all-new interface, largely compatible to older versions, and new core functionalites shaping the package's capabilties.
 

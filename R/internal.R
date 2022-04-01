@@ -83,54 +83,77 @@
 #' @param product_name product name 
 #' @keywords internal
 #' @noRd
-.translate_records <- function(records, product_name){
+.translate_records <- function(records, product_name, simplify_cols = TRUE){
 
-  #"relativeorbit_number.1" "sensor_mode.1"          "level.1"
+  # standardize
+  records.names <- colnames(records) <- gsub("[.]", "", tolower(colnames(records)))
+  
   # set-up column name dictionary
-  records.names <- colnames(records)
   dict <- getOption("gSD.clients_dict")
+  dict$clients <- gsub("[.]", "", tolower(dict$clients))
   
-  # translate
-  records <- cbind(do.call(cbind, .gsd_compact(lapply(1:nrow(dict), function(i){
-    x <- records[[dict$clients[i]]]
-    if(!is.null(x)){
-      x <- data.frame(x, stringsAsFactors = F)
-      colnames(x) <- dict$gSD[i]
-    }
-    return(x)
-  }))), records[,!sapply(records.names, function(x) x %in% dict$clients, USE.NAMES = F)])
+  # match position of names in dictionary and in records
+  pos.names <- match(dict$clients, colnames(records))
+  records.tr <- records[,as.numeric(na.omit(pos.names))]
+  colnames(records.tr) <- dict$gSD[!is.na(pos.names)]
   
-  # colnames(records) <- sapply(colnames(records), function(x){
-  #   i <- which(x == dict[,which.col])
-  #   if(length(i) > 0) dict$gSD[i] else x
-  # }, USE.NAMES = F)
+  # pos.names <- match(colnames(records), dict$clients)
+  # colnames(records)[which(!is.na(pos.names))] <- dict$gSD[as.numeric(na.omit(pos.names))]
   
-  # specific cases: all EE products
-  # if(which(which.col) > 2){
-  #   records <- records[,-sapply(c("ordered", "bulkOrdered", "orderUrl", "dataAccessUrl", "downloadUrl", "cloudCover"), function(x) which(x == colnames(records)), USE.NAMES = F)]
-  # }
+  # remove duplicates, e.g. from meta data
+  # records.tr <- records.tr[,!duplicated(colnames(records.tr))]
   
-  records <- records[,!sapply(colnames(records), function(x) x %in%  c("orderUrl", "bulkOrdered", "ordered", "product", "dataAccessUrl", "sceneBounds", "platformshortname", "mission",
-    "hv_order_tileid", "level1cpdiidentifier", "datatakesensingstart", "s2datatakeid", "identifier", "gmlfootprint",
-    "status", "filename", "format", "url", "downloadUrl", "mode", "productlevel"), USE.NAMES = F)]
-
-  # product groups
+  # add disregarded field fields
+  if(isTRUE(simplify_cols)){
+    #keep.cols <- colnames(records) %in% dict$gSD
+    #out(paste0("[DEBUG] Deleted '", paste0(colnames(records)[!keep.cols], collapse = "', '"), "'."), msg = T)
+    #records <- records[,keep.cols]
+    records <- records.tr
+  } else{
+    records <- cbind(records.tr, records[, -as.numeric(na.omit(pos.names))])
+  }
+  
+  # add product and product group
   products <- get_products(grouped = T, update_online = F)
-  records$product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
+  records$product_group <- product_group <- names(products)[sapply(products, function(x) any(grepl(product_name, x)))]
   records$product <- product_name
   
   # product-specfic cases
-  if(unique(records$product_group) == "Sentinel"){
+  if(unique(records$product_group) == "sentinel"){
     records$date_acquisition <- sapply(strsplit(records$start_time, "T"), '[', 1)
     records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
-  if(unique(records$product == "Sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
+  if(unique(records$product == "sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
       gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
   
+  # clean records ID
   records$record_id <- gsub("[.]", "_", gsub(":", "_", records$record_id))
   
-  # sort columns
+  # tiem and date field conversions
+  if(product_group == "sentinel"){
+    records$start_time <- as.POSIXct(strptime(records$start_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$date_acquisition)
+  }
+  if(product_group == "landsat"){
+    records$start_time <- as.POSIXct(strptime(records$start_time, "%Y:%j:%T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y:%j:%T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$start_time)
+    records$start_date <- records$stop_date <- NULL
+  }
+  if(product_group == "modis"){
+    records$start_time <- as.POSIXct(strptime(records$start_date, "%Y-%m-%d %T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_date, "%Y-%m-%d %T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$date_acquisition)
+    records$start_date <- records$stop_date <- NULL
+  }
+  if(product_group == "srtm"){
+    records$start_time <- as.POSIXct(strptime(records$start_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y-%m-%dT%T", tz = "UTC"))
+    records$date_acquisition <- as.Date(records$start_time)
+  }
+  
   return(records)
 }
 
@@ -247,7 +270,7 @@ rbind.different <- function(x) {
   return(aoi_npixels)
 }
 
-#' checks if records data.frame has SAR records (Sentinel-1) and if all records are SAR
+#' checks if records data.frame has SAR records (sentinel-1) and if all records are SAR
 #' @param products character vector of all products in records.
 #' @return \code{has_SAR} numeric 1 for TRUE, 2 for FALSE, 100 for "all".
 #' @keywords internal
@@ -263,7 +286,7 @@ rbind.different <- function(x) {
   
 }
 
-#' creates a tileid where not given, except Sentinel-1
+#' creates a tileid where not given, except sentinel-1
 #' @param records data.frame.
 #' @return \code{records} data.frame with a completely filled tile_id column.
 #' @keywords internal
@@ -295,9 +318,9 @@ rbind.different <- function(x) {
   return(records)
 }
 
-#' creates tile ids for Sentinel-1 records from its footprints
+#' creates tile ids for sentinel-1 records from its footprints
 #' @param records data.frame
-#' @return records data.frame with added tile id of Sentinel-1 records
+#' @return records data.frame with added tile id of sentinel-1 records
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel1 <- function(records) {
@@ -331,9 +354,9 @@ rbind.different <- function(x) {
   return(records)
 }
 
-#' creates tile ids for Sentinel-2 records
+#' creates tile ids for sentinel-2 records
 #' @param records data.frame
-#' @return records data.frame with added tile id of Sentinel-2 records
+#' @return records data.frame with added tile id of sentinel-2 records
 #' @keywords internal
 #' @noRd
 .make_tileid_sentinel2 <- function(records) {
@@ -342,7 +365,7 @@ rbind.different <- function(x) {
   TILEID <- name_tile_id()
   SENTINEL2 <- "S2"
   
-  # Sentinel-2
+  # sentinel-2
   record_ids <- records[[RECORD_ID]]
   is_sentinel2 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL2)))
   if (!.is_empty_array(is_sentinel2)) {
@@ -358,9 +381,9 @@ rbind.different <- function(x) {
   
 }
 
-#' creates tile ids for Sentinel-3 records
+#' creates tile ids for sentinel-3 records
 #' @param records data.frame
-#' @return records data.frame with added tile id of Sentinel-3 records
+#' @return records data.frame with added tile id of sentinel-3 records
 #' @importFrom utils tail
 #' @keywords internal
 #' @noRd
@@ -370,7 +393,7 @@ rbind.different <- function(x) {
   TILEID <- name_tile_id()
   SENTINEL3 <- "S3"
   
-  # Sentinel-3
+  # sentinel-3
   record_ids <- records[[RECORD_ID]]
   is_sentinel3 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL3)))
   if (!.is_empty_array(is_sentinel3)) {
@@ -409,19 +432,19 @@ rbind.different <- function(x) {
   return(records)
 }
 
-#' creates tile ids for Landsat records
+#' creates tile ids for landsat records
 #' @param records data.frame
-#' @return records data.frame with added tile id of Landsat records
+#' @return records data.frame with added tile id of landsat records
 #' @keywords internal
 #' @noRd
 .make_tileid_landsat <- function(records) {
   
   RECORD_ID <- name_record_id()
   TILEID <- name_tile_id()
-  LANDSAT <- name_product_group_landsat()
+  landsat <- name_product_group_landsat()
   
   record_ids <- records[[RECORD_ID]]
-  is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, LANDSAT)))
+  is_landsat <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, landsat)))
   if (!.is_empty_array(is_landsat)) {
     no_tileid <- is_landsat[is.na(records[is_landsat, TILEID])]
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
@@ -436,9 +459,9 @@ rbind.different <- function(x) {
   
 }
 
-#' creates tile ids for MODIS records
+#' creates tile ids for modis records
 #' @param records data.frame
-#' @return records data.frame with added tile id of MODIS records
+#' @return records data.frame with added tile id of modis records
 #' @keywords internal
 #' @noRd
 .make_tileid_modis <- function(records) {
@@ -446,13 +469,13 @@ rbind.different <- function(x) {
   RECORD_ID <- name_record_id()
   PRODUCT <- name_product()
   TILEID <- name_tile_id()
-  MODIS <- name_product_group_modis()
+  modis <- name_product_group_modis()
   POINT_SEP <- "\\."
   h <- "h"
   v <- "v"
   
   product_names <- records[[PRODUCT]]
-  is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, MODIS)))
+  is_modis <- intersect(which(!is.na(product_names)), which(startsWith(product_names, modis)))
   if (!.is_empty_array(is_modis)) {
     no_tileid <- is_modis[is.na(records[is_modis, TILEID])]
     if (!is.na(no_tileid) && !.is_empty_array(no_tileid)) {
@@ -505,7 +528,7 @@ rbind.different <- function(x) {
 # raster utils
 # -------------------------------------------------------------
 
-#' mask the edges of Landsat preview raster
+#' mask the edges of landsat preview raster
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
@@ -537,7 +560,7 @@ rbind.different <- function(x) {
   return(preview_masked)
 }
 
-#' mask the edges of Sentinel-2 preview raster
+#' mask the edges of sentinel-2 preview raster
 #' @param preview raster.
 #' @return \code{preview_masked} masked preview
 #' @importFrom methods as slot slot<-
@@ -651,8 +674,8 @@ rbind.different <- function(x) {
   aoi_area <- .calc_aoi_area(aoi) # km2
   adj <- aoi_area / factor
   res_ref <- mean(res(raster(x[[1]]))) # check the resolution and modify adjustment according to it
-  target_res <- 0.0019 * adj # the Sentinel-2 preview resolution * adj is the target res also for Landsat, MODIS
-  # do not reduce more than the equivalent of double the Sentinel-2 preview resolution
+  target_res <- 0.0019 * adj # the sentinel-2 preview resolution * adj is the target res also for landsat, modis
+  # do not reduce more than the equivalent of double the sentinel-2 preview resolution
   if (target_res > 0.0042) target_res <- 0.004 
   adj <- target_res / res_ref
   adj <- ifelse(adj < 2 && adj > 1, 2, adj)
@@ -755,7 +778,7 @@ rbind.different <- function(x) {
   return((x - minValue(x)) / (maxValue(x) - minValue(x)) * 100)
 }
 
-#' mask NA-like DNs in previews (very low RGB). Only in case of Landsat, Sentinel-2 and Sentinel-3 OLCi
+#' mask NA-like DNs in previews (very low RGB). Only in case of landsat, sentinel-2 and sentinel-3 OLCi
 #' @param preview RasterLayer
 #' @param record sf data.frame
 #' @return na_mask RasterLayer
@@ -1027,94 +1050,109 @@ rbind.different <- function(x) {
 .onLoad <- function(libname, pkgname){
   
   pboptions(type = "timer", char = "=", txt.width = getOption("width")-30) # can be changed to "none"
-  clients_dict <-  rbind.data.frame(c("summary", "product_group"), # place holder
-                                    c("summary", "product"), # place holder
-                                    c("title", "record_id"),
-                                    c("displayId", "record_id"),
-                                    c("uuid", "entity_id"),
-                                    c("entityId", "entity_id"),
-                                    c("id", "entity_id"),
-                                    c("summary", "summary"),
-                                    c("dataset_id", "summary"),
-                                    c("beginposition", "date_acquisition"),
-                                    c("acquisitionDate", "date_acquisition"),
-                                    c("beginposition", "start_time"),
-                                    c("StartTime", "start_time"),
-                                    c("AcquisitionStartDate", "start_time"),
-                                    c("time_start", "start_time"),
-                                    c("endposition", "stop_time"),
-                                    c("StopTime", "stop_time"),
-                                    c("AcquisitionEndDate", "stop_time"),
-                                    c("time_end", "stop_time"),
-                                    c("ingestiondate", "date_ingestion"),
-                                    c("modifiedDate", "date_modified"),
-                                    c("updated", "date_modified"),
-                                    c("creationdate", "date_creation"),
-                                    c("footprint", "footprint"),
-                                    c("boxes", "footprint"),
-                                    c("tileid", "tile_id"),
-                                    c("WRSPath", "tile_number_horizontal"),
-                                    c("WRSRow", "tile_number_vertical"),
-                                    c("HorizontalTileNumber", "tile_number_horizontal"),
-                                    c("VerticalTileNumber", "tile_number_vertical"),
-                                    c("url.alt", "md5_url"),
-                                    c("browseUrl", "preview_url"),
-                                    c("url.icon", "preview_url"),
-                                    c("metadataUrl", "meta_url"),
-                                    c("fgdcMetadataUrl", "meta_url_fgdc"),
-                                    c("slicenumber", "slice_number"),
-                                    c("orbitnumber", "orbit_number"),
-                                    c("orbitdirection", "orbit_direction"),
-                                    c("lastorbitnumber", "lastorbit_number"),
-                                    c("relativeorbitnumber", "relativeorbit_number"),
-                                    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
-                                    c("passnumber", "pass_number"),
-                                    c("passdirection", "pass_direction"),
-                                    c("relorbitdir", "relativeorbit_direction"),
-                                    c("relpassnumber", "relativepass_number"),
-                                    c("relpassdirection", "relativepass_direction"),
-                                    c("lastorbitdirection", "lastorbit_direction"),
-                                    c("lastpassnumber", "lastpass_number"),
-                                    c("lastpassdirection", "lastpass_direction"),
-                                    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
-                                    c("lastrelpassnumber", "lastrelativepass_number"),
-                                    c("lastrelpassdirection", "lastrelativepass_direction"),
-                                    c("swathidentifier", "swath_id"),
-                                    c("producttype", "product_type"),
-                                    c("productclass", "product_class"),
-                                    c("productconsolidation", "product_consolidation"),
-                                    c("timeliness", "timeliness"),
-                                    c("platformname", "platform"),
-                                    c("platformidentifier", "platform_id"),
-                                    c("platformserialidentifier", "platform_serial"),
-                                    c("instrumentname", "sensor"),
-                                    c("instrumentshortname", "sensor_id"),
-                                    c("SensorIdentifier", "sensor_id"),
-                                    c("sensoroperationalmode", "sensor_mode"),
-                                    c("polarisationmode", "polarisation_mode"),
-                                    c("acquisitiontype", "aquistion_type"),
-                                    c("size", "size"),
-                                    c("is_gnss", "is_gnss"),
-                                    c("LandCloudCover", "cloudcov_land"),
-                                    c("SceneCloudCover", "cloudcov"),
-                                    c("cloudCover", "cloudcov"),
-                                    c("cloudcoverpercentage", "cloudcov"),
-                                    c("highprobacloudspercentage", "cloudcov_highprob"),
-                                    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
-                                    c("notvegetatedpercentage", "cloudcov_notvegetated"),
-                                    c("snowicepercentage", "snowice"),
-                                    c("unclassifiedpercentage", "unclassified"),
-                                    c("vegetationpercentage", "vegetation"),
-                                    c("waterpercentage", "water"),
-                                    c("processinglevel", "level"),
-                                    c("level", "level"),
-                                    c("AutoQualityFlag", "flag_autoquality"),
-                                    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
-                                    c("ScienceQualityFlag", "flag_sciencequality"),
-                                    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
-                                    c("MissingDataPercentage", "missingdata"),
-                                    c("collection_concept_id", "product_id"), stringsAsFactors = F)
-  colnames(clients_dict) <- c("clients", "gSD")
+  dict <-  rbind.data.frame(
+    c("summary", "product_group"), # place holder
+    c("summary", "product"), # place holder
+    c("title", "record_id"),
+    c("displayId", "record_id"),
+    c("uuid", "entity_id"),
+    c("entityId", "entity_id"),
+    c("id", "entity_id"),
+    c("summary", "summary"),
+    c("dataset_id", "summary"),
+    c("localgranuleid", "summary"),
+    c("beginposition", "start_time"),
+    c("StartTime", "start_time"),
+    c("time_start", "start_time"),
+    c("temporalcoveragestartdate", "start_date"),
+    c("endposition", "stop_time"),
+    c("StopTime", "stop_time"),
+    c("temporalcoverageenddate", "stop_date"),
+    c("time_end", "stop_time"),
+    c("beginposition", "date_acquisition"),
+    c("acquisitionDate", "date_acquisition"),
+    c("AcquisitionStartDate", "date_acquisition"),
+    c("daynightindicator", "day_or_night"),
+    c("ingestiondate", "date_ingestion"),
+    c("publishdate", "date_publish"),
+    c("dateentered", "date_ingestion"),
+    c("dateupdated", "date_modified"),
+    c("modifiedDate", "date_modified"),
+    c("updated", "date_modified"),
+    c("creationdate", "date_creation"),
+    c("footprint", "footprint"),
+    c("boxes", "footprint"),
+    c("tileid", "tile_id"),
+    c("wrspath", "tile_number_horizontal"),
+    c("wrsrow", "tile_number_vertical"),
+    c("HorizontalTileNumber", "tile_number_horizontal"),
+    c("VerticalTileNumber", "tile_number_vertical"),
+    c("url.alt", "md5_url"),
+    c("browseUrl", "preview_url"),
+    c("url.icon", "preview_url"),
+    c("preview_url", "preview_url"),
+    c("metadataUrl", "meta_url"),
+    c("fgdcMetadataUrl", "meta_url_fgdc"),
+    c("slicenumber", "slice_number"),
+    c("orbitnumber", "orbit_number"),
+    c("orbitdirection", "orbit_direction"),
+    c("lastorbitnumber", "lastorbit_number"),
+    c("relativeorbitnumber", "relativeorbit_number"),
+    c("lastrelativeorbitnumber", "lastrelativeorbit_number"),
+    c("passnumber", "pass_number"),
+    c("passdirection", "pass_direction"),
+    c("relorbitdir", "relativeorbit_direction"),
+    c("relpassnumber", "relativepass_number"),
+    c("relpassdirection", "relativepass_direction"),
+    c("lastorbitdirection", "lastorbit_direction"),
+    c("lastpassnumber", "lastpass_number"),
+    c("lastpassdirection", "lastpass_direction"),
+    c("lastrelorbitdirection", "lastrelativeorbit_direction"),
+    c("lastrelpassnumber", "lastrelativepass_number"),
+    c("lastrelpassdirection", "lastrelativepass_direction"),
+    c("swathidentifier", "swath_id"),
+    c("producttype", "product_type"),
+    c("productclass", "product_class"),
+    c("productconsolidation", "product_consolidation"),
+    c("timeliness", "timeliness"),
+    c("platformname", "platform"),
+    c("Platform", "platform"),
+    c("platformidentifier", "platform_id"),
+    c("platformserialidentifier", "platform_serial"),
+    c("instrumentname", "sensor"),
+    c("Sensor", "sensor"),
+    c("instrumentshortname", "sensor_id"),
+    c("SensorIdentifier", "sensor_id"),
+    c("sensoroperationalmode", "sensor_mode"),
+    c("polarisationmode", "polarisation_mode"),
+    c("acquisitiontype", "acquistion_type"),
+    c("size", "size"),
+    c("is_gnss", "is_gnss"),
+    c("landcloudcover", "cloudcov_land"),
+    c("scenecloudcover", "cloudcov"),
+    c("cloudcover", "cloudcov"),
+    c("cloudcoverpercentage", "cloudcov"),
+    c("highprobacloudspercentage", "cloudcov_highprob"),
+    c("mediumprobacloudspercentage", "cloudcov_mediumprob"),
+    c("notvegetatedpercentage", "cloudcov_notvegetated"),
+    c("snowicepercentage", "snowice"),
+    c("unclassifiedpercentage", "unclassified"),
+    c("vegetationpercentage", "vegetation"),
+    c("waterpercentage", "water"),
+    c("processinglevel", "level"),
+    c("versionnumber", "version_product"),
+    c("productgenerationalgorithm", "version_algorithm"),
+    c("level", "level"),
+    c("AutoQualityFlag", "flag_autoquality"),
+    c("AutoQualityFlagExplanation", "flag_autoquality_expl"),
+    c("ScienceQualityFlag", "flag_sciencequality"),
+    c("ScienceQualityFlagExpln", "flag_sciencequality_expl"),
+    c("MissingDataPercentage", "missingdata"),
+    c("collectionnumber", "collection"),
+    c("collectioncategory", "collection_category"),
+    c("collection_concept_id", "product_id"),
+    c("product", "product"), stringsAsFactors = F)
+  colnames(dict) <- c("clients", "gSD")
   
   op <- options()
   op.gSD <- list(
@@ -1124,7 +1162,8 @@ rbind.different <- function(x) {
                    s5p = 'https://s5phub.copernicus.eu/',
                    gnss = 'https://scihub.copernicus.eu/gnss/',
                    espa = 'https://espa.cr.usgs.gov/api/v1/',
-                   ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/',
+                   #ee = 'https://earthexplorer.usgs.gov/inventory/json/v/1.4.0/', #deprecated
+                   ee = 'https://m2m.cr.usgs.gov/api/api/json/stable/',
                    aws.l8 = 'https://landsat-pds.s3.amazonaws.com/c1/L8/',
                    aws.l8.sl = 'https://landsat-pds.s3.amazonaws.com/c1/L8/scene_list.gz',
                    laads = 'https://ladsweb.modaps.eosdis.nasa.gov/archive/allData/'),
@@ -1137,7 +1176,7 @@ rbind.different <- function(x) {
                          ee = "USGS EarthExplorer",
                          aws.l8 = "AWS Landsat 8",
                          laads = "NASA DAAC LAADS"),
-    gSD.copnames = data.frame(name = c("Sentinel-1", "Sentinel-2", "Sentinel-3", "Sentinel-5P", "GNSS"),
+    gSD.copnames = data.frame(name = c("sentinel-1", "sentinel-2", "sentinel-3", "sentinel-5p", "gnss"),
                               api = c("dhus", "dhus", "dhus", "s5p", "gnss"), stringsAsFactors = F),
     gSD.sen2cor = list(win = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-win64.zip",
                        linux = "http://step.esa.int/thirdparties/sen2cor/2.5.5/Sen2Cor-02.05.05-Linux64.run",
@@ -1169,7 +1208,7 @@ rbind.different <- function(x) {
     gSD.aoi = FALSE,
     gSD.aoi_set = FALSE,
     gSD.products = NULL,
-    gSD.clients_dict = clients_dict
+    gSD.clients_dict = dict
   )
   toset <- !(names(op.gSD) %in% names(op))
   if(any(toset)) options(op.gSD[toset])

@@ -4,7 +4,7 @@
 \alias{is.modis}
 \alias{is.modis_terra}
 \alias{is.modis_aqua}
-\title{Returns TRUE for records that are of product group 'MODIS' or the referred sub-selection}
+\title{Returns TRUE for records that are of product group 'modis' or the referred sub-selection}
 \usage{
 is.modis(records)
 

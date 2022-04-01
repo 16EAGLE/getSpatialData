@@ -62,11 +62,6 @@ set_aoi <- function(aoi){
 #' @export
 view_aoi <- function(aoi = NULL, aoi_colour = "deepskyblue", ...){
   
-  if(missing(aoi_colour)){
-    extras <- list(...)
-    aoi_colour <- extras$color # deprecated argument
-  }
-  
   aoi.sf <- .check_aoi(aoi, type = "sf")
   mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, alpha.regions = 0, legend = F, homebutton = T)
 }

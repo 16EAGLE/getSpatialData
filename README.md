@@ -1,9 +1,12 @@
 # getSpatialData <a href="http://jxsw.de/getSpatialData"><img align="right" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_hex.png" /></a>
 
-[![CRAN version](https://www.r-pkg.org/badges/version/getSpatialData)](https://CRAN.R-project.org/package=getSpatialData)
-[![Build Status](https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master)](https://travis-ci.org/16EAGLE/getSpatialData) 
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/16EAGLE/getSpatialData?branch=master&svg=true)](https://ci.appveyor.com/project/16EAGLE/getSpatialData)
-[![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+<!-- badges: start -->
+  [![CRAN version](https://www.r-pkg.org/badges/version/getSpatialData)](https://CRAN.R-project.org/package=getSpatialData)
+  [![R-CMD-check](https://github.com/16EAGLE/getSpatialData/workflows/R-CMD-check/badge.svg)](https://github.com/16EAGLE/getSpatialData/actions)
+  [![Build Status](https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master)](https://travis-ci.org/16EAGLE/getSpatialData) 
+  [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/16EAGLE/getSpatialData?branch=master&svg=true)](https://ci.appveyor.com/project/16EAGLE/getSpatialData)
+  [![Lifecycle:maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+<!-- badges: end -->
 
 ## Introduction
 

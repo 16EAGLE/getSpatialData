@@ -6,7 +6,7 @@
 \alias{is.landsat5}
 \alias{is.landsat7}
 \alias{is.landsat8}
-\title{Returns TRUE for records that are of product group 'Landsat' or the referred sub-selection}
+\title{Returns TRUE for records that are of product group 'landsat' or the referred sub-selection}
 \usage{
 is.landsat(records)
 
@@ -29,15 +29,15 @@ logical vector, same length as number of rows in \code{records}.
 These functions check which records are records of the referred product group, product or sub-selection.
 }
 \details{
-\code{is.landsat} returns TRUE for records that are of product group 'Landsat'.
+\code{is.landsat} returns TRUE for records that are of product group 'landsat'.
 
 \code{is.landsatMSS} returns TRUE for records that are of product 'LANDSAT_MSS_C1'.
 
-\code{is.landsat5} returns TRUE for records that are of product 'LANDSAT_TM_C1' (Landsat-5).
+\code{is.landsat5} returns TRUE for records that are of product 'LANDSAT_TM_C1' (landsat-5).
 
-\code{is.landsat7} returns TRUE for records that are of product 'LANDSAT_ETM_C1' (Landsat-7).
+\code{is.landsat7} returns TRUE for records that are of product 'LANDSAT_ETM_C1' (landsat-7).
 
-\code{is.landsat8} returns TRUE for records that are of product 'LANDSAT_8_C1' (Landsat-8).
+\code{is.landsat8} returns TRUE for records that are of product 'LANDSAT_8_C1' (landsat-8).
 }
 \author{
 Henrik Fisser, 2020

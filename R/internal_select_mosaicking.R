@@ -377,7 +377,7 @@
     # generically for all
     na_mask <- .create_preview_na_mask(preview, record)
     preview <- mask(preview, na_mask, maskvalue=0)
-    # specifically for Landsat and Sentinel-2
+    # specifically for landsat and sentinel-2
     if (is.landsat(record)) {
       preview <- .landsat_preview_mask_edges(preview)
     } else if (is.sentinel2(record)) {

@@ -27,7 +27,6 @@
 write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NULL, 
                           append = FALSE, verbose = TRUE, ...) {
   
-  name_footprint <- name_footprint()
   if (is.null(append)) append <- FALSE # could be passed as NULL through ... from higher level
   if (is.null(dir_out) && is.null(file)) {
     out("One of the two arguments 'file' and 'dir_out' has to be provided", 3)
@@ -62,6 +61,11 @@ write_records <- function(records, file = NULL, driver = "GeoJSON", dir_out = NU
   if (!any(sapply(drivers, function(x) {endsWith(file, x)}))) {
     file <- paste0(file, extension)
   }
+  
+  # collapsing some listst since drivers do only support one list for geometries
+  records$preview_url <- sapply(records$preview_url, function(x) paste0(unlist(x), collapse = "; "))
+  ## more? ##
+  
   out(paste0("Writing records to ", file), msg=T, type=1)
   if (!append && file.exists(file)) unlink(file)
   write <- try(suppressWarnings(st_write(records, dsn = file, append = append, quiet = TRUE)))

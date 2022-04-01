@@ -141,6 +141,7 @@
     records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y:%j:%T", tz = "UTC"))
     records$date_acquisition <- as.Date(records$start_time)
     records$start_date <- records$stop_date <- NULL
+    records[, which(colnames(records) == "cloudcov")[2]] <- NULL #remove duplicated column
   }
   if(product_group == "modis"){
     records$start_time <- as.POSIXct(strptime(records$start_date, "%Y-%m-%d %T", tz = "UTC"))
@@ -199,8 +200,8 @@ rbind.different <- function(x) {
       x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
       y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
       
-      x.bind[, c(as.character(y.diff))] <- NA
-      x[[i]][, c(as.character(x.diff))] <- NA
+      x.bind[c(as.character(y.diff))] <- NA
+      x[[i]][c(as.character(x.diff))] <- NA
       
       x.bind <- rbind(x.bind, x[[i]])
     }

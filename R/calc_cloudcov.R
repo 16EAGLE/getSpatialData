@@ -87,7 +87,6 @@ calc_cloudcov <- function(records, max_deviation = 2,
                           dir_out = NULL,
                           username = NULL, password = NULL, as_sf = TRUE, verbose = TRUE, ...) {
   
-  TRY_ERROR <- TRY_ERROR()
   DF <- DATAFRAME()
   NONE <- "NONE"
   
@@ -188,7 +187,7 @@ calc_cloudcov <- function(records, max_deviation = 2,
       record_preview <- NULL
     }
     
-    .set_verbose(v) # reset verbose to original value after supressing verbose in get_previews
+    .set_verbose(v) # reset verbose to original value after suppressing verbose in get_previews
     verbose <- v
     
     preview_worked <- inherits(record_preview, DF)

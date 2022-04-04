@@ -39,15 +39,21 @@ view_previews <- function(records, show_aoi = TRUE, aoi_colour = "deepskyblue", 
   out("Composing preview map...")
   prev <- lapply(records$preview_file, stack)
   map.list <- mapply(x = prev, y = records$record_id, function(x, y){
-    if(nlayers(x) == 3) quiet(viewRGB(x, r=1, g=2, b=3, layer.name = y, homebutton = FALSE, maxpixels = maxpixels)) else{
-      quiet(mapview(x[[1]], layer.name = y, homebutton = FALSE, legend = TRUE, maxpixels = maxpixels))
+    if(nlayers(x) == 3) quiet(viewRGB(x, r=1, g=2, b=3, layer.name = y, maxpixels = maxpixels)) else{
+      quiet(mapview(x[[1]], layer.name = y, homebutton = T, legend = TRUE, maxpixels = maxpixels))
     } 
   }, SIMPLIFY = F)
+  
+  # workaround to remove home button from mapview
+  map.list <- lapply(map.list, function(map){
+    i <- grep("homebutton", tolower(sapply(map@map[["x"]][["calls"]], function(x) x[["method"]])))
+    map@map[["x"]][["calls"]][[i]] <- NULL
+    return(map)
+  })
   map <- map.list[[1]]
   if(length(map.list) > 1) for(i in 2:length(map.list)) map <- "+"(map, map.list[[i]])
   
-  if(isTRUE(show_aoi)) map <- .add_aoi(map, aoi_colour)
-  
+  if(isTRUE(show_aoi)) map <- .add_aoi(map, aoi_colour, homebutton = T)
   return(map)
 }
 

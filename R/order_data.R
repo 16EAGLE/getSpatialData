@@ -21,7 +21,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
   extras <- list(...)
   if(is.null(extras$hub)) extras$hub <- "auto"
   if(is.null(extras$wait_interval)) wait_interval <- 15 else wait_interval <- extras$wait_interval
-  records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id", "summary"))
+  records <- .check_records(records, c("product", "product_group", "entity_id", "level", "record_id"))
   
   # save names
   records.names <- colnames(records)
@@ -30,7 +30,7 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
   groups <- unique(records$product_group)
   if("sentinel" %in% groups){
     .check_login("Copernicus")
-    out("Please note: The Copernicus LTA quota currently permits users to request a maximum of one LTA dataset per 30 minutes!", type = 2)
+    out("Please note: The Copernicus LTA quota and retention time is dynamically set according to the usage patterns to ensure efficient access to the most recent and frequently downloaded data. ", type = 2)
   }
   if(any("landsat" %in% groups, "modis" %in% groups)){
     .check_login("USGS")
@@ -108,18 +108,42 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
           x$gSD.dataset_url <- .get_ds_urls(x)
           
           # get head first
-          request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
-          if(!inherits(request_head, "try-error")){
-            if(request_head$status_code == 200) x$ordered <- TRUE
-            if(request_head$status_code == 202){
-              request <- try(.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
-              x$ordered <- TRUE
-              #retry$last_LTA_success <- Sys.time()
+          retry_count <- 3
+          while(retry_count != 0){
+            request_head <- try(HEAD(x$gSD.dataset_url, authenticate(unlist(x$gSD.cred)[1], unlist(x$gSD.cred)[2])), silent = T)
+            if(!inherits(request_head, "try-error")){
+              if(request_head$status_code == 200){
+                out(paste0(x$gSD.head, "Record '", x$record_id, "' already available."))
+                retry_count <- 0
+                x$ordered <- TRUE
+              }
+              if(request_head$status_code == 202){
+                request <- try(.get(x$gSD.dataset_url, username = unlist(x$gSD.cred)[1], password = unlist(x$gSD.cred)[2]), silent = T)
+                x$ordered <- TRUE
+                retry_count <- 0
+                #retry$last_LTA_success <- Sys.time()
+              }
+              if(request_head$status_code == 503){
+                Sys.sleep(2)
+                retry_count <- retry_count-1
+                if(retry_count == 0){
+                  out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' failed: Copernicus LTA cannot accept new requests since is is busy in handling other requests. Retry later. "), type = 2)
+                }
+                x$ordered <- FALSE
+              }
+              if(request_head$status_code == 403){
+                out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' failed: Coperncius LTA rejected the request, since the number of submitted requested exceeded the dynamic user quota. Retry later."), type = 2)
+                x$ordered <- FALSE
+                retry_count <- 0
+              }
             }
-          }
-          if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
-            out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' failed. The quota of allowed LTA requests may have been exceeded. Please retry in max. 30 minutes."), type = 2)
-            x$ordered <- FALSE
+            if(any(inherits(request_head, "try-error"), inherits(request, "try-error"))){
+              retry_count <- retry_count-1
+              if(retry_count == 0){
+                out(paste0(x$gSD.head, "Requesting to restore '", x$record_id, "' failed: Could not place request."), type = 2)
+              }
+              x$ordered <- FALSE
+            }
           }
         }
         

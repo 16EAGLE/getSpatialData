@@ -43,6 +43,12 @@ read_records <- function(file, as_sf = TRUE, verbose = TRUE) {
     out(paste0("Read ", 
                n_records, ifelse(n_records > 1, " records", " record")), msg=F, type=1)
     records <- .check_records(records, as_sf = as_sf)
+    
+    if(!is.null(records$preview_url)){
+      records$preview_url <- lapply(records$preview_url, function(x){
+        as.list(strsplit(x, "; ")[[1]])
+      })
+    }
     return(records)
   } else {
     out(paste0("Failed to read records: ", file), 3)

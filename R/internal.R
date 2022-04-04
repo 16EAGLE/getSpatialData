@@ -141,6 +141,7 @@
     records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y:%j:%T", tz = "UTC"))
     records$date_acquisition <- as.Date(records$start_time)
     records$start_date <- records$stop_date <- NULL
+    records[, which(colnames(records) == "cloudcov")[2]] <- NULL #remove duplicated column
   }
   if(product_group == "modis"){
     records$start_time <- as.POSIXct(strptime(records$start_date, "%Y-%m-%d %T", tz = "UTC"))
@@ -199,8 +200,8 @@ rbind.different <- function(x) {
       x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
       y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
       
-      x.bind[, c(as.character(y.diff))] <- NA
-      x[[i]][, c(as.character(x.diff))] <- NA
+      x.bind[c(as.character(y.diff))] <- NA
+      x[[i]][c(as.character(x.diff))] <- NA
       
       x.bind <- rbind(x.bind, x[[i]])
     }
@@ -230,25 +231,22 @@ rbind.different <- function(x) {
   
 }
 
-#' calculates the number of cells of value 1 covering the aoi
+#' calculates the number of cells of value == 1 covering the aoi
 #' @param x raster for which the percentage of value 1 in aoi shall be calculated.
 #' @param aoi aoi.
 #' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster ncell area getValues
+#' @importFrom raster cellStats
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
   
+  x <- .mask_raster_by_polygon(x, aoi)
   if (is.null(aoi_ncell)) aoi_ncell <- .calc_aoi_corr_vals(aoi, x)
   x_vals <- getValues(x)
-  # calc number of pixels with value 1
-  x_valid <- length(x_vals[!is.na(x_vals)])
-  
-  # calculate percentage of pixels with value 1 in aoi
-  percent <- (x_valid / aoi_ncell) * 100
-  return(percent)
+  # calculate percentage of pixels with value == 1 in aoi
+  return((cellStats(x, "sum") / aoi_ncell) * 100)
   
 }
 
@@ -652,7 +650,7 @@ rbind.different <- function(x) {
     val2 <- length(which(x_mat == custom[[2]]))
     percent <- (val1 / sum(val1, val2)) * 100
   } else if (mode == "aoi") {
-    percent <- .calc_aoi_coverage(x, aoi, aoi_ncell)
+    percent <- 100 - .calc_aoi_coverage(x, aoi, aoi_ncell)
   }
   # due to the calculation based on pixel values it might happen that percent 
   # exceeds 100 slightly. In these cases use 100
@@ -663,7 +661,7 @@ rbind.different <- function(x) {
 #' aggregates rasters according to the aoi area size.
 #' @param x character vector of paths to rasters to check on. All have to have
 #' the same resolution.
-#' @param x_names character vector of names refering to x.
+#' @param x_names character vector of names referring to x.
 #' @param aoi aoi.
 #' @param factor numeric adjustment for aoi_area resulting in an adjustment 
 #' @param dir_out character directory where to save adjusted rasters if necessary
@@ -819,7 +817,7 @@ rbind.different <- function(x) {
     out("No AOI is displayed, since no AOI has been set yet (use 'set_aoi()' to define an AOI).", type = 2)
   } else{
     aoi.sf <- getOption("gSD.aoi")
-    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, legend = F, homebutton = homebutton)
+    map.aoi <- mapview(aoi.sf, layer.name = "AOI", label = "AOI", lwd = 6, color = aoi_colour, alpha.regions = 0, legend = F, homebutton = homebutton)
     if(!is.null(map)) return(map + map.aoi) else return(map.aoi)
   }
 }

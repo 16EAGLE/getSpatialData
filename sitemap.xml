@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://jxsw.de/getSpatialData/404.html</loc>
+  </url>
+  <url>
+    <loc>http://jxsw.de/getSpatialData/LICENSE-text.html</loc>
+  </url>
+  <url>
+    <loc>http://jxsw.de/getSpatialData/authors.html</loc>
+  </url>
+  <url>
     <loc>http://jxsw.de/getSpatialData/index.html</loc>
+  </url>
+  <url>
+    <loc>http://jxsw.de/getSpatialData/news/index.html</loc>
   </url>
   <url>
     <loc>http://jxsw.de/getSpatialData/reference/aoi.html</loc>
@@ -44,6 +56,9 @@
   </url>
   <url>
     <loc>http://jxsw.de/getSpatialData/reference/get_select_supported.html</loc>
+  </url>
+  <url>
+    <loc>http://jxsw.de/getSpatialData/reference/index.html</loc>
   </url>
   <url>
     <loc>http://jxsw.de/getSpatialData/reference/is.landsat.html</loc>

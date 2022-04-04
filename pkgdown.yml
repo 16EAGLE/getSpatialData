@@ -1,8 +1,8 @@
 pandoc: 2.7.3
-pkgdown: 1.6.1
+pkgdown: 2.0.2
 pkgdown_sha: ~
 articles: {}
-last_built: 2021-06-02T16:20Z
+last_built: 2022-04-04T07:41Z
 urls:
   reference: http://jxsw.de/getSpatialData/reference
   article: http://jxsw.de/getSpatialData/articles

@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -39,7 +41,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -59,40 +61,40 @@
   <a href="news/index.html">Changelog</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Other packages
      
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="http://movevis.org">moveVis</a>
+      <a href="http://movevis.org" class="external-link">moveVis</a>
     </li>
     <li>
-      <a href="http://jxsw.de/basemaps">basemaps</a>
+      <a href="http://jxsw.de/basemaps" class="external-link">basemaps</a>
     </li>
     <li>
-      <a href="http://www.github.com/bleutner/RStoolbox">RStoolbox</a>
+      <a href="http://www.github.com/bleutner/RStoolbox" class="external-link">RStoolbox</a>
     </li>
   </ul>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="http://www.twitter.com/schwalbwillmann">
-    <span class="fas fa-twitter fa-lg"></span>
+  <a href="http://www.twitter.com/schwalbwillmann" class="external-link">
+    <span class="fa fa-twitter fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="http://www.github.com/16eagle">
-    <span class="fas fa-github fa-lg"></span>
+  <a href="http://www.github.com/16eagle" class="external-link">
+    <span class="fa fa-github fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="http://remote-sensing.eu">
-    <span class="fas fa-globe fa-lg"></span>
+  <a href="http://remote-sensing.eu" class="external-link">
+    <span class="fa fa-globe fa-lg"></span>
      
   </a>
 </li>
@@ -108,32 +110,32 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="getspatialdata-" class="section level1">
-<div class="page-header"><h1 class="hasAnchor">
-<a href="#getspatialdata-" class="anchor"></a>getSpatialData <a href="http://jxsw.de/getSpatialData"><img align="right" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_hex.png"></a>
+<div class="section level1">
+<div class="page-header"><h1 id="getspatialdata-">getSpatialData <a href="http://jxsw.de/getSpatialData"><img align="right" src="https://raw.githubusercontent.com/16EAGLE/AUX_data/master/data/gSD_hex.png"></a>
+<a class="anchor" aria-label="anchor" href="#getspatialdata-"></a>
 </h1></div>
 <!-- badges: start -->
 
-<div id="introduction" class="section level2">
-<h2 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h2>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
 <p><code>getSpatialData</code> is an R package in an early development stage that ultimately aims to enable homogeneous and reproducible workflows to query, preview, analyze, select, order and download various kinds of spatial datasets from open sources.</p>
 <p>The package enables generic access to multiple data distributors with a common syntax for <strong>159</strong> products.</p>
 <p>Among others <code>getSpatialData</code> supports these products: <em>Sentinel-1</em>, <em>Sentinel-2</em>, <em>Sentinel-3</em>, <em>Sentinel-5P</em>, <em>Landsat 8 OLI</em>, <em>Landsat ETM</em>, <em>Landsat TM</em>, <em>Landsat MSS</em>, <em>MODIS (Terra &amp; Aqua)</em> and <em>SRTM DEMs</em>. For this, <code>getSpatialData</code> facilitates access to multiple services implementing clients to public APIs of <em>ESA Copernicus Open Access Hub</em>, <em>USGS EarthExplorer</em>, <em>USGS EROS ESPA</em>, <em>Amazon Web Services (AWS)</em>, <em>NASA DAAC LAADS</em> and <em>NASA CMR search</em>. A full list of all supported products can be found below.</p>
 <p><code>getSpatialData</code> offers to quickly overview the data catalogues for a custom place and time period. For an efficient handling of available earth observation data, it specifically calculates the cloud coverage of records in an area of interest based on light preview images. Furthermore, <code>getSpatialData</code> is able to automatically select records based on cloud cover and temporal user requirements.</p>
 </div>
-<div id="installation" class="section level2">
-<h2 class="hasAnchor">
-<a href="#installation" class="anchor"></a>Installation</h2>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
 <p>To install the current beta version, use <code>devtools</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"16EAGLE/getSpatialData"</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="workflow" class="section level2">
-<h2 class="hasAnchor">
-<a href="#workflow" class="anchor"></a>Workflow</h2>
+<div class="section level2">
+<h2 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
+</h2>
 <p>The <code>getSpatialData</code> workflow is designed to be as reproducible as possible and is made of six steps:</p>
-<ol>
+<ol style="list-style-type: decimal">
 <li>
 <strong>querying</strong> products of interest (see <code><a href="reference/get_products.html">get_products()</a></code>) for available records by an area of interest (AOI) and time (see <code><a href="reference/get_records.html">get_records()</a></code>),</li>
 <li>
@@ -149,9 +151,9 @@
 </ol>
 <p>For all steps, <code>getSpatialData</code> supports local chaching to reduce bandwith usage and uneccasary downloads.</p>
 <p>This approach is implemented by the following functions (sorted by the order in which they would be typically used):</p>
-<div id="defining-session-settings" class="section level4">
-<h4 class="hasAnchor">
-<a href="#defining-session-settings" class="anchor"></a>Defining session settings</h4>
+<div class="section level4">
+<h4 id="defining-session-settings">Defining session settings<a class="anchor" aria-label="anchor" href="#defining-session-settings"></a>
+</h4>
 <ul>
 <li>
 <code><a href="reference/aoi.html">set_aoi()</a></code>, <code><a href="reference/aoi.html">view_aoi()</a></code> and <code><a href="reference/aoi.html">get_aoi()</a></code> set, view and get a session-wide area of interest (AOI) that can be used by all <code>getSpatialData</code> functions.</li>
@@ -159,23 +161,23 @@
 <code><a href="reference/archive.html">set_archive()</a></code> and <code><a href="reference/archive.html">get_archive()</a></code> set and get a session-wide archive directory that can be used by all <code>getSpatialData</code> functions.</li>
 </ul>
 </div>
-<div id="logging-in" class="section level4">
-<h4 class="hasAnchor">
-<a href="#logging-in" class="anchor"></a>Logging in</h4>
+<div class="section level4">
+<h4 id="logging-in">Logging in<a class="anchor" aria-label="anchor" href="#logging-in"></a>
+</h4>
 <ul>
 <li>
-<code><a href="reference/login.html">login_CopHub()</a></code> logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at <a href="https://scihub.copernicus.eu/" class="uri">https://scihub.copernicus.eu/</a>).</li>
+<code><a href="reference/login.html">login_CopHub()</a></code> logs you in at the ESA Copernicus Open Access Hub using your credentials (register once at <a href="https://scihub.copernicus.eu/" class="external-link uri">https://scihub.copernicus.eu/</a>).</li>
 <li>
-<code><a href="reference/login.html">login_USGS()</a></code> logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at <a href="https://ers.cr.usgs.gov/register/" class="uri">https://ers.cr.usgs.gov/register/</a>).</li>
+<code><a href="reference/login.html">login_USGS()</a></code> logs you in at the USGS EROS Registration System (ERS) using your credentials (register once at <a href="https://ers.cr.usgs.gov/register/" class="external-link uri">https://ers.cr.usgs.gov/register/</a>).</li>
 <li>
-<code><a href="reference/login.html">login_earthdata()</a></code> logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at <a href="https://urs.earthdata.nasa.gov/users/new" class="uri">https://urs.earthdata.nasa.gov/users/new</a>)</li>
+<code><a href="reference/login.html">login_earthdata()</a></code> logs you in at the NASA Earth Data User Registration System (URS) using your credentials (register once at <a href="https://urs.earthdata.nasa.gov/users/new" class="external-link uri">https://urs.earthdata.nasa.gov/users/new</a>)</li>
 <li>
 <code><a href="reference/login.html">services()</a></code> displays the status of all online services used by <code>getSpatialData</code>.</li>
 </ul>
 </div>
-<div id="retrieving-and-visualizing-records" class="section level4">
-<h4 class="hasAnchor">
-<a href="#retrieving-and-visualizing-records" class="anchor"></a>Retrieving and visualizing records</h4>
+<div class="section level4">
+<h4 id="retrieving-and-visualizing-records">Retrieving and visualizing records<a class="anchor" aria-label="anchor" href="#retrieving-and-visualizing-records"></a>
+</h4>
 <ul>
 <li>
 <code><a href="reference/get_products.html">get_products()</a></code> obtains the names of all products available using <code>getSpatialData</code>. Currently, <code>getSpatialData</code> supports <strong>159</strong> products, including <em>Sentinel</em>, <em>Landsat</em>, <em>MODIS</em> and <em>SRTM</em> products.</li>
@@ -185,9 +187,9 @@
 <code><a href="reference/view_records.html">view_records()</a></code> and <code><a href="reference/view_records.html">plot_records()</a></code> display the footprint geometries of each record on a map.</li>
 </ul>
 </div>
-<div id="analysing-previews" class="section level4">
-<h4 class="hasAnchor">
-<a href="#analysing-previews" class="anchor"></a>Analysing previews</h4>
+<div class="section level4">
+<h4 id="analysing-previews">Analysing previews<a class="anchor" aria-label="anchor" href="#analysing-previews"></a>
+</h4>
 <ul>
 <li>
 <code><a href="reference/get_previews.html">get_previews()</a></code> downloads and georeferences preview images for visual inspection or automatic analysis and saves them to disk.</li>
@@ -199,29 +201,14 @@
 <code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code> calculates the AOI cloud cover and optionally saves raster cloud masks, all based on preview images.</li>
 </ul>
 </div>
-<div id="selecting-records" class="section level4">
-<h4 class="hasAnchor">
-<a href="#selecting-records" class="anchor"></a>Selecting records</h4>
-<p>Automatic remote sensing records selection is possible both for optical and SAR products. <code>select_*</code> functionalities also support fusion of multiple optical products. The selection is based on aoi cloud cover of optical records and temporal characterstics. For optical records <code>select_*</code> uses preview cloud masks from <code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code> to create timestamp-wise mosaics. It aims at cloud-free mosaics while ensuring user-defined temporal and product constraints.</p>
-<ul>
-<li>
-<code><a href="reference/get_select_supported.html">get_select_supported()</a></code> tells you for which products automatic record selection is supported.</li>
-<li>
-<code><a href="reference/select_unitemporal.html">select_unitemporal()</a></code> selects remote sensing records <em>uni-temporally</em>
-</li>
-<li>
-<code><a href="reference/select_bitemporal.html">select_bitemporal()</a></code> selects remote sensing records <em>bi-temporally</em>
-</li>
-<li>
-<code><a href="reference/select_timeseries.html">select_timeseries()</a></code> selects remote sensing records for a <em>time series</em>
-</li>
-<li>
-<code>is.*()</code>, such as <code><a href="reference/is.sentinel.html">is.sentinel()</a></code>, <code><a href="reference/is.landsat.html">is.landsat()</a></code>, <code><a href="reference/is.modis.html">is.modis()</a></code> and more to simplify filtering of records.</li>
-</ul>
+<div class="section level4">
+<h4 id="selecting-records">Selecting records<a class="anchor" aria-label="anchor" href="#selecting-records"></a>
+</h4>
+<p>Automatic remote sensing records selection is possible both for optical and SAR products. <code>select_*</code> functionalities also support fusion of multiple optical products. The selection is based on aoi cloud cover of optical records and temporal characterstics. For optical records <code>select_*</code> uses preview cloud masks from <code><a href="reference/calc_cloudcov.html">calc_cloudcov()</a></code> to create timestamp-wise mosaics. It aims at cloud-free mosaics while ensuring user-defined temporal and product constraints. * <code><a href="reference/get_select_supported.html">get_select_supported()</a></code> tells you for which products automatic record selection is supported. * <code><a href="reference/select_unitemporal.html">select_unitemporal()</a></code> selects remote sensing records <em>uni-temporally</em> * <code><a href="reference/select_bitemporal.html">select_bitemporal()</a></code> selects remote sensing records <em>bi-temporally</em> * <code><a href="reference/select_timeseries.html">select_timeseries()</a></code> selects remote sensing records for a <em>time series</em> * <code>is.*()</code>, such as <code><a href="reference/is.sentinel.html">is.sentinel()</a></code>, <code><a href="reference/is.landsat.html">is.landsat()</a></code>, <code><a href="reference/is.modis.html">is.modis()</a></code> and more to simplify filtering of records.</p>
 </div>
-<div id="checking-ordering-and-downloading-records" class="section level4">
-<h4 class="hasAnchor">
-<a href="#checking-ordering-and-downloading-records" class="anchor"></a>Checking, ordering and downloading records</h4>
+<div class="section level4">
+<h4 id="checking-ordering-and-downloading-records">Checking, ordering and downloading records<a class="anchor" aria-label="anchor" href="#checking-ordering-and-downloading-records"></a>
+</h4>
 <ul>
 <li>
 <code><a href="reference/check_availability.html">check_availability()</a></code> checks for each record whether it is available for direct download (can be downloaded instantly) or not (and thus must be ordered before download).</li>
@@ -231,9 +218,9 @@
 <code><a href="reference/get_data.html">get_data()</a></code> downloads the full datasets per records.</li>
 </ul>
 </div>
-<div id="writing-and-reading" class="section level4">
-<h4 class="hasAnchor">
-<a href="#writing-and-reading" class="anchor"></a>Writing and reading</h4>
+<div class="section level4">
+<h4 id="writing-and-reading">Writing and reading<a class="anchor" aria-label="anchor" href="#writing-and-reading"></a>
+</h4>
 <ul>
 <li>
 <code><a href="reference/get_records_drivers.html">get_records_drivers()</a></code> provides the driver names that can be used in <code><a href="reference/write_records.html">write_records()</a></code>.</li>
@@ -246,13 +233,13 @@
 </ul>
 </div>
 </div>
-<div id="get-started" class="section level2">
-<h2 class="hasAnchor">
-<a href="#get-started" class="anchor"></a>Get started</h2>
+<div class="section level2">
+<h2 id="get-started">Get started<a class="anchor" aria-label="anchor" href="#get-started"></a>
+</h2>
 <p>The following example demonstrates a workflow for querying, previewing, analysing, selecting, ordering and downloading optical data from multiple sources at once (in this case Sentinel-2 L2A and Landsat 8 OLI Surface Reflectances).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.github.com/16eagle/getSpatialData/">getSpatialData</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"aoi_data"</span><span class="op">)</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.github.com/16eagle/getSpatialData/" class="external-link">getSpatialData</a></span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"aoi_data"</span><span class="op">)</span>
 
 <span class="co"># Define an archive directory:</span>
 <span class="fu"><a href="reference/archive.html">set_archive</a></span><span class="op">(</span><span class="st">"/path/to/your/archive/directory/"</span><span class="op">)</span>
@@ -262,7 +249,9 @@
 <span class="fu"><a href="reference/aoi.html">set_aoi</a></span><span class="op">(</span><span class="va">aoi_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co"># View the AOI:</span>
 <span class="fu"><a href="reference/aoi.html">view_aoi</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<p><img src="https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png" alt="gsd_view_aoi"></p>
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/23257860/84061935-11297a00-a9bf-11ea-9626-a69c6bde6061.png" alt=""><p class="caption">gsd_view_aoi</p>
+</div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># There are three services to login at:</span>
 <span class="fu"><a href="reference/login.html">login_CopHub</a></span><span class="op">(</span>username <span class="op">=</span> <span class="st">"yourusername"</span><span class="op">)</span>
@@ -341,16 +330,18 @@
 
 <span class="co"># Query all available records for multiple products and a given time range at once,</span>
 <span class="co"># for example for Sentinel-2 and Landsat 8:</span>
-<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_records.html">get_records</a></span><span class="op">(</span>time_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2020-05-15"</span>, <span class="st">"2020-05-30"</span><span class="op">)</span>,
-                       products <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Sentinel-2"</span>, <span class="st">"LANDSAT_8_C1"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_records.html">get_records</a></span><span class="op">(</span>time_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2020-05-15"</span>, <span class="st">"2020-05-30"</span><span class="op">)</span>,
+                       products <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sentinel-2"</span>, <span class="st">"LANDSAT_8_C1"</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt; Searching records for product name 'Sentinel-2'...</span>
 <span class="co">#&gt; Searching records for product name 'LANDSAT_8_C1'...</span>
 <span class="co">#&gt; Reading meta data of search results from USGS EarthExplorer...</span>
 <span class="co">#&gt; Recieving available product levels from USGS-EROS ESPA...</span>
 
 <span class="co"># Have a look at the returned records table:</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/View.html">View</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span></code></pre></div>
-<p><img src="https://user-images.githubusercontent.com/23257860/84061417-2a7df680-a9be-11ea-982b-8d954f85370c.png" alt="gSD_records"></p>
+<span class="fu"><a href="https://rdrr.io/r/utils/View.html" class="external-link">View</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span></code></pre></div>
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/23257860/84061417-2a7df680-a9be-11ea-982b-8d954f85370c.png" alt=""><p class="caption">gSD_records</p>
+</div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Filter records, e.g. to contain only Level 2A/surface reflectance records:</span>
 <span class="va">records</span> <span class="op">&lt;-</span> <span class="va">records</span><span class="op">[</span><span class="va">records</span><span class="op">$</span><span class="va">level</span> <span class="op">==</span> <span class="st">"Level-2A"</span> <span class="op">|</span> <span class="va">records</span><span class="op">$</span><span class="va">level</span> <span class="op">==</span> <span class="st">"sr"</span>,<span class="op">]</span>
@@ -358,12 +349,16 @@
 <span class="co"># Display the records footprints interactively:</span>
 <span class="fu"><a href="reference/view_records.html">view_records</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span>
 <span class="co">#&gt; Composing records map...</span></code></pre></div>
-<p><img src="https://user-images.githubusercontent.com/23257860/84061407-27830600-a9be-11ea-8249-7914d77ded0e.png" alt="gsd_view_records"></p>
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/23257860/84061407-27830600-a9be-11ea-8249-7914d77ded0e.png" alt=""><p class="caption">gsd_view_records</p>
+</div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># ...or plot them:</span>
 <span class="fu"><a href="reference/view_records.html">plot_records</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span>
 <span class="co">#&gt; Composing records plot...</span></code></pre></div>
-<p><img src="https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png" alt="gsd_plot_records"></p>
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/23257860/84061404-24881580-a9be-11ea-9d43-a60e9ad93f58.png" alt=""><p class="caption">gsd_plot_records</p>
+</div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Download and georeference the previews for all records:</span>
 <span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_previews.html">get_previews</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span> 
@@ -371,12 +366,16 @@
 <span class="co"># Display the previews interactively (all or just a selection):</span>
 <span class="fu"><a href="reference/view_previews.html">view_previews</a></span><span class="op">(</span><span class="va">records</span><span class="op">[</span><span class="fl">21</span><span class="op">:</span><span class="fl">24</span>,<span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt; Composing preview map...</span></code></pre></div>
-<p><img src="https://user-images.githubusercontent.com/23257860/84061411-294cc980-a9be-11ea-9457-60461469e70b.png" alt="gsd_view_previews"></p>
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/23257860/84061411-294cc980-a9be-11ea-9457-60461469e70b.png" alt=""><p class="caption">gsd_view_previews</p>
+</div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># ...or plot them:</span>
 <span class="fu"><a href="reference/view_previews.html">plot_previews</a></span><span class="op">(</span><span class="va">records</span><span class="op">[</span><span class="fl">21</span><span class="op">:</span><span class="fl">24</span>,<span class="op">]</span><span class="op">)</span>
 <span class="co">#&gt; Composing preview plot...</span></code></pre></div>
-<p><img src="https://user-images.githubusercontent.com/23257860/84061405-2651d900-a9be-11ea-8038-075efe9a3f36.png" alt="gsd_plot_previews"></p>
+<div class="figure">
+<img src="https://user-images.githubusercontent.com/23257860/84061405-2651d900-a9be-11ea-8038-075efe9a3f36.png" alt=""><p class="caption">gsd_plot_previews</p>
+</div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Use the previews to calculate the cloud coverage in your AOI for all records:</span>
 <span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/calc_cloudcov.html">calc_cloudcov</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span> 
@@ -384,11 +383,11 @@
 
 <span class="co"># With the result, getSpatiaData can automatically select the most usable records,</span>
 <span class="co"># for a single timestamp:</span>
-<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/select_unitemporal.html">select_unitemporal</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span>
+<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/select_unitemporal.html">select_unitemporal</a></span><span class="op">(</span><span class="va">records</span>, max_sub_period<span class="op">=</span><span class="fl">12</span><span class="op">)</span>
 <span class="co"># for two timestamps:</span>
-<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/select_bitemporal.html">select_bitemporal</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span>
+<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/select_bitemporal.html">select_bitemporal</a></span><span class="op">(</span><span class="va">records</span>, min_distance<span class="op">=</span><span class="fl">3</span>, max_sub_period<span class="op">=</span><span class="fl">7</span><span class="op">)</span>
 <span class="co"># or for a series of timestamps:</span>
-<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/select_timeseries.html">select_timeseries</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span>
+<span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/select_timeseries.html">select_timeseries</a></span><span class="op">(</span><span class="va">records</span>, n_timestamps<span class="op">=</span><span class="fl">3</span>, min_distance<span class="op">=</span><span class="fl">2</span>, max_sub_period<span class="op">=</span><span class="fl">5</span><span class="op">)</span>
 
 
 <span class="co"># Once, you came to a selection (manually or automatically), check for availability:</span>
@@ -416,73 +415,83 @@
 <span class="co"># Finally, download records available for download:</span>
 <span class="va">records</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_data.html">get_data</a></span><span class="op">(</span><span class="va">records</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="supported-products" class="section level2">
-<h2 class="hasAnchor">
-<a href="#supported-products" class="anchor"></a>Supported products</h2>
+<div class="section level2">
+<h2 id="supported-products">Supported products<a class="anchor" aria-label="anchor" href="#supported-products"></a>
+</h2>
 <p><em>Table to be added</em></p>
 </div>
-<div id="contribution" class="section level2">
-<h2 class="hasAnchor">
-<a href="#contribution" class="anchor"></a>Contribution</h2>
-<p>We are happy about any kind of contribution, from feature ideas, ideas on possible data sources, technical ideas or other to bug fixes, code suggestions or larger code contributions! Open an issue to start a discussion: <a href="https://github.com/16eagle/getSpatialData/issues" class="uri">https://github.com/16eagle/getSpatialData/issues</a></p>
+<div class="section level2">
+<h2 id="contribution">Contribution<a class="anchor" aria-label="anchor" href="#contribution"></a>
+</h2>
+<p>We are happy about any kind of contribution, from feature ideas, ideas on possible data sources, technical ideas or other to bug fixes, code suggestions or larger code contributions! Open an issue to start a discussion: <a href="https://github.com/16eagle/getSpatialData/issues" class="external-link uri">https://github.com/16eagle/getSpatialData/issues</a></p>
 </div>
-<div id="mentioned" class="section level2">
-<h2 class="hasAnchor">
-<a href="#mentioned" class="anchor"></a>Mentioned</h2>
+<div class="section level2">
+<h2 id="mentioned">Mentioned<a class="anchor" aria-label="anchor" href="#mentioned"></a>
+</h2>
 <p><code>getSpatialData</code> has been mentioned here:</p>
-<p>Kwok, R., 2018. Ecology’s remote-sensing revolution. Nature 556, 137. <a href="https://doi.org/10.1038/d41586-018-03924-9" class="uri">https://doi.org/10.1038/d41586-018-03924-9</a></p>
+<p>Kwok, R., 2018. Ecology’s remote-sensing revolution. Nature 556, 137. <a href="https://doi.org/10.1038/d41586-018-03924-9" class="external-link uri">https://doi.org/10.1038/d41586-018-03924-9</a></p>
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li>Report a bug at <br><a href="http://www.github.com/16eagle/getSpatialData/issues">http://​www.github.com/​16eagle/​getSpatialData/​issues</a>
-</li>
-<li>Browse source code at <br><a href="http://github.com/16eagle/getSpatialData">http://​github.com/​16eagle/​getSpatialData</a>
-</li>
-<li>Find out more about our work at <br><a href="http://remote-sensing.eu">http://​remote-sensing.eu</a>
-</li>
+<li><a href="http://www.github.com/16eagle/getSpatialData/issues" class="external-link">Report a bug</a></li>
+<li><a href="http://github.com/16eagle/getSpatialData" class="external-link">Browse source code</a></li>
+<li><a href="http://remote-sensing.eu" class="external-link">Find out more about our work</a></li>
 </ul>
 </div>
+
 <div class="license">
-<h2>License</h2>
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>
-<a href="https://www.r-project.org/Licenses/GPL-3">GPL-3</a> | file <a href="LICENSE-text.html">LICENSE</a>
+<a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a> | file <a href="LICENSE-text.html">LICENSE</a>
 </li>
 </ul>
 </div>
+
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing getSpatialData</a></li>
+</ul>
+</div>
+
 <div class="developers">
-<h2>Developers</h2>
+<h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Jakob Schwalb-Willmann <br><small class="roles"> Author, maintainer </small>  </li>
 <li>Henrik Fisser <br><small class="roles"> Author </small>  </li>
 </ul>
 </div>
 
-  <div class="dev-status">
-<h2>Dev status</h2>
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://CRAN.R-project.org/package=getSpatialData"><img src="https://www.r-pkg.org/badges/version/getSpatialData" alt="CRAN version"></a></li>
-<li><a href="https://github.com/16EAGLE/getSpatialData/actions"><img src="https://github.com/16EAGLE/getSpatialData/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://travis-ci.org/16EAGLE/getSpatialData"><img src="https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master" alt="Build Status"></a></li>
-<li><a href="https://ci.appveyor.com/project/16EAGLE/getSpatialData"><img src="https://ci.appveyor.com/api/projects/status/github/16EAGLE/getSpatialData?branch=master&amp;svg=true" alt="AppVeyor build status"></a></li>
-<li><a href="https://www.tidyverse.org/lifecycle/#maturing"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a></li>
+<li><a href="https://CRAN.R-project.org/package=getSpatialData" class="external-link"><img src="https://www.r-pkg.org/badges/version/getSpatialData" alt="CRAN version"></a></li>
+<li><a href="https://github.com/16EAGLE/getSpatialData/actions" class="external-link"><img src="https://github.com/16EAGLE/getSpatialData/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://travis-ci.org/16EAGLE/getSpatialData" class="external-link"><img src="https://travis-ci.org/16EAGLE/getSpatialData.svg?branch=master" alt="Build Status"></a></li>
+<li><a href="https://ci.appveyor.com/project/16EAGLE/getSpatialData" class="external-link"><img src="https://ci.appveyor.com/api/projects/status/github/16EAGLE/getSpatialData?branch=master&amp;svg=true" alt="AppVeyor build status"></a></li>
+<li><a href="https://www.tidyverse.org/lifecycle/#maturing" class="external-link"><img src="https://img.shields.io/badge/lifecycle-maturing-blue.svg" alt="Lifecycle:maturing"></a></li>
 </ul>
 </div>
-</div>
+
+  </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by Jakob Schwalb-Willmann, Henrik Fisser.</p>
+  <p></p>
+<p>Developed by Jakob Schwalb-Willmann, Henrik Fisser.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer>
@@ -490,6 +499,8 @@
 
   
 
+
+  
 
   </body>
 </html>

@@ -84,7 +84,7 @@
 #' @keywords internal
 #' @noRd
 .translate_records <- function(records, product_name, simplify_cols = TRUE){
-
+  
   # standardize
   records.names <- colnames(records) <- gsub("[.]", "", tolower(colnames(records)))
   
@@ -124,7 +124,7 @@
     records$md5_url <- paste0(records$md5_url, "Checksum/Value/$value")
   }
   if(unique(records$product == "sentinel-2")) records$tile_id[is.na(records$tile_id)] <- sapply(strsplit(records$record_id[is.na(records$tile_id)], "_"), function(x){
-      gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
+    gsub("T", "", x[nchar(x) == 6 & substr(x, 1, 1) == "T"])
   })
   
   # clean records ID
@@ -197,13 +197,15 @@ rbind.different <- function(x) {
   } else {
     x.bind <- x[[1]]
     for(i in 2:length(x)){
-      x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
-      y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
-      
-      x.bind[c(as.character(y.diff))] <- NA
-      x[[i]][c(as.character(x.diff))] <- NA
-      
-      x.bind <- rbind(x.bind, x[[i]])
+      if(nrow(x[[i]]) > 0){
+        x.diff <- setdiff(colnames(x.bind), colnames(x[[i]]))
+        y.diff <- setdiff(colnames(x[[i]]), colnames(x.bind))
+        
+        x.bind[c(as.character(y.diff))] <- NA
+        x[[i]][c(as.character(x.diff))] <- NA
+        
+        x.bind <- rbind(x.bind, x[[i]])
+      }
     }
     return(x.bind)
   }
@@ -330,7 +332,7 @@ rbind.different <- function(x) {
   FOOTPRINT <- name_footprint()
   SENTINEL1 <- "S1"
   POINT_SEP <- "\\."
-
+  
   record_ids <- records[[RECORD_ID]]
   is_sentinel1 <- intersect(which(!is.na(record_ids)), which(startsWith(record_ids, SENTINEL1)))
   if (!.is_empty_array(is_sentinel1)) {
@@ -608,12 +610,12 @@ rbind.different <- function(x) {
   }
   if (!.is_empty_array(min_below_zero)) {
     for (i in min_below_zero) {
-        x[[i]][x[[i]] < min] <- min
+      x[[i]][x[[i]] < min] <- min
     }
   }
   if (!.is_empty_array(max_above_255)) {
     for (i in max_above_255) {
-        x[[i]][x[[i]] > max] <- max
+      x[[i]][x[[i]] > max] <- max
     }
   }
   return(x)
@@ -714,7 +716,7 @@ rbind.different <- function(x) {
                                 vrtnodata="0",
                                 seperate=F,overwrite=T,
                                 datatype=datatype))
-
+  
   if (inherits(write_mos, TRY_ERROR())) {
     return(NA)
   } else {

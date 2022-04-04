@@ -69,6 +69,7 @@ get_records <- function(time_range, products, aoi = NULL, as_sf = TRUE, rename_c
   }, USE.NAMES = F, SIMPLIFY = F)
   
   # bind records
+  records <- records[!sapply(records, is.null)]
   if(length(records) > 1) records <- rbind.different(.gsd_compact(records)) else records <- records[[1]]
   
   if(!is.null(records)){

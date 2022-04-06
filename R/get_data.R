@@ -62,7 +62,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   sub <- which(records$download_available)
   
   # check for ESPA records
-  if(any(records[sub,][records$product_group == "landsat",]$level != "l1")){
+  if(any(records[sub,][records[sub,]$product_group == "landsat",]$level != "l1")){
     
     # subscripts for this task:
     sub_espa <- which(

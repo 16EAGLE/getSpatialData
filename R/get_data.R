@@ -63,10 +63,14 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
   
   # check for ESPA records
   if(any(records[sub,][records$product_group == "landsat",]$level != "l1")){
+    
+    # subscripts for this task:
+    sub_espa <- which(
+      records$download_available & !is.na(records$order_id) & records$product_group == "landsat" & records$level != "l1"
+    )
     records$gSD.espa_item <- NA
-    records[sub,][records$product_group == "landsat" & records$level != "l1",]$gSD.espa_item <- 
-      .apply(records[sub,][records$product_group == "landsat" & records$level != "l1",], MARGIN = 1, function(x){
-      content(.get(paste0(getOption("gSD.api")$espa, "item-status/", x$order_id, "/", x$record_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
+    records[sub_espa,]$gSD.espa_item <- .lapply(records[sub_espa, ]$order_id, function(id){
+      content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
     })
   }
   
@@ -92,7 +96,7 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
         if(!is.null(x$md5_url)) content(.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
       
       } else if(x["product_group"] == "landsat" & x$level != "l1"){
-        strsplit(content(.get(x$gSD.espa_item$cksum_download_ur), as = "text", encoding = "UTF-8"), " ")[[1]][1]
+        strsplit(content(.get(x$gSD.espa_item$cksum_download_url), as = "text", encoding = "UTF-8"), " ")[[1]][1]
       
       } else NA
     }, verbose = F))

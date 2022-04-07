@@ -195,6 +195,13 @@ rbind.different <- function(x) {
   if (.is_empty_array(x)) {
     return(x)
   } else {
+    
+    xnrow <- sapply(x, nrow)
+    if(any(xnrow == 0)){
+      x <- x[xnrow > 0]
+    }
+    if(length(x) == 1) return(x[[1]])
+    
     x.bind <- x[[1]]
     for(i in 2:length(x)){
       if(nrow(x[[i]]) > 0){

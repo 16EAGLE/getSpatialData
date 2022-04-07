@@ -19,7 +19,7 @@
 #' 
 #' @author Jakob Schwalb-Willmann
 #' 
-#' @importFrom httr content
+#' @importFrom httr content status_code http_status
 #' 
 #' @name get_data
 #' @export
@@ -96,8 +96,19 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
         if(!is.null(x$md5_url)) content(.get(x$md5_url, cred[1], cred[2]), USE.NAMES = F) else NA
       
       } else if(x["product_group"] == "landsat" & x$level != "l1"){
-        strsplit(content(.get(x$gSD.espa_item$cksum_download_url), as = "text", encoding = "UTF-8"), " ")[[1]][1]
-      
+        resp <- try(.get(x$gSD.espa_item$cksum_download_url), silent = T)
+        if(inherits(resp, "try-error")){
+          out(paste0("Requesting MD5 checksum for record '", x$record_id, "' failed with an error."), type = 2)
+          NA
+        }else{
+          sc <- status_code(resp)
+          if(sc != 200){
+            out(paste0("Requesting MD5 checksum for record '", x$record_id, "' failed with HTTP error ", sc, ": ", http_status(x)$message), type = 2)
+            NA
+          }else{
+            strsplit(content(resp, as = "text", encoding = "UTF-8"), " ")[[1]][1]
+          }
+        }
       } else NA
     }, verbose = F))
   }

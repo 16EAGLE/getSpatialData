@@ -42,11 +42,11 @@ order_data <- function(records, wait_to_complete = FALSE, ..., verbose = TRUE){
     records <- check_availability(records, verbose = FALSE)
     if(inherits(verbose, "logical")) options(gSD.verbose = verbose)
   }
-  if(all(records$download_available | records$order_status == "scheduled")){
+  if(all(records$download_available | records$order_status == "scheduled" | records$order_status == "oncache")){
     out("No new orders were placed since the supplied records have been ordered already or are available for download.")
   } else{
     # select records that are not available and did not have been ordererd
-    sub <- which(!(records$download_available | records$order_status == "scheduled"))
+    sub <- which(!(records$download_available | records$order_status == "scheduled" | records$order_status == "oncache"))
     
     # get credendtial info
     records$gSD.cred <- NA

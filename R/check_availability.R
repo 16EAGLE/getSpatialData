@@ -36,8 +36,8 @@ check_availability <- function(records, verbose = TRUE){
         .CopHub_select(x = "auto", p = x, user = getOption("gSD.dhus_user"), pw = getOption("gSD.dhus_pass"))
       })
       records[records$product_group == "sentinel" & !records$is_gnss,]$download_available <- .apply(records.sentinel, MARGIN = 1, function(x, names = colnames(records.sentinel)){
-        as.logical(toupper(unlist(.get_odata(x$entity_id, x$cred, field = "Online/$value"))))
-      })
+        as.logical(toupper(unlist(.get_odata(uuid = x$entity_id, cred = unlist(x$cred), field = "Online/$value"))))
+      }, verbose = verbose)
     }
     if(any(records$is_gnss, na.rm = T)){
       records[records$is_gnss,]$download_available <- TRUE
@@ -50,7 +50,7 @@ check_availability <- function(records, verbose = TRUE){
     sub <- records$product_group == "landsat"
     
     records[sub,]$download_available <- records[sub,]$level == "l1"
-    records$gSD.order_id <- if(is.null(records$order_id)) NA else records[sub,]$order_id
+    records$gSD.order_id <- if(is.null(records$order_id)) NA else records$order_id
     
     if(any(is.na(records[sub,]$gSD.order_id) & !records[sub,]$download_available)){
       
@@ -74,7 +74,8 @@ check_availability <- function(records, verbose = TRUE){
         })
         
         # extract order ids that match records and are still hot for download
-        records[sub,]$gSD.order_id <- order_ids[sapply(records[sub,]$record_id, function(x) which(x == item_ids)[1])]
+        records[sub,][records[sub,]$record_id %in% unlist(item_ids),]$gSD.order_id <- order_ids[unlist(item_ids) %in% records[sub,]$record_id]
+        #records[sub,]$gSD.order_id <- order_ids[sapply(records[sub,]$record_id, function(x) which(x == item_ids)[1])]
       }
     }
     
@@ -84,12 +85,17 @@ check_availability <- function(records, verbose = TRUE){
         sapply(content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
       }, USE.NAMES = F)
       #if(isTRUE(return_status)){
-      records[sub,]$order_status <- status
+      records[sub,]$order_status[!is.na(records[sub,]$gSD.order_id)] <- status
       #}
-      if(any(status != "complete")) status[status != "complete"] <- "FALSE"
-      status <- gsub("complete", "TRUE", status)
+      if(any(status != "complete")){
+        status[status != "complete"] <- "FALSE"
+      }
+      if(any(status == "complete")){
+        status[status == "complete"] <- "TRUE"
+      }
+      
       records[sub,]$download_available[!is.na(records[sub,]$gSD.order_id)] <- as.logical(status)
-      if(any(as.logical(status))) out("--> Found completed ESPA orders available for download.")
+      if(any(as.logical(status))) out("--> Found completed/cached ESPA orders available for download.")
     }
     
     records$order_id <- records$gSD.order_id

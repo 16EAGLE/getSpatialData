@@ -74,16 +74,21 @@ check_availability <- function(records, verbose = TRUE){
         })
         
         # extract order ids that match records and are still hot for download
-        records[sub,][records[sub,]$record_id %in% unlist(item_ids),]$gSD.order_id <- order_ids[unlist(item_ids) %in% records[sub,]$record_id]
+        records[sub,]$gSD.order_id <- .sapply(records[sub,]$record_id, function(recid){
+          match_item <- .sapply(item_ids, function(itid) recid %in% itid)
+          if(any(match_item)) order_ids[match_item] else NA
+        })
+        #records[sub,][records[sub,]$record_id %in% unlist(item_ids),]$gSD.order_id <- order_ids[unlist(item_ids) %in% records[sub,]$record_id]
         #records[sub,]$gSD.order_id <- order_ids[sapply(records[sub,]$record_id, function(x) which(x == item_ids)[1])]
       }
     }
     
     # check for order column
     if(any(!is.na(records[sub,]$gSD.order_id))){
-      status <- sapply(records[sub,]$gSD.order_id[!is.na(records[sub,]$gSD.order_id)], function(id){
-        sapply(content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]], function(y) y$status, USE.NAMES = F)
-      }, USE.NAMES = F)
+      status <- .apply(records[sub,][!is.na(records[sub,]$gSD.order_id),], MARGIN = 1, function(x){
+        resp <- content(.get(paste0(getOption("gSD.api")$espa, "item-status/", x$gSD.order_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]]
+        resp[.sapply(resp, function(y) y$name) == x$record_id][[1]]$status
+      })
       #if(isTRUE(return_status)){
       records[sub,]$order_status[!is.na(records[sub,]$gSD.order_id)] <- status
       #}

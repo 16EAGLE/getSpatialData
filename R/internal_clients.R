@@ -516,7 +516,7 @@
 #' @keywords internal
 #' @importFrom httr content
 #' @noRd
-.ESPA_order <- function(req.data, level = "sr", username, password, format = "gtiff", verbose){
+.ESPA_order <- function(req.data, id, level = "sr", username, password, format = "gtiff", verbose){
   
   ## group request by collection (single or multi order)
   coll <- sapply(req.data, function(x) x[[1]][[1]], USE.NAMES=F)

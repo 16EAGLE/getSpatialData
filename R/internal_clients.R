@@ -516,18 +516,9 @@
 #' @keywords internal
 #' @importFrom httr content
 #' @noRd
-.ESPA_order <- function(id, level = "sr", username, password, format = "gtiff", verbose){
-  
-  ## check query and abort, if not available
-  #out("Ordering requested items from ESPA...")
-  checked <- lapply(id , function(x, v = verbose){
-    r <- .get(paste0(getOption("gSD.api")$espa, "available-products/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass"))
-    if(names(content(r)) == "not_implemented") out(paste0("'", x, "': This ID is invalid, as it cannot be found in the ESPA database. Please remove it from input and reexecute."), type = 3)
-    list(x, r)
-  })
+.ESPA_order <- function(req.data, level = "sr", username, password, format = "gtiff", verbose){
   
   ## group request by collection (single or multi order)
-  req.data <- lapply(checked, function(x) c(names(content(x[[2]])), x[[1]]))
   coll <- sapply(req.data, function(x) x[[1]][[1]], USE.NAMES=F)
   coll.uni <- unique(coll)
   out(paste0("Collecting from ", toString(length(coll.uni)), " collection(s) [", paste0(coll.uni, collapse = ", "), "], resulting in ", toString(length(coll.uni)), " order(s)..."))
@@ -541,11 +532,9 @@
     i <- paste0(sapply(x, function(y) y[2], USE.NAMES = F), collapse = '", "')
     paste0('{"', x[[1]][1], '": { "inputs": ["', i, '"], "products": [', p, ']}, "format": "', f, '"}')
   })
-  
-  ## order
   order <- lapply(req.body, function(x, user = username, pass = password) .post(url = paste0(getOption("gSD.api")$espa, "order/"), username = user, password = pass, body = x))
   order.list <- sapply(order, function(x) content(x)[[1]], USE.NAMES = F)
   out(paste0("Products '", paste0(id, collapse = "', '"), "' have been ordered successfully:"))
-  out(paste0("[level = '", level, "', format = '", format, "', order ID(s) '", paste0(order.list, collapse = "', '"), "']."))
+  out(paste0("[level = '", paste0(level, collapse = "', "), "', format = '", format, "', order ID(s) '", paste0(order.list, collapse = "', '"), "']."))
   return(order.list)
 }

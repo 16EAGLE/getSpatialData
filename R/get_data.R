@@ -69,8 +69,13 @@ get_data <- function(records, dir_out = NULL, md5_check = TRUE, force = FALSE, a
       records$download_available & !is.na(records$order_id) & records$product_group == "landsat" & records$level != "l1"
     )
     records$gSD.espa_item <- NA
-    records[sub_espa,]$gSD.espa_item <- .lapply(records[sub_espa, ]$order_id, function(id){
-      content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
+    # records[sub_espa,]$gSD.espa_item <- .lapply(records[sub_espa, ]$order_id, function(id){
+    #   content(.get(paste0(getOption("gSD.api")$espa, "item-status/", id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]][[1]]
+    # })
+    # 
+    records[sub_espa,]$gSD.espa_item <- .apply(records[sub_espa, ], MARGIN = 1, function(x){
+      resp <- content(.get(paste0(getOption("gSD.api")$espa, "item-status/", x$order_id), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))[[1]]
+      resp[.sapply(resp, function(y) y$name) == x$record_id][[1]]
     })
   }
   

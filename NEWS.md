@@ -1,4 +1,32 @@
-## getSpatialData 0.1.1 (ongoing development)
+## getSpatialData 0.1.2
+Minor improvements, bug fixes
+
+#### Features:
+
+* enhanced `order_data()` to be able to order multiple records within one joint ESPA order instead of placing each record as an individual order
+* adjusted `get_data()` and `check_availability()` to to be able to deal with records that were jointly ordered as one ESPA order
+* improved request error handling and message forwarding by `get_data()`
+* enhanced Sentinel-2 ordering process, increased verbosity
+* adjusted calculation of preview-based cloud cover percentages
+* added minor README improvements
+
+
+#### Bug fixes:
+
+* fixed a bug in `get_records()` emerging when querying multiple products and one of the queries returned NULL (no records found)
+* fixed a bug that caused an error if a `get_records()` query for multiple products resulted in no results for all products
+* fixed indexing bug in `check_availability()`
+* fixed multiple other bugs in `check_availability()`
+* fixed an issue with pulling data from ESPA
+* fixed rbinding issue when requesting multiple products
+* fixed issue with ordering/downloading landsat data
+* fixed issue with writing records containing nested lists
+* fixed a mapview issue in `view_previews ()`
+* fixed a bug in `view_aoi()`
+* fixed an AOI cloud cover bug
+
+
+## getSpatialData 0.1.1
 Bug fixes, Landsat Collection 2 support
 
 #### Bug fixes:

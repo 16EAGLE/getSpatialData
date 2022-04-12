@@ -91,7 +91,39 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.1.1" id="getspatialdata-011-ongoing-development">getSpatialData 0.1.1 (ongoing development)<a class="anchor" aria-label="anchor" href="#getspatialdata-011-ongoing-development"></a></h2>
+<h2 class="page-header" data-toc-text="0.1.2" id="getspatialdata-012">getSpatialData 0.1.2<a class="anchor" aria-label="anchor" href="#getspatialdata-012"></a></h2>
+<p>Minor improvements, bug fixes</p>
+<div class="section level4">
+<h4 id="features-0-1-2">Features:<a class="anchor" aria-label="anchor" href="#features-0-1-2"></a></h4>
+<ul><li>enhanced <code><a href="../reference/order_data.html">order_data()</a></code> to be able to order multiple records within one joint ESPA order instead of placing each record as an individual order</li>
+<li>adjusted <code><a href="../reference/get_data.html">get_data()</a></code> and <code><a href="../reference/check_availability.html">check_availability()</a></code> to to be able to deal with records that were jointly ordered as one ESPA order</li>
+<li>improved request error handling and message forwarding by <code><a href="../reference/get_data.html">get_data()</a></code>
+</li>
+<li>enhanced Sentinel-2 ordering process, increased verbosity</li>
+<li>adjusted calculation of preview-based cloud cover percentages</li>
+<li>added minor README improvements</li>
+</ul></div>
+<div class="section level4">
+<h4 id="bug-fixes-0-1-2">Bug fixes:<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-2"></a></h4>
+<ul><li>fixed a bug in <code><a href="../reference/get_records.html">get_records()</a></code> emerging when querying multiple products and one of the queries returned NULL (no records found)</li>
+<li>fixed a bug that caused an error if a <code><a href="../reference/get_records.html">get_records()</a></code> query for multiple products resulted in no results for all products</li>
+<li>fixed indexing bug in <code><a href="../reference/check_availability.html">check_availability()</a></code>
+</li>
+<li>fixed multiple other bugs in <code><a href="../reference/check_availability.html">check_availability()</a></code>
+</li>
+<li>fixed an issue with pulling data from ESPA</li>
+<li>fixed rbinding issue when requesting multiple products</li>
+<li>fixed issue with ordering/downloading landsat data</li>
+<li>fixed issue with writing records containing nested lists</li>
+<li>fixed a mapview issue in <code><a href="../reference/view_previews.html">view_previews ()</a></code>
+</li>
+<li>fixed a bug in <code><a href="../reference/aoi.html">view_aoi()</a></code>
+</li>
+<li>fixed an AOI cloud cover bug</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.1.1" id="getspatialdata-011">getSpatialData 0.1.1<a class="anchor" aria-label="anchor" href="#getspatialdata-011"></a></h2>
 <p>Bug fixes, Landsat Collection 2 support</p>
 <div class="section level4">
 <h4 id="bug-fixes-0-1-1">Bug fixes:<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-1"></a></h4>

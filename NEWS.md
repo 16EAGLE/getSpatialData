@@ -1,3 +1,9 @@
+## getSpatialData 0.1.3
+
+#### Bug fixes:
+
+* fixed a bug causing an error when calling `get_records()` with `rename_cols = TRUE` 
+
 ## getSpatialData 0.1.2
 Minor improvements, bug fixes
 

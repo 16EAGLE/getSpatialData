@@ -1,5 +1,9 @@
 ## getSpatialData 0.1.3
 
+#### Features:
+
+* changed the way the offline product list is updated by `get_products()`
+
 #### Bug fixes:
 
 * fixed a bug causing an error when calling `get_records()` with `rename_cols = TRUE` 

@@ -713,16 +713,17 @@ rbind.different <- function(x) {
 #' @param srcnodata character nodata value in x. Default is for FLT4S.
 #' @return \code{mos} raster mosaic
 #' @keywords internal
-#' @importFrom gdalUtils gdalbuildvrt
+#' @importFrom sf gdal_utils
 #' @noRd
 .make_mosaic <- function(x, save_path, mode = "mask", 
                          srcnodata = NULL, datatype = NULL) {
   
-  write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",
-                                srcnodata=as.character(srcnodata),
-                                vrtnodata="0",
-                                seperate=F,overwrite=T,
-                                datatype=datatype))
+  write_mos <- try(sf::gdal_utils("buildvrt", x, save_path,
+                                  options = c("-resolution", "highest",
+                                              "-srcnodata", srcnodata,
+                                              "-vrtnodata", 0,
+                                              "-separate", 
+                                              "-overwrite")))
   
   if (inherits(write_mos, TRY_ERROR())) {
     return(NA)

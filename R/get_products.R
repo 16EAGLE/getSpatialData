@@ -44,7 +44,7 @@ get_products <- function(product_groups = "all", grouped = FALSE, update_online 
   
   # get offline products list
   products <- .prod.list
-                  
+  
   # login if required
   product_groups <- tolower(sort(product_groups))
   if(product_groups == "all") product_groups <- tolower(names(products))

@@ -246,7 +246,7 @@ rbind.different <- function(x) {
 #' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster cellStats
+#' @importFrom raster cellStats getValues
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
@@ -264,7 +264,7 @@ rbind.different <- function(x) {
 #' @param x raster with the resolution.
 #' @return integer number of pixels in aoi.
 #' @importFrom sf st_bbox
-#' @importFrom raster raster res crs values<-
+#' @importFrom raster raster res crs values<- getValues
 #' @keywords internal
 #' @noRd
 .calc_aoi_corr_vals <- function(aoi, x) {

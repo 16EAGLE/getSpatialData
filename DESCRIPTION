@@ -19,7 +19,6 @@ Imports:
   raster,
   sf,
   lwgeom,
-  gdalUtils,
   mapview,
   mapedit,
   cli,
@@ -31,7 +30,7 @@ Imports:
   stats,
   methods,
   grDevices
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Suggests: 
   testthat,
   covr

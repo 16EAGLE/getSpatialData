@@ -246,7 +246,7 @@ rbind.different <- function(x) {
 #' @param aoi_ncell list of numerics if the needed values. If they have already been calculated they can
 #' be provided here.
 #' @return \code{percent} numeric percentage of value 1 covering the aoi
-#' @importFrom raster cellStats
+#' @importFrom raster cellStats getValues
 #' @keywords internal
 #' @noRd
 .calc_aoi_coverage <- function(x, aoi, aoi_ncell = NULL) {
@@ -264,7 +264,7 @@ rbind.different <- function(x) {
 #' @param x raster with the resolution.
 #' @return integer number of pixels in aoi.
 #' @importFrom sf st_bbox
-#' @importFrom raster raster res crs values<-
+#' @importFrom raster raster res crs values<- getValues
 #' @keywords internal
 #' @noRd
 .calc_aoi_corr_vals <- function(aoi, x) {
@@ -713,16 +713,17 @@ rbind.different <- function(x) {
 #' @param srcnodata character nodata value in x. Default is for FLT4S.
 #' @return \code{mos} raster mosaic
 #' @keywords internal
-#' @importFrom gdalUtils gdalbuildvrt
+#' @importFrom sf gdal_utils
 #' @noRd
 .make_mosaic <- function(x, save_path, mode = "mask", 
                          srcnodata = NULL, datatype = NULL) {
   
-  write_mos <- try(gdalbuildvrt(x,save_path,resolution="highest",
-                                srcnodata=as.character(srcnodata),
-                                vrtnodata="0",
-                                seperate=F,overwrite=T,
-                                datatype=datatype))
+  write_mos <- try(sf::gdal_utils("buildvrt", x, save_path,
+                                  options = c("-resolution", "highest",
+                                              "-srcnodata", srcnodata,
+                                              "-vrtnodata", 0,
+                                              "-separate", 
+                                              "-overwrite")))
   
   if (inherits(write_mos, TRY_ERROR())) {
     return(NA)

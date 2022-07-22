@@ -78,7 +78,7 @@ get_products <- function(product_groups = "all", grouped = FALSE, update_online 
     }
     # offline
     if("srtm" %in% product_groups){
-      products[["modis"]] <- grep("srtm", names(.getCMR_id()))
+      products[["srtm"]] <- grep("srtm", names(.getCMR_id()), value = T)
     }
   }
   

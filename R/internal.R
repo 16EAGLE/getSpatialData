@@ -859,7 +859,7 @@ rbind.different <- function(x) {
   all_na <- sapply(x, function(element) {
     return(ifelse(inherits(element, LIST()), FALSE, is.na(element)))
   })
-  return(length(x) == 0 || is.null(x) || is.na(x) || all_null || all_na)
+  return(length(x) == 0 || is.null(x) || all(is.na(x)) || all(all_null) || all(all_na))
 }
 
 #' checks if a character can be integer

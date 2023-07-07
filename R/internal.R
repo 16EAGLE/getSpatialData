@@ -141,7 +141,10 @@
     records$stop_time <- as.POSIXct(strptime(records$stop_time, "%Y:%j:%T", tz = "UTC"))
     records$date_acquisition <- as.Date(records$start_time)
     records$start_date <- records$stop_date <- NULL
-    records[, which(colnames(records) == "cloudcov")[2]] <- NULL #remove duplicated column
+    # Find and remove Duplicated Columns
+    duplicated_columns <- duplicated(as.list(records))
+    records <- records[!duplicated_columns]
+    #records[, which(colnames(records) == "cloudcov")[2]] <- NULL #remove duplicated column
   }
   if(product_group == "modis"){
     records$start_time <- as.POSIXct(strptime(records$start_date, "%Y-%m-%d %T", tz = "UTC"))

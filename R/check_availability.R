@@ -60,7 +60,8 @@ check_availability <- function(records, verbose = TRUE){
       
       # extract order ids of last 7 days
       order_ids <- gsub('\\["', "", gsub('"]', "", strsplit(xml_text(xml_children(order_ids)[[1]]), '\", \"')[[1]]))
-      order_dates <- lapply(order_ids, function(x) strptime(strsplit(x, "-")[[1]][3], format = "%m%d%Y"))
+      # get third to last string of split, thereby ignoring possible hyphens in account e-mail-adress
+      order_dates <- lapply(order_ids, function(x) strptime(strsplit(x, "-")[[1]][length(strsplit(x, "-")[[1]])-2], format = "%m%d%Y"))
       order_ids <- order_ids[sapply(order_dates, function(x) difftime(Sys.time(), x, units = "days")) <= 7]
       
       # if there is something, digg deeper
@@ -76,7 +77,7 @@ check_availability <- function(records, verbose = TRUE){
         # extract order ids that match records and are still hot for download
         records[sub,]$gSD.order_id <- .sapply(records[sub,]$record_id, function(recid){
           match_item <- .sapply(item_ids, function(itid) recid %in% itid)
-          if(any(match_item)) order_ids[match_item] else NA
+          if(any(match_item)) order_ids[match_item][1] else NA
         })
         #records[sub,][records[sub,]$record_id %in% unlist(item_ids),]$gSD.order_id <- order_ids[unlist(item_ids) %in% records[sub,]$record_id]
         #records[sub,]$gSD.order_id <- order_ids[sapply(records[sub,]$record_id, function(x) which(x == item_ids)[1])]

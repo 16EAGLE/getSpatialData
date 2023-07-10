@@ -66,7 +66,7 @@ check_availability <- function(records, verbose = TRUE){
       
       # if there is something, digg deeper
       if(!is.na(order_ids[1])){
-        browser()
+        
         # get item ids for each order
         item_ids <- lapply(order_ids, function(x){
           response <- content(.get(paste0(getOption("gSD.api")$espa, "/order/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
@@ -77,7 +77,7 @@ check_availability <- function(records, verbose = TRUE){
         # extract order ids that match records and are still hot for download
         records[sub,]$gSD.order_id <- .sapply(records[sub,]$record_id, function(recid){
           match_item <- .sapply(item_ids, function(itid) recid %in% itid)
-          if(any(match_item)) order_ids[match_item] else NA
+          if(any(match_item)) order_ids[match_item][1] else NA
         })
         #records[sub,][records[sub,]$record_id %in% unlist(item_ids),]$gSD.order_id <- order_ids[unlist(item_ids) %in% records[sub,]$record_id]
         #records[sub,]$gSD.order_id <- order_ids[sapply(records[sub,]$record_id, function(x) which(x == item_ids)[1])]

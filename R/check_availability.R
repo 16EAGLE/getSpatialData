@@ -60,12 +60,13 @@ check_availability <- function(records, verbose = TRUE){
       
       # extract order ids of last 7 days
       order_ids <- gsub('\\["', "", gsub('"]', "", strsplit(xml_text(xml_children(order_ids)[[1]]), '\", \"')[[1]]))
-      order_dates <- lapply(order_ids, function(x) strptime(strsplit(x, "-")[[1]][3], format = "%m%d%Y"))
+      # get third to last string of split, thereby ignoring possible hyphens in account e-mail-adress
+      order_dates <- lapply(order_ids, function(x) strptime(strsplit(x, "-")[[1]][length(strsplit(x, "-")[[1]])-2], format = "%m%d%Y"))
       order_ids <- order_ids[sapply(order_dates, function(x) difftime(Sys.time(), x, units = "days")) <= 7]
       
       # if there is something, digg deeper
       if(!is.na(order_ids[1])){
-        
+        browser()
         # get item ids for each order
         item_ids <- lapply(order_ids, function(x){
           response <- content(.get(paste0(getOption("gSD.api")$espa, "/order/", x), getOption("gSD.usgs_user"), getOption("gSD.usgs_pass")))
